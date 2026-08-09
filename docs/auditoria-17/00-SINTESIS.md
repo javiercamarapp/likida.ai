@@ -74,7 +74,7 @@ la regla— y cerraba para el coordinado real, al que ni se le podía capturar e
 régimen. Es el error de jerarquía que `normas/README.md` llama *"el más caro del
 dominio"*.
 Prueba: `regimen_facilidad_15.test.ts` (4 casos) — sin el arreglo fallan 2.
-Incluye migración `0086` + bloque 62 de `verificaciones.sql`.
+Incluye migración `0088` + bloque 63 de `verificaciones.sql`.
 
 ### Pendientes (4) — con la razón
 

@@ -1,24 +1,30 @@
 import Link from 'next/link';
-import { Fuel, Receipt, Route as RouteIcon, Truck, Wallet, AlertTriangle, Percent, PiggyBank } from 'lucide-react';
+import { Wallet, Calculator, Fuel, PiggyBank } from 'lucide-react';
 import {
-  getKpis, getAcreditables, detectarAnomalias, getLiquidacionesPorDia, getViajes,
-  contarViajes, getValorAhorro, getGastoPorConcepto, getGastoPorRuta, getOperadoresDetalle,
+  getKpis, getAcreditables, detectarAnomalias, getViajes, getViajesPorMes,
+  getGastoPorSemanaSeries, getLiquidadoPorSemanaSeries, getTopRutasPorGastoSeries,
+  getSeriesKpiCards,
   type ViajeRow,
-  type DashboardKpis, type Acreditables, type Anomalia, type ValorAhorro,
-  type GastoPorConcepto, type GastoPorRuta, type OperadorDetalle,
+  type DashboardKpis, type Acreditables, type Anomalia,
+  type GastoSemanalSeries, type LiquidadoSemanalSeries, type TopRutasSeries, type SeriesKpiCards,
 } from '@/lib/likida/analytics';
-import { getPorFacturar, type TicketPorFacturar } from '@/lib/likida/facturacion/pendientes';
-import { saludo, fechaLarga, ahoraMs } from '@/lib/saludo';
+import { getConfig, type CuadraConfig } from '@/lib/likida/config';
+import {
+  resolverPeriodo, getGastosFiscales, getGastosFiscalesSeries, resumirPerdidas,
+  type GastoFiscal, type ResumenPerdidas, type GastosFiscalesSeries,
+} from '@/lib/likida/fiscal';
+import { opcionesDe } from './contador/comun';
+import { saludo, ahoraMs } from '@/lib/saludo';
 import { LEYENDA_CORTA } from '@/lib/likida/cuadre/leyendas';
 import { resolverTenantEfectivo } from '@/lib/auth/tenant-efectivo';
 import { estadoPanel, liquidacionesDeViajes } from './estado';
-import { AreaChartSimple, Dona } from '../admin/charts';
-import { HBars } from '../admin/ui/graficas';
-import { GlobalFilter, resolverRango } from '../admin/ui/global-filter';
-import { KpiTile } from '../admin/ui/kit';
-import { KpiDegradado, ProximosVencimientos, TablaViajesRecientes } from './resumen-visual';
-import CifraGrande from './cifra-grande';
-import AvanceCierre from './avance-cierre';
+import {
+  HeroSaludo, KpiDegradado,
+  MotorFiscal, TituloSeccion,
+} from './resumen-visual';
+import { KpiPeriodo } from './kpi-periodo';
+import { MotorFiscalPeriodo } from './motor-fiscal-periodo';
+import { PanelPeriodo } from './panel-periodo';
 import { InicioOperacion } from './inicio-operacion';
 import { puedeVerArea } from '@/lib/auth/visibilidad';
 import { sufijoTenant } from './sufijo';
@@ -32,13 +38,6 @@ async function safe<T>(fn: () => Promise<T>): Promise<T | null> {
   try { return await fn(); } catch { return null; }
 }
 
-function TituloSeccion({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--muted)' }}>
-      {children}
-    </h2>
-  );
-}
 
 /**
  * Inicio / Resumen del panel de la FLOTA — el equivalente de admin/page.tsx
@@ -68,49 +67,82 @@ export async function InicioContenido({
    *  ningún cliente real, cuyo tenant existe por llave foránea. */
   tenantExiste?: boolean;
 }) {
-  // Por defecto 7 DÍAS, igual que /admin — decisión de Javier (3-ago-2026).
-  //
-  // ESTO REVIERTE UNA DECISIÓN ANTERIOR Y HAY QUE SABER QUÉ SE ACEPTA. El
-  // default era 30 porque este filtro no mueve una gráfica de actividad como
-  // en /admin: mueve los ACREDITABLES FISCALES. Con ventana de 7 días el
-  // panel puede abrir con "IVA acreditable $0.00 · Peaje $0.00" teniendo
-  // miles de pesos acumulados un poco más atrás, y un cero de encuadre se lee
-  // como un cero de la flota. El mes es además la unidad en la que un
-  // contralor piensa su corte.
-  //
-  // Si en el demo el panel abre en ceros con datos existiendo, es esto: se
-  // cambia el default de vuelta a '30' en esta línea — y el filtro se entera
-  // solo, que es justo lo que antes no pasaba (ver `resolverRango`).
-  const r = resolverRango(sp?.rango, '7');
-  const { rango, ventanaDias, ventana } = r;
   const sufijo = sufijoTenant(sp);
 
-  // El filtro de arriba mueve TODO, no solo la gráfica: con 'todo' se pasa
-  // `undefined` (sin corte) y con 7/30 la misma ventana a las tres consultas,
-  // para que los rótulos "del periodo" digan la verdad.
-  const [acred, kpis, anomalias, porDia, viajes, viajesActivos, totalViajes, valorAhorro, gastoConcepto, gastoRuta, operadoresDetalle, porFacturar] = await Promise.all([
-    safe<Acreditables>(() => getAcreditables(tenantId, ventana)),
-    safe<DashboardKpis>(() => getKpis(tenantId, ventana)),
+  // AUDITORÍA DE DISEÑO, 8-AGO-2026 — se quitó el filtro operativo 7d/30d/
+  // Todo de esta página entera (vivía en un solo `GlobalFilter` arriba de
+  // los KPIs). "Gasto por categoría" y "Liquidado por semana" volvieron como
+  // GRÁFICAS de las últimas 5 semanas ISO (fijas, sin selector — la cifra ya
+  // no vive en un KPI plano de arriba, así que no hace falta que el usuario
+  // elija ventana), y con ellas no queda ninguna sección que necesite un
+  // corte operativo elegible, así que:
+  //   - `getKpis` ya NO recibe ventana: sin corte, para que "por revisar" y
+  //     "comprobantes duplicados" (abajo, `alertas`) nunca escondan un
+  //     pendiente real solo por ser viejo — ocultar un item accionable
+  //     detrás de una ventana que ya no tiene control en pantalla sería un
+  //     bug nuevo, no una limpieza.
+  //   - `getAcreditables` (el diésel elegible del motor fiscal) ahora usa
+  //     el MISMO periodo que el resto de "Tu motor fiscal" (`periodoFiscal`,
+  //     el ejercicio fiscal en curso) en vez de una ventana operativa
+  //     huérfana — dos cifras en la misma tarjeta con dos "cuándo" distintos
+  //     se leen como un error de captura.
+  const hoy = new Date(ahoraMs()).toISOString().slice(0, 10);
+  const periodoFiscal = resolverPeriodo(undefined, hoy);
+  const diasEjercicio = periodoFiscal.desde
+    ? Math.floor((Date.parse(`${hoy}T00:00:00Z`) - Date.parse(`${periodoFiscal.desde}T00:00:00Z`)) / 86_400_000) + 1
+    : undefined;
+
+  const [
+    acred, kpis, anomalias, viajes,
+    gastoSemanalSeries, liquidadoSemanalSeries, seriesKpis,
+    cfgFiscal, gastosFiscales, gastosFiscalesSeries, viajesPorMes, topRutasSeries,
+  ] = await Promise.all([
+    safe<Acreditables>(() => getAcreditables(tenantId, diasEjercicio)),
+    safe<DashboardKpis>(() => getKpis(tenantId)),
     safe<Anomalia[]>(() => detectarAnomalias(tenantId)),
-    safe<Array<{ dia: string; valor: number }>>(() => getLiquidacionesPorDia(tenantId, ventanaDias)),
-    // Para la barra de avance de cierre: se traen los viajes con su fecha y
-    // estatus y el filtro por periodo se hace en el cliente, así cambiar de
-    // semana a mes no cuesta una consulta por clic. La tabla "Viajes
-    // recientes" de abajo reusa este MISMO arreglo (ya viene ordenado por
-    // más reciente) en vez de pedirlo de nuevo.
+    // `estadoPanel` y `PanelPeriodo` (Actividad) reusan este MISMO arreglo.
     safe<ViajeRow[]>(() => getViajes(tenantId)),
-    // Piezas del Resumen visual (dirección elegida 7-ago-2026): cada una
-    // envuelta en `safe` por separado, así que si una consulta nueva falla
-    // no tumba el resto de una pantalla que ya funcionaba.
-    safe<number | null>(() => contarViajes(tenantId, ['abierto', 'en_cuadre'])),
-    safe<number | null>(() => contarViajes(tenantId)),
-    safe<ValorAhorro>(() => getValorAhorro(tenantId)),
-    safe<GastoPorConcepto[]>(() => getGastoPorConcepto(tenantId)),
-    safe<GastoPorRuta[]>(() => getGastoPorRuta(tenantId)),
-    safe<OperadorDetalle[]>(() => getOperadoresDetalle(tenantId)),
-    safe<TicketPorFacturar[]>(() => getPorFacturar(tenantId)),
+    // Semanal/mensual/histórico — mismo selector único que las tarjetas de
+    // KPI y el resto de `PanelPeriodo` (dirección del 8-ago-2026: antes
+    // esta gráfica vivía fija a 5 semanas, sin selector).
+    safe<GastoSemanalSeries>(() => getGastoPorSemanaSeries(tenantId, hoy)),
+    safe<LiquidadoSemanalSeries>(() => getLiquidadoPorSemanaSeries(tenantId, hoy)),
+    // Semanal/mensual/histórico para las flechas ‹ › de las tarjetas de KPI
+    // (dirección del 8-ago-2026) — cada tarjeta cicla su PROPIA
+    // granularidad, independiente de las demás. `PanelPeriodo` también lo
+    // reusa para la dona "Viajes" (liquidados/pendientes DEL periodo).
+    safe<SeriesKpiCards>(() => getSeriesKpiCards(tenantId, hoy)),
+    safe<CuadraConfig>(() => getConfig(tenantId)),
+    safe<GastoFiscal[]>(() => getGastosFiscales(tenantId, periodoFiscal)),
+    // "En riesgo/perdido" y "Recuperable pidiendo factura" también ciclan
+    // semanal/mensual/histórico ahora (`MotorFiscalPeriodo`) — serie
+    // aparte de `gastosFiscales` (que sigue fija al ejercicio, para el
+    // top-causas de "Tu motor fiscal" más abajo).
+    safe<GastosFiscalesSeries>(() => getGastosFiscalesSeries(tenantId, hoy)),
+    // `Actividad` pestaña Histórico — agregado real por mes, SIN el tope de
+    // 100 filas de `viajes` (ver nota en `getViajesPorMes`): un tope ahí se
+    // leería como "todo el histórico" en una flota que ya lo superó.
+    safe<Array<{ dia: string; valor: number }>>(() => getViajesPorMes(tenantId)),
+    safe<TopRutasSeries>(() => getTopRutasPorGastoSeries(tenantId, 5, hoy)),
   ]);
-  const etiquetaVentana = rango === 'todo' ? 'histórico' : `últimos ${ventanaDias} días`;
+  const resumenPerdidas: ResumenPerdidas | null = cfgFiscal && gastosFiscales
+    ? resumirPerdidas(gastosFiscales, opcionesDe(cfgFiscal))
+    : null;
+  // Las 3 vistas de "En riesgo/Recuperable" (`MotorFiscalPeriodo`, cliente) —
+  // `resumirPerdidas` es pura, así que se calcula UNA vez por modo aquí en
+  // el servidor y se manda ya resuelta: `fiscal.ts` importa `supabaseAdmin`
+  // a nivel de módulo, así que un Client Component no puede importar esa
+  // función en tiempo de ejecución sin arrastrar el service-role al bundle
+  // del navegador (mismo caso que `pctCambio` se movió de `analytics.ts` a
+  // `formato.ts` el 8-ago).
+  const resumenPerdidasSeries: Record<'semanal' | 'mensual' | 'historico', ResumenPerdidas> | null =
+    cfgFiscal && gastosFiscalesSeries
+      ? {
+        semanal: resumirPerdidas(gastosFiscalesSeries.semanal, opcionesDe(cfgFiscal)),
+        mensual: resumirPerdidas(gastosFiscalesSeries.mensual, opcionesDe(cfgFiscal)),
+        historico: resumirPerdidas(gastosFiscalesSeries.historico, opcionesDe(cfgFiscal)),
+      }
+      : null;
 
   // `liquidaciones` ya no se carga en esta página (se fue a /dashboard/cuadre),
   // así que el estado se decide con lo que SÍ vive aquí. AUDITORÍA 10, ALTO:
@@ -118,7 +150,7 @@ export async function InicioContenido({
   // SIEMPRE tiene 7 o 30 elementos, uno por día, así que `.length` nunca daba
   // 0 y la rama 'vacio' de `estadoPanel` era inalcanzable ("0% tasa de
   // cuadre" se pintaba siempre). `liquidacionesDeViajes` filtra los VIAJES
-  // reales (ya cargados abajo para `AvanceCierre`) a los que de verdad están
+  // reales (ya cargados arriba para "Actividad") a los que de verdad están
   // `liquidado` — un arreglo que sí puede quedar vacío.
   const estado = estadoPanel({ acreditables: acred, kpis, liquidaciones: liquidacionesDeViajes(viajes), anomalias });
 
@@ -145,46 +177,26 @@ export async function InicioContenido({
     // KPIs y su borde redondeado no aparece nunca — se lee como interfaz rota.
     <main>
       <div className="glass-panel overflow-hidden">
-        {/* Encabezado FIJO: el saludo y la cifra grande no se van al hacer
-            scroll — son el marco de referencia de todo lo de abajo. */}
-        <div className="px-5 pt-3 pb-3 flex items-start justify-between gap-6 shrink-0">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl tracking-tight truncate" style={{ fontFamily: 'var(--font-display), var(--font-sans)', fontWeight: 600 }}>
-              {saludo()}, {nombre ?? 'flota'}
-            </h1>
-            {/* Ya viene capitalizada de `fechaLarga()` (solo el primer
-                carácter) — `capitalize` de Tailwind capitalizaba TODAS las
-                palabras, incluidos los dos "de" ("Martes, 4 De Agosto De
-                2026"). Auditoría 10, BAJO. */}
-            <p className="text-[13px] mt-0.5" style={{ color: 'var(--muted)' }}>{fechaLarga()}</p>
-            {tenantNombre && (
-              <span className="inline-block mt-1 text-[11px] px-2 py-0.5 rounded-full font-medium" style={{ color: 'var(--accent-fg)', background: 'var(--accent)' }}>
-                viendo como superadmin · {tenantNombre}
-              </span>
-            )}
-            {/* La barra vive DENTRO de la columna del saludo, no debajo del
-                bloque: así queda al nivel de la cifra grande y se corta antes
-                de ella en vez de pasarle por abajo y estirar el encabezado. */}
-            <AvanceCierre viajes={viajes ?? []} ahoraMs={ahoraMs()} />
-          </div>
-          {/* `CifraGrande`, no el `ContadorRetro` de tiles negros: ese reloj
-              Solari es el guiño de la consola INTERNA y ahí se queda. Y no
-              repite el "Monto comprobado" del grid de abajo —era la misma
-              cifra dos veces en pantalla— sino lo que el motor SEÑALÓ, que es
-              lo único aquí que solo Likida pone sobre la mesa. */}
-          <CifraGrande
-            valor={kpis ? kpis.diferenciaDetectada : undefined}
-            formato="mxn"
-            etiqueta="Señalado por el motor"
-            nota={`Sobre política y duplicados · ${etiquetaVentana}`}
-          />
-        </div>
+        <HeroSaludo saludo={saludo()} nombre={nombre ?? 'flota'} tagline="Todo listo para que sigas moviendo tu flota" />
 
+        {/* "Señalado por el motor" no está en la dirección visual del 7-ago
+            — se retiró de aquí junto con la fila que los traía (el
+            Calendario que daba la fecha también se quitó, 8-ago). El único
+            sobreviviente de esa fila es la insignia de previsualización del
+            superadmin: sin ella, un superadmin viendo "como Dueño" no tiene
+            forma de saber que no es su propia cuenta. */}
+        {tenantNombre && (
+          <div className="px-5 pt-2">
+            <span className="inline-block text-[11px] px-2 py-0.5 rounded-full font-medium" style={{ color: 'var(--accent-fg)', background: 'var(--accent)' }}>
+              viendo como superadmin · {tenantNombre}
+            </span>
+          </div>
+        )}
 
         {/* ANTES QUE NINGUNA CIFRA. Lo de abajo son ceros de una flota que no
             existe, y esa frase tiene que llegar antes que los ceros. */}
         {!tenantExiste && (
-          <div className="px-5 pb-3.5"><AvisoSinFlota tenantId={tenantId} /></div>
+          <div className="px-5 pt-2 pb-3.5"><AvisoSinFlota tenantId={tenantId} /></div>
         )}
 
         {alertas.length > 0 && (
@@ -211,28 +223,17 @@ export async function InicioContenido({
               </p>
             </div>
           </div>
-        ) : estado === 'vacio' ? (
-          <div className="px-5 pb-5 pt-1">
-            <div className="card p-10 text-center">
-              {/* "Aún no hay liquidaciones" es una afirmación sobre el negocio
-                  de una flota. Sin flota no se puede hacer: no es que el
-                  cliente no haya cerrado su primer viaje, es que no hay
-                  cliente. Misma regla que `estadoPanel` aplica para una
-                  consulta caída, un escalón antes. */}
-              <p className="text-lg font-semibold tracking-tight">
-                {tenantExiste ? 'Aún no hay liquidaciones' : 'No hay flota, así que no hay nada que liquidar'}
-              </p>
-              <p className="mt-2 text-sm" style={{ color: 'var(--muted)' }}>
-                {tenantExiste
-                  ? 'En cuanto un operador cierre su primer viaje por WhatsApp, aquí aparecen los acreditables y el detalle.'
-                  : 'Esta pantalla es la que verá el dueño de la flota. Con una flota dada de alta y su primer viaje cerrado por WhatsApp, aquí aparecen los acreditables y el detalle.'}
-              </p>
-              <Link href="/demo" className="inline-block mt-5 px-5 py-2.5 rounded-xl text-sm font-medium"
-                style={{ background: 'var(--accent)', color: 'var(--accent-fg)' }}>Ver el demo</Link>
-            </div>
-          </div>
         ) : (
           <>
+            {/* `vacio` y `datos` son el MISMO layout — `estadoPanel` ya
+                garantiza que todo cargó bien en ambos casos (ver estado.ts),
+                así que "vacío" no es una pantalla aparte: son las mismas
+                piezas con sus propios ceros honestos (`Dona` ya trae su
+                fallback de "aún no hay X" cuando el arreglo viene vacío).
+                Antes había una tarjeta centrada distinta con un botón "Ver
+                el demo" — dos pantallas para un panel que solo tiene una
+                flota real dada de alta se leía como que el producto no
+                estaba terminado. */}
             {estado === 'parcial' && (
               <div className="px-6 pb-4">
                 <div className="card p-4 flex items-start gap-3" style={{ borderColor: 'var(--warn)' }}>
@@ -247,178 +248,86 @@ export async function InicioContenido({
               </div>
             )}
 
-            {/* ── KPIs de la flota, en degradado (dirección de diseño del 7-ago-2026) ── */}
+            {/* ── KPIs de la flota, en degradado (dirección de diseño del 7-ago-2026,
+                revisada el 8-ago) ── "Total viajes" y "Liquidado" salieron de
+                aquí: sus números ya se ven como GRÁFICA más abajo (la dona
+                "Viajes" y "Liquidado por semana") — un KPI plano al lado de
+                la misma cifra en gráfica es la cifra dos veces, no
+                información nueva. "Ahorro generado" se queda (pedido
+                explícito): mismo número que "Recuperable pidiendo factura"
+                en Motor fiscal, pero fijo al ejercicio fiscal completo, no
+                al ciclo semanal/mensual/histórico de esa tarjeta — la
+                lectura "de todo el año" vale la pena tenerla arriba aunque
+                se repita el dato. La dirección buena/mala no es la misma
+                para las tres: gastar más no es bueno aunque el número
+                suba (al revés de "más ahorro"). */}
             {kpis && (
-              <div className="px-5 pb-4 border-t pt-4" style={{ borderColor: 'var(--line)' }}>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-                  <KpiDegradado icono={<Truck width={17} height={17} strokeWidth={1.75} />}
-                    etiqueta="Viajes activos" valor={viajesActivos ?? 0} formato="entero" />
-                  <KpiDegradado icono={<Wallet width={17} height={17} strokeWidth={1.75} />}
-                    etiqueta={`Liquidado — ${etiquetaVentana}`} valor={kpis.montoComprobado} formato="mxn" />
-                  <KpiDegradado icono={<Percent width={17} height={17} strokeWidth={1.75} />}
-                    etiqueta="Tasa de cuadre" valor={kpis.tasaCuadre} formato="porcentaje" />
-                  {valorAhorro && (
+              <div className="px-5 pb-4 pt-2">
+                {seriesKpis ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <KpiPeriodo icono={<Wallet width={17} height={17} strokeWidth={1.75} />}
+                      nombre="Gasto total" campo="gastoTotal" formato="mxn" subeEsBueno={false} series={seriesKpis} />
+                    <KpiPeriodo icono={<Calculator width={17} height={17} strokeWidth={1.75} />}
+                      nombre="Costo por viaje" campo="costoPorViaje" formato="mxn" subeEsBueno={false} series={seriesKpis} />
                     <KpiDegradado icono={<PiggyBank width={17} height={17} strokeWidth={1.75} />}
-                      etiqueta="Horas ahorradas (estimado)" valor={valorAhorro.horasAhorradasEstimadas} formato="numero" />
-                  )}
-                </div>
+                      etiqueta={`Ahorro generado — ${periodoFiscal.etiqueta}`}
+                      valor={resumenPerdidas?.montoRecuperable ?? 0} formato="mxn" />
+                  </div>
+                ) : (
+                  <p className="text-sm" style={{ color: 'var(--muted)' }}>No se pudo cargar el comparativo de KPIs.</p>
+                )}
               </div>
             )}
 
-            {/* ── Viajes / Gasto por categoría / Próximos vencimientos ── */}
-            <div className="px-5 pb-4 border-t pt-4 grid grid-cols-1 md:grid-cols-3 gap-4" style={{ borderColor: 'var(--line)' }}>
-              <div>
-                <TituloSeccion>Viajes</TituloSeccion>
-                <div className="mt-2.5">
-                  {kpis && totalViajes !== null && totalViajes !== undefined && totalViajes > 0 ? (
-                    <Dona segmentos={[
-                      { etiqueta: 'Liquidados', valor: kpis.viajesLiquidados },
-                      { etiqueta: 'Pendientes', valor: Math.max(0, totalViajes - kpis.viajesLiquidados) },
-                    ]} />
-                  ) : (
-                    <p className="text-sm" style={{ color: 'var(--muted)' }}>Aún no hay viajes registrados.</p>
-                  )}
-                </div>
-              </div>
-              <div>
-                <TituloSeccion>Gasto por categoría</TituloSeccion>
-                <div className="mt-2.5">
-                  {gastoConcepto && gastoConcepto.length > 0 ? (
-                    <Dona segmentos={gastoConcepto.map((g) => ({ etiqueta: g.concepto, valor: g.total }))} />
-                  ) : (
-                    <p className="text-sm" style={{ color: 'var(--muted)' }}>Aún no hay gastos capturados.</p>
-                  )}
-                </div>
-              </div>
-              <div>
-                <TituloSeccion>Próximos vencimientos</TituloSeccion>
-                <div className="mt-2.5">
-                  {porFacturar ? (
-                    <ProximosVencimientos items={porFacturar.map((t) => ({
-                      nombre: t.comercio?.nombre ?? t.concepto,
-                      monto: t.monto,
-                      caducidad: t.caducidad,
-                    }))} />
-                  ) : (
-                    <p className="text-sm" style={{ color: 'var(--muted)' }}>No se pudo cargar esta sección.</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* ── Liquidaciones cerradas por día (mismo dato de siempre, toggle 7d/30d/Todo) ── */}
+            {/* ── Motor fiscal — el diferenciador real, no un TMS genérico ──
+                Subido justo debajo de los KPIs (dirección del 8-ago-2026):
+                antes vivía hasta el fondo de la página. "En riesgo/perdido"
+                y "Recuperable pidiendo factura" van ALINEADAS bajo este
+                mismo título — antes eran una sección aparte, sin
+                encabezado propio, flotando entre los KPI y "Tu motor
+                fiscal"; ahora todo lo fiscal vive junto, con un solo
+                título. */}
             <div className="px-5 pb-4 border-t pt-4" style={{ borderColor: 'var(--line)' }}>
-              <div className="flex items-center justify-between gap-4 mb-3">
-                <TituloSeccion>
-                  Liquidaciones cerradas — {rango === 'todo' ? 'histórico' : `últimos ${ventanaDias} días`}
-                </TituloSeccion>
-                <GlobalFilter base="/dashboard" r={r} extra={sufijoTenantParams(sp)} />
+              <TituloSeccion>Tu motor fiscal — {periodoFiscal.etiqueta}</TituloSeccion>
+              {/* Las 3 tarjetas en la MISMA línea, ocupando todo el ancho
+                  (pedido explícito, 8-ago-2026: "que ocupen todo el ancho
+                  de la pantalla", anchos desiguales están bien) y de la
+                  MISMA altura (`h-full` en `KpiDegradado` — sin eso, la de
+                  2 líneas quedaba más baja que las de 3). El diésel
+                  elegible va en LITROS, no en pesos — el estímulo es cuota
+                  DOF (semanal) × litros, y esa cuota no vive aquí.
+                  `docs/conocimiento/guion-demo.md` + `guion_demo.test.ts`
+                  atan el guion de venta a esto: si esto cambia, el guion
+                  tiene que cambiar con ello. */}
+              <div className="mt-3 flex flex-wrap gap-2.5 items-stretch">
+                <MotorFiscalPeriodo series={resumenPerdidasSeries} />
+                {acred && (
+                  <div className="flex-1 min-w-[200px]">
+                    <KpiDegradado icono={<Fuel width={17} height={17} strokeWidth={1.75} />}
+                      etiqueta="Diésel elegible para el estímulo" valor={acred.litrosDiesel} formato="litros" />
+                  </div>
+                )}
               </div>
-              {rango === 'todo' ? (
-                <div className="flex flex-col items-center justify-center" style={{ height: 160 }}>
-                  <div className="text-4xl font-semibold tracking-tight tabular">{kpis?.viajesLiquidados ?? 0}</div>
-                  <div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>Liquidaciones cerradas — total histórico</div>
-                </div>
-              ) : porDia === null ? (
-                <div className="flex items-center text-sm" style={{ color: 'var(--muted)', height: 160 }}>
-                  No se pudo cargar esta gráfica.
-                </div>
-              ) : porDia.some((d) => d.valor > 0) ? (
-                <AreaChartSimple datos={porDia} etiquetaValor={(v) => String(v)} />
-              ) : (
-                <div className="flex items-center text-sm" style={{ color: 'var(--muted)', height: 160 }}>
-                  Sin cierres en esta ventana — prueba con 30d o el histórico.
-                </div>
-              )}
-            </div>
-
-            {/* ── Top operadores / Top rutas por gasto ── */}
-            <div className="px-5 pb-4 border-t pt-4 grid grid-cols-1 md:grid-cols-2 gap-4" style={{ borderColor: 'var(--line)' }}>
-              <div>
-                <TituloSeccion>Top operadores por gasto</TituloSeccion>
-                <div className="mt-3">
-                  {operadoresDetalle && operadoresDetalle.filter((o) => o.comprobadoTotal > 0).length > 0 ? (
-                    <HBars formato="mxn" datos={[...operadoresDetalle]
-                      .filter((o) => o.comprobadoTotal > 0)
-                      .sort((a, b) => b.comprobadoTotal - a.comprobadoTotal)
-                      .slice(0, 5)
-                      .map((o) => ({ etiqueta: o.nombre, valor: o.comprobadoTotal }))} />
-                  ) : (
-                    <p className="text-sm" style={{ color: 'var(--muted)' }}>Aún no hay gasto comprobado por operador.</p>
-                  )}
-                </div>
-              </div>
-              <div>
-                <TituloSeccion>Top rutas por gasto</TituloSeccion>
-                <div className="mt-3">
-                  {gastoRuta && gastoRuta.length > 0 ? (
-                    <HBars formato="mxn" datos={gastoRuta.map((r) => ({ etiqueta: r.ruta, valor: r.total }))} />
-                  ) : (
-                    <p className="text-sm" style={{ color: 'var(--muted)' }}>Aún no hay gasto asociado a una ruta.</p>
-                  )}
-                </div>
+              <div className="mt-3">
+                <MotorFiscal resumen={resumenPerdidas} />
               </div>
             </div>
 
-            {/* ── Viajes recientes ── */}
-            <div className="px-5 pb-4 border-t pt-4" style={{ borderColor: 'var(--line)' }}>
-              <TituloSeccion>Viajes recientes</TituloSeccion>
-              <div className="mt-2.5 overflow-x-auto">
-                <TablaViajesRecientes viajes={(viajes ?? []).slice(0, 6)} />
-              </div>
+            {/* ── Viajes / Actividad / Gasto por categoría / Liquidado /
+                Top rutas — UN SOLO selector Semanal/Mensual/Histórico que
+                mueve las 5 juntas (pedido explícito, 8-ago-2026).
+                "Próximos vencimientos" se quitó (pedido explícito, mismo
+                día). */}
+            <div className="border-t pt-4" style={{ borderColor: 'var(--line)' }}>
+              <PanelPeriodo
+                viajes={viajes ?? []}
+                porMes={viajesPorMes ?? []}
+                seriesKpis={seriesKpis}
+                gastoSemanalSeries={gastoSemanalSeries}
+                liquidadoSemanalSeries={liquidadoSemanalSeries}
+                topRutasSeries={topRutasSeries}
+              />
             </div>
-
-            {/* ── Estímulos acreditables ── */}
-            <section className="p-4 border-t" style={{ borderColor: 'var(--line)' }}>
-              {/* AUDITORÍA 10, MEDIO — el `GlobalFilter` de arriba SÍ mueve
-                  esta consulta (recibe `ventana`), pero el título no lo
-                  decía: con el default de 7 días, "IVA acreditable $12,480"
-                  se leía como el total de la flota, no como el corte de la
-                  semana. Mismo periodo que ya lleva la gráfica de arriba
-                  ("Liquidaciones cerradas — últimos N días"). */}
-              <TituloSeccion>Estímulos acreditables — {etiquetaVentana}</TituloSeccion>
-              {acred === null ? (
-                <div className="card p-4 mt-3 text-sm" style={{ color: 'var(--muted)' }}>No se pudo cargar esta sección.</div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 mt-2.5">
-                  <KpiTile icono={<Fuel width={15} height={15} strokeWidth={1.75} style={{ color: 'var(--marca)' }} />}
-                    etiqueta="Diésel elegible para el estímulo" valor={acred.litrosDiesel} formato="litros" destacar
-                    nota="LIF 2026, Art. 20-A — su contador aplica la cuota semanal vigente" />
-                  <KpiTile icono={<Receipt width={15} height={15} strokeWidth={1.75} style={{ color: 'var(--marca)' }} />}
-                    etiqueta="IVA acreditable" valor={acred.iva} formato="mxn"
-                    nota="LIVA, Art. 5 — CFDI con IVA desglosado" />
-                  <KpiTile icono={<RouteIcon width={15} height={15} strokeWidth={1.75} style={{ color: 'var(--marca)' }} />}
-                    etiqueta="Peaje (50%)" valor={acred.peaje} formato="mxn"
-                    nota="Estímulo de autopistas · LIF 2026, Art. 20-A" />
-                </div>
-              )}
-            </section>
-
-            {/* ── Liquidaciones ── */}
-            <section className="p-4 border-t" style={{ borderColor: 'var(--line)' }}>
-              <div className="flex items-center justify-between gap-4">
-                {/* Mismo hallazgo que "Estímulos acreditables": ventaneada
-                    por `ventana` y sin decirlo. */}
-                <TituloSeccion>Liquidaciones — {etiquetaVentana}</TituloSeccion>
-                <Link href={`/dashboard/cuadre${sufijo}`} className="text-xs font-medium px-2.5 py-1.5 rounded-full hairline hover:opacity-70 transition-opacity shrink-0">
-                  Ver detalle →
-                </Link>
-              </div>
-              {kpis === null ? (
-                <div className="card p-4 mt-3 text-sm" style={{ color: 'var(--muted)' }}>No se pudo cargar esta sección.</div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mt-2.5">
-                  <KpiTile icono={<Truck width={15} height={15} strokeWidth={1.75} style={{ color: 'var(--marca)' }} />}
-                    etiqueta="Viajes liquidados" valor={kpis.viajesLiquidados} formato="entero" />
-                  <KpiTile icono={<Wallet width={15} height={15} strokeWidth={1.75} style={{ color: 'var(--marca)' }} />}
-                    etiqueta="Monto comprobado" valor={kpis.montoComprobado} formato="mxn" />
-                  <KpiTile icono={<AlertTriangle width={15} height={15} strokeWidth={1.75} style={{ color: 'var(--marca)' }} />}
-                    etiqueta="Con diferencia" valor={kpis.conDiferencias + kpis.porRevisar} formato="entero" />
-                  <KpiTile icono={<Percent width={15} height={15} strokeWidth={1.75} style={{ color: 'var(--marca)' }} />}
-                    etiqueta="Tasa de cuadre" valor={kpis.tasaCuadre} formato="porcentaje" />
-                </div>
-              )}
-            </section>
           </>
         )}
 
@@ -427,18 +336,6 @@ export async function InicioContenido({
     </main>
   );
 
-}
-
-/** AUDITORÍA 16, MEDIO: el filtro 7d/30d perdía el ?rol= de la previsualización
- *  "ver como encargado" y la volteaba al panel del dinero. Se arrastran
- *  tenant/vista/rol juntos — el mismo criterio que sufijoTenant. */
-function sufijoTenantParams(sp: { tenant?: string; vista?: string; rol?: string } | undefined): Record<string, string> | undefined {
-  if (!sp) return undefined;
-  const out: Record<string, string> = {};
-  if (sp.tenant) out.tenant = sp.tenant;
-  else if (sp.vista) out.vista = sp.vista;
-  if (sp.rol) out.rol = sp.rol;
-  return Object.keys(out).length ? out : undefined;
 }
 
 /** La página real: resuelve quién eres y a qué flota apuntas, y pinta el

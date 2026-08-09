@@ -46,6 +46,139 @@ function corteVentana(ventanaDias?: number, hoy: string = new Date().toISOString
   return d.toISOString();
 }
 
+export interface ComparativoPeriodo {
+  /** Límites del periodo, MX (`America/Mexico_City`) — AAAA-MM-DD, ambos
+   *  incluidos. Vienen en el resultado (no solo el índice de la serie) para
+   *  que la tarjeta pueda enseñar QUÉ fechas está mostrando, no solo "hace
+   *  N periodos". */
+  desde: string;
+  hasta: string;
+  gastoTotal: number;
+  totalViajes: number;
+  /** `null` sin viajes en el periodo — dividir entre cero daría Infinity, y
+   *  "$0/viaje" se leería como que salió gratis, no como que no hay con qué
+   *  medir. */
+  costoPorViaje: number | null;
+  liquidado: number;
+  /** De `totalViajes`, cuántos ya están `estatus = 'liquidado'` — para la
+   *  dona "Viajes" del Resumen (liquidados vs pendientes DEL periodo, no
+   *  del histórico completo de la flota). */
+  viajesLiquidados: number;
+}
+
+/**
+ * Serie de `pasos` periodos consecutivos de `ventanaDias` días cada uno,
+ * SIN traslape, terminando en `hoy` — índice 0 es el más reciente (el que
+ * ya se enseñaba como "actual"), índice `pasos-1` el más viejo. Reemplaza a
+ * `getTendenciaKpis`/`comparativoEnRango` (un solo par actual/anterior):
+ * las flechas ‹ › de cada tarjeta de KPI (dirección del 8-ago-2026, una por
+ * tarjeta, independientes entre sí) necesitan poder seguir retrocediendo
+ * más de un periodo, no solo comparar contra el inmediato anterior.
+ *
+ * UNA SOLA CONSULTA POR TABLA, no `pasos` consultas — se trae el rango
+ * completo (`desdeGlobal` a `hoy`) una vez y se bucketea en memoria, mismo
+ * criterio que `viajes` en `page.tsx` (una carga, varias tarjetas). `gasto`
+ * y `viaje.fecha_inicio` son columnas `date` (comparación de string, sin
+ * riesgo de zona horaria). `liquidacion.created_at` SÍ es `timestamptz`,
+ * así que su bucket usa el día LOCAL (mismo patrón que
+ * `getLiquidacionesPorDia`) — un filtro en la base solo por UTC habría
+ * repetido el bug ya pagado ahí (cierres de tarde cayendo en el día
+ * siguiente).
+ */
+export async function getSerieComparativa(
+  tenantId: string,
+  ventanaDias: number,
+  pasos: number,
+  hoy: string = new Date().toLocaleDateString('en-CA', { timeZone: TZ_MX }),
+): Promise<ComparativoPeriodo[]> {
+  const limites = Array.from({ length: pasos }, (_, i) => {
+    const hastaD = new Date(`${hoy}T00:00:00Z`);
+    hastaD.setUTCDate(hastaD.getUTCDate() - i * ventanaDias);
+    const hasta = hastaD.toISOString().slice(0, 10);
+    const desdeD = new Date(hastaD);
+    desdeD.setUTCDate(desdeD.getUTCDate() - (ventanaDias - 1));
+    return { desde: desdeD.toISOString().slice(0, 10), hasta };
+  });
+  const desdeGlobal = limites[limites.length - 1].desde;
+
+  const admin = supabaseAdmin();
+  const [gastos, viajes, liquidaciones] = await Promise.all([
+    traerTodo<{ fecha: unknown; monto: unknown }>(
+      (desde, hasta) => admin.from('gasto').select('fecha, monto')
+        .eq('tenant_id', tenantId).gte('fecha', desdeGlobal).lte('fecha', hoy)
+        .order('id').range(desde, hasta),
+      'getSerieComparativa.gasto',
+    ),
+    traerTodo<{ fecha_inicio: unknown; estatus: unknown }>(
+      (desde, hasta) => admin.from('viaje').select('fecha_inicio, estatus')
+        .eq('tenant_id', tenantId).gte('fecha_inicio', desdeGlobal).lte('fecha_inicio', hoy)
+        .order('id').range(desde, hasta),
+      'getSerieComparativa.viaje',
+    ),
+    // Cota inferior generosa (medianoche UTC del día MX más viejo) — un
+    // poco de sobra hacia el pasado no rompe nada porque el bucket real de
+    // abajo filtra por día LOCAL; lo que sí rompería es una cota que
+    // recorte por el lado equivocado.
+    traerTodo<{ created_at: unknown; total_comprobado: unknown }>(
+      (desde, hasta) => admin.from('liquidacion').select('created_at, total_comprobado')
+        .eq('tenant_id', tenantId).gte('created_at', `${desdeGlobal}T00:00:00Z`)
+        .order('id').range(desde, hasta),
+      'getSerieComparativa.liquidacion',
+    ),
+  ]);
+
+  const diaLocalMx = (iso: string): string => new Date(iso).toLocaleDateString('en-CA', { timeZone: TZ_MX });
+  const enRango = (dia: string, desde: string, hasta: string) => dia >= desde && dia <= hasta;
+
+  return limites.map(({ desde, hasta }) => {
+    const gastoTotal = round2(
+      gastos.filter((g) => enRango(g.fecha as string, desde, hasta))
+        .reduce((s, g) => s + Number(g.monto ?? 0), 0),
+    );
+    const viajesDelPeriodo = viajes.filter((v) => v.fecha_inicio && enRango(v.fecha_inicio as string, desde, hasta));
+    const n = viajesDelPeriodo.length;
+    const viajesLiquidados = viajesDelPeriodo.filter((v) => v.estatus === 'liquidado').length;
+    const liquidado = round2(
+      liquidaciones.filter((l) => enRango(diaLocalMx(l.created_at as string), desde, hasta))
+        .reduce((s, l) => s + Number(l.total_comprobado ?? 0), 0),
+    );
+    return {
+      desde, hasta, gastoTotal, totalViajes: n, costoPorViaje: n === 0 ? null : round2(gastoTotal / n),
+      liquidado, viajesLiquidados,
+    };
+  });
+}
+
+export interface SeriesKpiCards {
+  /** [actual, anterior] — 7 días vs los 7 previos. */
+  semanal: ComparativoPeriodo[];
+  /** [actual, anterior] — 30 días vs los 30 previos. */
+  mensual: ComparativoPeriodo[];
+  /** [total] — un solo bucket, TODO el histórico. Sin "anterior": no hay
+   *  tendencia que enseñar contra un periodo que no existe. */
+  historico: ComparativoPeriodo[];
+}
+
+/**
+ * Las 3 vistas que cada tarjeta de KPI cicla con sus flechas ‹ › (dirección
+ * del 8-ago-2026: reemplaza al filtro único 7d/30d/Todo que vivía arriba de
+ * las 4 tarjetas — ahora cada una cambia de granularidad por su cuenta).
+ * `histórico` reusa el mismo truco que ya usaba `getTendenciaKpis`: una
+ * ventana de ~10 años (de sobra para una flota que arrancó en 2026) hace de
+ * "todo el histórico" sin necesitar una consulta sin cota.
+ */
+export async function getSeriesKpiCards(
+  tenantId: string,
+  hoy: string = new Date().toLocaleDateString('en-CA', { timeZone: TZ_MX }),
+): Promise<SeriesKpiCards> {
+  const [semanal, mensual, historico] = await Promise.all([
+    getSerieComparativa(tenantId, 7, 2, hoy),
+    getSerieComparativa(tenantId, 30, 2, hoy),
+    getSerieComparativa(tenantId, 3650, 1, hoy),
+  ]);
+  return { semanal, mensual, historico };
+}
+
 export async function getKpis(tenantId: string, ventanaDias?: number): Promise<DashboardKpis> {
   const corte = corteVentana(ventanaDias);
   const rows = await traerTodo<{ total_comprobado: unknown; diferencia: unknown; estatus: unknown; diferencias: unknown }>(
@@ -197,6 +330,201 @@ export async function getLiquidacionesPorDia(
     const dia = cortes(ventanaDias - 1 - i);
     return { dia, valor: porDiaMap.get(dia) ?? 0 };
   });
+}
+
+/** Lunes-a-domingo ISO de una fecha simple (columna `date`, sin hora) →
+ *  "Sem NN" para el eje X — el algoritmo estándar: el jueves de la semana
+ *  decide a qué año pertenece (evita que la semana 1 de enero se lea como
+ *  la última del año anterior en fechas de fin de diciembre). */
+function semanaIso(fechaIso: string): { anio: number; semana: number } {
+  const d = new Date(`${fechaIso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const inicioAnio = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const semana = Math.ceil(((d.getTime() - inicioAnio.getTime()) / 86_400_000 + 1) / 7);
+  return { anio: d.getUTCFullYear(), semana };
+}
+
+/** Últimas `semanas` semanas ISO completas (lunes-domingo), terminando en la
+ *  semana de `hoy` — mismas etiquetas para cualquier serie semanal de esta
+ *  página (`getGastoPorSemana`/`getLiquidadoPorSemana`), para que dos
+ *  gráficas contiguas hablen del mismo eje X. */
+function ultimasSemanas(semanas: number, hoy: string): Array<{ anio: number; semana: number; etiqueta: string }> {
+  const out: Array<{ anio: number; semana: number; etiqueta: string }> = [];
+  const cursor = new Date(`${hoy}T00:00:00Z`);
+  for (let i = semanas - 1; i >= 0; i--) {
+    const d = new Date(cursor);
+    d.setUTCDate(d.getUTCDate() - i * 7);
+    const { anio, semana } = semanaIso(d.toISOString().slice(0, 10));
+    out.push({ anio, semana, etiqueta: `${anio}-S${String(semana).padStart(2, '0')}` });
+  }
+  return out;
+}
+
+export interface GastoSemanalPorCategoria {
+  categorias: string[];
+  series: Array<{ nombre: string; valores: number[] }>;
+}
+
+/**
+ * Gasto de las últimas `semanas` semanas ISO, agrupado por concepto — hasta
+ * las 3 categorías con MÁS gasto total en la ventana, no fijas a mano: el
+ * dominio real de `gasto.concepto` incluye 'viaticos' (heredado, el OCR ya
+ * no lo emite — mig. 0025) junto a 'diesel'/'caseta'/etc., así que fijar 3
+ * categorías de antemano podría enseñar una en ceros mientras una real con
+ * gasto de verdad se queda fuera. Reusa `StackedBars` (`admin/ui/graficas`),
+ * no un componente nuevo — mismo lenguaje monocromo por opacidad del resto
+ * del producto.
+ */
+export async function getGastoPorSemana(
+  tenantId: string,
+  semanas: number = 5,
+  hoy: string = new Date().toLocaleDateString('en-CA', { timeZone: TZ_MX }),
+): Promise<GastoSemanalPorCategoria> {
+  const bloques = ultimasSemanas(semanas, hoy);
+  const desdeGlobal = new Date(`${hoy}T00:00:00Z`);
+  desdeGlobal.setUTCDate(desdeGlobal.getUTCDate() - (semanas * 7 - 1));
+
+  const filas = await traerTodo<{ fecha: unknown; concepto: unknown; monto: unknown }>(
+    (desde, hasta) => supabaseAdmin().from('gasto').select('fecha, concepto, monto')
+      .eq('tenant_id', tenantId).gte('fecha', desdeGlobal.toISOString().slice(0, 10)).lte('fecha', hoy)
+      .order('id').range(desde, hasta),
+    'getGastoPorSemana',
+  );
+
+  const totalPorConcepto = new Map<string, number>();
+  const porSemanaConcepto = new Map<string, number>(); // clave: `${anio}-${semana}-${concepto}`
+  for (const f of filas) {
+    const { anio, semana } = semanaIso(f.fecha as string);
+    const concepto = (f.concepto as string) ?? 'otro';
+    const monto = Number(f.monto ?? 0);
+    totalPorConcepto.set(concepto, (totalPorConcepto.get(concepto) ?? 0) + monto);
+    const k = `${anio}-${semana}-${concepto}`;
+    porSemanaConcepto.set(k, (porSemanaConcepto.get(k) ?? 0) + monto);
+  }
+
+  const top3 = [...totalPorConcepto.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([c]) => c);
+
+  return {
+    categorias: bloques.map((b) => b.etiqueta),
+    series: top3.map((concepto) => ({
+      nombre: concepto,
+      valores: bloques.map((b) => round2(porSemanaConcepto.get(`${b.anio}-${b.semana}-${concepto}`) ?? 0)),
+    })),
+  };
+}
+
+/** Cuántas semanas hacia atrás enseña cada vista — mismo mapeo en las 3
+ *  funciones `*Series` de esta página (Actividad, Gasto por categoría,
+ *  Liquidado, Top rutas): 5 semanas para "semanal" (el detalle de siempre),
+ *  ~3 meses para "mensual", ~1 año para "histórico" — más ancho de vista
+ *  según se aleja el zoom, sin ser una consulta sin cota. */
+const SEMANAS_POR_MODO = { semanal: 5, mensual: 13, historico: 52 } as const;
+export type ModoPeriodo = keyof typeof SEMANAS_POR_MODO;
+
+export interface GastoSemanalSeries {
+  semanal: GastoSemanalPorCategoria; mensual: GastoSemanalPorCategoria; historico: GastoSemanalPorCategoria;
+}
+
+/** Las 3 vistas de "Gasto por categoría" para el selector Semanal/Mensual/
+ *  Histórico compartido del Resumen (8-ago-2026) — antes esta gráfica
+ *  vivía fija a 5 semanas, con su propio rótulo ("últimas 5 semanas"); el
+ *  selector único de la página ahora la mueve igual que a Actividad. */
+export async function getGastoPorSemanaSeries(
+  tenantId: string,
+  hoy: string = new Date().toLocaleDateString('en-CA', { timeZone: TZ_MX }),
+): Promise<GastoSemanalSeries> {
+  const [semanal, mensual, historico] = await Promise.all([
+    getGastoPorSemana(tenantId, SEMANAS_POR_MODO.semanal, hoy),
+    getGastoPorSemana(tenantId, SEMANAS_POR_MODO.mensual, hoy),
+    getGastoPorSemana(tenantId, SEMANAS_POR_MODO.historico, hoy),
+  ]);
+  return { semanal, mensual, historico };
+}
+
+/**
+ * Total LIQUIDADO (pesos, `total_comprobado`) de las últimas `semanas`
+ * semanas ISO — a diferencia de `getLiquidacionesPorDia` (que cuenta
+ * cierres, no pesos, para /dashboard/analitica), esto suma dinero: la
+ * gráfica "Liquidado por semana" del Resumen enseña cuánto se pagó, no
+ * cuántas liquidaciones se cerraron. `created_at` es timestamptz — bucket
+ * por DÍA LOCAL (mismo patrón que `getSerieComparativa`), no por el UTC
+ * crudo, para no repetir el bug ya pagado de cierres de tarde cayendo en el
+ * día siguiente.
+ */
+export async function getLiquidadoPorSemana(
+  tenantId: string,
+  semanas: number = 5,
+  hoy: string = new Date().toLocaleDateString('en-CA', { timeZone: TZ_MX }),
+): Promise<Array<{ dia: string; valor: number }>> {
+  const bloques = ultimasSemanas(semanas, hoy);
+  const desdeGlobal = new Date(`${hoy}T00:00:00Z`);
+  desdeGlobal.setUTCDate(desdeGlobal.getUTCDate() - (semanas * 7 - 1));
+
+  const filas = await traerTodo<{ created_at: unknown; total_comprobado: unknown }>(
+    (desde, hasta) => supabaseAdmin().from('liquidacion').select('created_at, total_comprobado')
+      .eq('tenant_id', tenantId).gte('created_at', `${desdeGlobal.toISOString().slice(0, 10)}T00:00:00Z`)
+      .order('id').range(desde, hasta),
+    'getLiquidadoPorSemana',
+  );
+
+  const diaLocalMx = (iso: string): string => new Date(iso).toLocaleDateString('en-CA', { timeZone: TZ_MX });
+  const porSemana = new Map<string, number>();
+  for (const f of filas) {
+    const { anio, semana } = semanaIso(diaLocalMx(f.created_at as string));
+    const k = `${anio}-${semana}`;
+    porSemana.set(k, (porSemana.get(k) ?? 0) + Number(f.total_comprobado ?? 0));
+  }
+
+  return bloques.map((b) => ({ dia: b.etiqueta, valor: round2(porSemana.get(`${b.anio}-${b.semana}`) ?? 0) }));
+}
+
+export interface LiquidadoSemanalSeries {
+  semanal: Array<{ dia: string; valor: number }>;
+  mensual: Array<{ dia: string; valor: number }>;
+  historico: Array<{ dia: string; valor: number }>;
+}
+
+/** Las 3 vistas de "Liquidado por semana" — mismo criterio y mismo mapeo
+ *  de semanas que `getGastoPorSemanaSeries` (`SEMANAS_POR_MODO`). */
+export async function getLiquidadoPorSemanaSeries(
+  tenantId: string,
+  hoy: string = new Date().toLocaleDateString('en-CA', { timeZone: TZ_MX }),
+): Promise<LiquidadoSemanalSeries> {
+  const [semanal, mensual, historico] = await Promise.all([
+    getLiquidadoPorSemana(tenantId, SEMANAS_POR_MODO.semanal, hoy),
+    getLiquidadoPorSemana(tenantId, SEMANAS_POR_MODO.mensual, hoy),
+    getLiquidadoPorSemana(tenantId, SEMANAS_POR_MODO.historico, hoy),
+  ]);
+  return { semanal, mensual, historico };
+}
+
+/** Viajes iniciados por MES, histórico completo — a diferencia de `viajes`
+ *  (que ya carga la página para `AvanceCierre`/`ViajesAtencion`), ese
+ *  arreglo viene topado a 100 filas más recientes por diseño: de sobra para
+ *  una ventana de 7/30 días, corto para "todo el histórico" de una flota
+ *  con más de 100 viajes en total, donde la vista histórica se leería como
+ *  un tramo reciente disfrazado de serie completa. `traerTodo` pagina sin
+ *  el tope de 1,000 filas de PostgREST; `fecha_inicio` es columna `date`
+ *  (sin hora/zona horaria que resolver, a diferencia de `created_at`). */
+export async function getViajesPorMes(tenantId: string): Promise<Array<{ dia: string; valor: number }>> {
+  const rows = await traerTodo<{ fecha_inicio: unknown }>(
+    (desde, hasta) => supabaseAdmin()
+      .from('viaje')
+      .select('fecha_inicio')
+      .eq('tenant_id', tenantId)
+      .not('fecha_inicio', 'is', null)
+      .order('id')
+      .range(desde, hasta),
+    'getViajesPorMes',
+  );
+  const porMes = new Map<string, number>();
+  for (const r of rows) {
+    const mes = (r.fecha_inicio as string).slice(0, 7); // YYYY-MM
+    porMes.set(mes, (porMes.get(mes) ?? 0) + 1);
+  }
+  return Array.from(porMes.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([dia, valor]) => ({ dia, valor }));
 }
 
 export interface Acreditables {
@@ -582,6 +910,132 @@ export async function getGastoPorRuta(tenantId: string): Promise<GastoPorRuta[]>
     .map(([ruta, total]) => ({ ruta, total: round2(total) }))
     .sort((a, b) => b.total - a.total)
     .slice(0, 5);
+}
+
+/**
+ * Ciudad → región de logística en México — hecho geográfico real (INEGI/
+ * gremio del autotransporte), NO una categoría de negocio inventada.
+ * Cobertura deliberadamente acotada a las plazas más comunes en carga por
+ * carretera; una ciudad que no está aquí NO se adivina — sale sin región
+ * en vez de con una región falsa (misma regla de "nunca inventar" que el
+ * resto del producto, aplicada a geografía en vez de a dinero).
+ */
+const REGION_POR_CIUDAD: Record<string, string> = {
+  'ciudad de mexico': 'Centro', 'cdmx': 'Centro', 'mexico city': 'Centro',
+  'toluca': 'Centro', 'puebla': 'Centro', 'queretaro': 'Centro', 'pachuca': 'Centro',
+  'cuernavaca': 'Centro', 'tlaxcala': 'Centro',
+  'guadalajara': 'Occidente', 'leon': 'Occidente', 'aguascalientes': 'Occidente',
+  'morelia': 'Occidente', 'colima': 'Occidente', 'zapopan': 'Occidente', 'irapuato': 'Occidente',
+  'celaya': 'Occidente', 'zamora': 'Occidente',
+  'monterrey': 'Noreste', 'saltillo': 'Noreste', 'reynosa': 'Noreste', 'nuevo laredo': 'Noreste',
+  'matamoros': 'Noreste', 'torreon': 'Noreste', 'ciudad victoria': 'Noreste',
+  'tijuana': 'Noroeste', 'mexicali': 'Noroeste', 'hermosillo': 'Noroeste',
+  'culiacan': 'Noroeste', 'ciudad juarez': 'Noroeste', 'chihuahua': 'Noroeste',
+  'la paz': 'Noroeste', 'los mochis': 'Noroeste',
+  'veracruz': 'Golfo', 'xalapa': 'Golfo', 'tampico': 'Golfo', 'coatzacoalcos': 'Golfo',
+  'villahermosa': 'Sureste', 'merida': 'Sureste', 'cancun': 'Sureste', 'campeche': 'Sureste',
+  'oaxaca': 'Sur', 'tuxtla gutierrez': 'Sur', 'acapulco': 'Sur', 'chilpancingo': 'Sur',
+};
+
+/** Sin diacríticos, minúsculas — para que "Querétaro"/"queretaro" empaten
+ *  con la misma llave del catálogo. */
+function normalizarCiudad(s: string): string {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+}
+
+/** Busca la región de una ciudad EN LA LLAVE del catálogo (no al revés):
+ *  "Guadalajara, Jal." contiene "guadalajara" — evita exigir que el campo
+ *  libre venga exactamente igual al catálogo. */
+function regionDe(ciudad: string | null): string | null {
+  if (!ciudad) return null;
+  const norm = normalizarCiudad(ciudad);
+  for (const [clave, region] of Object.entries(REGION_POR_CIUDAD)) {
+    if (norm.includes(clave)) return region;
+  }
+  return null;
+}
+
+export interface RutaConRegion {
+  origen: string; destino: string; total: number;
+  /** % del gasto total de las rutas devueltas (no del gasto total de la
+   *  flota) — mismo criterio que un top-N: el 100% es la suma de ESTE top,
+   *  no un universo más grande que el usuario no ve. */
+  pct: number;
+  /** `null` cuando ni origen ni destino matchean el catálogo — se enseña
+   *  como "sin clasificar" en vez de adivinar. */
+  region: string | null;
+}
+
+/**
+ * Top rutas por gasto CON región — a diferencia de `getGastoPorRuta` (que
+ * regresa la ruta ya concatenada en un string), aquí se necesitan origen y
+ * destino por separado para poder buscar la región de cada uno.
+ */
+export async function getTopRutasPorGasto(
+  tenantId: string, top: number = 5, ventana?: { desde: string; hasta: string },
+): Promise<RutaConRegion[]> {
+  const admin = supabaseAdmin();
+  const [gastos, viajes] = await Promise.all([
+    traerTodo<{ viaje_id: unknown; monto: unknown }>(
+      (desde, hasta) => {
+        let q = admin.from('gasto').select('viaje_id, monto').eq('tenant_id', tenantId);
+        if (ventana) q = q.gte('fecha', ventana.desde).lte('fecha', ventana.hasta);
+        return q.order('id').range(desde, hasta);
+      },
+      'getTopRutasPorGasto.gasto',
+    ),
+    traerTodo<{ id: unknown; origen: unknown; destino: unknown }>(
+      (desde, hasta) => admin.from('viaje').select('id, origen, destino').eq('tenant_id', tenantId).order('id').range(desde, hasta),
+      'getTopRutasPorGasto.viaje',
+    ),
+  ]);
+  const viajePorId = new Map(viajes.map((v) => [v.id as string, v]));
+  const mapa = new Map<string, { origen: string; destino: string; total: number }>();
+  for (const g of gastos) {
+    const v = viajePorId.get(g.viaje_id as string);
+    if (!v) continue;
+    const origen = (v.origen as string) || '—';
+    const destino = (v.destino as string) || '—';
+    const clave = `${origen}→${destino}`;
+    const prev = mapa.get(clave) ?? { origen, destino, total: 0 };
+    prev.total += Number(g.monto ?? 0);
+    mapa.set(clave, prev);
+  }
+  const ordenado = [...mapa.values()].sort((a, b) => b.total - a.total).slice(0, top);
+  const sumaTop = ordenado.reduce((s, r) => s + r.total, 0) || 1;
+  return ordenado.map((r) => ({
+    origen: r.origen, destino: r.destino, total: round2(r.total),
+    pct: round2((r.total / sumaTop) * 100),
+    // La región del DESTINO — es el mercado al que llega la carga, la
+    // pregunta operativa habitual ("¿dónde estoy vendiendo/entregando?").
+    region: regionDe(r.destino),
+  }));
+}
+
+export interface TopRutasSeries {
+  semanal: RutaConRegion[]; mensual: RutaConRegion[]; historico: RutaConRegion[];
+}
+
+/** Las 3 vistas de "Top rutas por gasto" — mismo mapeo de semanas que
+ *  `getGastoPorSemanaSeries` (`SEMANAS_POR_MODO`); "histórico" no manda
+ *  ventana en absoluto (sin cota), no una de 52 semanas disfrazada de
+ *  "todo". */
+export async function getTopRutasPorGastoSeries(
+  tenantId: string, top: number = 5,
+  hoy: string = new Date().toLocaleDateString('en-CA', { timeZone: TZ_MX }),
+): Promise<TopRutasSeries> {
+  const ventanaDe = (semanas: number) => {
+    const hastaD = new Date(`${hoy}T00:00:00Z`);
+    const desdeD = new Date(hastaD);
+    desdeD.setUTCDate(desdeD.getUTCDate() - (semanas * 7 - 1));
+    return { desde: desdeD.toISOString().slice(0, 10), hasta: hoy };
+  };
+  const [semanal, mensual, historico] = await Promise.all([
+    getTopRutasPorGasto(tenantId, top, ventanaDe(SEMANAS_POR_MODO.semanal)),
+    getTopRutasPorGasto(tenantId, top, ventanaDe(SEMANAS_POR_MODO.mensual)),
+    getTopRutasPorGasto(tenantId, top),
+  ]);
+  return { semanal, mensual, historico };
 }
 
 export interface OperadorDetalle {

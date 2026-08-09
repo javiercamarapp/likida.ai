@@ -48,7 +48,7 @@ cada corrida.
 | 14 | Vuelta 2 — prueba que reproduce el CRÍTICO de operabilidad | 1 de 3 casos en rojo | — |
 | 15 | Vuelta 2 — arreglo: solo se suelta el lock propio | verde; suite 3,155 | `61cf600` |
 | 16 | Vuelta 3 — prueba que reproduce el CRÍTICO fiscal | 2 de 4 casos en rojo | — |
-| 17 | Vuelta 3 — arreglo: 624 Coordinados + mig. 0086 + bloque 62 | verde; suite 3,159 | `37612f1` |
+| 17 | Vuelta 3 — arreglo: 624 Coordinados + mig. 0088 + bloque 63 | verde; suite 3,159 | `37612f1` |
 | 18 | Contabilidad: anotar el paso de red que agregó el arreglo #13 | 8.9s → 9.4s contra 12s | `a30f7b0` |
 | 19 | Tablero + captura, mirada | 12 rubros, notas cuadran | — |
 
