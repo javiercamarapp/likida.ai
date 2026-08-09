@@ -1,188 +1,245 @@
-# Cumplimiento fiscal — auditoría 17
+# Cumplimiento fiscal — auditoría 17 (pase 2)
 
-**Nota: 4/10** (antes 6, ronda 13; la 16 se autocalificó 7). Razón del
-movimiento: **deuda que cobró factura, y la mirada más profunda encontró dos
-sitios donde el producto imprime una cifra fiscal equivocada.** El hallazgo más
-reincidente del rubro —la válvula del 15% de la RFA 2.9— *sí* se cerró como
-compuerta (ya no se ofrece a cualquier tenant: `desde_db.ts:56-58` exige la
-declaración y el motor tiene tres estados honestos), pero la ronda 16 la conectó
-al **código de régimen equivocado**: `601` no es el Título II Capítulo VII que la
-regla nombra, y el `624` que sí lo es no existe ni en el selector ni en el
-CHECK de la base. La válvula ya no está abierta de par en par: ahora abre para
-quien no califica y cierra para quien sí. Y el contador del 15% mide contra un
-denominador —"lo que Likida vio"— que no es el que la regla nombra, y con él
-imprime "No deducible" en el PDF.
+**Nota: 5/10** (antes 4). Razón del movimiento: **el código cambió, y en las dos
+direcciones a la vez.** Se cerró de verdad el CRÍTICO C3 (el régimen `624`
+Coordinados existe hoy en `administracion.ts:128`, en el selector y en el CHECK
+de la migración `0088`), y la mitad del ALTO del peaje se cerró por supresión (las
+tarjetas "Peaje (50%) · LIF 2026 20-A" e "IVA acreditable" ya **no** están en
+`/dashboard`). Contra eso, el rework del dashboard —el foco de este pase—
+**introdujo dos ALTOS nuevos en la pantalla de aterrizaje del contralor**, y
+ninguno de los 7 reincidentes del pase 1 se tocó. Un CRÍTICO menos sube la nota
+un punto; dos ALTOS nuevos en la superficie más vista se lo comen casi entero.
 
-Lo que sostiene la nota por encima de 3: la trazabilidad es real y funcionó —
-las dos fichas que refutan los dos CRÍTICOS ya traen el texto literal que los
-desmiente (`rfa-2026-2.9.yaml`, `verificado_fuente_primaria`); el estímulo de
-IEPS, que es el dinero grande, se sigue negando a imprimirse en pesos y entrega
-litros; el PDF lleva el tono `condicionado` donde toca; y RLISR 57 quedó cerrado
-de verdad (ya hay escritor de `operador.rfc`).
+**Riesgo mayor del rubro, hoy:** el panel del dueño ascendió cifras fiscales a
+KPI sin ascender sus matices — la misma pantalla que estrena "Ahorro generado"
+en pesos es la que en otra página del mismo producto declara por escrito que
+llamarle "ahorro" a eso sería contar como ganado algo que todavía no se cobra.
 
-**El riesgo mayor del rubro, hoy:** la elegibilidad de una facilidad se deriva
-de un catálogo del SAT mal mapeado, y el resultado —deducible o no deducible—
-se imprime en el PDF citando la regla. Es el mismo error de jerarquía que
-`normas/README.md` llama "el más caro del dominio", cometido esta vez por el
-código que existía para evitarlo.
+**Respuesta a la pregunta dura del pase 2:** *no* hay una segunda implementación.
+`getGastosFiscalesSeries` (`fiscal.ts:829-849`) llama tres veces a
+`getGastosFiscales` y `page.tsx:141-143` corre el mismo `resumirPerdidas` sobre
+cada ventana; `analytics.ts` +454 no agregó **ninguna** consulta fiscal (todo lo
+nuevo es gasto/viaje/liquidación por semana, mes y ruta). Y `getAcreditables`
+sigue leyendo las columnas que **escribió el motor**, no recalculando. Lo que sí
+apareció con el periodo es peor que una segunda implementación: es la **misma**
+implementación presentada sin su letra chica.
+
+---
+
+## Estado de los hallazgos del pase 1
+
+| # (pase 1) | Sev. | Estado hoy | Evidencia |
+|---|---|---|---|
+| Régimen `601` abre la facilidad; `624` no existe | CRÍTICO | **CERRADO** | `administracion.ts:128` → `['624','612']`; `admin/flotas/page.tsx:223` → `<option value="624">`; `0088_regimen_624_coordinados.sql:36` mete `'624'` al CHECK |
+| El 15% contra "lo que Likida vio" | CRÍTICO | **ABIERTO — REINCIDENTE** | `engine.ts:337,354` y `repo.ts:831-834` idénticos |
+| "Ya no se recupera" por plazo de nivel 6, fundado en LISR 27-III | ALTO | **ABIERTO — REINCIDENTE, superficie nueva** | `fiscal.ts:243-248` idéntico; ahora además alimenta el KPI del dueño |
+| Peaje en pesos sin las 4 condiciones | ALTO | **PARCIAL** — `/dashboard` cerrado por supresión, `/dashboard/facturacion:98` abierto | ver hallazgo A4 |
+| Combustible en efectivo no acredita IVA sin ficha | ALTO | **ABIERTO — REINCIDENTE** | `engine.ts:985` y `fiscal.ts:515` idénticos |
+| `causasDe` no conoce `no_encontrado`/`pendiente` | MEDIO | **ABIERTO — REINCIDENTE, superficie nueva** | `fiscal.ts:321-328`; `grep no_encontrado fiscal.ts` → solo la línea 509 |
+| `efectivo_no_elegible` fuera de `ORDEN` | MEDIO | **ABIERTO — REINCIDENTE (3ª)** | `fiscal.ts:354-357` idéntico |
+| Píldora/gauge del 15% sin `elegible15` | MEDIO | **ABIERTO — REINCIDENTE (3ª)** | `contador/combustible/page.tsx:134` idéntico |
+| Gasto sin fecha contra el contador del 15% | MEDIO | **ABIERTO — REINCIDENTE (3ª)** | `engine.ts:312-313` idéntico |
+| `tools.ts` cuenta el 15% sin las claves del SAT | MEDIO | **ABIERTO — REINCIDENTE (4ª)** | `tools.ts:110` sigue sin tercer argumento |
+| Base del peaje afirmada como resuelta | MEDIO | **ABIERTO — REINCIDENTE** | `contador/combustible/page.tsx:227-230` idéntico |
+| Leyenda del CFF 89 ausente en el panel del contador | MEDIO | **ABIERTO — REINCIDENTE** | `grep -rln "LEYENDA\|criterios que dé a conocer" src/app/dashboard/contador/` → **cero archivos** |
+| `avisoTope15` afirma efectivo sin mirarlo | BAJO | **ABIERTO — REINCIDENTE** | `periodo/aviso.ts:32-33` idéntico |
+| `continue` del fail-closed se lleva otras notas | BAJO | **ABIERTO — REINCIDENTE** | `engine.ts:324` idéntico |
+
+Compuerta corrida por mí: `npx vitest run src/lib/likida/fiscal.test.ts
+src/lib/likida/fiscal_series.test.ts src/app/dashboard/estado.test.ts` → 79/79
+verdes. Ninguna de esas 79 pruebas compara una cifra del panel contra la cifra
+que el motor imprime para el mismo comprobante — que es exactamente el hueco
+por donde entran los dos ALTOS nuevos.
 
 ---
 
 ## Hallazgos
 
-### [CRÍTICO] El régimen `601` abre la facilidad del 15% de la RFA 2.9 — y `624` (Coordinados), el único régimen de PM que la regla nombra, no existe en el producto
+### [CRÍTICO · REINCIDENTE] El 15% se sigue midiendo contra "el combustible que Likida vio", no contra el total de pagos por consumo de combustible del ejercicio
 
-`src/lib/likida/administracion.ts:115-116` · `src/app/admin/flotas/page.tsx:220,232-233` ·
-`supabase/migrations/0056_datos_fiscales_y_cfdi.sql:45-53` ·
-ficha `normas/rfa-2026-2.9.yaml` (`estado_verificacion: verificado_fuente_primaria`,
-fuente DOF/SIDOF 5780249)
+`src/lib/likida/cuadre/engine.ts:337,354` · `src/lib/likida/repo.ts:831-834` ·
+ficha `normas/rfa-2026-2.9.yaml` (`verificado_fuente_primaria`: **sí**, DOF/SIDOF 5780249)
 
-**Norma (literal, `rfa-2026-2.9.yaml` → `texto_vigente`):**
-> "Los contribuyentes personas físicas o morales, dedicados exclusivamente al
-> autotransporte terrestre de carga federal, **que tributen conforme al Título
-> II, Capítulo VII o Título IV, Capítulo II, Sección I de la Ley del ISR**,
-> considerarán cumplida la obligación establecida en el artículo 27, fracción
-> III, segundo párrafo de la Ley del ISR, cuando los pagos por consumo de
-> combustible se realicen con medios distintos a cheque nominativo…"
-
-Y su `condiciones_de_aplicacion`, literal:
-> "Tributar en Título II Cap. VII (**coordinados**) o Título IV Cap. II Secc. I
-> (PF act. empresarial)"
-
-**Código (literal, `administracion.ts:111-116`):**
-```
-  // elegibilidad se DERIVA de él: los códigos 601 (General de Ley PM —
-  // coordinados) y 612 (PF con actividades empresariales) son los dos títulos
-  // que la regla admite.
-  const REGIMENES_ELEGIBLES = ['601', '612'];
-  const regimenElegible = f.regimenFiscal ? REGIMENES_ELEGIBLES.includes(f.regimenFiscal) : undefined;
-```
-Y el selector, literal (`admin/flotas/page.tsx:220,232-233`):
-```
-  <option value="601">601 — General de Ley PM (coordinados)</option>
-  … la facilidad del 15% (RFA 2.9) exige 601 o 612; cualquier otro
-  no califica y el efectivo en combustible no se deduce.
-```
-
-En el catálogo `c_RegimenFiscal` del SAT, **601 es "General de Ley Personas
-Morales" (Título II, régimen general) y "Coordinados" es la clave 624**. El
-comentario del código y la etiqueta del selector equiparan las dos. `624` no
-aparece en ningún archivo del repo (`grep -rn "624"` → cero coincidencias fuera
-de un número de teléfono en un test), y tampoco está en el CHECK
-`tenant_regimen_fiscal_dominio` (`0056:47-53` admite solo `601, 603, 612, 621,
-626`).
-
-**Escenario A — se afirma una deducción que no existe.** Flota "X, S.A. de
-C.V.", persona moral del régimen general, alta con `regimenFiscal: '601'` y la
-casilla de dedicación exclusiva marcada → `facilidadCombustibleEfectivo:
-{dedicacionExclusivaCarga: true, regimenElegible: true}` → `desde_db.ts:56-58`
-entrega `facilidad15 = true`. Un ticket de diésel de **$2,320 pagado en
-efectivo** con CFDI, ejercicio 2026 con $200,000 de combustible: `engine.ts:337`
-calcula `tope = 0.15 × 200,000 = $30,000`, cae dentro, y el PDF imprime
-**"Deducible para ISR $2,320.00"** en verde más la nota "deducible por la
-facilidad del 15% (RFA 2026 regla 2.9)". La regla no le aplica: por LISR 27-III
-2º párrafo (sin excepción para el régimen general) esos **$2,320 no son
-deducibles**. Salen $2,320 donde la norma da $0.
-
-**Escenario B — se le quita la deducción a quien sí la tiene.** Un coordinado de
-verdad (c_RegimenFiscal 624) no se puede registrar: el valor no está en el
-selector ni lo acepta el CHECK de la base. Las únicas salidas son "Sin declarar"
-—y entonces todo su diésel en efectivo cae para siempre en `combustible_efectivo`
-(revisión, `engine.ts:365-369`)— o marcarlo 601, que lo mete al escenario A.
-Además, 8 de las 10 opciones del selector (`605, 606, 607, 608, 610, 611, 615,
-616`) violan el CHECK: el alta revienta con un error de constraint crudo. Y la
-etiqueta "615 — Incorporación Fiscal" es falsa (615 es "ingresos por obtención
-de premios"; Incorporación Fiscal es 621), sobre una columna que
-`facturacion/flota_fiscal.ts:84` y `saas/facturapi.ts:183` usan como
-`tax_system` del receptor del CFDI.
-
-**Consecuencia:** el contralor archiva un PDF que declara deducible en verde un
-gasto que su contador va a rechazar en la primera revisión, con la regla citada
-al lado. Del otro lado, un coordinado —el cliente arquetípico de esta facilidad—
-no puede ser dado de alta correctamente.
-
-**Causa raíz probable:** la ronda 16 sustituyó un booleano declarado por una
-derivación desde el catálogo del SAT sin cotejar `c_RegimenFiscal` contra el
-texto de la ficha; el comentario que escribió la equivalencia ("601 … —
-coordinados") se convirtió en la única fuente de verdad.
-
----
-
-### [CRÍTICO] El 15% se mide contra "el combustible que Likida vio", no contra "el total de los pagos efectuados por consumo de combustible" — y con ese denominador el PDF imprime "No deducible"
-
-`src/lib/likida/cuadre/engine.ts:337,354` · `src/lib/likida/cuadre/desde_db.ts:78,91` ·
-`src/lib/likida/repo.ts:820-834` · ficha `normas/rfa-2026-2.9.yaml`
-(`verificado_fuente_primaria`)
-
-**Norma (literal):**
 > "…siempre que estos no excedan el 15 por ciento **del total de los pagos
 > efectuados por consumo de combustible para realizar su actividad**."
+> — `rfa-2026-2.9.yaml:16-17`, `texto_vigente`
 
-**Código (literal, `repo.ts:826-834` — el único productor del denominador):**
-```
-      .from('gasto')
-      .select('monto, forma_pago', …)
-      .eq('tenant_id', tenantId)
-      .or(claves?.length ? `concepto.eq.diesel,clave_prod_serv.in.(${claves.join(',')})` : 'concepto.eq.diesel')
-      .gte('fecha', `${ejercicio}-01-01`)
-```
-y `engine.ts:337,354`:
+Código, literal (`engine.ts:337` y la frase que se imprime, `engine.ts:354`):
+
 ```
         const tope = 0.15 * total;
         … `el ejercicio lleva ${mxn(acumulado)} de combustible en efectivo contra un tope de ${mxn(tope)} (15% de ${mxn(total)}); el excedente de ${mxn(excedenteDeEste)} de ESTE comprobante NO se deduce (RFA 2026 regla 2.9).`
 ```
 
-`gasto` contiene **únicamente lo que los operadores mandaron por WhatsApp**. El
-propio producto lo dice en el pie del panel del contador
-(`contador/comun.tsx:177-179`: "No es la contabilidad completa de la flota").
-Pero ni el motor ni el PDF lo dicen, y el motor lo usa como si fuera el
-universo: la frase impresa dice "15% de $X" a secas.
+y el único productor de `total` (`repo.ts:831-834`):
 
-**Escenario:** flota elegible (612 + dedicación exclusiva), ejercicio 2026. Carga
-la mayor parte de su diésel en su terminal con factura directa a la cuenta de la
-empresa: **$1,200,000 en el año, que nunca pasan por el teléfono**. Por WhatsApp
-llegan solo las cargas de carretera: **$80,000, de los cuales $30,000 en
-efectivo**.
-- Motor: `total = 80,000` → `tope = 0.15 × 80,000 = $12,000`; acumulado
-  $30,000 → `excedenteDeEste` se reparte y **$18,000 se van a `totalNoDeducible`**
-  (vía `proporcionDeducible`, `engine.ts:343` → `engine.ts:1134-1137`). El PDF
-  imprime "**No deducible $18,000.00**" en rojo y la nota "…contra un tope de
-  $12,000.00 (15% de $80,000.00) … NO se deduce (RFA 2026 regla 2.9)".
+```
+      .or(claves?.length ? `concepto.eq.diesel,clave_prod_serv.in.(${claves.join(',')})` : 'concepto.eq.diesel')
+      .gte('fecha', `${ejercicio}-01-01`)
+      .lte('fecha', `${ejercicio}-12-31`)
+```
+
+`gasto` es solo lo que los operadores mandaron por WhatsApp; el propio producto
+lo dice en `contador/comun.tsx:177-179` ("No es la contabilidad completa de la
+flota"). El motor lo usa como si fuera el universo.
+
+**Escenario:** flota elegible (624 + dedicación exclusiva), ejercicio 2026.
+Carga $1,200,000 de diésel en su terminal con factura directa a la cuenta de la
+empresa — nunca pasa por el teléfono. Por WhatsApp llegan $80,000 de cargas de
+carretera, de los cuales **$30,000 en efectivo**.
+- Motor: `total = 80,000` → `tope = $12,000`; acumulado $30,000 →
+  `excedenteDeEste` se reparte por `proporcionDeducible` (`engine.ts:343`) y
+  **$18,000 salen a `totalNoDeducible`**. El PDF imprime **"No deducible
+  $18,000.00"** en rojo con la frase "…contra un tope de $12,000.00 (15% de
+  $80,000.00) … NO se deduce (RFA 2026 regla 2.9)".
 - Norma: el total de pagos por consumo de combustible del ejercicio es
   **$1,280,000**; el 15% son **$192,000**; los $30,000 en efectivo son el
-  **2.3%**. Todo es deducible. Lo correcto es **$0 no deducible**.
+  **2.34%**. Lo correcto es **$0.00 no deducible**.
 
-Sale $18,000 en rojo donde la norma da $0, con la regla citada.
+Sale **$18,000** en rojo donde la norma da **$0**, con la regla citada al lado.
 
-**Consecuencia:** el contralor ve una pérdida de deducción que no existe y la
-cifra tiene el formato de una medición. Peor: el rótulo "15% de $80,000" es
-falso como afirmación sobre el ejercicio de la flota — es el rótulo que la regla
-de producto "un rótulo tiene que ser verdad" prohíbe. Y el error es del lado que
-el contador *sí* revisa (le quitan dinero), así que se descubre en la sala.
-
-**Causa raíz probable:** el contador del 15% se construyó sobre la única tabla
-que el producto tiene (`gasto`) sin declarar que su universo es parcial; ninguna
-ficha ni ningún renglón del PDF acota la afirmación al alcance real del dato.
+**Consecuencia / causa raíz.** El contralor archiva una pérdida de deducción que
+no existe, y el rótulo "15% de $80,000" es falso como afirmación sobre el
+ejercicio de su flota. Causa raíz: el denominador se construyó sobre la única
+tabla que el producto tiene y ningún renglón acota la afirmación a ese alcance —
+es decisión de producto (¿se pide el total del ejercicio al contralor?), no un
+bug de aritmética.
 
 ---
 
-### [ALTO · REINCIDENTE, otra superficie] El panel del contador declara "Ya no se recupera $X" por un plazo de **nivel 6** y lo funda en **LISR 27-III** — el mismo hecho que el PDF ya corrigió
+### [ALTO · NUEVO en el pase 2] "Ahorro generado — Ejercicio 2026" imprime en pesos el **monto bruto del gasto**, no un ahorro — y el mismo producto tiene escrito por qué eso no se hace
 
-`src/lib/likida/fiscal.ts:243-248` (`TITULOS.plazo_vencido`) · `fiscal.ts:326`
-(`if (g.plazoVencido === true) push('plazo_vencido')`) ·
-`src/app/dashboard/contador/deducciones/page.tsx:52,126-127` ·
-`fiscal.ts:945-946` (columna `fundamento` del CSV) ·
-ficha `normas/politica-portales-plazos.yaml` (`jerarquia: 6`,
-`estado_verificacion: sin_verificar`)
+`src/app/dashboard/page.tsx:272-274` · `src/lib/likida/fiscal.ts:420` ·
+contraste literal: `src/app/dashboard/valor-ahorro/page.tsx:109-112` y
+`src/app/dashboard/contador/deducciones/page.tsx:104` ·
+sin ficha en `normas/` que sostenga una tasa de ISR (`verificado_fuente_primaria`: **n/a — no hay ficha**)
 
-**Norma / ficha (literal, `advertencia_de_jerarquia`):**
+Regla del producto (`CLAUDE.md`, "Un rótulo tiene que ser verdad") y regla que
+el propio código escribió, literal (`valor-ahorro/page.tsx:109-112`):
+
+> "Esto es dinero **señalado**, no recuperado: el motor lo marca y tú decides.
+> Presentarlo como **&quot;ahorro&quot;** sería contar como ganado algo que todavía no
+> se cobra."
+
+Código nuevo, literal (`page.tsx:272-274`, commit `44ade83`):
+
+```
+                    <KpiDegradado icono={<PiggyBank width={17} height={17} strokeWidth={1.75} />}
+                      etiqueta={`Ahorro generado — ${periodoFiscal.etiqueta}`}
+                      valor={resumenPerdidas?.montoRecuperable ?? 0} formato="mxn" />
+```
+
+Qué es `montoRecuperable` (`fiscal.ts:420`): `else montoRecuperable +=
+f.gasto.monto;` — la suma del **monto bruto** (IVA incluido — el mismo campo `monto` que `fiscal.ts:461` describe como "lo
+que salió de la caja, no la base gravable") de los comprobantes
+cuya causa dominante es `sin_cfdi`, cuyo título es "**Sin CFDI todavía**"
+(`fiscal.ts:285-290`). La página hermana rotula ese mismo número "Dinero que ya
+salió de la caja y **no va a bajar la base gravable**"
+(`deducciones/page.tsx:104`).
+
+**Escenario:** flota con 62 tickets de diésel y casetas sin CFDI en el ejercicio
+2026, por **$250,000** brutos, todos con plazo de facturación abierto.
+- Panel del dueño: tarjeta con degradado de marca y alcancía — **"Ahorro
+  generado — Ejercicio 2026: $250,000.00"**.
+- Lo que hay: una deducción **pendiente de $250,000** que todavía hay que ir a
+  pedir. Ni un peso ahorrado: nadie timbró nada. Y aun cobrada entera, una
+  deducción baja la **base**, no el impuesto: el efecto en caja sería del orden
+  de $75,000 de ISR (30% PM) + $34,483 de IVA acreditable ≈ **$109,500** —
+  menos de la mitad de lo impreso. *(La tasa del 30% la doy como orden de
+  magnitud declarado: **no hay ficha de LISR 9 en `normas/`**, así que no la
+  cito como norma. El hallazgo no depende de ella: aunque la tasa fuera otra,
+  $250,000 de gasto bruto nunca es el ahorro de deducir $250,000.)*
+
+`KpiDegradado` (`resumen-visual.tsx:95-134`) **no tiene ranura para `nota`**: la
+cifra sale sin un solo qualifier. Y `?? 0` es alcanzable: `estadoPanel`
+(`estado.ts:30`) solo mira `acreditables/kpis/liquidaciones/anomalias`, así que
+si únicamente `getConfig` o `getGastosFiscales` truena, el panel se queda en
+estado `datos` e imprime **"Ahorro generado $0.00"** — un cero que parece
+medición, justo lo que `MotorFiscalPeriodo:39-41` sí evita ("No se pudo leer el
+motor fiscal en este momento").
+
+**Consecuencia / causa raíz.** Es la primera cifra en pesos que ve el contralor
+al entrar, y la que el guion de demo va a leer en voz alta. Causa raíz: el KPI
+se cableó al campo que ya existía (`montoRecuperable`) y se le puso el nombre
+que el pedido usaba ("Ahorro generado"), sin pasar por la única función que
+sabía nombrarlo. **No lo marco CRÍTICO** porque la cifra es una medición real de
+gasto recuperable; lo falso es el sustantivo.
+
+---
+
+### [ALTO · NUEVO en el pase 2] La tarjeta "En riesgo / perdido" cuenta en rojo el combustible en efectivo que el motor ya declaró **deducible** dentro del 15% — y lo hace sobre una ventana de 7 días para una regla que la norma ancla al ejercicio
+
+`src/app/dashboard/motor-fiscal-periodo.tsx:60-63` · `src/lib/likida/fiscal.ts:273-278,339,419` ·
+contraste: `src/lib/likida/cuadre/engine.ts:344-350` ·
+ficha `normas/rfa-2026-2.9.yaml` (`verificado_fuente_primaria`: **sí**)
+
+> "…siempre que estos no excedan el 15 por ciento del total de los pagos
+> efectuados por consumo de combustible **para realizar su actividad**."
+> — `rfa-2026-2.9.yaml:16-17`. Y `condiciones_de_aplicacion` (línea 35), literal:
+> "El efectivo no puede exceder el 15% del total pagado por combustible **en el
+> ejercicio**".
+
+Código nuevo, literal (`motor-fiscal-periodo.tsx:60-63`):
+
+```
+        <div className="text-xl font-semibold tracking-tight tabular mt-1" style={{ color: 'var(--color-bad)' }}>
+          {mxn(r.montoEnRiesgo + r.montoPerdido)}
+        </div>
+        <div className="text-[10px] mt-0.5" style={{ color: 'var(--muted)' }}>{ETIQUETA_MODO[modo]}</div>
+```
+
+con `ETIQUETA_MODO.semanal = 'últimos 7 días'` (`:12`) y `modoIdx = 0` por
+defecto (`:36`). El sumando `montoEnRiesgo` recibe **el 100% del monto** de todo
+diésel en efectivo (`fiscal.ts:339` → `combustible_efectivo`, gravedad
+`en_riesgo`, `fiscal.ts:273-278` → `fiscal.ts:419`), y **`causasDe` nunca
+consulta el tope**: `grep -n "evaluarTope15\|tope15" fiscal.ts` no aparece en
+ninguna parte de `causasDe`/`resumirPerdidas`.
+
+**Escenario:** flota elegible (624 + dedicación exclusiva). Ejercicio 2026:
+$200,000 de combustible, de los cuales **$12,000 en efectivo (6%)** — holgado.
+En los últimos 7 días llegan **3 tickets de diésel en efectivo con CFDI por
+$8,000** en total.
+- Motor / PDF (`engine.ts:344-350`): `combustible_efectivo_dentro15`, `monto: 0`,
+  y la nota impresa **"deducible por la facilidad del 15% (RFA 2026 regla 2.9):
+  el ejercicio lleva $12,000.00 de $200,000.00 de combustible en efectivo (6%
+  del total, tope 15%)"**. Los $8,000 entran íntegros a `totalDeducible`.
+- Panel del dueño, al abrir: **"En riesgo / perdido · $8,000.00 · últimos 7
+  días"** en `var(--color-bad)`.
+
+$8,000 en rojo sobre pesos que el PDF de los mismos viajes imprimió como
+deducibles. Agravante de forma: la tarjeta **funde** `montoPerdido` y
+`montoEnRiesgo` en un solo número rojo, cuando `Gravedad` (`fiscal.ts:225-231`)
+los define como cosas distintas ("El dinero ya no se recupera" vs "Depende de
+algo que todavía puede moverse") y `/dashboard/contador/deducciones:126-136` los
+pinta **separados y en colores distintos** (`--bad` vs `--warn`). Un CFDI
+cancelado y un diésel en efectivo al 6% del tope se leen idénticos.
+
+**Consecuencia / causa raíz.** El contralor que cruce el panel contra el PDF ve
+al producto contradecirse sobre los mismos pesos, y el error va del lado que
+*sí* revisa (dice que pierde dinero que no pierde). Causa raíz: `resumirPerdidas`
+se diseñó para una pantalla que enseña las tres cubetas con su detalle y su
+`detalle` normativo al lado ("Cuenta contra el 15% del combustible del
+ejercicio", `fiscal.ts:277`); el KPI nuevo consume solo los tres escalares y tira
+título, detalle, norma y la separación entre gravedades.
+
+---
+
+### [ALTO · REINCIDENTE, ahora también en el panel del dueño] "Ya no se recupera $X" por un plazo de **nivel 6** fundado en **LISR 27-III**
+
+`src/lib/likida/fiscal.ts:243-248,326,418` · `src/app/dashboard/contador/deducciones/page.tsx:126-127` ·
+`src/lib/likida/fiscal.ts:960,990` (columna `fundamento` del export) ·
+`src/app/dashboard/motor-fiscal-periodo.tsx:61` (nuevo consumidor) ·
+ficha `normas/politica-portales-plazos.yaml` (`verificado_fuente_primaria`: **NO** — `sin_verificar`, `jerarquia: 6`)
+
 > "**ESTO NO ES UNA NORMA FISCAL.** Es la política interna de un tercero y tiene
 > CERO fuerza legal. El plazo LEGAL para pedir factura es todo el ejercicio (el
 > SAT lo dice expresamente), y negarla porque 'ya pasó el mes' es una práctica
-> indebida listada por el propio SAT, con remedio en la Conciliación de Factura.
-> **El producto NUNCA debe presentar estos plazos como una obligación fiscal.**"
+> indebida listada por el propio SAT… **El producto NUNCA debe presentar estos
+> plazos como una obligación fiscal.**"
+> — `politica-portales-plazos.yaml`, `advertencia_de_jerarquia`
 
-**Código (literal, `fiscal.ts:243-248`):**
+Código, literal (`fiscal.ts:243-248`):
+
 ```
   plazo_vencido: {
     gravedad: 'perdida',
@@ -192,159 +249,125 @@ ficha `normas/politica-portales-plazos.yaml` (`jerarquia: 6`,
   },
 ```
 
-`gravedad: 'perdida'` se pinta en `deducciones/page.tsx:126-127` como
-**"Ya no se recupera"** en `var(--bad)`, y el monto entra a `montoPerdido`
-(`fiscal.ts:418`). El fundamento que se imprime junto al renglón y en la columna
-`fundamento` del export a Excel es **"LISR 27-III"** — un artículo de nivel 1 que
-habla de medio de pago y de comprobante fiscal, y que **no dice una palabra sobre
-plazos de facturación**.
-
 **Escenario:** ticket de diésel de **$4,800** del **3-jul-2026**, sin CFDI,
-comercio reconocido (Petromax, `plazo: 'mes_natural'`, `plazoVerificado: false`).
-Hoy 8-ago-2026 → `calcularCaducidad` da vencido el 31-jul → `plazoVencido: true`.
-- Panel: **"Ya no se recupera $4,800.00"**, causa "Plazo de facturación
-  vencido", fundamento "LISR 27-III".
-- El PDF del **mismo ticket**, corregido en la ronda 10 (`engine.ts:749`), dice
-  literalmente: *"se pasó el plazo de facturación. El comercio ya no suele
-  facturarlo en su portal, **pero legalmente puedes exigirlo dentro del ejercicio
-  (Conciliación de Factura del SAT)**"*.
+comercio con `plazo: 'mes_natural'` y `plazoVerificado: false`. Hoy 9-ago-2026 →
+`plazoVencido: true`.
+- `/dashboard/contador/deducciones`: **"Ya no se recupera $4,800.00"** en
+  `var(--bad)`, causa "Plazo de facturación vencido", fundamento **"LISR
+  27-III"** — artículo de nivel 1 que habla de medio de pago y comprobante y
+  **no dice una palabra de plazos de facturación**. El fundamento viaja además a
+  la columna `fundamento` del CSV (`fiscal.ts:960,990` — `fundamento: dominante ? dominante.norma : ''`).
+- **Nuevo en este pase:** ese mismo `montoPerdido` entra al KPI del dueño
+  (`motor-fiscal-periodo.tsx:61`), así que ahora la afirmación aparece también
+  en la pantalla de aterrizaje, sin causa ni fundamento visibles.
+- El PDF del **mismo ticket** dice lo contrario (`engine.ts:749`): *"…pero
+  legalmente puedes exigirlo dentro del ejercicio (Conciliación de Factura del
+  SAT)"*.
 
-Dos superficies del mismo producto, dos verdades opuestas sobre el mismo peso, y
-la que dice que está perdido es la que encabeza "la pantalla que justifica el
-producto" (`deducciones/page.tsx:22-24`).
-
-**Consecuencia:** el contador da por perdidos $4,800 (y su IVA) que recupera con
-una llamada o con Conciliación de Factura, y la cifra viaja al Excel con un
-artículo que no la sostiene. Si el contralor cruza el panel contra el PDF ve al
-producto contradecirse.
-
-**Causa raíz probable:** el arreglo de la jerarquía se aplicó al motor y nunca se
-propagó a `fiscal.ts`, que es el módulo gemelo escrito después.
+**Consecuencia / causa raíz.** El contador da por perdidos $4,800 (y su IVA) que
+recupera con una llamada. Causa raíz: el arreglo de jerarquía se aplicó al motor
+y nunca se propagó a `fiscal.ts`; el pase 2 amplió el radio del error sin tocar
+la línea.
 
 ---
 
-### [ALTO] El estímulo de peaje se imprime en pesos, en el panel del cliente, sin ninguna de las cuatro condiciones — el matiz que sí lleva el PDF
+### [ALTO · REINCIDENTE PARCIAL] El estímulo de peaje se sigue imprimiendo en pesos, sin ninguna de las cuatro condiciones, en `/dashboard/facturacion`
 
-`src/app/dashboard/page.tsx:391-392` · `src/app/dashboard/facturacion/page.tsx:98` ·
-contraste: `src/lib/likida/liquidacion/acreditable.ts:110-119` ·
-ficha `normas/lif-2026-20-A.yaml` (`verificado_fuente_primaria`)
+`src/app/dashboard/facturacion/page.tsx:96-98` · contraste `src/lib/likida/liquidacion/acreditable.ts:110-119` ·
+ficha `normas/lif-2026-20-A.yaml` (`verificado_fuente_primaria`: **sí**)
 
-**Norma (literal, `estimulo_peaje.texto_vigente`):**
 > "Se otorga un estímulo fiscal a las personas contribuyentes que se dediquen
 > **exclusivamente** al transporte terrestre público y privado, de carga o
-> pasaje, así como el turístico, que utilizan la **Red Nacional de Autopistas de
-> Cuota**, que obtengan en el ejercicio fiscal… **ingresos totales anuales… menores
-> a 300 millones de pesos**… El estímulo **no podrá ser aplicable por las personas
-> morales que se consideran partes relacionadas** de acuerdo con el artículo 179…"
+> pasaje… que utilizan la **Red Nacional de Autopistas de Cuota**, que obtengan
+> en el ejercicio fiscal… **ingresos totales anuales… menores a 300 millones de
+> pesos**… El estímulo **no podrá ser aplicable por las personas morales que se
+> consideran partes relacionadas** de acuerdo con el artículo 179…"
+> — `lif-2026-20-A.yaml:39-51`, `estimulo_peaje.texto_vigente`
 
-Y sus hallazgos H5/H6, literales en la ficha:
-> H5 · que hace el motor: "**Aplica el 50% a TODO gasto con concepto 'caseta'.**"
-> H6 · que hace el motor: "**No conoce los ingresos de la flota ni su relación de
+Y sus hallazgos propios, literales (`:69-80`):
+> H5 · que_hace_el_motor: "**Aplica el 50% a TODO gasto con concepto 'caseta'.**"
+> H6 · que_hace_el_motor: "**No conoce los ingresos de la flota ni su relación de
 > partes.** El estímulo se aplica sin verificar si el cliente califica."
 
-**Código (literal, `dashboard/page.tsx:391-392`):**
-```
-                    etiqueta="Peaje (50%)" valor={acred.peaje} formato="mxn"
-                    nota="Estímulo de autopistas · LIF 2026, Art. 20-A" />
-```
-y `facturacion/page.tsx:98`:
+Código, literal (`facturacion/page.tsx:98`):
 ```
                 etiqueta="Peaje acreditable (50%)" valor={acred.peaje} formato="mxn" nota="LIF 2026, Art. 20-A" />
 ```
-El motor lo calcula con `engine.ts:1028`: `if (g.concepto === 'caseta' && (g.subTotal ?? 0) > 0) peajeAcreditable += (g.subTotal as number) * peajeFactor;` — sin
-mirar RNAC, ingresos ni partes relacionadas.
+Además `getAcreditables(tenantId)` se llama **sin ventana** (`:35`), y
+`corteVentana(undefined)` devuelve `null` (`analytics.ts:43`): la cifra es de
+todo el histórico, bajo un encabezado que no declara periodo.
 
-El PDF **sí** lo resuelve: `acreditable.ts:115-118` etiqueta el renglón
-"…**— sujeto a elegibilidad**", lo pinta en tono `condicionado` (tinta neutra, no
-verde) y le cuelga los dos pies `BASE_ESTIMULO_PEAJE` y
-`CONDICIONES_ESTIMULO_PEAJE`, que enumeran las cuatro. El comentario de
-`pdf.ts:330-333` explica exactamente por qué: *"Una flota con ingresos ≥ $300M, o
-parte relacionada, se llevaba impreso un estímulo al que no tiene derecho."* El
-arreglo no llegó ni a `/dashboard` (la pantalla de aterrizaje del contralor) ni a
-`/dashboard/facturacion`. La página de detalle sí lo lleva
-(`dashboard/[id]/page.tsx:266`, `nota="Sujeto a elegibilidad"`), lo que confirma
-que fue una omisión y no una decisión.
+**Escenario:** flota con **$420M** de ingresos anuales. Histórico de casetas:
+$50,000 de SubTotal → `peajeAcreditable = 50,000 × 0.5 = $25,000` (`engine.ts:1028`).
+La pantalla imprime **"Peaje acreditable (50%) $25,000.00 · LIF 2026, Art.
+20-A"**. El estímulo real de esa flota es **$0.00**: supera los $300M. El PDF de
+las mismas liquidaciones sí lleva "— sujeto a elegibilidad", tono `condicionado`
+y los dos pies `BASE_ESTIMULO_PEAJE` / `CONDICIONES_ESTIMULO_PEAJE`
+(`acreditable.ts:115-118`), que enumeran las cuatro.
 
-**Escenario:** flota con $420M de ingresos anuales. En la ventana de 7 días hay
-CFDI de caseta por $50,000 de subtotal → `peajeAcreditable = $25,000`. El panel
-imprime **"Peaje (50%) $25,000.00 · Estímulo de autopistas · LIF 2026, Art.
-20-A"**. El estímulo real de esa flota es **$0** (supera los $300M). El PDF de
-las mismas liquidaciones lleva "sujeto a elegibilidad" y las cuatro condiciones;
-el panel no.
+**Progreso real:** `/dashboard/page.tsx` **ya no** tiene ese renglón — el rework
+retiró las tarjetas de peaje e IVA en pesos y dejó solo litros de diésel
+(`page.tsx:304-309`). Queda una sola superficie abierta.
 
-**Consecuencia:** una cifra en pesos con un artículo citado al lado es una
-afirmación. `normas/criterio-1-CFF-PI.yaml` recuerda que la fracción de cierre
-alcanza a "quien asesore, aconseje, **PRESTE SERVICIOS** o participe" — es
-exposición de Likida, no del cliente.
-
-**Causa raíz probable:** `analytics.acreditables()` devuelve `peaje` como número
-crudo y cada pantalla decide su copy; el renglón condicionado vive en
-`acreditable.ts`, que solo consume el PDF.
+**Consecuencia / causa raíz.** Una cifra en pesos con artículo citado al lado es
+una afirmación; `normas/criterio-1-CFF-PI.yaml` recuerda que la fracción de
+cierre alcanza a quien "PRESTE SERVICIOS" — es exposición de Likida. Causa raíz:
+`analytics.acreditables()` entrega `peaje` como número crudo y cada pantalla
+decide su copy; el renglón condicionado vive en `acreditable.ts`, que solo
+consume el PDF.
 
 ---
 
-### [ALTO] El combustible en efectivo dentro del 15% no acredita **IVA** — y ninguna ficha respalda esa negativa (la que existe excluye el IEPS, no el IVA)
+### [ALTO · REINCIDENTE] El combustible en efectivo dentro del 15% no acredita **IVA**, y la ficha que se invoca excluye el **IEPS**, no el IVA
 
 `src/lib/likida/cuadre/engine.ts:985,1003` · `src/lib/likida/fiscal.ts:512-515` ·
-fichas `normas/liva-5.yaml` y `normas/rfa-2026-2.9.yaml`
-(ambas `verificado_fuente_primaria`)
+fichas `normas/liva-5.yaml` y `normas/rfa-2026-2.9.yaml` (ambas `verificado_fuente_primaria`: **sí**)
 
-**Norma (literal, `liva-5.yaml` → art. 5 fr. I):**
-> "…se consideran estrictamente indispensables **las erogaciones efectuadas por el
-> contribuyente que sean deducibles para los fines del impuesto sobre la renta**,
-> aun cuando no se esté obligado al pago de este último impuesto."
+> "…se consideran estrictamente indispensables **las erogaciones efectuadas por
+> el contribuyente que sean deducibles para los fines del impuesto sobre la
+> renta**, aun cuando no se esté obligado al pago de este último impuesto."
+> — `liva-5.yaml`, art. 5 fr. I
 
-**Norma (literal, `rfa-2026-2.9.yaml` → `limite_importante`):**
-> "Conserva la **DEDUCCIÓN para ISR**. NO habilita el acreditamiento **del IEPS**:
-> son dos beneficios distintos y el efectivo solo salva uno."
+> "Conserva la **DEDUCCIÓN para ISR**. NO habilita el acreditamiento **del
+> IEPS**: son dos beneficios distintos y el efectivo solo salva uno."
+> — `rfa-2026-2.9.yaml:37-39`, `limite_importante`
 
-**Código (literal, `engine.ts:985,1003`):**
+Código, literal (`engine.ts:985`, la lista, y `:1003`, el salto):
 ```
-  const SIN_ACREDITAMIENTO: TipoDiferencia[] = ['rfc_receptor', …, 'combustible_efectivo', 'combustible_efectivo_dentro15', 'efectivo_sobre_15', 'efectivo_no_elegible', …];
+  const SIN_ACREDITAMIENTO: TipoDiferencia[] = [… 'combustible_efectivo', 'combustible_efectivo_dentro15', 'efectivo_sobre_15', 'efectivo_no_elegible', …];
   …
     if (diferencias.some((d) => d.gastoId === g.id && SIN_ACREDITAMIENTO.includes(d.tipo))) continue;
 ```
-El `continue` salta el gasto **entero**, incluida la línea de IVA
-(`engine.ts:1026`). `fiscal.ts:515` hace lo mismo en el panel y lo justifica así:
-`// … el combustible en EFECTIVO no acredita IVA — la facilidad del 15% (RFA 2.9) solo salva la deducción de ISR`.
+El `continue` salta el gasto entero, incluida la línea de IVA (`engine.ts:1027`).
+`fiscal.ts:515` repite la exclusión en el panel con este comentario: *"el
+combustible en EFECTIVO no acredita IVA — la facilidad del 15% (RFA 2.9) solo
+salva la deducción de ISR"*. La ficha dice **IEPS**.
 
-La ficha dice **IEPS**. El código extiende la exclusión al **IVA**, un impuesto
-distinto, sin ficha que lo sostenga. Y el art. 5 de la LIVA no condiciona el
-acreditamiento al medio de pago: la fr. I lo ata a que la erogación sea
-*deducible para ISR* —y por la RFA 2.9 lo es— y la fr. III solo pide que el IVA
-esté trasladado expresamente y por separado.
-
-**Escenario:** CFDI de diésel de **$5,800** (subtotal $5,000, IVA trasladado
+**Escenario:** CFDI de diésel de **$5,800** (SubTotal $5,000, IVA trasladado
 $800), pagado en efectivo, XML verificado, flota elegible, dentro del 15%. El
 motor emite `combustible_efectivo_dentro15`, el gasto entra a `totalDeducible`
-por $5,800 (bien), y `ivaAcreditable` recibe **$0**. Por LIVA 5-I + RFA 2.9 son
-**$800** acreditables. El PDF no imprime el renglón "IVA acreditable (LIVA art.
-5)" para ese comprobante, y el panel lo cuenta en `ivaNoAcreditable`
-(`fiscal.ts:536`).
+por $5,800 (correcto) y `ivaAcreditable` recibe **$0.00**. Por LIVA 5-I (la
+erogación es deducible para ISR gracias a la RFA 2.9) + fr. III (IVA trasladado
+expresamente y por separado) serían **$800.00** acreditables. El PDF no imprime
+el renglón "IVA acreditable (LIVA art. 5)" para ese comprobante y el panel lo
+suma a `ivaNoAcreditable` (`fiscal.ts:536`).
 
-**Consecuencia:** al cliente le faltan $800 de IVA acreditable por CFDI en el
-papel que le entregamos. El error va a la baja (menos riesgo ante el SAT, más
-dinero perdido para el cliente), pero es igual de equivocado y contradice la
-regla del producto de no afirmar sin ficha: aquí se **niega** un acreditamiento
-citando una restricción que la ficha no contiene.
-
-**Causa raíz probable:** la lista `SIN_ACREDITAMIENTO` es una sola dimensión
-("no acredita nada") para dos impuestos con requisitos distintos; el comentario
-que la encabeza (`engine.ts:979-984`) advierte precisamente de esa confusión
-pero solo en la dirección ISR↔IEPS.
+**Consecuencia / causa raíz.** Al cliente le faltan $800 de IVA acreditable por
+CFDI en el papel que Likida le entrega. El error va a la baja (menos riesgo ante
+el SAT, más dinero perdido para el cliente), pero **niega** un acreditamiento
+citando una restricción que ninguna ficha contiene. Causa raíz:
+`SIN_ACREDITAMIENTO` es una sola dimensión ("no acredita nada") para dos
+impuestos con requisitos distintos.
 
 ---
 
-### [MEDIO · REINCIDENTE] "El SAT no reconoce este CFDI" no llega al panel del contador: `causasDe` solo conoce `cancelado`
+### [MEDIO · REINCIDENTE, ahora en el KPI del dueño] "El SAT no reconoce este CFDI" sigue sin llegar a `causasDe` — y ahora tampoco al panel del dueño
 
-`src/lib/likida/fiscal.ts:314-344` (`causasDe`), `fiscal.ts:207-223`
-(`CausaPerdida` no tiene `cfdi_no_encontrado` ni `cfdi_pendiente`) ·
-contraste: `src/lib/likida/cuadre/engine.ts:100-101`
-(`NO_DEDUCIBLE_ISR` incluye `'cfdi_no_encontrado'`; `POR_CONFIRMAR` incluye
-`'cfdi_pendiente'`) · `src/lib/likida/intake/sat.ts:18`
-(`EstadoSat = 'vigente' | 'cancelado' | 'no_encontrado' | 'pendiente'`)
+`src/lib/likida/fiscal.ts:314-344` · contraste `src/lib/likida/cuadre/engine.ts:100-101,985` ·
+`src/lib/likida/intake/sat.ts:18` (`EstadoSat = 'vigente' | 'cancelado' | 'no_encontrado' | 'pendiente'`) ·
+ficha `normas/cff-29-A.yaml` (`verificado_fuente_primaria`: **no** — `texto_vigente: null`)
 
-**Código (literal, `fiscal.ts:321-328`):**
+Código, literal (`fiscal.ts:321-328`):
 ```
   if (g.estadoSat === 'cancelado') push('cfdi_cancelado');
 
@@ -353,383 +376,294 @@ contraste: `src/lib/likida/cuadre/engine.ts:100-101`
     else push('sin_cfdi');
   }
 ```
-No hay rama para `'no_encontrado'` ni para `'pendiente'`.
+`grep -n "no_encontrado" src/lib/likida/fiscal.ts` devuelve **una sola línea, la
+509** (`ivaSostenible`). `causasDe` no tiene rama.
 
-**Escenario:** un gasto de **$11,600** con UUID que el SAT devuelve como *no
-encontrado* (UUID inexistente o fabricado), forma de pago transferencia.
-- Motor / PDF: `cfdi_no_encontrado` → `cubetaDe` → **`no_deducible`** →
-  "No deducible $11,600.00" en rojo, nota "El SAT NO reconoce el CFDI… — no
-  deducible" (`engine.ts:502`).
-- `/dashboard/contador/deducciones`: `causasDe` devuelve `[]` → la fila no entra
-  a `resumirPerdidas` → si es el único comprobante marcado, la pantalla imprime
-  *"Ningún comprobante del periodo tiene una observación fiscal"*
+**Escenario:** gasto de **$11,600** con UUID que el SAT devuelve *no encontrado*,
+pagado por transferencia.
+- Motor / PDF: `cfdi_no_encontrado` → **no deducible** → "No deducible
+  $11,600.00" en rojo (`engine.ts:502`).
+- `/dashboard/contador/deducciones`: `causasDe` → `[]`, la fila no entra a
+  `resumirPerdidas`; si es el único marcado, la pantalla imprime "Ningún
+  comprobante del periodo tiene una observación fiscal"
   (`deducciones/page.tsx:120-122`) y **$0.00** en las tres cubetas.
+- **Nuevo:** la tarjeta "En riesgo / perdido" del dueño también da **$0.00**
+  sobre los mismos $11,600 que el PDF declara perdidos.
 
-Lo mismo con `estadoSat === 'pendiente'`: el motor lo manda a `por_confirmar` y
-lo saca del acreditamiento; el panel no lo cuenta en ninguna cubeta. El arreglo
-de la ronda anterior llegó solo a `ivaSostenible` (`fiscal.ts:509` sí excluye
-`pendiente` y `no_encontrado` del IVA) y no a `causasDe`, que es lo que mueve el
-dinero de la pantalla.
-
-**Consecuencia:** el contador cierra el mes con la pantalla que dice que no hay
-nada perdido, y el PDF de ese mismo viaje declara $11,600 no deducibles.
-
-**Causa raíz probable:** dos catálogos de veredictos (`TipoDiferencia` del motor
-y `CausaPerdida` del panel) sin nada que obligue a que el segundo cubra al
-primero.
+Igual con `'pendiente'`. **Consecuencia:** dos pantallas dicen que no hay nada
+perdido sobre el peso que el PDF ya dio por perdido.
 
 ---
 
-### [MEDIO · REINCIDENTE (2ª ronda)] `efectivo_no_elegible` sigue fuera de `ORDEN`: la sección "por causa" queda vacía con dinero en "perdido", y un diésel sin CFDI de flota no elegible se cuenta como "se recupera"
+### [MEDIO · REINCIDENTE (3ª ronda)] `efectivo_no_elegible` sigue fuera de `ORDEN`
 
-`src/lib/likida/fiscal.ts:354-357` · `fiscal.ts:429-440` (`porCausa` se filtra por
-`ORDEN`) · `src/app/dashboard/contador/deducciones/page.tsx` (la sección "por
-causa" no se renderiza con `porCausa` vacío)
+`src/lib/likida/fiscal.ts:354-357,429-440`
 
-**Código (literal, `fiscal.ts:354-357`):**
 ```
 const ORDEN: CausaPerdida[] = [
   'efos', 'cfdi_cancelado', 'plazo_vencido', 'efectivo_sobre_tope',
   'efos_indeterminado', 'combustible_efectivo', 'sin_cfdi',
 ];
 ```
-`'efectivo_no_elegible'` está en `CausaPerdida` (`fiscal.ts:221`), en `TITULOS`
-(`fiscal.ts:279-284`) y en `causasDe` (`fiscal.ts:338`) — pero no aquí.
+`'efectivo_no_elegible'` está en `CausaPerdida` (`:221`), en `TITULOS` (`:279`) y
+en `causasDe` (`:338`) — no aquí.
 
-**Escenario:** flota con `elegible15 = false`. Diésel en efectivo de **$1,000**
-**sin** CFDI → `causasDe` devuelve `[sin_cfdi, efectivo_no_elegible]`;
-`causaDominante` recorre `ORDEN`, encuentra `sin_cfdi` y devuelve esa →
-**`montoRecuperable = $1,000`**, "Se recupera pidiendo la factura". Falso: aun
-timbrándolo, el efectivo en combustible de una flota que no califica no deduce
-(LISR 27-III sin excepción, que es justo lo que el propio `TITULOS`
-`efectivo_no_elegible` dice). Con CFDI, la dominante sí es `efectivo_no_elegible`
-→ $1,000 en "Ya no se recupera" pero **`porCausa = []`**: la suma por causa no
-cuadra con el total, que es lo que la propia pantalla se prohíbe
-(`deducciones/page.tsx:36-41`).
-
-**Consecuencia:** la gravedad del dinero queda invertida y el desglose que
-explica dónde se perdió desaparece.
-
-**Causa raíz probable:** el tipo se añadió a tres de las cuatro listas que lo
-necesitan.
+**Escenario:** flota con `elegible15 = false`, diésel en efectivo de **$1,000**
+**sin** CFDI → `causasDe` da `[sin_cfdi, efectivo_no_elegible]`; `causaDominante`
+recorre `ORDEN`, encuentra `sin_cfdi` y devuelve esa → **$1,000 a
+`montoRecuperable`**, "Se recupera pidiendo la factura", y **$1,000 se suman a
+"Ahorro generado"** en el panel del dueño. Falso: aun timbrado, el efectivo en
+combustible de una flota que no califica no deduce (es lo que el propio
+`TITULOS.efectivo_no_elegible` dice, `fiscal.ts:279-284`). Con CFDI la dominante
+sí es `efectivo_no_elegible` → $1,000 en "perdido" pero **`porCausa = []`**: el
+desglose por causa desaparece y la suma por causa no cuadra con el total.
 
 ---
 
-### [MEDIO · REINCIDENTE (2ª ronda)] La píldora y el gauge del 15% siguen diciendo "Holgado / Excedido" a flotas a las que la facilidad no aplica
+### [MEDIO · REINCIDENTE (3ª ronda)] La píldora y el gauge del 15% dicen "Holgado / Excedido" a flotas a las que la facilidad no aplica
 
-`src/app/dashboard/contador/combustible/page.tsx:75,134,148` ·
-`src/lib/likida/fiscal.ts:611-619` (`tope15DeGastos` no recibe ni lee
-`o.elegible15`) · contraste: `combustible/page.tsx:154-171`, donde el **texto**
-sí interroga la declaración.
+`src/app/dashboard/contador/combustible/page.tsx:134` · `src/lib/likida/fiscal.ts:611-619`
+(`tope15DeGastos` no recibe ni lee `o.elegible15`)
 
-**Código (literal, `page.tsx:134`):**
 ```
                 accion={<StatusPill estado={ESTADO_TOPE[tope.estado].estado}>{ESTADO_TOPE[tope.estado].texto}</StatusPill>}
 ```
 
-**Escenario:** flota con `elegible15 = false` y $500 de diésel en efectivo sobre
-$10,000 de combustible del periodo → `evaluarTope15` da `estado: 'holgado'` → la
-píldora se pinta **verde "Holgado"** y el gauge al 5%, justo encima del texto que
-dice "La flota declaró que NO califica… el combustible en efectivo no es
-deducible". La píldora es lo que se lee primero.
-
-**Consecuencia:** la lectura rápida de la pantalla afirma que la flota va dentro
-de una válvula que no tiene.
-
-**Causa raíz probable:** el fix de la ronda 15 curó el copy y no la función que
-alimenta el indicador.
+**Escenario:** flota con `elegible15 = false`, $500 de diésel en efectivo sobre
+$10,000 de combustible del periodo → `evaluarTope15` → `'holgado'` → píldora
+**verde "Holgado"** y gauge al 5%, justo encima del texto que dice "La flota
+declaró que NO califica… el combustible en efectivo no es deducible"
+(`:155-159`). La píldora se lee primero.
 
 ---
 
-### [MEDIO · REINCIDENTE (2ª ronda)] Un gasto de combustible **sin fecha** corre contra el contador del 15% cuyo denominador lo excluye
+### [MEDIO · REINCIDENTE (3ª ronda)] Un gasto de combustible **sin fecha** corre contra un contador del 15% cuyo denominador lo excluye
 
-`src/lib/likida/cuadre/engine.ts:312-313` · `src/lib/likida/cuadre/desde_db.ts:86-90` ·
-`src/lib/likida/repo.ts:832-833` (`.gte('fecha', …)` / `.lte('fecha', …)`)
+`src/lib/likida/cuadre/engine.ts:312-313` · `src/lib/likida/cuadre/desde_db.ts:87` ·
+`src/lib/likida/repo.ts:832-833`
 
-**Código (literal, `engine.ts:312-313`):**
 ```
         const anioComprobante = g.fecha ? g.fecha.slice(0, 4) : null;
         const mismoEjercicio = !anioComprobante || anioComprobante === input.anioEjercicio;
 ```
-y `desde_db.ts:87`:
-```
-    .filter((g) => (g.fecha?.slice(0, 4) ?? anioEjercicio) === anioEjercicio
-```
-Un gasto sin fecha se declara "del mismo ejercicio" por construcción en los dos
-sitios, pero la consulta que mide la base filtra por `fecha` y nunca lo incluyó.
+Un gasto sin fecha se declara "del mismo ejercicio" por construcción, pero
+`repo.ts:832-833` filtra `.gte('fecha', …)/.lte('fecha', …)` y nunca lo incluyó.
 
-**Escenario (ejercicio 2026):** la consulta trae `efectivo = 14,300` (incluye
-$500 fechados de este viaje) y `totalCombustible = 99,000`. Este viaje trae
-además un diésel en efectivo de **$1,000 SIN fecha** (el OCR no la leyó).
-`efectivoDeEsteViaje = 500 + 1,000 = 1,500` → `prev = 14,300 − 1,500 = 12,800`
-(se resta un monto que la consulta nunca sumó). El motor acumula `12,800 + 1,500
-= 14,300` contra `tope = 14,850` → declara **cero exceso**. El efectivo real del
-ejercicio es `13,800 + 1,500 = 15,300` contra un tope real de `15,000` (el
-sin-fecha también es base): el exceso verdadero es **$300** y el motor imprimió
-**$0**.
-
-**Consecuencia:** la flota cruza el 15% sin corte y el PDF afirma deducible lo
-que no lo es. La dirección del error se invierte según de dónde venga el
-sin-fecha, así que tampoco es conservador.
-
-**Causa raíz probable:** el fail-closed de la ronda 15 cubrió "gasto de otro
-ejercicio" y dejó "gasto sin ejercicio atribuible" tratado como del año en curso.
+**Escenario (ejercicio 2026):** la consulta trae `efectivo = 14,300` y
+`totalCombustible = 99,000`. Este viaje trae además un diésel en efectivo de
+**$1,000 sin fecha** (el OCR no la leyó). `efectivoDeEsteViaje = 500 + 1,000 =
+1,500` → `prev = 12,800` (se resta un monto que la consulta nunca sumó) →
+acumulado $14,300 contra `tope = $14,850` → **cero exceso impreso**. El efectivo
+real del ejercicio es $15,300 contra un tope real de $15,000 (el sin-fecha
+también es base): el exceso verdadero es **$300** y el PDF imprimió **$0**.
 
 ---
 
-### [MEDIO · REINCIDENTE (3ª ronda)] El chat cuenta el 15% con `concepto='diesel'` a secas; el `SUM` en SQL de la migración 0084 nunca se llama
+### [MEDIO · REINCIDENTE (4ª ronda)] El chat cuenta el 15% con `concepto='diesel'` a secas
 
-`src/lib/likida/tools.ts:109` (`await getAcumuladoCombustible(ctx.tenantId, ejercicio)`
-— sin el tercer argumento) · `src/lib/likida/repo.ts:831` (sin `claves` cae a
-`concepto.eq.diesel`) · contraste `desde_db.ts:78` (mismo llamado **con**
-`clavesCombustible`) · `supabase/migrations/0084_sumar_combustible_ejercicio.sql`
-(`grep -rn "sumar_combustible_ejercicio" src/` solo devuelve
-`migraciones_verificadas.test.ts:56`, que además afirma "si falta,
-getAcumuladoCombustible lanza ruidoso… (el RPC no existe)" — el RPC no se invoca
-desde ningún camino de producción).
+`src/lib/likida/tools.ts:110` (`await getAcumuladoCombustible(ctx.tenantId, ejercicio)` — **sin** el tercer argumento) ·
+`src/lib/likida/repo.ts:831` (sin `claves` cae a `concepto.eq.diesel`) ·
+contraste `src/lib/likida/cuadre/desde_db.ts:78` (mismo llamado **con** `clavesCombustible`)
 
-**Escenario:** un CFDI de diésel llega después de la foto y
-`repo.updateGastoCfdiXml` (`repo.ts:421-433`) escribe `clave_prod_serv =
-'15101505'` pero **no reescribe `concepto`** — el gasto sigue con el concepto que
-puso el OCR (`otro`/`factura`). El motor y `desde_db` lo cuentan en el 15% (por
-clave); el aviso del chat no. El mismo día, WhatsApp puede decir "vas en 8% del
-15%" mientras la liquidación imprime "el excedente NO se deduce".
-
-**Consecuencia:** dos cifras del mismo hecho fiscal en dos canales, y la del chat
-es la que el jefe de flota lee para decidir con qué pagar.
+**Escenario:** el CFDI de diésel llega después de la foto;
+`repo.updateGastoCfdiXml` escribe `clave_prod_serv = '15101505'` pero **no**
+reescribe `concepto` (queda `otro`/`factura`). Motor y `desde_db` lo cuentan en
+el 15% por clave; el aviso del chat no. Con $8,000 de diésel-por-clave fuera del
+conteo del chat sobre $60,000 del ejercicio, WhatsApp dice "vas en 8%" el mismo
+día en que la liquidación imprime "el excedente NO se deduce". Además,
+`0084_sumar_combustible_ejercicio.sql` sigue sin invocarse desde producción
+(`grep -rn "sumar_combustible_ejercicio" src/` → solo
+`migraciones_verificadas.test.ts:56`).
 
 ---
 
-### [MEDIO] El panel del contador afirma como resuelto lo que la ficha marca `SIN RESOLVER`: "el estímulo es el 50% del gasto en peaje **sin IVA**"
+### [MEDIO · REINCIDENTE] El panel afirma como resuelto lo que la ficha marca `SIN RESOLVER`: "el estímulo es el 50% del gasto en peaje **sin IVA**"
 
-`src/app/dashboard/contador/combustible/page.tsx:227-230` · ficha
-`normas/lif-2026-20-A.yaml`, hallazgo **H4**, `severidad: alta`,
-`estado: SIN RESOLVER`
+`src/app/dashboard/contador/combustible/page.tsx:227-230` ·
+ficha `normas/lif-2026-20-A.yaml`, hallazgo **H4** (`severidad: alta`, `estado: SIN RESOLVER`)
 
-**Norma (literal):** "…consistente en permitir un acreditamiento de los gastos
-realizados en el pago de los servicios por el uso de la infraestructura
-mencionada hasta en un 50 por ciento **del gasto total erogado** por este
-concepto."
+> "…hasta en un 50 por ciento **del gasto total erogado** por este concepto."
+> — `lif-2026-20-A.yaml:46`
+> H4 · `por_que_importa`: "…CONFLICTO: usar el total podría duplicar el beneficio
+> del IVA… **Esta es una pregunta para un contador, NO para resolverse sola.**"
 
-**Código (literal, `combustible/page.tsx:227-230`):**
 ```
                     El estímulo es el 50% del gasto en peaje sin IVA (LIF 2026 20-A, para ingresos bajo $300M). La
-                    base es el SubTotal, no el total: aplicar el 50% al total incluiría el IVA, que ya se acredita
-                    por su lado.
+                    base es el SubTotal, no el total: aplicar el 50% al total incluiría el IVA…
 ```
-El PDF, para la misma cifra, dice lo contrario de "resuelto"
-(`acreditable.ts:47-49`, `BASE_ESTIMULO_PEAJE`): *"La ley dice '50% del gasto
-total erogado'; si su contador toma el total con IVA, la cifra sube alrededor de
-13.8%."*
-
-**Escenario:** $50,000 de subtotal de casetas. El panel enseña la base como
-$50,000 y afirma que esa es la del estímulo → $25,000. Con la base literal de la
-ley ($58,000 erogados) serían $29,000: **$4,000 de diferencia** presentados como
-si no hubiera discusión, sobre un punto que la ficha declara sin resolver y
-"pregunta para un contador".
-
-**Consecuencia:** el contador lee una regla en el panel y la contraria en el PDF.
+**Escenario:** $50,000 de SubTotal de casetas. El panel afirma sin matiz que la
+base del estímulo es $50,000 → $25,000. Con la base literal de la ley ($58,000
+erogados) serían $29,000: **$4,000 de diferencia** presentados como si no hubiera
+discusión. El PDF, para la misma cifra, dice lo contrario
+(`acreditable.ts:47-49`): *"La ley dice '50% del gasto total erogado'; si su
+contador toma el total con IVA, la cifra sube alrededor de 13.8%."*
 
 ---
 
-### [MEDIO] Las seis pantallas del panel del contador emiten veredictos fiscales con norma citada sin la leyenda del CFF 89 — la eximente que `leyendas.ts` existe para producir
+### [MEDIO · REINCIDENTE] Las seis pantallas del panel del contador emiten veredictos con norma citada sin la leyenda del CFF 89
 
-`src/app/dashboard/contador/comun.tsx:174-183` (`PieDeAlcance`, el único pie de
-esas pantallas) · `src/lib/likida/fiscal.ts:945-946` (columna `fundamento` del
-export a Excel) · `src/lib/likida/cuadre/leyendas.ts:36-39` (`LEYENDA_CORTA`,
-usada solo en `dashboard/page.tsx:425`, `dashboard/cuadre/page.tsx:246` y
-`dashboard/[id]/page.tsx:372`) · ficha `normas/cff-89-90.yaml`
-(`verificado_fuente_primaria`)
+`src/app/dashboard/contador/comun.tsx:174-183` · `src/lib/likida/fiscal.ts:960,990` ·
+`src/lib/likida/cuadre/leyendas.ts:36-39` · ficha `normas/cff-89-90.yaml` (`verificado_fuente_primaria`: **sí**)
 
-**Norma (literal, art. 89 último párrafo):**
 > "No se incurrirá en la infracción a que se refiere la fracción primera de este
 > artículo, cuando se manifieste… **o bien manifiesten también por escrito al
 > contribuyente que su asesoría puede ser contraria a la interpretación de las
-> autoridades fiscales.**"
+> autoridades fiscales.**" — art. 89, último párrafo
 
-**Código (literal, `comun.tsx:177-180`):**
-```
-      Todo lo de esta pantalla sale de los comprobantes que los operadores mandaron por WhatsApp y que el
-      agente leyó. No es la contabilidad completa de la flota: los gastos que no pasan por el teléfono
-      (nómina, seguros, arrendamiento, refacciones de taller) no están aquí y hay que sumarlos aparte.
-```
-Dice de dónde sale el dato; **no** dice que el criterio puede diferir del del
-SAT. `grep -rln "LEYENDA\|dictamen\|criterios que dé a conocer"
-src/app/dashboard/contador/` → cero archivos.
+`grep -rln "LEYENDA\|criterios que dé a conocer" src/app/dashboard/contador/` →
+**cero archivos**. `PieDeAlcance` dice de dónde sale el dato, no que el criterio
+pueda diferir del del SAT. **Escenario:** el contador abre "Deducciones
+perdidas", ve "$4,800 ya no se recupera · LISR 27-III", exporta el CSV con la
+columna `fundamento` y lo mete a su papel de trabajo; el art. 90 sube la multa
+del 10% al 20% de la contribución omitida cuando el criterio es diverso al del
+SAT, y la conducta eximente nunca se manifestó por escrito.
 
-**Escenario:** el contador abre "Deducciones perdidas", ve "$X ya no se
-recupera · LISR 27-III", exporta el CSV con la columna `fundamento`, y lo usa
-para su papel de trabajo. En ninguna de las dos superficies aparece la
-manifestación por escrito que el propio art. 89 nombra como conducta que exime.
+---
 
-**Consecuencia:** es exposición de Likida (el propio encabezado de
-`leyendas.ts:8-11` lo dice: "un motor que calcula mal un estímulo… comete una
-práctica indebida propia"), y el agravante del art. 90 sube la multa del 10% al
-20% de la contribución omitida cuando el criterio es diverso al del SAT.
+### [MEDIO · NUEVO en el pase 2] Las ventanas de 7 y 30 días excluyen en silencio los comprobantes sin fecha; el campo que lo diría se calcula y se tira
+
+`src/lib/likida/fiscal.ts:733-734` (`if (periodo.desde) q = q.gte('fecha', …)`) ·
+`fiscal.ts:452` (`sinFecha: gastos.filter((g) => !g.fecha).length`) ·
+`src/app/dashboard/motor-fiscal-periodo.tsx:15` (`interface ResumenSimple { montoPerdido; montoEnRiesgo; montoRecuperable }`)
+
+`getGastosFiscales` documenta la regla, literal (`fiscal.ts:712-714`): *"Los
+comprobantes SIN `fecha` quedan fuera de cualquier corte por periodo, y eso **se
+cuenta y se dice** (`sinFecha` en el resumen) en vez de meterlos calladamente en
+el mes actual."* La tarjeta nueva no lo dice: `ResumenSimple` solo lleva los tres
+escalares, y `page.tsx:141-143` descarta `sinFecha` al armar la serie.
+
+**Escenario:** flota con 9 tickets sin fecha por **$27,400** (OCR no leyó la
+fecha), todos sin CFDI. En `semanal` y `mensual` la consulta los excluye
+(`.gte('fecha', …)` descarta NULL) → la tarjeta muestra "Recuperable pidiendo
+factura $3,100 · últimos 30 días". Al pasar a `histórico`
+(`resolverPeriodo('todo')`, `desde/hasta = null`, sin filtro) los $27,400
+reaparecen de golpe: **$30,500**. Un salto de 10× al mover la flecha, sin una
+palabra que lo explique — mientras `/dashboard/contador/deducciones` sí tiene el
+campo para decirlo.
 
 ---
 
 ### [BAJO · REINCIDENTE] `avisoTope15` afirma "hay pagos de combustible en efectivo" a toda flota sin declarar, incluso con cero efectivo
 
 `src/lib/likida/periodo/aviso.ts:32-33`
-
-**Código (literal):**
 ```
   if (elegible === undefined) {
     return `Diésel en efectivo ${ejercicio}: hay pagos de combustible en efectivo, pero la facilidad del 15% de la RFA 2026 regla 2.9 exige que la flota declare su dedicación y régimen al registrarla. …`;
   }
 ```
-La rama devuelve el texto sin mirar `r`. El contrato de la función
-(`aviso.ts:19-22`) dice "En `holgado` devuelve null a propósito".
-
-**Escenario:** tenant sin declarar con **cero** diésel en efectivo en el
-ejercicio (`efectivo = 0, total = 0` → `evaluarTope15` da `holgado`). `tools.ts:119`
-mete el aviso en el turno del agente; si el modelo lo repite, el jefe de flota
-recibe por WhatsApp la afirmación "hay pagos de combustible en efectivo" sobre un
-hecho que nadie midió.
+La rama devuelve el texto **sin mirar `r`**, contra el contrato de la propia
+función (`:19-20`: "En `holgado` devuelve null a propósito").
+**Escenario:** tenant sin declarar con `efectivo = 0, total = 0` → `holgado`;
+`tools.ts:119` mete el aviso en el turno del agente y el jefe de flota recibe por
+WhatsApp "hay pagos de combustible en efectivo" sobre un hecho que nadie midió.
 
 ---
 
-### [BAJO · REINCIDENTE] La rama fail-closed del 15% hace `continue` y se lleva por delante `monto_discrepante` y `comprobante_no_fiscal` del mismo comprobante
+### [BAJO · REINCIDENTE] La rama fail-closed del 15% hace `continue` y se lleva por delante `monto_discrepante` del mismo comprobante
 
-`src/lib/likida/cuadre/engine.ts:324` (`continue;`) · las notas saltadas viven en
-`engine.ts:381,399,402`. Las otras cuatro ramas del 15% no continúan.
-
+`src/lib/likida/cuadre/engine.ts:324` (`continue;`) · notas saltadas en `engine.ts:381,399,402`.
+Las otras cuatro ramas del 15% no continúan.
 **Escenario:** el contador del ejercicio no responde (`total = 0`, bache de red)
-y ese mismo ticket de diésel en efectivo trae `ocrExtra.montoDiscrepante` (el
-total del código no coincide con el del OCR, p. ej. $4,200 vs $4,700). El gasto
-sale a `por_confirmar` con la nota honesta de la facilidad —bien— pero **sin** la
-advertencia de que el total está en duda, que en cualquier otra circunstancia sí
-se emite. El contralor recibe la liquidación con un monto dudoso y sin aviso.
+y ese mismo ticket de diésel en efectivo trae `ocrExtra.montoDiscrepante`
+($4,200 del código vs $4,700 del OCR). Sale a `por_confirmar` con la nota honesta
+de la facilidad, pero **sin** la advertencia de que el total está en duda. El
+contralor recibe la liquidación con un monto dudoso y sin aviso.
 
 ---
 
-## Fichas: cuáles verifiqué y cuáles quedaron no verificables
+## Fichas que NO pude verificar en esta ronda
 
-Abrí y leí las 24 fichas de `normas/`; las 16 fiscales son las que este rubro
-juzga. **Ninguna se pudo re-verificar contra la fuente en esta ronda**: los dos
-latidos (`normas/.latido-vigilancia`, `normas/.latido-cuota-diesel`) declaran
-egress bloqueado hacia `sidofqa.segob.gob.mx`, `www.sat.gob.mx` y
-`diputados.gob.mx` — **octava corrida consecutiva** de vigilancia normativa y
-segunda de cuota-diésel. El rango sin barrer del DOF va del **24-jul al 6-ago**.
-La ventana anticipada del SAT (ETag del minisitio, chequeo de lunes) lleva **tres
-lunes** bloqueada.
+`normas/` tiene hoy **21 fichas** (16 fiscales; el MAPA dice 24 — la cuenta
+cambió). **Ninguna se pudo re-verificar contra la fuente:** los dos latidos
+(`normas/.latido-vigilancia`, `.latido-cuota-diesel`) siguen declarando egress
+bloqueado a `sidofqa.segob.gob.mx`, `www.sat.gob.mx` y `diputados.gob.mx`. Todo
+lo que este reporte afirma sobre las normas sale del texto ya transcrito en las
+fichas.
 
-| Ficha | Estado | Última verificación | Uso en el veredicto de esta auditoría |
-|---|---|---|---|
-| `rfa-2026-2.9.yaml` | **verificado_fuente_primaria** | 2026-07-27 | Gana los dos CRÍTICOS (texto literal del régimen y del denominador) |
-| `lif-2026-20-A.yaml` | **verificado_fuente_primaria** | 2026-07-27 | Gana el ALTO del peaje y el MEDIO de la base |
-| `liva-5.yaml` | **verificado_fuente_primaria** | *sin fecha en la ficha* (nota: 28-jul) | Gana el ALTO del IVA sobre efectivo |
-| `lisr-28-V.yaml` | **verificado_fuente_primaria** | 2026-07-27 | Verificado contra el motor: correcto |
-| `rlisr-57.yaml` | **verificado_fuente_primaria** | 2026-07-27 | Verificado: cerrado |
-| `cff-89-90.yaml` | **verificado_fuente_primaria** | 2026-07-28 | Gana el MEDIO de la leyenda ausente |
-| `cff-69-B.yaml` | **verificado_fuente_primaria** | 2026-07-28 | Verificado contra `sat.ts`: correcto |
-| `cff-30.yaml` | **verificado_fuente_primaria** | 2026-07-28 | No decide dinero |
-| `rfa-2026-2.2.yaml` | **verificado_fuente_primaria** | 2026-07-27 | `usado_en_codigo: []` — el 8% no se implementa (correcto: excluye combustible) |
-| `lisr-27-III.yaml` | evidencia_corroborante | 2026-07-27 | **No verificable en esta ronda.** Su `nota_verificacion` pide leer el PDF de diputados; el motor decide "no deducible" con ella (`efectivo_sobre_tope`, `efectivo_no_elegible`) |
-| `cff-29-A.yaml` | evidencia_corroborante (`texto_vigente: null`) | 2026-07-27 | **No verificable.** El PDF cita CFF 29-A en `comprobante_no_fiscal` sobre una ficha sin texto transcrito |
-| `criterio-1-LIF-PI.yaml` | evidencia_corroborante (`texto_vigente: null`) | 2026-07-27 | **No verificable.** Sostiene la decisión de no imprimir el IEPS en pesos (decisión correcta y conservadora) |
-| `criterio-1-CFF-PI.yaml` | evidencia_corroborante (`texto_vigente: null`) | 2026-07-27 | **No verificable.** Sostiene las leyendas |
-| `rmf-2026-2.7.1.48.yaml` | evidencia_corroborante | 2026-07-27 | **No verificable.** `exigibleDesde: null` — el motor avisa y no declara no deducible: correcto mientras siga null |
-| `rmf-2026-2.7.1.21.yaml` | evidencia_corroborante (`texto_vigente: null`) | 2026-07-27 | **No verificable.** `usado_en_codigo` solo documentación |
-| `politica-portales-plazos.yaml` | **sin_verificar** (nivel 6) | 2026-07-28 | Sostiene el ALTO de "Ya no se recupera": una ficha `sin_verificar` de nivel 6 está moviendo dinero en el panel |
-| `cuota-ieps-diesel.yaml` | **NO EXISTE** | — | El motor no tiene cuota semanal para ninguna fecha. Correcto que no imprima pesos; incorrecto que lleve 12 días sin poder crearse |
+| Ficha | Estado | Efecto en el veredicto |
+|---|---|---|
+| `rfa-2026-2.9.yaml` | **verificado_fuente_primaria** (2026-07-27) | Gana el CRÍTICO y el ALTO de la tarjeta "En riesgo" |
+| `lif-2026-20-A.yaml` | **verificado_fuente_primaria** (2026-07-27) | Gana el ALTO del peaje y el MEDIO de la base |
+| `liva-5.yaml` | **verificado_fuente_primaria** | Gana el ALTO del IVA sobre efectivo |
+| `cff-89-90.yaml` | **verificado_fuente_primaria** (2026-07-28) | Gana el MEDIO de la leyenda ausente |
+| `lisr-28-V.yaml`, `rlisr-57.yaml`, `cff-69-B.yaml`, `cff-30.yaml`, `rfa-2026-2.2.yaml` | **verificado_fuente_primaria** | Verificadas contra el código: correctas |
+| `lisr-27-III.yaml` | evidencia_corroborante | **No verificable.** El motor decide "no deducible" con ella (`efectivo_sobre_tope`, `efectivo_no_elegible`) |
+| `cff-29-A.yaml` | evidencia_corroborante, `texto_vigente: null` | **No verificable.** El PDF y `TITULOS.cfdi_cancelado` citan CFF 29-A sobre una ficha sin texto transcrito |
+| `criterio-1-LIF-PI.yaml`, `criterio-1-CFF-PI.yaml` | evidencia_corroborante, `texto_vigente: null` | **No verificables.** Sostienen la decisión de no imprimir el IEPS en pesos y las leyendas |
+| `rmf-2026-2.7.1.48.yaml`, `rmf-2026-2.7.1.21.yaml` | evidencia_corroborante | **No verificables.** `exigibleDesde: null` — el motor avisa y no declara no deducible: correcto mientras siga null |
+| `politica-portales-plazos.yaml` | **sin_verificar**, `jerarquia: 6` | Sostiene el ALTO de "Ya no se recupera": una ficha sin verificar de nivel 6 mueve dinero en dos pantallas |
+| `cuota-ieps-diesel.yaml` | **NO EXISTE** (13 días) | Correcto que el producto no imprima el estímulo en pesos; sigue sin poder crearse |
+| *Sin ficha* | — | La **tasa de ISR** no tiene ficha en `normas/`; por eso el ALTO de "Ahorro generado" se argumenta sin depender de ella |
 
-Lectura: **ninguna ficha lleva más de 12 días sin re-verificar por descuido — lo
-llevan porque el entorno no permite verificar.** Pero el efecto sobre la
-trazabilidad es el mismo: cuatro fichas con `texto_vigente: null` sostienen citas
-que el producto imprime (CFF 29-A en el PDF, 1/LIF/PI y 1/CFF/PI en las
-leyendas), y una `sin_verificar` de nivel 6 decide una cifra en pesos.
+`rfa-2026-2.9.yaml:42-44` (`usado_en_codigo`) sigue listando solo dos sitios de
+`engine.ts`; hoy la regla también decide en `fiscal.ts`, `desde_db.ts`,
+`repo.ts`, `tools.ts`, `aviso.ts`, `administracion.ts` y dos páginas del panel.
+La trazabilidad ficha→código está desactualizada en la dirección que importa.
 
 ---
 
 ## Lo que revisé y está bien
 
-- **El estímulo de IEPS NO se imprime en pesos.** `engine.ts:998` (`const
-  iepsAcreditable = 0;` y su comentario) + `acreditable.ts:94-100` entregan
-  **litros** con el pie "el estímulo se calcula con la cuota SEMANAL vigente al
-  momento de cada compra". Es exactamente lo que exige `criterio-1-LIF-PI` y lo
-  que el brief señala como la trampa clásica. **La confusión "IEPS trasladado =
-  estímulo" está cerrada en las cinco superficies** que la podrían cometer
-  (`engine.ts:1078`, `acreditable.ts`, `pdf.ts:334-365`, `dashboard/page.tsx:385`,
-  `contador/combustible/page.tsx:122-124`, esta última con la nota literal "El
-  estímulo es cuota del DOF × litros — no esta cifra").
-- **Los litros se cotejan contra precio × litros** antes de acreditarse
-  (`engine.ts:1065-1076`): un decimal corrido (200 L leídos como 20,000 L) emite
-  `diesel_desviacion` y no acredita. Tolerancia 0.5×–2× declarada.
-- **LISR 28-V está bien implementado en las tres condiciones verificables.**
-  $750/día **por beneficiario** y solo alimentación (`engine.ts:887-903`, ficha
-  `confirmado_del_codigo`); el amparo de hospedaje/transporte
-  (`engine.ts:805-835`); y **H1b**, la tercera oración del 2º párrafo —"sólo
-  procederá cuando el pago se efectúe mediante tarjeta de crédito de la persona
-  que realiza el viaje"— con `formaPago !== '04'` (`engine.ts:857`), donde débito
-  ('28') correctamente **no** cuenta.
-- **LIVA 5-I proporcional está implementado** (`engine.ts:1024-1026`): el IVA de
-  una erogación parcialmente deducible se acredita en la proporción del día, y el
-  bloque de acreditamiento corre **después** del tope de alimentación
-  (`engine.ts:973-978`) para que la proporción exista.
-- **RLISR 57 quedó cerrado.** `repo.ts:907-914` (`actualizarRfcOperador`) y
-  `dashboard/operadores/page.tsx:182,190` son el escritor que faltaba;
-  `desde_db.ts:43-46` lo lee y `engine.ts:487-497` distingue los tres estados
-  (RFC del operador = válido; sin RFC = revisión sin quitar la deducción; tercero
-  = no deducible). El hallazgo abierto del brief **ya no aplica**.
-- **La válvula del 15% ya no se ofrece sin declaración.** `desde_db.ts:56-58`
-  exige que **ambas** condiciones sean booleanos explícitos; `undefined` va a
-  `combustible_efectivo` (revisión, `engine.ts:365-369`); el fail-closed de
-  `engine.ts:315-325` (total ≤ 0 o comprobante de otro ejercicio) no afirma nada.
-  La compuerta funciona: lo que falla es **con qué código se abre**.
-- **Las leyendas dicen lo que la norma dice.** `leyendas.ts:36-39,50-58` contra
-  `cff-89-90.yaml`: la frase "puede diferir de los criterios que dé a conocer el
-  SAT" reproduce la conducta eximente del último párrafo del art. 89, y la cita
-  del art. 52 del CFF ("no constituye un dictamen") es correcta.
-- **El complemento de hidrocarburos no tira deducciones sobre una fecha sin
-  respaldo.** `engine.ts:531-534,562-573` + `normas/indice.ts` (`exigibleDesde:
-  null`): con la exigibilidad sin confirmar se emite
-  `complemento_no_verificable` (revisión), nunca `complemento_hidrocarburos` (no
-  deducible).
-- **El permiso CRE nunca se declara cumplido ni incumplido** y se avisa una sola
-  vez por liquidación (`engine.ts:545-560,585-595`), con el renglón de
-  deducibilidad en tono `condicionado` (`deducibilidad.ts:64-71`).
-- **Las tres cubetas suman el comprobado o no se pinta nada**
-  (`deducibilidad.ts:54-55`, tolerancia de un centavo).
-- **Las retenciones no se inventan.** `fiscal.ts:665-680` declara `calculable:
-  false` con los dos campos que faltan por nombre exacto, en vez de derivar `4% ×
-  subtotal`.
-- **El IEPS del panel exige pago electrónico** (`fiscal.ts:541`) y no aplica la
-  válvula del 15%, que es lo que `rfa-2026-2.9.yaml:limite_importante` pide.
-- **El aviso de facturación lleva el matiz de jerarquía en las dos ramas**
-  (`engine.ts:730-732,749`): "legalmente puedes exigir la factura dentro del
-  ejercicio". Comprobé además que `pendientes.ts:154` (`plazo: c?.plazo ??
-  'mes_natural'`) y `engine.ts:698` (`comercio?.plazoVerificado ? … :
-  'mes_natural'`) **no** producen fechas distintas hoy, porque las 13 entradas
-  del catálogo usan `mes_natural` salvo `office_depot` (`mes_siguiente`,
-  `plazoVerificado: true`) — refuté esta divergencia antes de reportarla.
-- **La clave del estímulo de IEPS es solo diésel** (`config.ts:109`,
-  `clavesDieselIeps: ['15101505']`), y `etiquetaConcepto` (`engine.ts:1191-1198`)
-  impide que un ticket de PLUS se imprima como "Diésel" e invite a reclamar un
-  estímulo que no aplica.
+- **No hay segunda implementación fiscal.** Verificado línea a línea:
+  `getGastosFiscalesSeries` (`fiscal.ts:829-849`) llama 3× a `getGastosFiscales`
+  y `page.tsx:141-143` corre el **mismo** `resumirPerdidas`; el diff de
+  `analytics.ts` (+454) no introduce ni una consulta de IVA, IEPS, peaje ni 15%
+  (`git diff 94c0733..HEAD -- src/lib/likida/analytics.ts | grep '^+'` filtrado
+  por términos fiscales: solo coincidencias accidentales con "15" de `3650`).
+- **`getAcreditables` sigue leyendo columnas escritas por el motor**
+  (`analytics.ts:537-546`), no recalculando: una cifra, un cálculo.
+- **CRÍTICO C3 cerrado con evidencia:** `administracion.ts:128`
+  (`['624','612']`), `admin/flotas/page.tsx:223` (`<option value="624">`),
+  `0088_regimen_624_coordinados.sql:36`. El comentario de `flotas/page.tsx:221-222`
+  explica la equivalencia falsa que se corrigió.
+- **Refuté yo mismo el "15% mensual".** `/dashboard/contador/combustible` sí
+  permite `?p=mes`, pero `page.tsx:175-178` imprime, literal: *"Ojo con el rango:
+  la regla es del EJERCICIO completo. Con el filtro en un mes, esto mide ese mes,
+  no el año — para el dato que va a la declaración anual, pon el filtro en
+  'Ejercicio'."* Con esa nota el rótulo es verdad: **no es hallazgo.** Lo que la
+  tarjeta nueva del dueño no tiene es exactamente esa nota.
+- **El estímulo de IEPS sigue sin imprimirse en pesos.** `engine.ts:998`
+  (`const iepsAcreditable = 0;`) + `acreditable.ts:94-100` entregan **litros**.
+  El rework lo respetó: la tarjeta del dueño quedó "Diésel elegible para el
+  estímulo" en **litros** (`page.tsx:306-307`), y `facturacion/page.tsx:100-101`
+  dice "El estímulo en pesos lo calcula tu contador con la cuota semanal del
+  DOF". La confusión "IEPS trasladado = estímulo" está cerrada en las cinco
+  superficies que podrían cometerla.
+- **El retiro de las tarjetas de peaje e IVA en pesos de `/dashboard`** cerró la
+  superficie más vista del ALTO del peaje sin inventar un matiz nuevo.
+- **`LEYENDA_CORTA` sigue al pie de `/dashboard`** (`page.tsx:334`), incluso
+  después del rework completo de la página.
+- **`MotorFiscalPeriodo` falla cerrado** con `series === null`
+  (`motor-fiscal-periodo.tsx:39-41`: "No se pudo leer el motor fiscal en este
+  momento") — el criterio correcto, y por eso el `?? 0` de `KpiDegradado` dos
+  líneas arriba destaca tanto.
+- **Las ventanas nuevas están probadas en sus límites**
+  (`fiscal_series.test.ts`, 4 pruebas: `2026-08-02..2026-08-08` para 7 días,
+  `2026-07-10..2026-08-08` para 30, y `desde/hasta = undefined` para histórico) y
+  `getGastosFiscales` filtra por `fecha` del comprobante, no por `created_at`
+  (`fiscal.ts:733-734`), que es el criterio del contador.
+- **LISR 28-V, LIVA 5-I proporcional, RLISR 57, la clave del estímulo solo
+  diésel, el cotejo de litros y el permiso CRE** siguen como los verifiqué en el
+  pase 1: sin cambios en el diff y correctos contra sus fichas.
 
 ---
 
 ## Lo que NO alcancé a revisar
 
 - **`src/lib/likida/facturacion/` completo** (adaptadores CAPUFE/Playwright,
-  `permiso_cre.ts`, `comercios.ts` entrada por entrada). Solo verifiqué
-  `caducidad.ts`, `pendientes.ts` y los plazos del catálogo. El adaptador de
-  CAPUFE teclea datos fiscales del receptor en un portal real y no lo audité.
-- **`src/lib/saas/`** (Stripe, Facturapi, CFDI que Likida **emite** a la flota).
-  Solo miré `fiscal.ts` lo suficiente para ver el conflicto de catálogos con
-  `crearFlota`. El CFDI de la suscripción —uso, régimen, CP, PUE/PPD, REP— no
-  está auditado en esta ronda.
-- **`intake/consolidado.ts` y `intake/ocr.ts`** (424 y 472 líneas): de dónde
-  salen `litros`, `formaPago` y `producto`, que son insumos directos de tres
-  reglas fiscales. Solo verifiqué qué hace el motor con ellos.
+  `permiso_cre.ts`, `comercios.ts` entrada por entrada). El adaptador de CAPUFE
+  teclea datos fiscales del receptor en un portal real y sigue sin auditarse.
+- **`src/lib/saas/`** (Stripe, Facturapi — el CFDI que Likida **emite** a la
+  flota: uso, régimen, CP, PUE/PPD, REP). Sin auditar en las dos pasadas.
+- **`intake/consolidado.ts` e `intake/ocr.ts`** (424 y 472 líneas): de dónde
+  salen `litros`, `formaPago`, `subTotal` y `producto`, insumos directos de
+  cuatro reglas fiscales.
+- **`recordatorio_comprobacion.ts`** (+171, nuevo en `c5a7c19`): manda mensajes
+  solos sobre plazos de facturación. No revisé si el texto que sale por WhatsApp
+  repite la afirmación de nivel 6 ("ya no se recupera") o si lleva el matiz de
+  `engine.ts:749`. Es la primera cosa que miraría en un pase 3.
 - **Corrida real del motor con estos escenarios.** No creé archivos en el repo
-  (instrucción del brief), así que todas las cifras de este reporte están
-  derivadas leyendo el código línea por línea, no medidas con `vitest`. Las
-  aritméticas son deliberadamente simples para que se puedan recomprobar a mano.
-- **Retenciones y Carta Porte 3.1**: el producto declara honestamente que no
-  existen (`facturacion/page.tsx:106-113`), así que no hay código que auditar.
+  (instrucción del brief): todas las cifras salen de leer el código línea por
+  línea. Las aritméticas son deliberadamente simples para recomprobarlas a mano.
 - **Verificación de las fichas contra el DOF/SAT**: imposible en este entorno
-  (egress bloqueado, ver la tabla de arriba). Todo lo que este reporte afirma
-  sobre las normas sale del texto ya transcrito en las fichas, no de la fuente.
+  (egress bloqueado).
