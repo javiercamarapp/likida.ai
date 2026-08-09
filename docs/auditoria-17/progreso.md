@@ -78,3 +78,38 @@ en ambos casos se dejó escrito por qué:
 | 26 | Compuerta post-merge `npx vitest run` | **255 archivos, 3,168 pasan, 1 saltada** | — |
 | 27 | Compuerta post-merge `npm run lint` | **0 errores, 18 warnings** | — |
 | 28 | `MAPA.md` actualizado con el delta del pase 2 | ok | — |
+| 29 | 11 auditores lanzados en paralelo (tool calling NO: cero archivos suyos cambiaron) | 11 archivos entregados | — |
+| 30 | Verificación adversarial de los 3 CRÍTICOS nuevos, abriendo el código | los 3 reales, 0 descartados | — |
+| 31 | Vuelta 1 — prueba que reproduce el CRÍTICO frontend (panel en blanco) | 2 de 4 casos en rojo con la regla vieja | — |
+| 32 | Vuelta 1 — arreglo: la marca del asistente mira también la ruta | verde; suite 3,172 | `d7b71a8` |
+| 33 | Vuelta 2 — prueba que reproduce el CRÍTICO backend (afirma sin mirar) | 3 de 4 casos en rojo | — |
+| 34 | Vuelta 2 — arreglo: una consulta por lote a `gasto`, fallando cerrado | verde; suite 3,176 | `709e410` |
+| 35 | Vuelta 3 — prueba que reproduce el ALTO convergente (`?? 0`) | 2 de 6 en rojo, 4 controles verdes | — |
+| 36 | Vuelta 3 — arreglo: `KpiDegradado` acepta `number \| null` y pinta '—' | verde; suite 3,182 | `e47b124` |
+| 37 | Tope de 3 vueltas AGOTADO | 4 CRÍTICOS quedan pendientes con razón | — |
+
+## Por qué esta ronda es de CONTINUACIÓN
+
+El PR **#9** (`claude/auditoria-17`) estaba abierto, así que el PASO 1 manda
+continuar sobre él. Se hizo, y no se abrió PR nuevo.
+
+Dos cosas que costaron tiempo y conviene dejar escritas:
+
+- **El `origin/master` del clon venía stale y de OTRA historia.** Apuntaba a
+  `e4326f9` (3-ago), que **no tiene ancestro común** con la línea viva
+  (`git merge-base 20ecbb1 origin/master` → vacío). Medir el delta contra esa
+  referencia daba "50 commits, 494 archivos, −50,315 líneas", que es basura.
+  `git fetch origin master` la corrigió a `20ecbb1` (forced update). Cualquier
+  corrida futura que vea un diff absurdo debe sospechar esto ANTES de auditarlo.
+- **Colisión de números de migración.** master trajo `0086_retirar_rol_operador`
+  y `0087_recordatorio_comprobacion` mientras la rama de auditoría ya tenía su
+  propio `0086`. Dos migraciones con el mismo número se aplican en orden
+  indefinido. La de la auditoría se renumeró a `0088` y su bloque de
+  `verificaciones.sql` de 62 a 63.
+
+## Rubro NO auditado en el pase 2
+
+**Tool calling**, y por una razón verificable: `git diff --name-only
+94c0733..origin/master | grep -iE "agent|tool|llm"` devuelve **vacío**. Conserva
+su 7/10 marcado *no auditado este pase*. La cobertura por rotación es
+deliberada; repetir un auditor sobre código idéntico no produce señal.
