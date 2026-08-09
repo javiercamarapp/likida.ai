@@ -1,353 +1,385 @@
-# Backend y API — auditoría 17
+# Backend y API — auditoría 17 (pase 2)
 
-**Nota: 6/10** (antes 7). Razón del movimiento: **deuda que cobró factura**. Los
-cierres de las rondas 13–16 se mantienen (los verifiqué uno por uno, abajo), pero
-QStash entró al camino del dinero en cuatro commits (`91c41db`, `4cd1eb4`,
-`4568121`, `ec012da`) **sin una sola prueba**: `route.test.ts` nunca define
-`UPSTASH_QSTASH_TOKEN`, así que sus 40+ casos ejercitan la rama síncrona —la que
-producción **no** toma— y el archivo `cola/route.ts` no aparece en ningún test del
-repo. El ancla del rubro es explícita: *"6 si es correcto por lectura y no por
-prueba"*. Encima, una mirada más profunda encontró un lee-modifica-escribe con el
-error descartado que borra señales de fraude ya detectadas.
+**Nota: 5/10** (antes 6). Razón del movimiento: **deuda que cobró factura**. Los
+siete hallazgos del pase 1 siguen abiertos sin una línea tocada (lo verifiqué con
+`git diff 94c0733..HEAD` sobre cada archivo: `cron/facturar/`, `repo.ts`,
+`api/demo/`, `asistente/route.ts`, `cfdi/export/route.ts` no tienen ni un cambio;
+`administracion.ts` sí cambió, pero en `crearFlota`, no en `guardarPolitica`).
+Encima entró un camino nuevo que **manda WhatsApp solo a personas reales** —
+`recordatorio_comprobacion.ts` — y ahí la disciplina de concurrencia sí subió
+(el claim tiene prueba propia, cosa que QStash nunca tuvo), pero el **contrato de
+selección** no: la consulta que decide a quién escribirle no comprueba ninguna de
+las tres cosas que el mensaje afirma.
 
-Compuerta corrida hoy por mí: `npx vitest run` → 249 archivos, 3148 verdes, 1
-saltada (60.9 s). `npx eslint src/` → 0 errores, 18 warnings. Coincide con el MAPA.
+Compuerta corrida hoy por mí: `npx vitest run src/lib/likida/recordatorio_comprobacion.test.ts
+src/lib/likida/escalar_viaje.test.ts src/proxy.test.ts` → 54 verdes. Coincide con
+el MAPA.
 
-**El riesgo mayor del rubro hoy:** el cron de facturación puede responder 200 y
-verde en el panel de Vercel durante semanas sin que se emita una sola factura,
-porque desde la ronda 16 el trabajo real ocurre en otro proceso (el callback de
-QStash) y nada en la respuesta del cron demuestra que ese proceso corrió.
+**El riesgo mayor del rubro hoy:** el cron de las :00 puede mandarle al chofer del
+viaje del demo —el teléfono de Javier, `seed.sql:75`— un mensaje que dice "llevas
+N días sin mandarme comprobantes" sobre un viaje que tiene dos comprobantes
+cargados y a la vista en la pantalla.
+
+---
+
+## Estado de los hallazgos del pase 1
+
+Ninguno cerrado. Siete de siete **REINCIDENTES**, y los verifiqué por línea, no
+por diff:
+
+1. **[ALTO] El cron de facturación declara `corrio: true` cuando solo encoló** —
+   **REINCIDENTE**. `cron/facturar/route.ts:308-330` intacto: sigue el
+   `return NextResponse.json({corrio: true, encolado: true, …})` dentro del `if
+   (process.env.UPSTASH_QSTASH_TOKEN …)`, y `cola/route.ts:25-28` sigue
+   devolviendo 503 sin que el cron se entere. `grep UPSTASH_QSTASH_TOKEN
+   src/app/api/cron/facturar/route.test.ts` → **vacío**; `grep -rn "facturar/cola"
+   src --include=*.test.ts` → **vacío**. Sigue sin una sola prueba.
+   La nota colateral también: `route.ts:258` sigue calculando `modo` sin usarlo.
+2. **[ALTO] `updateGastoCfdiXml` descarta el error de su lectura y reemplaza
+   `ocr_extra`** — **REINCIDENTE**. `repo.ts:415-419` sigue siendo
+   `const { data: actual } = await acotada(...)` sin `error`, y `:419-420`
+   sigue escribiendo `extra.ocr_extra = ocrExtra` completo.
+3. **[MEDIO] La cola de QStash se presupuesta con los 300 s del cron** —
+   **REINCIDENTE**. `route.ts:25` sigue en `maxDuration = 300` y `cola/route.ts:11`
+   en 600; `PRESUPUESTO_LOTE_MS` sigue siendo constante de módulo.
+4. **[MEDIO] Dos handlers resuelven `?tenant=` a mano sin mirar `error`** —
+   **REINCIDENTE**. `api/dashboard/asistente/route.ts:57` sigue con
+   `const { data: t } = await supabaseAdmin().from('tenant')…maybeSingle()`;
+   `dashboard/contador/cfdi/export/route.ts:55` igual. `resolverTenantApi` sigue
+   cableado solo en los dos endpoints de `export`.
+5. **[MEDIO] `tenant.config` con lee-modifica-escribe desde dos módulos** —
+   **REINCIDENTE**. `administracion.ts` cambió en esta ventana (`crearFlota`,
+   régimen 624), pero `guardarPolitica` y `repo.ts:926-934` (`actualizarFacilidad15`)
+   siguen exactamente igual.
+6. **[BAJO] La URL destino del job firmado sale de la cabecera `Host`** —
+   **REINCIDENTE**. `cron/facturar/route.ts:316` textual.
+7. **[BAJO] `receiver.verify` sin `url`** — **REINCIDENTE**.
+   `cola/route.ts:36-39`: sigue `receiver.verify({ signature, body })`.
+8. **[BAJO] `/api/demo` parsea el cuerpo sin red** — **REINCIDENTE**.
+   `api/demo/route.ts:32`: `const body = (await req.json()) as {…}` sin try/catch.
 
 ---
 
 ## Hallazgos
 
-### [ALTO] El cron de facturación declara `corrio: true` cuando lo único que hizo fue encolar; si el callback rebota, el cron se queda verde para siempre
+### [CRÍTICO] El recordatorio afirma "sin mandarme comprobantes" sin haber mirado un solo comprobante
 
-`src/app/api/cron/facturar/route.ts:308-337` (el enqueue) y
-`src/app/api/cron/facturar/cola/route.ts:21-28` (el 503 del callback).
+`src/lib/likida/recordatorio_comprobacion.ts:54-61` (la consulta) y `:84-92`
+(el texto). Contrastar con `supabase/migrations/0087_recordatorio_comprobacion.sql:5`,
+que describe la funcionalidad como *"un viaje abierto/en_cuadre con `fecha_inicio`
+vieja **y sin comprobantes recientes**"*.
 
-**Escenario.** `UPSTASH_QSTASH_TOKEN` está puesto en Vercel pero
-`QSTASH_CURRENT_SIGNING_KEY` **no** (son variables distintas; `.env.example` solo
-las documentó en `468ec1f`, *después* del commit de la funcionalidad `91c41db`, y
-`4cd1eb4` existe precisamente porque la primera versión verificaba con el token en
-vez de con las signing keys). A las 12:30 el cron:
+**Escenario, con valores.** La consulta filtra por cuatro cosas:
+`estatus in ('abierto','en_cuadre')`, `recordatorio_comprobacion_en is null`,
+`fecha_inicio is not null` y `fecha_inicio <= hoy-3d`. **No hay ni un `join`, ni
+un `exists`, ni una lectura a `gasto`.** Tomo el viaje del propio seed:
+`seed.sql:115-121` inserta `44444444-…-0001` / folio `VJ-2026-0001`,
+`estatus='abierto'`, `fecha_inicio = current_date`, operador
+`33333333-…-0001`; y `seed.sql:130-140` le carga **dos gastos**: diésel $4,200 con
+CFDI timbrado y caseta $1,400. El teléfono de ese operador es
+`529993700779`, y `seed.sql:71` dice qué número es: *"OP-101 (el del viaje demo)
+usa el teléfono de Javier"*.
 
-1. lee 8 gastos con `cfdi_uuid IS NULL` (línea 278-294),
-2. entra al `if` de la línea 308, `publishJSON` devuelve `messageId: "msg_abc"`,
-3. responde `200 {corrio: true, encolado: true, messageId: "msg_abc", tickets: 8}`.
+Se siembra el lunes, el demo es el jueves. El jueves a las 12:00 corre
+`/api/cron/escalar`, `fecha_inicio` (lunes) ya es `<= hoy-3d`, y a ese teléfono le
+entra:
 
-QStash entrega el mensaje a `/api/cron/facturar/cola`. Ahí, línea 25-28:
-`!currentKey` → `503 {error:'QStash no configurado'}`. QStash reintenta 2 veces
-(`retries: 2` en la línea 320), las dos rebotan igual, el mensaje muere en el DLQ
-de Upstash. **Ningún gasto se tocó: no se selló `autofactura_intentada_en`, no se
-bloqueó nada, no hay un `logger.error` del lado del cron.** A las 13:30 se repite
-idéntico, y a las 14:30, y así 24 veces al día. Vercel pinta el cron en verde
-porque el cron devolvió 200.
+> Llevas 3 días con tu viaje *VJ-2026-0001* sin mandarme comprobantes. 📋
 
-**Consecuencia.** Es literalmente el modo de falla que este módulo se escribió para
-no tener — sus propias líneas 86-96 lo dicen (*"Un 200 con la lista vacía dejaría
-el cron verde en el panel de Vercel para siempre"*) y `route.test.ts:10` lo repite
-(*"Un cron en verde que no hace nada es peor que uno en rojo"*). Para la flota son
-tickets que caducan: 7-15 días en gasolineras. Para Javier, la única señal de que
-la facturación automática lleva un mes sin correr sería que alguien abra la
-pantalla de "por facturar" y cuente. Y para el equipo: **no hay prueba que cubra
-ninguno de los dos lados de este camino** — ni el `if` de la línea 308, ni la
-verificación de firma, ni el re-chequeo de vigencia de `cola/route.ts:61-69`.
+sobre un viaje que tiene $5,600 comprobados y un CFDI con complemento
+HidroYPetro ya cuadrados.
 
-**Causa raíz probable:** el `return` de la línea 324 afirma un hecho (`corrio`) que
-solo el callback puede constatar, y no hay marca en base ni contador que ate el
-`messageId` publicado a un lote efectivamente procesado.
+**Consecuencia.** Rompe "un rótulo tiene que ser verdad" en el único canal que el
+comprador ve en vivo: el hilo de WhatsApp proyectado. El contralor de Transportes
+Innovativos está viendo la pantalla donde el motor acaba de leer esos dos
+comprobantes, y el producto le escribe al chofer que no mandó ninguno. En
+producción es peor y más callado: el chofer que **sí** está comprobando a diario
+recibe un reclamo falso, y el canal —que este repo protege en todos lados con el
+argumento de "no se quema"— se quema con el primer mensaje.
 
-**Nota colateral del mismo bloque:** `route.ts:258` calcula `modo` y no lo usa
-(eslint no lo marca), así que la respuesta del camino encolado es la única que
-**no** dice si el lote va a correr en `ensayo` o en `emitir` — el dato que
-distingue un ensayo de un CFDI irreversible ante el SAT.
+**Causa raíz probable:** el predicado que el nombre de la columna, el comentario
+de la migración y el texto del mensaje prometen (*sin comprobantes*) nunca se
+escribió en la consulta; el único proxy es la antigüedad de `fecha_inicio`.
 
 ---
 
-### [ALTO] `updateGastoCfdiXml` descarta el error de su propia lectura y luego reemplaza `ocr_extra` entero — borrando las señales de fraude que el motor ya había detectado
+### [ALTO] El recordatorio se manda con `sendText`, que fuera de la ventana de 24 h no entrega — y el claim de un solo tiro ya se quemó
 
-`src/lib/likida/repo.ts:414-420` (el `const { data: actual }` sin `error`) y
-`:421` (el UPDATE que escribe `extra.ocr_extra` completo).
+`src/lib/likida/recordatorio_comprobacion.ts:133-140` (el envío) y `:117-125`
+(el claim, que ocurre antes). Contrastar con `escalar_viaje.ts:220-233`, que en el
+mismo repo sí hace el fallback.
 
-**Escenario, con valores.** El chofer manda la foto de un ticket de gasolinera de
-$8,450. El intake guarda
-`ocr_extra = {producto:"PLUS", estacion:"E12345", urlFacturacion:"https://...",
-folioPortal:"A-000123", codigoBarras:"…", montoDiscrepante:true, montoOcr:8054}`.
-Horas después la oficina reenvía el XML del monedero; `processor.ts:1422` entra por
-la rama `eraTicket` y llama a `updateGastoCfdiXml` con `claveUnidad:'LTR'`,
-`cantidad: 850`, así que se dispara el bloque de la línea 414.
+**Escenario, con valores.** El destinatario de este recordatorio es, por
+construcción, alguien que lleva ≥3 días sin actividad en el viaje. WhatsApp solo
+entrega texto libre dentro de las 24 h desde el último mensaje **del usuario**;
+`meta/client.ts:204-214` lo documenta con todas sus letras (*"Todo lo que Likida
+INICIA —pedir un POD, avisar de un anticipo, recordar un cierre— tiene que ir por
+aquí"*, refiriéndose a `sendTemplate`) y `meta/client.ts:285-286` ya tiene el
+mensaje del error concreto: `131047`.
 
-Ese `SELECT ocr_extra` va envuelto en `acotada()`, y `acotada` **no lanza al agotar
-el tope**: resuelve `{data: null, error: {message:'sin respuesta en 8000 ms (tope
-de consulta)'}}` (`presupuesto.ts:156-163`, `TOPE_CONSULTA_MS = 8_000`). El
-llamador solo desestructura `data`. Entonces `actual` es `null`,
-`ocrExtra = {litros: 850}`, y el UPDATE de la línea 421 escribe **ese objeto
-completo** sobre la columna.
+Corrida: viaje `v-1`, folio `VJ-104`, chofer con última respuesta hace 4 días.
+`reclamarRecordatorio` (`:158-164`) escribe `recordatorio_comprobacion_en = now()`
+y devuelve `ganado: true`. `sendText` (`:135`) pega a Meta, Meta contesta 400 con
+`code: 131047`, `sendText` registra `wa.sendText` y devuelve `null` (`client.ts:96`),
+y aquí eso se convierte en `r.fallos.push('VJ-104: WhatsApp rechazó el envío')`.
+El sello ya está puesto: `recordatorio_comprobacion_en IS NULL` nunca vuelve a ser
+cierto, y **ese viaje jamás vuelve a entrar a la consulta**. El único rastro es un
+string dentro del JSON que devuelve el cron, que Vercel no persiste, y una línea
+`wa.sendText` con el status.
 
-**Sale mal:** `ocr_extra` queda en `{litros: 850}`. Se perdieron
-`montoDiscrepante`, `montoOcr`, `producto`, `estacion`, `urlFacturacion`,
-`folioPortal`, `codigoBarras`.
+Lo llamativo: `escalar_viaje.ts:222-228` resuelve exactamente esto —
+`recordado = Boolean(await sendText(...)); if (!recordado) await avisarAlChofer(...)`,
+y `avisarAlChofer` → `notificarAsignacion` → `sendTemplate` (`notificar.ts:170`).
+El camino nuevo copió el claim de `escalar_viaje.ts` y no copió el fallback.
 
-**Consecuencia.** El motor de cuadre lee justo esas llaves para levantar
-diferencias que van al PDF del contralor: `engine.ts:381` (`monto_discrepante` — el
-código decía $8,450 y la visión $8,054), `engine.ts:402` (`texto_sospechoso`) y
-`engine.ts:398` (`comprobante_no_fiscal`). Con la columna borrada, la liquidación
-sale **sin la anomalía que el sistema ya había detectado** y el contralor firma un
-comprobado que nadie marcó. Además `identificarComercio` (`identificar.ts:31-35`)
-pierde su señal más fuerte —el dominio del QR— y el ticket cae a `sinPortal` en el
-cron, o sea que deja de facturarse solo, y `folioPortal` —el código que la oficina
-teclea en el portal— desaparece del papel de "por facturar".
+**Prueba que lo cubra: no existe.** `recordatorio_comprobacion.test.ts:82` fija
+`sendText.mockResolvedValue('wamid.TEST')` y ningún caso lo pone en `null`. Está
+probada la excepción (`:221-230`) y el teléfono ausente (`:148-157`), pero no el
+rechazo de Meta, que es el caso de casi todos.
 
-Lo llamativo es que el propio archivo declara la regla dos veces y aquí la rompe:
-`repo.ts:411-413` (*"no se reemplaza el jsonb — ahí viven producto, estacion,
-fechaImpresa… que una escritura a ciegas borraría"*) y `repo.ts:463-469`, que
-explica que por esto exacto el merge de `enriquecerGastoConCodigo` se mudó a SQL
-(mig. 0017) y nombra a `montoDiscrepante` y `textoSospechoso` como lo que se
-perdía.
+**Consecuencia.** La funcionalidad entera puede tener una tasa de entrega cercana
+a cero y reportar `recordados: 0, fallos: [...]` en un cuerpo HTTP que nadie lee;
+para el chofer, el recordatorio automático que Javier pidió el 8-ago simplemente
+no existe, y no hay segunda oportunidad porque el sello es de un solo tiro y sin
+expiración (a diferencia de `al_vuelo.ts`, que sí tiene `CLAIM_MINUTOS = 10`).
 
-**Causa raíz probable:** el único lee-modifica-escribe de `ocr_extra` que quedó del
-lado de la app usa `actual?.ocr_extra ?? {}`, que hace indistinguible "la fila no
-tiene nada" de "no pude leer".
+**Causa raíz probable:** se reusó el mecanismo de claim de `escalar_viaje.ts` sin
+reusar su distinción entre "el canal rechazó" y "el canal entregó".
 
 ---
 
-### [MEDIO] La cola de QStash se presupuesta con los 300 s del cron, no con sus 600 s: el techo que existe para romper sigue en pie
+### [ALTO] La misma corrida del cron puede mandarle al mismo chofer dos WhatsApps contradictorios sobre el mismo viaje
 
-`src/app/api/cron/facturar/route.ts:25` (`maxDuration = 300`), `:129`
-(`PRESUPUESTO_LOTE_MS = maxDuration * 1000`), `:158` (`MARGEN_LOTE_MS = 150_000`),
-`:469` y `:509` (los dos cortes), contra
-`src/app/api/cron/facturar/cola/route.ts:11` (`maxDuration = 600`).
+`src/app/api/cron/escalar/route.ts:65-83` (los dos bloques, uno tras otro, sin
+intersección) contra `escalar_viaje.ts:81-92` y
+`recordatorio_comprobacion.ts:54-61`.
 
-**Escenario.** `procesarLoteEnCola` está definida en `route.ts`, así que cierra
-sobre la constante de **ese** archivo. El callback la importa (`cola/route.ts:5`) y
-la invoca con su propio `inicio` (`:72`). Un lote de 8 tickets repartido en 3
-flotas: la primera abre navegador en t≈2 s y tarda 100 s; la segunda arranca en
-t≈102 s y tarda 60 s; al llegar la tercera, t≈162 s, la comprobación de la línea
-469 evalúa `162_000 >= 300_000 - 150_000` → **verdadero**, así que la tercera flota
-sale como `sinTiempo` y se aplaza una hora. Al callback le quedaban ~438 s sin usar.
+**Escenario, con valores.** Los dos filtros pueden ser ciertos a la vez sobre la
+misma fila. `viajesSinAceptar` pide `estatus='abierto'`, `aceptado_en is null`,
+`escalado_en is null`, `avisado_en <= ahora-5h`. `viajesSinComprobar` pide
+`estatus in ('abierto','en_cuadre')`, `recordatorio_comprobacion_en is null`,
+`fecha_inicio <= hoy-3d`. **Ninguno de los dos mira las columnas del otro.**
 
-**Consecuencia.** La cola se construyó explícitamente para esto —su propio
-comentario dice *"el techo de 300 s de una invocación directa es justo lo que esta
-cola existe para romper"* (`cola/route.ts:8-10`)— y no lo rompe. Para la flota:
-tickets que se aplazan una vuelta de reloj por cada corrida con más de dos flotas,
-contra un plazo real de 7-15 días. Para el equipo: el número que se lee en la
-respuesta (`sinTiempo`) parece capacidad agotada y no lo es, así que la conclusión
-natural —"hay que subir `maxDuration`"— ya se aplicó y no cambió nada.
+Caso concreto y común: el despacho captura el lunes 3 de agosto un viaje cuya
+`fecha_inicio` es el **viernes 31 de julio** (registro retroactivo — el viaje ya
+salió). `crear_viaje_wa.ts` llama a `avisarAlChofer`, que pone `avisado_en =
+lunes 08:00`. El chofer no contesta. El lunes a las 13:00 corre el cron:
 
-**Causa raíz probable:** `PRESUPUESTO_LOTE_MS` es una constante del módulo del cron
-y no un parámetro de la función compartida, que es la que corre en dos hosts con
-presupuestos distintos.
+- bloque 1 (`escalarViajesSinAceptar`): `avisado_en` tiene 5 h → gana el claim de
+  `escalado_en` y manda *"Te recuerdo tu viaje **VJ-104**: lo tienes asignado desde
+  hace 5 horas y todavía no me confirmas si lo arrancas"* (`escalar_viaje.ts:138-146`);
+- bloque 2 (`enviarRecordatoriosComprobacion`): `fecha_inicio` (31-jul) es ≤ 5-ago
+  → gana el claim de `recordatorio_comprobacion_en` y manda, segundos después,
+  *"Llevas 3 días con tu viaje **VJ-104** sin mandarme comprobantes"*.
 
----
+Dos mensajes en la misma pantalla, en el mismo minuto, sobre el mismo folio: uno
+dice que el viaje ni siquiera arrancó y el otro le reclama los comprobantes de
+tres días de ese viaje.
 
-### [MEDIO] (REINCIDENTE, ronda 12 → 13) Dos handlers siguen resolviendo `?tenant=` a mano sin mirar `error`, con el helper que lo arregla ya escrito
+**Consecuencia.** El chofer no puede actuar sobre ninguno de los dos y aprende a
+ignorar el hilo — que es el modo de falla que los dos archivos citan como su razón
+de existir (`escalar_viaje.ts:20-25`, `recordatorio_comprobacion.ts:23-29`). Si
+pasa durante el demo, es el producto contradiciéndose a sí mismo por WhatsApp
+delante del comprador. El encabezado de la ruta (`escalar/route.ts:15-19`) afirma
+que los dos chequeos *"son 'viaje abierto que se está pasando de tiempo', misma
+cadencia"* y que juntarlos era lo económico — pero juntarlos sin cruzarlos es lo
+que hace posible el doble mensaje.
 
-`src/app/api/dashboard/asistente/route.ts:57` y
-`src/app/dashboard/contador/cfdi/export/route.ts:55`.
+**Prueba que lo cubra: no existe.** No hay `route.test.ts` bajo
+`src/app/api/cron/escalar/` (`find src/app/api -name "*.test.ts"` devuelve seis
+archivos, ninguno del cron de escalar), y las dos suites de módulo se ejecutan
+aisladas con mocks distintos, así que nada ejercita las dos consultas contra la
+misma fila.
 
-Los dos hacen `const { data } = await supabaseAdmin().from('tenant').select('id')…`
-y descartan `error`. `resolverTenantApi` (`tenant-api.ts:63-72`) y
-`resolverTenantPedido` (`tenant-api.ts:92-99`) existen desde la ronda 12/13
-precisamente para esto, con el comentario que lo dice con todas sus letras: *"sin
-revisar `error`, un bache de red se ve idéntico a 'ese uuid no existe' — el `data`
-es null en los dos"*. Solo las dos rutas de `export` los usan.
-
-**Escenario.** Javier, superadmin, abre `/dashboard?tenant=<uuid de Transportes
-Innovativos>`. La página de abajo resuelve por `resolverTenantEfectivo` y pinta las
-cifras de Innovativos. En paralelo, el rail de la derecha pega a
-`/api/dashboard/asistente?tenant=<mismo uuid>`; ese `select` agota el tope o
-devuelve un 503 transitorio → `t` es `null` → el `if` de la línea 58 no entra →
-`tenantId` se queda en `tenantDemo()` y `tenantNombre` en `null` (o sea, sin
-badge). El rail devuelve 200 con `errorCarga: false` y pinta IVA, IEPS acreditable
-y anomalías **de la flota demo**, junto a una página que dice Innovativos.
-
-**Consecuencia.** Es exactamente lo que el encabezado de ese archivo dice que
-existe para evitar (*"Dos verdades distintas en la misma pantalla"*, líneas 8-9), y
-rompe la regla de producto "un rótulo tiene que ser verdad". En el demo del 6-ago
-son cifras fiscales de otra empresa en la misma pantalla, sin una sola señal de
-error. En el export de CFDI del contador el mismo patrón produce un CSV de la flota
-de la sesión rotulado como si fuera el de la pedida.
-
-**Causa raíz probable:** el helper se escribió y se cableó solo en los dos endpoints
-donde se descubrió el bug; no hay prueba ni regla de lint que impida un sitio nuevo
-que lo resuelva a mano.
+**Causa raíz probable:** los dos chequeos comparten invocación y destinatario pero
+no comparten estado; ninguno excluye los viajes que el otro acaba de reclamar.
 
 ---
 
-### [MEDIO] `tenant.config` se escribe con lee-modifica-escribe desde dos módulos sin control de concurrencia: una política de gasto se puede perder sin log
+### [ALTO] La mig. 0087 no tiene compuerta de arranque: la primera corrida alcanza todo el histórico de viajes abiertos, con la antigüedad impresa en el mensaje
 
-`src/lib/likida/administracion.ts:272-278` (`guardarPolitica`) y
-`src/lib/likida/repo.ts:926-934` (`actualizarFacilidad15`).
+`supabase/migrations/0087_recordatorio_comprobacion.sql:14-15` (la columna nace
+`NULL` para todas las filas existentes) y
+`src/lib/likida/recordatorio_comprobacion.ts:52-61` (sin cota inferior de fecha),
+`:134` (el cálculo de `dias`).
 
-**Escenario, con tiempos.** El contralor guarda la política en
-`/dashboard/politicas` con 13 conceptos. `guardarPolitica` lee `config` en
-t=0.00 s. En t=0.10 s el flota_admin guarda la declaración de la facilidad del 15%
-desde otra pantalla; `actualizarFacilidad15` lee el **mismo** `config` (todavía sin
-los 13 conceptos). En t=0.20 s aterriza el UPDATE de `guardarPolitica`; en t=0.35 s
-aterriza el de `actualizarFacilidad15`, que escribe el objeto que leyó en t=0.10 s
-más su llave. La política vuelve a la anterior. Ninguna de las dos llamadas
-devuelve error, `anotar(tenantId,'politica.editada',…)` deja constancia de una
-edición que ya no está, y la pantalla recarga mostrando lo viejo.
+**Escenario, con valores.** La 0058 —el patrón que este archivo dice copiar—
+quedó protegida por accidente feliz: `escalado_en` depende de `avisado_en`, una
+columna que también nacía `NULL`, y su propia migración lo dice
+(`0058:9-10`: *"Sin esto puesto, el viaje es INVISIBLE para la escalación"*). El
+histórico entero quedó fuera. La 0087 se cuelga de `fecha_inicio`, que existe
+**desde `0001_init.sql:53`** y está poblada en todo viaje jamás creado.
 
-**Consecuencia.** La política es lo que el motor de cuadre usa para decidir topes y
-`requiereCfdi` (`engine.ts`), o sea que el siguiente viaje se liquida contra reglas
-que el contralor cree haber cambiado. Es la misma clase de fallo que el comentario
-de `guardarPolitica` (líneas 240-250) describe para el caso de un solo escritor
-—*"se salta el bloque… una liquidación que declara todo deducible sin un solo error
-en el log"*— pero por la vía de dos escritores.
+Entonces: se aplica la 0087 y se despliega. A la hora siguiente, la primera
+corrida del cron levanta hasta **100 viajes** (`:61`, `.limit(100)`, sin `order`)
+de cualquier antigüedad, con tal de que sigan en `abierto`/`en_cuadre` — o sea,
+todos los viajes de prueba, de seed, y los que alguien abrió y abandonó desde que
+existe la base. `dias` (`:134`) no tiene tope: un viaje de febrero produce
 
-**Causa raíz probable:** PostgREST no da transacción, y `config` se sobrescribe
-entero en vez de con un `jsonb_set` en SQL o un update condicionado a `updated_at`
-(el patrón que la mig. 0017 ya usa para `ocr_extra`).
+> Llevas 187 días con tu viaje *VJ-2026-0009* sin mandarme comprobantes. 📋
 
----
+y sale a los teléfonos que estén capturados en `operador` — incluidos los
+`+521111111102…105` inventados del seed (`seed.sql:76-79`) y el de Javier
+(`seed.sql:75`). Todo en un solo minuto, sin reversa: los 100 claims quedan
+puestos.
 
-### [BAJO] La URL destino del job firmado sale de una cabecera `Host` del que llama
+**Consecuencia.** Un solo despliegue dispara una ráfaga saliente proporcional al
+tamaño del histórico, con textos absurdos, hacia números que el propio seed marca
+como placeholders. Para la flota: mensajes del sistema que nadie pidió sobre
+viajes muertos. Para Likida: consumo de mensajes de Meta y calidad del número
+degradada por reportes de spam, en la cuenta con la que se hace el demo.
+La única prueba que toca la fecha (`recordatorio_comprobacion.test.ts:98-104`)
+verifica el **límite superior** (`lte`), y confirma que no hay inferior.
 
-`src/app/api/cron/facturar/route.ts:316`.
-
-`const base = process.env.NEXT_PUBLIC_APP_URL ?? \`https://${req.headers.get('host')}\``.
-Si `NEXT_PUBLIC_APP_URL` no está puesta —lo está, según CLAUDE.md, pero nada en el
-código lo exige— quien pueda llamar al cron con `CRON_SECRET` y un
-`Host: evil.example` hace que QStash publique el lote a
-`https://evil.example/api/cron/facturar/cola`, con el cuerpo completo: `tenant_id`,
-`concepto`, `monto`, `fecha`, `folio`, `rfc_emisor` y `ocr_extra` de 8 gastos
-reales, y con dos reintentos de cortesía. **Consecuencia:** exfiltración de datos
-comerciales de la flota por una cabecera, detrás del secreto del cron.
-**Causa raíz probable:** el fallback usa una entrada no confiable para construir un
-destino de salida.
+**Causa raíz probable:** el sello se diseñó como "no se le ha mandado" sin
+distinguirlo de "nació antes de que esta funcionalidad existiera"; falta el
+backfill o el piso de fecha que la 0058 tuvo gratis.
 
 ---
 
-### [BAJO] La verificación de firma de QStash no fija la URL, así que no se comprueba el `sub` del JWT
+### [MEDIO] Dos lotes de envíos secuenciales comparten 120 s sin medirlos: el segundo puede no correr nunca y el resultado de los dos se pierde
 
-`src/app/api/cron/facturar/cola/route.ts:36-39`.
+`src/app/api/cron/escalar/route.ts:11` (`maxDuration = 120`), `:65-83` (los dos
+bloques en serie) y `:89` (el único lugar donde salen los `fallos`).
 
-`receiver.verify({ signature, body })` se llama sin `url`. En la implementación
-(`node_modules/@upstash/qstash/chunk-JYPXGFWX.mjs:1147-1150`) el chequeo de destino
-está guardado por `if (request.url !== void 0 …)`, así que omitir el parámetro lo
-salta: se valida `iss: "Upstash"`, `exp` y el hash del cuerpo, pero no que ese
-mensaje fuera dirigido a **este** endpoint. **Consecuencia:** hoy es teórico —solo
-existe un consumidor de QStash en el repo, así que no hay otro mensaje firmado que
-redirigir— pero deja de serlo en cuanto se encole un segundo tipo de trabajo, y es
-deuda que va a cobrar factura sin que nadie recuerde por qué. **Causa raíz
-probable:** el parámetro es opcional en la librería y su ausencia no falla, falla
-silenciosa.
+**Escenario, con valores.** `escalarViajesSinAceptar` procesa hasta 100 viajes
+(`escalar_viaje.ts:92`) y por cada uno puede hacer hasta cuatro llamadas a Meta
+con `AbortSignal.timeout(10_000)` cada una (`client.ts:17`): `sendText` al chofer,
+`sendTemplate` de respaldo dentro de `avisarAlChofer`, `sendText` al jefe y
+`sendTemplate` al jefe. Con Meta lento —no caído, lento— a 2 s por llamada y 40
+viajes en el lote, el primer bloque consume ~240 s. La invocación muere a los
+120 s: el `for` se corta a media lista, y **el `return` de la línea 89 nunca
+ocurre**, así que se pierden los `fallos` de los dos bloques, y
+`enviarRecordatoriosComprobacion` no llega a ejecutarse ni una vez. Mientras
+tanto, los viajes ya reclamados en el bloque 1 quedan con `escalado_en` puesto y
+sin mensaje enviado, que es el trato aceptado del claim — pero sin nadie que sepa
+cuáles.
+
+Si el volumen de viajes sin aceptar se mantiene alto, el bloque 2 se queda en
+**inanición permanente**: la funcionalidad nueva nunca corre y el síntoma es
+indistinguible de "no hay viajes que recordar".
+
+**Consecuencia.** Para el equipo: el cron se ve verde salvo por el timeout en los
+logs de Vercel, y el único inventario de lo que falló vive en un cuerpo HTTP que
+se perdió. Es la misma clase de "cron en verde que no hace nada" que la propia
+ruta declara evitar (`:33-40`) — pero por agotamiento, no por falta de secreto. El
+comentario de `:8-11` dice *"el presupuesto es para los envíos"*; nada en el código
+mide ese presupuesto, a diferencia de `cron/facturar/route.ts:129,158`, que sí
+tiene `PRESUPUESTO_LOTE_MS` y `MARGEN_LOTE_MS`.
+
+**Causa raíz probable:** el lote está acotado en filas (100) pero no en tiempo, y
+los dos chequeos se encadenaron en una invocación sin repartir el presupuesto.
 
 ---
 
-### [BAJO] `/api/demo` parsea el cuerpo sin red
+### [BAJO] Un viaje sin teléfono capturado quema su recordatorio para siempre, y la condición se conocía antes del claim
 
-`src/app/api/demo/route.ts:32`. `await req.json()` sin `try/catch` en un endpoint
-público y sin sesión: un POST con `Content-Type: application/json` y cuerpo `{`
-sube una excepción sin capturar y Next devuelve un 500 genérico —ni el 400 que le
-correspondería, ni una línea de log—. El resto del archivo sí acota cuerpo
-(`bodyExcede`, 64 KB) y tasa (30/min), así que la puerta está a medio cerrar.
-**Consecuencia:** ruido de 500s en Sentry indistinguible de un fallo real del motor
-de cuadre, justo en la ruta que se enseña en vivo.
+`src/lib/likida/recordatorio_comprobacion.ts:117` (el claim) y `:127-131` (la
+comprobación del teléfono, después).
+
+**Escenario.** Se da de alta una flota y se capturan cinco operadores sin
+teléfono (`operador.telefono` es nulable; el seed marca cuatro de cinco como
+placeholders). Tres días después corre el cron: los viajes ganan el claim, luego
+entra el `if (!v.operadorTelefono)`, se registra `recordatorio_comprobacion.sin_telefono`
+y se sigue. Cuando el encargado captura los teléfonos esa misma tarde, el
+recordatorio de esos viajes **ya se consumió**: no hay reintento.
+
+**Consecuencia.** Es la decisión documentada (`:100-108`) y probada
+(`test:148-157`), heredada de `escalar_viaje.ts` — la anoto en BAJO porque, a
+diferencia de allá, aquí `operadorTelefono` ya viene en la fila leída (`:75`) y se
+podría descartar **antes** de gastar el claim, sin cambiar el resto del trato.
+Deuda: al equipo le va a costar entender por qué un viaje "ya recordado" nunca
+recibió nada.
+
+---
+
+### [BAJO] `viajesSinComprobar` cruza todos los tenants sin filtro de actividad ni orden
+
+`src/lib/likida/recordatorio_comprobacion.ts:54-61`.
+
+La consulta no lleva `tenant_id` (correcto: es un cron global) pero tampoco lleva
+`order`, ni excluye tenants dados de baja, ni operadores con `activo = false`
+(`seed.sql:75-79` muestra que la columna existe). Con `.limit(100)` sobre un
+`select` sin `order by`, el subconjunto que Postgres devuelve es arbitrario;
+como los reclamados salen de la consulta la cola se drena igual, así que el orden
+no produce inanición — pero un operador dado de baja sigue recibiendo mensajes de
+una flota en la que ya no trabaja, y eso sí es un dato de viaje enviado a alguien
+que ya no debería recibirlo. **Consecuencia:** ruido saliente y un dato de
+operación (folio, días) a un ex-empleado. **Causa raíz probable:** la consulta se
+calcó de `viajesSinAceptar`, que tampoco filtra por `activo`.
 
 ---
 
 ## Lo que revisé y está bien
 
-Esto vale tanto como lo de arriba: son los cierres de rondas anteriores que
-**siguen puestos**, verificados leyendo el código y nombrando la prueba.
-
-- **La carrera del doble CFDI está cerrada por Postgres, no por un `if`.**
-  `al_vuelo.ts:627-659`: el claim es un `UPDATE … .or('autofactura_intentada_en.is.null,
-  autofactura_intentada_en.lt.<vencido>') .select('id')` — condicional sobre la
-  columna que el propio UPDATE pisa, así que el segundo proceso se queda sin filas.
-  Falla **cerrado** si el update devuelve error (`:651-657`). Probado en
-  `al_vuelo.test.ts:649-790` (el sello, su forma y el orden de la 0063).
-- **Un reintento del callback de QStash no re-emite.** Lo verifiqué contra los
-  números, no por lectura: el backoff de QStash pone el primer reintento a ~12 s y
-  el segundo a ~148 s del fallo, y `CLAIM_MINUTOS = 10` (`al_vuelo.ts:604`) son
-  600 s. Los tres intentos caen dentro de la ventana del claim, así que el segundo
-  y el tercero salen por `ya_en_proceso` (`al_vuelo.ts:387-392`). Además
-  `cola/route.ts:61-69` re-consulta `cfdi_uuid IS NULL` antes de procesar. **Esto
-  no tiene prueba**, pero el mecanismo es correcto.
-- **El tenant no se puede confundir por el cuerpo del callback.** Aunque el `lote`
-  llega en el body, `facturarLoteAlVuelo` releé con
-  `.eq('tenant_id', args.tenantId).in('id', args.gastoIds)` (`al_vuelo.ts:343-347`)
-  y descarta el gasto cuyo comercio no sea el del lote (`:410-414`, con
-  `logger.error`). Un `tenant_id` manipulado sale como "no existe en esta flota".
-- **Guardar el UUID no se traga su fallo.** `al_vuelo.ts:508-536`: si el UPDATE
-  falla, el gasto se **bloquea** con el UUID dentro del motivo y distinguiendo
-  `CU001` (viaje ya liquidado) de `23505` sobre `uq_gasto_cfdi_uuid`. Sale de la
-  cola automática en vez de volver a emitir. `pg_errores.ts:40-45` exige el código
-  **y** el nombre del índice antes de tragarse nada.
-- **El cierre de liquidación es una sola transacción.** `repo.ts:605-620`:
-  `guardar_liquidacion_tx` (mig. 0013) hace liquidación + viaje en un plpgsql; el
-  error sube. Ya no hay "segunda escritura ignorada" ahí.
-- **Idempotencia del webhook de WhatsApp.** `conv.ts:343-353`: `claimMessage`
-  distingue tres estados y solo `23505` cuenta como duplicado; el indeterminado se
-  sigue procesando a propósito (`processor.ts:332-340`) porque los efectos con
-  dinero traen su propio candado.
-- **El mutex del viaje distingue "ocupado" de "no supe".** `conv.ts:418-464`:
-  `rpcAusente` (migración sin aplicar) abre con `logger.error`; el transitorio
-  reintenta con backoff y solo abre tras agotar la ventana. Y tras tomarlo se
-  re-verifica que el viaje siga abierto (`processor.ts:1764`), con
-  `getOpenViaje` lanzando `ConsultaFallida` en vez de devolver `null`
-  (`conv.ts:178`) — que era el camino por el que se le afirmaba al chofer "ese
-  viaje ya quedó cerrado" sobre un viaje abierto.
-- **La barrera de ráfaga falla cerrada.** `conv.ts:488-497` y `:524-548`: `null` es
-  "no sé" y no abre; el contador vencido a 10 min sí. `esperarIntake`
-  (`:598-609`) devuelve `false` y el llamador avisa.
-- **Las lecturas paginadas no devuelven cifras parciales.** `pg.ts:137-175`:
-  `traerTodo` avanza por filas leídas (no por número de página), exige el `count`
-  o una página vacía, y lanza `LecturaIncompleta`. El export lo maneja
-  explícitamente (`export/liquidaciones/route.ts:73-80`).
-- **El webhook de Stripe marca antes de aplicar y desmarca al fallar.**
-  `stripe/webhook/route.ts:60-76` + `:79-89`, con 503 si falta el secreto y 500 a
-  propósito para que Stripe reintente.
-- **Los dos endpoints de export cierran rol + área + tenant.**
-  `export/pdf/[id]/route.ts:63-71` y `export/liquidaciones/route.ts:47-55`; el 404
-  no distingue "no existe" de "existe sin PDF" (`pdf/[id]:91`) y la descarga va por
-  URL firmada de 60 s sobre bucket privado (`:93-103`).
-- **El 429 del webhook de WhatsApp en vez de 200.** `whatsapp/route.ts:244-249`:
-  lo que pasa del techo se aplaza usando la cola durable de Meta, y lo que cabe se
-  procesa. `route_pool.test.ts` cubre el pool de 5 y `acuses.test.ts` los
-  `value.statuses`.
-- **`proxy.ts` no es la puerta de `/api`** y está dicho: su matcher excluye `/api`
-  (`:148`), y cada handler resuelve su propia autorización. La única ruta de API
-  fuera de `/api` —`dashboard/contador/cfdi/export/route.ts`— cae bajo
-  `RUTAS_CON_SESION` por el prefijo `/dashboard` (`proxy.ts:94`), así que lleva las
-  dos capas.
-- **`acotada` convierte el cuelgue en `{data:null,error}` por el mismo camino que
-  un error de Postgres** (`presupuesto.ts:148-169`), que es la decisión correcta —
-  y es justo lo que hace que el hallazgo ALTO #2 sea alcanzable: cualquier llamador
-  que descarte `error` convierte un timeout en un dato vacío.
-- **El renombre Cuadra→Likida no dejó rutas huérfanas.** Crucé las 16 rutas de
-  `src/app/api` contra las 13 cadenas `/api/...` referenciadas en el código y en
-  `vercel.json`: no hay referencia a una ruta inexistente ni ruta sin referencia
-  (`/api/cron/*` las llama `vercel.json`, `/api/cron/facturar/cola` lo llama
-  QStash). Los `process.env.CUADRA_*` que quedan (`CUADRA_CAPTURAS_DIR`,
-  `CUADRA_INTAKE_ESPERA_MS`, `CUADRA_TOPE_CONSULTA_MS`, `CUADRA_CHROMIUM_PATH`,
-  `CUADRA_MODEL_*`) coinciden con `.env.example`: el renombre no rompió ningún
-  contrato de configuración.
-- **`duplicados.ts` es lógica pura y sin bordes de base** (`:82-117`), con
-  `buscadorDeUuidEnLlave` (`:66-80`) devolviendo la misma respuesta que la versión
-  O(G×U). Nada que reportar.
+- **El claim del recordatorio es correcto Y tiene prueba propia — la respuesta a
+  la pregunta dura del brief es NO.** Dos corridas solapadas **no** pueden mandar
+  dos mensajes al mismo viaje. `recordatorio_comprobacion.ts:158-164` es un
+  `UPDATE … .eq('id') .eq('tenant_id') .is('recordatorio_comprobacion_en', null)
+  .select('id')`: la condición cae sobre la misma columna que el UPDATE pisa, así
+  que bajo READ COMMITTED la segunda transacción bloquea, reevalúa el predicado
+  sobre la fila ya actualizada y devuelve **cero filas**. Cero filas se trata como
+  "perdí la carrera", no como error (`:170`), y un error de la base se trata como
+  fallo cerrado: no se manda nada (`:118-121`). La prueba que lo cubre se llama
+  **`recordatorio_comprobacion.test.ts:171` — "DOS CORRIDAS SOLAPADAS: solo UNA
+  gana el claim y manda el mensaje"**, más `:159` (claim con error → `sendText` no
+  se llama) y `:188` (un viaje malo no tumba el lote, con tres `resultadosUpdate`
+  distintos). Esto es exactamente lo que le faltó a QStash en el pase 1.
+- **El claim va acotado por tenant además de por id** (`:161-163`), con prueba
+  nombrada (`test:207`, "el UPDATE va acotado por tenant, no solo por id").
+- **`viajesSinComprobar` falla cerrado**: `:63` lanza en vez de devolver `[]`, con
+  prueba (`test:106`, "UN ERROR NO ES UNA LISTA VACÍA"). Es la regla del CLAUDE.md
+  aplicada al camino nuevo.
+- **El cron nuevo no afloja la puerta**: `escalar/route.ts:50-61` sigue exigiendo
+  `CRON_SECRET` presente (500 si falta, no 200) y comparando el `Bearer` completo,
+  y el 401 va sin cuerpo. Los dos chequeos van en `try/catch` independientes
+  (`:65-83`), así que uno que truene no ciega al otro — verificado leyendo, sin
+  prueba de ruta que lo cubra.
+- **`startup.ts:65-85` cerró un lock que se pedía y no se respetaba**, y con
+  prueba: el `unlock_viaje` incondicional del probe borraba el lease de un
+  proceso ajeno (`unlock_viaje` es un `delete where viaje_id` sin token de dueño,
+  mig. 0005). Ahora solo suelta si `tomado === true`. La prueba se llama
+  **`startup_mutex_ajeno.test.ts`** (89 líneas nuevas). Es el único camino de
+  concurrencia que este pase cerró.
+- **El retiro del rol `operador` no dejó agujeros de ruteo.** `proxy.ts:110`
+  reduce `RUTAS_CON_SESION` a `['/dashboard','/admin']` y las páginas
+  correspondientes ya no existen (`ls src/app` no lista `chofer` ni `mis-viajes`);
+  `guard.ts` perdió `requireOperador` sin dejar importadores
+  (`grep -rn requireOperador src/` solo devuelve comentarios), y `PANEL_PROPIO`
+  vacío hace que un `app_user` con `rol='operador'` residual caiga a `/sin-acceso`
+  por el `??` de `areasDe` — fail closed. `proxy.test.ts` verde (11 pruebas).
+- **El arreglo del PDF del contralor en `processor.ts:2160-2190` está bien del
+  lado del servidor:** la segunda firma va dentro de `acotada` con etiqueta
+  propia, distingue `error` de `!data?.signedUrl`, registra
+  `pdf.contralor_no_firmado` con tenant y viaje, y degrada a "aviso sin adjunto"
+  en vez de mandar el ejemplar censurado. El paso nuevo se anotó en
+  `PASOS_CIERRE` (`presupuesto.ts:47-53`), que es la disciplina de ese archivo.
+- **`duplicados.ts`, `pg_errores.ts`, `conv.ts` y `repo.ts`** no tienen un solo
+  cambio en esta ventana (`git diff --stat 94c0733..HEAD -- src/lib/`), así que
+  los cierres que verifiqué en el pase 1 sobre esos archivos siguen puestos: el
+  claim del doble CFDI (`al_vuelo.ts:627-659`, probado en
+  `al_vuelo.test.ts:649-790`), la transacción única del cierre
+  (`repo.ts:605-620`), la idempotencia del webhook (`conv.ts:343-353`) y el mutex
+  del viaje (`conv.ts:418-464`).
 
 ---
 
 ## Lo que NO alcancé a revisar
 
-- **`processor.ts` completo** (136 KB). Recorrí el arranque (`:325-430`), la rama
-  de XML (`:1382-1490`) y el cierre con mutex (`:1720-1830`, `:2239`). Las ~1,000
-  líneas de las ramas de imagen, huérfanos y consulta del chofer las leí solo por
-  encima.
-- **`src/lib/likida/facturacion/adaptadores/`** (`pagina_playwright.ts`,
-  `capufe.ts`, `registro.ts`): el comportamiento de `conNavegador` bajo corte de
-  presupuesto lo di por bueno desde el llamador, no leyendo el adaptador.
-- **`agente.ts` / `facturarLoteConAgente`**: no verifiqué qué garantiza sobre el
-  orden de `porGasto` frente a `tickets`, del que depende el reparto de
-  `cfdi_orden` en `guardarUno` (`al_vuelo.ts:481-483`).
-- **Las funciones plpgsql** (`guardar_liquidacion_tx`, `try_lock_viaje`,
-  `intake_delta`, `enriquecer_gasto_codigo`, `mantenimiento_de_datos`): las traté
-  como caja negra. Su contenido es del auditor de modelo de datos.
-- **No pude ejercitar ninguna ruta contra una base real** (sin credenciales en este
-  entorno) ni correr `npm run build`, así que todo lo de QStash está verificado por
-  lectura del código y del paquete instalado, no en vuelo.
+- **El comportamiento real de Meta ante el 131047 en este flujo.** El hallazgo del
+  `sendText` fuera de ventana está verificado por lectura del código
+  (`client.ts:204-214`, `:285-286`) y por el hecho de que `escalar_viaje.ts` ya
+  hace el fallback; **no** pude ejercitarlo contra la Graph API (sin credenciales
+  aquí y las `pruebas-manuales/*` están vetadas).
+- **El volumen real del histórico de viajes `abierto`.** El hallazgo del arranque
+  sin compuerta está verificado en el mecanismo (columna nueva `NULL` + columna
+  vieja poblada desde `0001_init.sql:53`); cuántas filas dispara la primera
+  corrida solo se sabe consultando la base de producción, que no tengo.
+- **`processor.ts` completo** (136 KB). Solo leí el bloque que cambió
+  (`:2100-2200`).
+- **`cron/purgar/route.ts`** — no lo abrí en ninguno de los dos pases.
+- **Las funciones plpgsql** (`try_lock_viaje`, `unlock_viaje`,
+  `guardar_liquidacion_tx`, `intake_delta`): caja negra; son del auditor de modelo
+  de datos. La afirmación de que `unlock_viaje` borra sin token de dueño la tomé
+  del comentario de `startup.ts:70-72`, no del SQL.
+- **Ninguna ruta ejercitada contra una base o un Meta reales.**
