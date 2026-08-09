@@ -1,6 +1,49 @@
-# MAPA — auditoría 17 (8-ago-2026)
+# MAPA — auditoría 17 (8-ago-2026 · pase 2 el 9-ago-2026)
 
-## Ronda y anclaje
+## PASE 2 — ronda de CONTINUACIÓN (9-ago-2026)
+
+El PR #9 (`claude/auditoria-17`) sigue **abierto**, así que esta corrida continúa
+sobre él en vez de abrir uno nuevo. Lo que cambió desde que los auditores del
+pase 1 escribieron sus archivos:
+
+- `origin/master` avanzó **12 commits** (`94c0733` → `20ecbb1`), mergeados a esta
+  rama en `c7c9a0e`. **65 archivos, +2886 / −3262**.
+- Cambios dominantes, y por qué importan a la auditoría:
+  1. **`31babfd` retira el rol `operador` del dominio** (mig. `0086`). Se borra
+     `/chofer` entero (12 archivos), `mis-viajes`, `admin/vista-chofer`,
+     `lib/likida/chofer.ts` (499 líneas) y `guard.ts` pierde 39 líneas. El chofer
+     ya solo existe por WhatsApp. **Toca seguridad, arquitectura, datos, legal.**
+  2. **`c5a7c19` agrega el recordatorio automático de comprobación por WhatsApp**
+     (`recordatorio_comprobacion.ts` +171, mig. `0087`, cron `escalar` +51).
+     Camino nuevo que manda mensajes solo. **Toca agéntico, backend, legal, operabilidad.**
+  3. **Rework del dashboard del dueño** (8 commits): `analytics.ts` **+454 líneas**
+     de consultas nuevas, `panel-periodo.tsx`, `kpi-periodo.tsx`, `top-rutas.tsx`,
+     `gasto-semanal-chart.tsx`, `actividad.tsx`, `motor-fiscal-periodo.tsx`,
+     y `page.tsx` reescrito (473 líneas movidas). Un selector único
+     Semanal/Mensual/Histórico mueve todo lo de abajo. **Toca frontend, rendimiento,
+     fiscal, arquitectura.** Es exactamente la superficie donde vive la regla
+     "un rótulo tiene que ser verdad".
+  4. `formato.ts` +34 y `fiscal.ts` +44 — cifras nuevas en la única fuente de formato.
+- **Colisión de migraciones resuelta en el merge:** master trajo `0086_retirar_rol_operador`
+  y `0087_recordatorio_comprobacion`; la rama de auditoría tenía su propio `0086`
+  (régimen 624 del CRÍTICO fiscal C3). El de la auditoría se renumeró a **`0088`**
+  y su bloque de `verificaciones.sql` pasó de **62 a 63**.
+- **Rubro NO reauditado en el pase 2: tool calling.** `src/lib/likida/tools.ts`,
+  `src/lib/llm/*` y `src/lib/agents/*` no tienen un solo cambio en los 12 commits
+  (`git diff --name-only 94c0733..origin/master | grep -iE "agent|tool|llm"` → vacío).
+  Conserva su 7/10 marcado *no auditado este pase*.
+
+### Compuerta del pase 2 (árbol post-merge, corrida el 9-ago-2026)
+
+```
+npx tsc --noEmit -p .   → 0 errores
+npx vitest run          → 255 archivos, 3,168 pruebas verdes, 1 saltada
+npm run lint            → 0 errores, 18 warnings
+```
+
+---
+
+## Ronda y anclaje (pase 1)
 
 - Rama: `claude/auditoria-17` (desde `origin/master` = `94c0733`).
 - Ronda anterior con **tabla completa de notas**: la **13** (global 7.2/10).

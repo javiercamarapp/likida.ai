@@ -62,3 +62,19 @@ en ambos casos se dejó escrito por qué:
 - `startup_diagnostico.test.ts` — encadenaba mocks por POSICIÓN y daba por hecho
   un `unlock` que ahora, correctamente, no ocurre.
 - `presupuesto.test.ts` — el conteo de pasos del cierre pasa de 13 a 14.
+
+---
+
+# PASE 2 — ronda de CONTINUACIÓN (9-ago-2026)
+
+| # | Acción | Resultado | sha |
+|---|---|---|---|
+| 20 | `git status` al arrancar | limpio (HEAD detached en `20ecbb1`) → autofix HABILITADO | — |
+| 21 | Decisión de tamaño: PR **#9 abierto** sobre `claude/auditoria-17` | **CONTINUACIÓN** sobre esa rama, sin PR nuevo | — |
+| 22 | `origin/master` del clon venía **stale** (`e4326f9`, historia sin ancestro común) | `git fetch origin master` → `20ecbb1` (forced update); la referencia vieja era basura del clon | — |
+| 23 | Merge de `origin/master` (12 commits) en la rama | 1 conflicto en `verificaciones.sql`; colisión de `0086` renumerada a `0088` / bloque 63 | `c7c9a0e` |
+| 24 | `npm ci` | ok | — |
+| 25 | Compuerta post-merge `npx tsc --noEmit -p .` | **0 errores** | — |
+| 26 | Compuerta post-merge `npx vitest run` | **255 archivos, 3,168 pasan, 1 saltada** | — |
+| 27 | Compuerta post-merge `npm run lint` | **0 errores, 18 warnings** | — |
+| 28 | `MAPA.md` actualizado con el delta del pase 2 | ok | — |
