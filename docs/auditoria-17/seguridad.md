@@ -1,469 +1,430 @@
-# Seguridad — auditoría 17
+# Seguridad — auditoría 17 (pase 2)
 
-**Nota: 7/10** (antes 8). Razón del movimiento: mirada más profunda · deuda que
-cobró factura. Los cierres de RLS de las rondas 11–13 se mantienen y las dos
-fronteras nuevas (QStash, migración 0085) no abrieron acceso sin autenticar —
-pero el hallazgo abierto de la ronda 13 (`operador_sube_su_pod`) **sigue vivo**
-(la 0081 arregló el tenant, no la auto-certificación), el rol de `/admin`
-descansa en **una sola capa** para 20 de sus 27 páginas, y hay un CVE con camino
-real de explotación (`sharp` 0.34.5 sobre bytes que manda un chofer por
-WhatsApp). El ancla de "8+" pide dos capas independientes en toda ruta
-privilegiada; hoy en `/admin` y en `/cuenta` la capa de autorización es una.
+**Nota: 6/10** (antes 7). Razón del movimiento: **mirada más profunda**. La
+migración 0086 se leyó línea por línea y **no ensanchó nada** —quitar
+`and not is_operador()` es un no-op algebraico para los cuatro roles que
+quedan— y de paso **cerró** el hallazgo reincidente de la ronda 13
+(`operador_sube_su_pod` fue borrada, no parchada). Pero al comprobar policy por
+policy salió lo que el pase 1 anotó como "está bien": **`/dashboard` NO tiene
+dos capas de rol.** Las dos que reporté (proxy + `puedeVerRuta`) corren en el
+MISMO proceso de Next; en la base, `tenant_data` sobre `viaje`, `gasto` y
+`liquidacion` no mira el rol. El repo mismo escribió el modelo de amenaza que
+eso rompe (`0048:42-46`) y aplicó el remedio (`ve_finanzas()`) a las tablas
+vacías, no a las que tienen el dinero. Súmale que `sharp` sigue en 0.34.5 sin
+tocar un segundo pase, y la nota baja uno.
 
-**El riesgo mayor del rubro, hoy:** el rol de superadmin se comprueba en UN solo
-sitio (`src/app/admin/layout.tsx:36`) para 13 páginas que pintan datos de TODOS
-los tenants —incluidas las transcripciones de WhatsApp de todos los choferes—
-y el proxy, la otra capa, solo pregunta "¿hay sesión?", no "¿qué rol?".
+**El riesgo mayor del rubro, hoy:** el jefe de tráfico (`encargado`) y el
+contador tienen, por RLS, lectura **y escritura** completas sobre las 19 tablas
+de negocio de su flota —incluidas `gasto`, `liquidacion` y `operador`—, y la
+separación que el producto vende ("el encargado despacha, no factura"; "el
+contador es de solo lectura") vive únicamente en TypeScript.
+
+---
+
+## Estado de los hallazgos del pase 1
+
+| # | Hallazgo del pase 1 | Estado hoy | Evidencia |
+|---|---|---|---|
+| 1 | **[ALTO]** `sharp` 0.34.5 decodifica bytes que elige el chofer | **REINCIDENTE, sin cambio** | `package.json` sigue en `"sharp": "^0.34.0"`; `node -e require('sharp/package.json').version` → **0.34.5**; `npm audit` sigue reportando GHSA-f88m-g3jw-g9cj. `cfdi.ts:249` intacto (`sharp(image).rotate().resize(...)`). |
+| 2 | **[MEDIO]** `operador_sube_su_pod` — el chofer certifica su propio POD | **CERRADO** | `0086:30` → `drop policy if exists operador_sube_su_pod on public.pod;` y `0086:29` también borra `operador_ve_su_pod`. `pod` queda solo con `tenant_data` (`0086:38-52`). Ninguna migración posterior (0087, 0088) la recrea. Ya no existe rol que la pudiera usar: `0086:96-98` retira `operador` del dominio. |
+| 3 | **[MEDIO]** `/admin` es una sola capa (20 páginas sin puerta propia) | **REINCIDENTE, sin cambio** | `requireSuperadmin()` sigue solo en `src/app/admin/layout.tsx:36`. Barrido de hoy: las mismas **20** `page.tsx` bajo `/admin` no mencionan ninguna guardia. `proxy.ts:117-132` sigue preguntando solo "¿hay sesión?". |
+| 4 | **[MEDIO]** QStash: el productor arranca con menos config que el consumidor | **REINCIDENTE, sin cambio** | `facturar/route.ts:308` sigue disparando con `UPSTASH_QSTASH_TOKEN` solo; `cola/route.ts:22-28` sigue exigiendo tres. `env.ts:29-38` (`GROUPS`) sigue sin ninguna `QSTASH_*`. |
+| 5 | **[BAJO]** `search_path` borrado de `config_tenant_valida` por 0082/0083/0085 | **REINCIDENTE** | 0086, 0087 y 0088 no tocan la función. `pg_proc.proconfig` sigue sin restaurar desde el repo. |
+| 6 | **[BAJO]** `/cuenta` fuera del matcher del proxy | **REINCIDENTE, y la lista encogió** | `proxy.ts:108` ahora es `['/dashboard', '/admin']` (se fueron `/mis-viajes` y `/chofer`). `/cuenta` sigue sin estar y `src/app/cuenta/page.tsx` sigue con su único `requireSessionTenant`. |
+| 7 | **[BAJO]** El callback de QStash no comprueba el destino de la firma | **REINCIDENTE, sin cambio** | `cola/route.ts:36-39`: `receiver.verify({ signature, body })`, sin campo `url`. |
+
+**Además, retiro un renglón del "está bien" del pase 1:** «*`/dashboard` sí
+tiene dos capas de rol*». Es falso — ver el primer hallazgo de abajo.
 
 ---
 
 ## Hallazgos
 
-### [ALTO] `sharp` 0.34.5 decodifica bytes que elige el chofer, dentro del proceso que tiene el service-role
-`src/lib/likida/intake/cfdi.ts:249` · `package.json` (`"sharp": "^0.34.0"`, instalado **0.34.5**)
-· ruta de llegada: `src/lib/meta/client.ts:413-427` → `src/lib/likida/processor.ts:522,724` → `src/lib/likida/intake/ocr.ts:244`
+### [ALTO] Las tablas del dinero no tienen capa de rol en la base: un `encargado` las lee enteras por PostgREST
+`supabase/migrations/0086_retirar_rol_operador.sql:38-52` · contra
+`supabase/migrations/0048_comercial_cliente_tarifa_ingreso.sql:42-46` ·
+`src/lib/auth/visibilidad.ts:41` · `src/lib/auth/permisos.ts:4-8`
 
-Escenario: el chofer Juan (fila en `operador` con `telefono = 5219993700779`,
-así que `resolveOperador` lo reconoce) manda por WhatsApp un archivo de 900 KB
-cuyo `mime_type` que reporta Meta es `image/jpeg` pero cuyos bytes son un TIFF
-con un IFD manipulado. `downloadMediaAsDataUrl` lo baja sin ningún tope de
-tamaño ni validación de formato (`client.ts:426`: `Buffer.from(await
-bin.arrayBuffer())`), y `decodeCodigosFromImage` hace
-`sharp(image).rotate().resize({width:1600}).jpeg().toBuffer()`. `sharp` no mira
-el mime declarado: enruta por *magic bytes* al cargador de libvips
-correspondiente, así que un solo canal de entrada alcanza todos los decodificadores
-(TIFF, WebP, HEIF, JPEG2000). `sharp <0.35.0` arrastra las CVE de libvips
-CVE-2026-33327 / -33328 / -35590 / -35591 (GHSA-f88m-g3jw-g9cj, HIGH), que son
-corrupción de memoria en esos cargadores.
-
-Sale mal: corrupción de heap dentro de la invocación de
-`/api/webhook/whatsapp`, que es un proceso Node cuyo `process.env` tiene
-`SUPABASE_SERVICE_ROLE_KEY` (salta TODA la RLS de todos los tenants),
-`WHATSAPP_ACCESS_TOKEN` y `OPENROUTER_API_KEY`. En el caso benigno, el
-`catch {}` de `cfdi.ts:255` se traga el crash y la foto se pierde en silencio.
-
-Consecuencia: el adversario que el producto modela explícitamente —el chofer que
-quiere que sus números cuadren— es el que tiene el canal de entrada. Con éxito,
-lectura y escritura de la base entera, incluidas liquidaciones y CFDI de otras
-flotas. Sin éxito, el intake de esa flota se muere sin una línea de log.
-
-Causa raíz probable: la única dependencia de producción que decodifica bytes de
-un tercero está pineada a un rango (`^0.34.0`) que no alcanza la versión con
-libvips parcheado, y no hay ningún tope de tamaño ni validación de formato antes
-del decodificador.
-
-Refutación intentada: `resolveOperador` (`processor.ts:384`) sí cierra el paso a
-un número desconocido —no es un ataque anónimo— y `FACTURACION_MODO` no
-interviene aquí. Pero el número de un chofer dado de alta no es una credencial:
-es un dato que la flota captura en el panel, y el propio chofer lo controla.
-No encontré ningún guardarraíl entre el `arrayBuffer()` y el `sharp()`.
-
----
-
-### [MEDIO · REINCIDENTE] El chofer sigue certificando su propio POD — la 0081 amarró el tenant, no el `estado`
-`supabase/migrations/0081_pod_tenant_amarrado.sql:15-19` · tabla en `supabase/migrations/0047_operacion_encargado.sql:127-146` · escritura del panel en `src/lib/likida/operacion.ts:394-398`
-
-La política vigente es:
+La 0086 reescribió `tenant_data` en 19 tablas y la dejó así:
 
 ```sql
-create policy operador_sube_su_pod on public.pod for insert
-  with check (
-    viaje_id in (select id from public.viaje where operador_id = get_user_operador_id())
-    and tenant_id = (select tenant_id from public.viaje where id = viaje_id)
-  );
+create policy tenant_data on %I for all
+  using (tenant_id = any(get_user_tenant_ids()) or is_superadmin())
+  with check (tenant_id = any(get_user_tenant_ids()) or is_superadmin())
 ```
 
-Restringe `viaje_id` y `tenant_id`. **No restringe `estado`, ni `storage_path`,
-ni `operador_id`, ni `capturado_en`.**
+En esa lista están `gasto`, `liquidacion`, `viaje`, `wa_conversacion`,
+`operador`, `pod`, `cfdi_xml`, `llm_costo`. **Ni una menciona el rol.**
+Mientras tanto `visibilidad.ts:41` declara `encargado: ['operacion']` y el
+comentario de `visibilidad.ts:8-13` explica por qué: "enseñarle el margen de la
+flota no es un detalle de UI, es exponerle a un puesto medio las finanzas
+completas de la empresa".
 
-Escenario: Juan es `app_user.rol='operador'` con `operador_id = op-7` y sesión web
-en `/chofer`. Toma la anon key del bundle del navegador
-(`NEXT_PUBLIC_SUPABASE_ANON_KEY`, pública por diseño) y hace:
+La función que resuelve exactamente esto **ya existe**: `ve_finanzas()`
+(`0048:47-60`, `rol in ('superadmin','flota_admin','contador')`). Se aplicó a
+`cliente`, `tarifa`, `factura_emitida`, `pago_recibido`, `factura_viaje` y
+`cotizacion` — las seis tablas que el MAPA declara **vacías, nadie las escribe
+todavía**. No se aplicó a ninguna de las tres que sí traen dinero.
+
+**Escenario, con valores.** Celinda es `app_user.rol = 'encargado'` del tenant
+`11111111-1111-1111-1111-111111111111` (jefa de tráfico de Transportes
+Innovativos, cuenta legítima con su magic link). En el panel,
+`/dashboard/cuadre` y `/dashboard/rentabilidad` la rebotan a `/dashboard`
+(`tenant-efectivo.ts:105`). Abre una terminal:
 
 ```
-POST https://<proj>.supabase.co/rest/v1/pod
-apikey: <anon>   Authorization: Bearer <su access token>
-{"viaje_id":"<V-9, suyo>","tenant_id":"<tenant de V-9>","estado":"subido",
- "storage_path":"pod/V-9.jpg","capturado_en":"2026-08-08T09:00:00Z",
- "operador_id":"<op-3, su compañero>","lat":25.68,"lng":-100.31}
+GET https://<ref>.supabase.co/rest/v1/liquidacion
+    ?select=viaje_id,total_anticipo,total_comprobado,diferencia,estatus
+apikey: <anon>
+Authorization: Bearer <su access_token, el de su propia sesión>
 ```
 
-Pasa el `with check` (el viaje es suyo, el tenant coincide) y la fila queda
-insertada. Sale mal en dos sitios a la vez:
+`get_user_tenant_ids()` devuelve su tenant, la policy pasa, y sale **la
+liquidación de cada viaje de la flota con anticipo, comprobado y diferencia** —
+literalmente el CSV que `api/export/liquidaciones/route.ts:45-48` le niega con
+un 403 y el mensaje "Tu rol no ve las cifras de dinero de la flota". Lo mismo
+con `wa_conversacion`: el historial completo de WhatsApp de todos los choferes
+(dato personal de terceros, LFPDPPP), que es exactamente el daño que la 0078
+enumera en su encabezado —lo cerró para el chofer y nunca para el encargado.
 
-1. `getPods` (`operacion.ts:330`) y `tableroOperacion` (`operacion.ts:450`) leen
-   `estado` y muestran el viaje F-1042 como **entrega comprobada**;
-   `podPendientes` baja en uno. Ningún camino de la aplicación escribe jamás
-   `estado='subido'` —`marcarPodPedido` inserta `'pendiente'`
-   (`operacion.ts:398`) y `rechazarPod` actualiza a `'rechazado'`
-   (`operacion.ts:411`)—, así que ese valor SOLO puede venir del chofer.
-2. `storage_path` apunta a un objeto que no existe: **no hay bucket `pod`** en
-   ninguna migración (0008 crea `liquidaciones`, 0039 `comprobantes`, 0046
-   `avatares`, y nada más). El constraint `pod_subido_tiene_archivo` solo exige
-   que la columna no sea nula, no que el archivo exista.
-3. El índice `pod_viaje_unico` (`0047:151`) es único por `viaje_id`: una vez que
-   el chofer insertó, el encargado que aprieta "Pedir POD" recibe un error de
-   llave duplicada y no puede volver a pedirlo.
+**Refutación intentada, y por qué no me la creo.** Lo único que hace falta y
+Celinda no tiene automáticamente es la anon key: hoy `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+solo se lee en `proxy.ts:119-120` y `supabase/server.ts:10-11`, ninguno de los
+dos en un bundle de cliente, así que no está inlineada en el navegador (lo
+verifiqué: el único `use client` que toca supabase es
+`dashboard/motor-fiscal-periodo.tsx`, y no la usa). Pero (a) el project-ref va
+en claro en el nombre de su propia cookie `sb-<ref>-auth-token`, así que la URL
+no es secreto; (b) Supabase documenta la anon key como pública por diseño y el
+repo **lo asume literalmente** en `0048:43-44` — "cualquier usuario autenticado
+tiene la anon key y puede pegarle a PostgREST directo: ahí la única frontera es
+RLS"; y (c) basta que un solo componente cliente futuro llame a
+`createBrowserClient` para que Next la inline. Una frontera de autorización que
+se sostiene porque una llave *documentada como pública* todavía no se publicó no
+es una segunda capa.
 
-Consecuencia: el contralor cierra el viaje con la entrega marcada como probada.
-Treinta días después el cliente de la flota disputa la entrega y detrás de
-`storage_path` no hay nada — ni foto, ni firma, ni coordenada verificable, y el
-`operador_id` de la fila apunta a un compañero que no llevó ese viaje.
+**Consecuencia.** El puesto medio de la flota tiene, con su cuenta legítima, el
+margen y el gasto completo de la empresa y los chats de todos los choferes. Y en
+la sala: el contralor pregunta "¿mi jefe de tráfico puede ver esto?", la
+pantalla dice que no y la base dice que sí.
 
-Causa raíz probable: la política se corrigió por el eje que la auditoría 13
-nombró (el tenant) sin volver a preguntar qué OTRAS columnas escribe ese mismo
-`insert` sin control.
+**Causa raíz probable.** `permisos.ts:4-8` fija la doctrina ("RLS es por TENANT,
+no por rol… eso es correcto para flota_admin/encargado/contador — los tres viven
+del mismo panel, mismos datos") y la 0044 la contradijo al partir el panel por
+áreas, sin que nadie volviera a las policies. La 0086 fue la ocasión en que se
+reescribieron esas 20 policies una por una, y se copió el predicado viejo.
 
 ---
 
-### [MEDIO] El rol de `/admin` es una sola capa: 13 páginas con datos de todos los tenants y ninguna puerta propia
-`src/app/admin/layout.tsx:36` (`await requireSuperadmin()`) · `src/proxy.ts:94,111` · `src/app/admin/conversaciones/page.tsx:16` · `src/app/admin/ejecutivo/page.tsx:18` · `src/app/admin/crecimiento/page.tsx:20`
+### [ALTO] El contador "de solo lectura" puede ESCRIBIR las 19 tablas, incluida la bitácora que lo delataría
+`supabase/migrations/0086_retirar_rol_operador.sql:47-49` (`for all` … `with check`) ·
+`0086:76-77` (`bitacora_insercion`) · `src/lib/auth/visibilidad.ts:84-86` ·
+`src/lib/auth/permisos.ts:17-19` · `src/lib/likida/conv.ts:100-114`
 
-El propio repo escribe la regla dos veces —`src/proxy.ts:14-16` ("las dos tienen
-que fallar a la vez") y `src/lib/auth/guard.ts:2-7`— y `/dashboard` la cumple:
-las **31** páginas pasan por `resolverTenantEfectivo`, que vuelve a comprobar el
-rol con `puedeVerRuta` (`tenant-efectivo.ts:105`). `/chofer` también: layout **y**
-página llaman a `requireOperador`.
+`visibilidad.ts:84-86` afirma: "Lo que hace al panel del contador de SOLO
+LECTURA no es el área: es que ninguna de sus páginas expone una acción (ver
+`permisos.ts` — `puedeAsignar`/`puedeAdministrar` ya le dicen que no)". Eso es
+cierto de los botones. La policy `tenant_data` es `for all` **con `with check`
+idéntico al `using`**: INSERT, UPDATE y DELETE incluidos, para cualquier
+`app_user` del tenant.
 
-`/admin` no. La primera capa (`proxy.ts:111`) solo pregunta si hay sesión —
-cualquier rol la pasa. La segunda vive únicamente en el layout, y **20 de las 27
-páginas** no tienen comprobación propia:
+**Escenario 1 — cambiar dinero.** Mario, `rol='contador'` de la flota
+`1111…1111`, con su sesión válida:
 
 ```
-notificaciones · configuracion · salud-sistema · crecimiento · cobranza
-conversaciones · conocimiento-rag · agente-whatsapp · capacidad-forecast
-chat · equipo · integraciones · agente-ocr · comunicacion · model-ops
-ejecutivo · soporte · playground · agente-cuadre · whatsapp-infra
+PATCH https://<ref>.supabase.co/rest/v1/gasto?id=eq.<g-77>
+apikey: <anon>   Authorization: Bearer <su access_token>
+{"monto": 3900}
 ```
 
-De ellas, **13 importan `@/lib/admin/negocio`** — la única función del repo con
-permiso de cruzar todos los tenants (CLAUDE.md).
+El gasto de diésel de $4,200 —el que en el seed dispara la diferencia de $200
+por tope de política— pasa a $3,900. `cuadrarDesdeDB` vuelve a cuadrar sobre ese
+número y el PDF sale sin la diferencia. Ninguna server action se ejecutó,
+ninguna comprobación de `puedeAdministrar` corrió, y `anotar()`
+(`administracion.ts:245`) no se llamó: **la bitácora no tiene una línea.**
 
-Escenario: Celinda, contadora de Transportes Innovativos
-(`app_user.rol='contador'`, sesión válida). Pide `/admin/conversaciones` con
-cabeceras `RSC: 1` y un `Next-Router-State-Tree` que declara el segmento
-`admin` ya renderizado. Next resuelve el árbol y renderiza solo el segmento que
-cambió; el layout —donde vive el único `requireSuperadmin()`— no vuelve a
-correr. La respuesta trae el payload de `ConversacionesPage`, o sea
-`getConversacionesActivas()`: `telefono`, `tenantNombre` y los `turns` completos
-de las conversaciones de WhatsApp de **todas** las flotas de la base. Por
-`/admin/ejecutivo` y `/admin/crecimiento`, `getResumenNegocio()`: gasto de IA en
-USD por flota y conteo de viajes de cada cliente.
+**Escenario 2 — robarse la identidad de WhatsApp de un chofer.** Misma sesión:
 
-Consecuencia: un contador de una flota lee los teléfonos y las conversaciones de
-los choferes de otra flota (dato personal de terceros, LFPDPPP) y las cifras de
-negocio internas de Likida. Y si eso se ve en la sala: el contralor de
-Innovativos descubre que su panel y la consola interna comparten puerta.
+```
+PATCH .../rest/v1/operador?id=eq.33333333-0000-0000-0000-000000000001
+{"telefono": "5215512345678"}
+```
 
-Causa raíz probable: `/admin` se construyó con la puerta en el layout y el
-comentario de `layout.tsx:26-27` lo declara como virtud ("ninguna página nueva
-puede olvidarlo"), que es exactamente el patrón que la documentación de Next
-desaconseja para autorización — un layout no se re-ejecuta cuando el árbol de
-router dice que no cambió.
+`resolveOperador` (`conv.ts:100-114`) resuelve al chofer **por teléfono**,
+`.eq('activo', true)`, y devuelve `tenant_id` y `operador_id`. A partir de ese
+PATCH, los mensajes que manda Mario desde su celular entran al motor como si
+fueran de Juan Pérez Ramírez (OP-101): puede subir comprobantes, cerrar el
+viaje y disparar la liquidación con el nombre de Juan en el PDF. Es palabra por
+palabra el daño que la 0078 documentó para el chofer ("cambiarse el suyo para
+robar la identidad de WhatsApp de un compañero") y que cerró **solo** para el
+rol que acaba de desaparecer.
 
-*Lo que verifiqué y lo que no:* verificado que 20 páginas no tienen puerta
-propia, que 13 leen `lib/admin/negocio`, y que el proxy no mira el rol. NO pude
-ejecutar la app (`npm run build` está prohibido y no hay entorno) para confirmar
-que Next 16 omita el layout ante un árbol forjado. Aun si no lo omitiera hoy, el
-hallazgo se sostiene por el ancla del rubro: es una sola capa sobre datos
-cruzados de tenants, y cualquier cambio de versión de Next la vuelve cero.
+**Escenario 3 — ensuciar la evidencia.** La 0086:76-77 dejó `bitacora_insercion`
+con `with check (tenant_id = any(get_user_tenant_ids()) or is_superadmin())` y
+nada más. `bitacora_auditoria` no valida `actor_email` ni `accion`
+(`0053:66-81`), así que un `POST /rest/v1/bitacora_auditoria` con
+`{"tenant_id":"1111…","actor_email":"javier@…","accion":"politica.cambiada"}`
+inserta un asiento atribuido al dueño. La tabla es append-only por RLS (no hay
+policy de UPDATE/DELETE) — correcto —, pero append-only con INSERT abierto
+significa que el registro **se puede diluir**, no borrar, que para efectos de
+evidencia es igual de malo. `bitacora_lectura` sí exige `administra_flota()`:
+el dueño lee un log en el que no puede confiar.
+
+**Consecuencia.** Un contralor que audite una liquidación disputada no tiene
+forma de distinguir un número que puso el motor de uno que puso un usuario con
+`curl`. Para un producto cuya promesa es "nunca inventar una cifra", el que
+puede inventarla es la persona que se sienta al lado del comprador.
+
+**Causa raíz probable.** `for all` con el mismo predicado en `using` y en
+`with check` se copió 19 veces por un `execute format` en bucle; nadie preguntó
+qué roles del dominio **escriben** de verdad (la respuesta, según el código, es
+ninguno: todo el panel escribe por `supabaseAdmin()`).
 
 ---
 
-### [MEDIO] QStash: el productor arranca con menos configuración que el consumidor, y el cron se queda verde mientras nadie factura
-`src/app/api/cron/facturar/route.ts:308` · `src/app/api/cron/facturar/cola/route.ts:22-28` · `src/lib/env.ts:29-38` · `src/lib/observability/arranque.ts:33-41`
+### [MEDIO] El recordatorio automático no distingue "viaje que acaba de vencer" de "viaje viejo": el primer cron manda el backlog entero
+`src/lib/likida/recordatorio_comprobacion.ts:52-62` ·
+`supabase/migrations/0087_recordatorio_comprobacion.sql:13-14` · contra
+`src/lib/likida/escalar_viaje.ts:86-92`
 
-El enqueue se dispara con **una** variable:
+La consulta que decide a quién se le manda WhatsApp es:
 
 ```js
-if (process.env.UPSTASH_QSTASH_TOKEN && lote.length > 0) {   // route.ts:308
+.in('estatus', ['abierto', 'en_cuadre'])
+.is('recordatorio_comprobacion_en', null)
+.not('fecha_inicio', 'is', null)
+.lte('fecha_inicio', limite)     // hoy − 3 días
+.limit(100)
 ```
 
-El callback exige **tres**:
+La 0087 agrega `recordatorio_comprobacion_en` como `timestamptz` nulo y **no
+hace backfill**. La hermana mayor, `escalar_viaje.ts:90`, tiene la protección
+que aquí falta: `.not('avisado_en', 'is', null)` — un viaje que nunca pasó por
+el flujo nuevo es invisible para la escalación. Esta consulta no tiene
+equivalente: cualquier viaje `abierto` con `fecha_inicio` vieja califica, sin
+importar si lleva ahí desde julio.
+
+**Escenario, con valores.** Se despliega 0087 y a la hora en punto corre
+`GET /api/cron/escalar`. En la base viven los viajes `abierto` que dejaron los
+ensayos de demo de las últimas semanas —los del tenant demo apuntan a
+`operador` OP-101, `telefono = 529993700779`, que el propio `seed.sql:71-75`
+documenta como **el número real de Javier**. Si hay 14 de esos con
+`fecha_inicio ≤ hoy−3`, el bucle de `enviarRecordatoriosComprobacion` reclama
+los 14 y manda **14 WhatsApps seguidos al mismo teléfono**, cada uno diciendo
+"Llevas N días con tu viaje *VJ-2026-xxxx* sin mandarme comprobantes". Los que
+apuntan a los placeholders `+521111111102…105` fallan en Meta, se sellan igual
+(`recordatorio_comprobacion.ts:116-117` sella antes de mandar, a propósito) y
+quedan como líneas en `fallos`.
+
+**Consecuencia.** Dos: (a) la ráfaga de envíos a números inválidos es
+exactamente lo que Meta puntúa como calidad del número —el WABA es UNO y es el
+del demo; si baja de tier o se marca, el demo no tiene canal—; (b) si el
+teléfono del contralor o de un chofer real está capturado, la primera impresión
+del recordatorio automático es una ráfaga, y el propio archivo declara la regla
+que se rompe: "un canal que insiste todos los días se aprende a ignorar"
+(`recordatorio_comprobacion.ts:25-27`).
+
+**Lo que NO pude verificar:** cuántas filas `abierto` con `fecha_inicio ≤ hoy−3`
+hay hoy en producción. Sin conexión a Supabase no puedo contarlas. Lo que sí es
+verificable en el repo es la ausencia del gate y del backfill, y el contraste
+explícito con `escalar_viaje.ts:90`, que sí lo tiene.
+
+**Causa raíz probable.** Se copió el mecanismo de idempotencia de la 0058
+(sello + claim condicional) sin copiar la condición que hace que el sello nulo
+signifique "todavía no le toca" en vez de "nunca se le ha mandado".
+
+---
+
+### [BAJO] `resolverTenantEfectivo` ignora el `error` al resolver `?tenant=` y cae en silencio a otra flota
+`src/lib/auth/tenant-efectivo.ts:120-126` · contra
+`src/lib/auth/tenant-api.ts:86-100`
 
 ```js
-if (!token || !currentKey || !nextKey) return ... { status: 503 }   // cola/route.ts:25-28
+const { data: t } = await supabaseAdmin().from('tenant').select('id, nombre').eq('id', sp.tenant).maybeSingle();
+if (t) { tenantId = t.id; tenantNombre = t.nombre; }
 ```
 
-Y son valores distintos que se copian de pantallas distintas de Upstash (el
-token, de la cola; las signing keys, de Settings → Signing Keys — lo dice el
-propio commit `4cd1eb4`).
+Se destructura `data` y **no `error`** — el patrón que el CLAUDE.md nombra por
+su nombre ("supabase-js reporta errores POR VALOR"). El repo ya resolvió esto
+en la ruta hermana: `tenant-api.ts:86-100` distingue "no existe" (400) de "no
+pude preguntar" (503) precisamente "para no escribir en la flota equivocada".
 
-Escenario, con valores: en Vercel queda puesto
-`UPSTASH_QSTASH_TOKEN=eyJVc2VySUQiOi…` y **no** `QSTASH_CURRENT_SIGNING_KEY` /
-`QSTASH_NEXT_SIGNING_KEY`. A las 12:30 el cron (`vercel.json`, `30 * * * *`)
-llama `GET /api/cron/facturar` con su Bearer, lee 8 gastos sin `cfdi_uuid`, los
-publica y contesta **HTTP 200** con
-`{"corrio":true,"encolado":true,"messageId":"msg_2x…","tickets":8,"quedaron":3}`.
-QStash entrega el callback; `cola/route.ts:27` devuelve 503 "QStash no
-configurado"; QStash reintenta dos veces (`retries: 2`) y manda el mensaje al
-DLQ. Ningún ticket se intenta, ni ese día ni ninguno: cada corrida vuelve a
-encolar y a morir igual.
+**Escenario.** Javier (superadmin) abre
+`/dashboard/cuadre?tenant=aaaa…aaaa` para enseñar la flota de Innovativos.
+Supabase devuelve un `error` transitorio (`fetch failed`). `t` es `null`, el
+`if` no entra, `tenantId` se queda en `tenantDemo()` y `tenantNombre` en `null`.
+La pantalla se pinta completa, con las cifras del **tenant demo**, sin un solo
+aviso: la única señal es que el nombre de la flota no aparece.
 
-Sale mal: el panel de crons de Vercel queda **verde** para siempre, que es
-literalmente el modo de falla que `facturar/route.ts:86-96`, `escalar/route.ts:20-26`
-y `purgar/route.ts:40-47` están escritos para no tener. Y no hay aviso por otro
-lado: `env.ts:29-38` (`GROUPS`) y `arranque.ts:33-41` (`SILENCIOSAS`) no
-mencionan ninguna `QSTASH_*`, así que `avisarConfiguracionSilenciosa()` reporta
-`ok:true` con la configuración rota.
+**Consecuencia.** No hay fuga de privilegio —un superadmin ya podía ver las dos
+flotas— pero sí una pantalla que enseña las cifras de una flota mientras el
+usuario cree estar viendo otra, en la única sesión donde se comparan clientes.
+BAJO porque solo alcanza a superadmin y el árbol degrada a datos que esa sesión
+ya podía ver.
 
-Consecuencia: la autofacturación deja de correr sin que nadie se entere. El
-plazo real para pedir el CFDI son 7–15 días en gasolineras y el mes fiscal en
-casetas (`facturar/route.ts:54-55`): lo que caduca en ese silencio es la
-deducción y el IVA acreditable de la flota. Hoy el daño monetario está topado
-porque `FACTURACION_MODO` viene en `ensayo` y no se emite nada de todos modos;
-el día que se ponga en `emitir`, este mismo camino lo apaga sin decirlo.
-
-Causa raíz probable: la condición del productor es un subconjunto estricto de la
-del consumidor, y ninguna de las dos entró al inventario de entorno que el
-arranque vigila.
+**Causa raíz probable.** El bloque de abajo (`tenant-efectivo.ts:137-140`) sí comprueba `error`;
+este se escribió antes y no se alineó cuando se agregó el de abajo.
 
 ---
 
-### [BAJO] La 0082/0083/0085 borraron el `search_path` que la 0035 le había fijado a `config_tenant_valida`
-`supabase/migrations/0085_fix_config_tenant_valida_tipo.sql:17-21` · `supabase/migrations/0082_config_facilidad15.sql:11` · `supabase/migrations/0083_config_facilidad15_forma.sql:8` · contra `supabase/migrations/0035_search_path_fijo.sql:27`
+## CVEs revisados y descartados (con la razón)
 
-La 0035 hizo `alter function public.config_tenant_valida(p_config jsonb) set
-search_path = public, pg_catalog;`. Las tres migraciones siguientes que tocan
-esa función usan `CREATE OR REPLACE FUNCTION` **sin** la cláusula `SET`:
+`npm audit` (corrido hoy): **13 — 2 críticas, 8 altas, 3 moderadas.** Idéntico
+al pase 1: ni un paquete cambió de versión en los 12 commits. Repito el veredicto
+por escrito, no por referencia:
 
-```sql
-CREATE OR REPLACE FUNCTION public.config_tenant_valida(p_config jsonb)
- RETURNS boolean
- LANGUAGE plpgsql
- IMMUTABLE
-AS $function$
-```
-
-En PostgreSQL, `CREATE OR REPLACE FUNCTION` conserva dueño y permisos pero
-reasigna **todas** las demás propiedades a lo que diga el comando — `proconfig`
-incluido. Entra: aplicar la 0085. Sale: `pg_proc.proconfig` de
-`config_tenant_valida` queda en `NULL`, o sea la función que valida la
-configuración de dinero de cada flota vuelve a resolver nombres con el
-`search_path` de quien la invoca. Es la misma regresión que la 0035 cerró y
-exactamente contra la lección que la 0074 dejó escrita en sus líneas 26-28
-("se usa `alter function … set search_path` a propósito, y NO un `create or
-replace`").
-
-Consecuencia: la función vuelve a encender el linter
-`function_search_path_mutable` de Supabase, y la próxima persona que lea la
-0035 creerá que el endurecimiento sigue puesto.
-
-Causa raíz probable: tres migraciones seguidas copiaron el cuerpo de la función
-sin copiar su cláusula `SET`; ninguna verificación del repo compara `proconfig`
-contra lo que la 0035/0074 declaran.
-
-**Refutación (por qué es BAJO y no más):** la función NO es `SECURITY DEFINER`
-(ni la 0026 ni la 0085 lo declaran), así que corre con los permisos del
-invocante; no referencia ninguna tabla, solo funciones de `pg_catalog`; y
-Postgres nunca busca funciones en `pg_temp` a menos que se nombre explícitamente
-en el `search_path`. Para explotarla haría falta un rol que pueda CREAR objetos
-en un esquema y anteponerlo a `pg_catalog` en su propio `search_path` — que
-`anon`/`authenticated` de Supabase no pueden. Es deuda de endurecimiento
-revertida, no un camino de acceso.
-
----
-
-### [BAJO] `/cuenta` tiene una sola capa: llama a `requireSessionTenant` y no está en el matcher del proxy
-`src/proxy.ts:94` (`RUTAS_CON_SESION = ['/dashboard','/mis-viajes','/chofer','/admin']`) · `src/app/cuenta/page.tsx:9` · `src/proxy.test.ts:136-145`
-
-Escenario: `GET /cuenta` sin cookie de sesión. El proxy no reconoce el prefijo,
-así que no evalúa sesión y solo aplica cabeceras; el `Cache-Control: no-store`
-de `proxy.ts:141` tampoco se pone, porque vive dentro de la rama de
-`RUTAS_CON_SESION`. La única puerta es `requireSessionTenant('/cuenta')` dentro
-de la página. Hoy esa puerta funciona y redirige a `/login`, así que no hay fuga
-— pero la promesa del archivo ("las dos tienen que fallar a la vez") no se
-cumple para esta ruta, que enseña el nombre de la flota y el nombre del usuario.
-
-La prueba que debía atraparlo es una igualdad literal contra cuatro strings
-(`proxy.test.ts:142-144`) y su propio comentario lo admite: "si mañana nace
-/taller o /cliente con su `requireX` en el layout, esta prueba no lo va a
-atrapar sola". `/cuenta` ya nació así y la prueba pasa en verde.
-
-Consecuencia: mínima hoy (nombre de flota y de usuario). Importa como señal: la
-lista de secciones gateadas y la lista de páginas con `requireX` divergieron sin
-que nada lo dijera, que es cómo `/chofer` se quedó fuera en su momento.
-
-Causa raíz probable: la lista del proxy se mantiene a mano y la prueba que la
-vigila compara contra una constante escrita a mano, no contra lo que el árbol de
-rutas realmente exige.
-
----
-
-### [BAJO] El callback de QStash no comprueba el destino de la firma ni tiene defensa de repetición
-`src/app/api/cron/facturar/cola/route.ts:36-39`
-
-```js
-const valido = await receiver.verify({
-  signature: req.headers.get('upstash-signature') ?? '',
-  body: raw,
-});
-```
-
-Falta el campo `url`. En `@upstash/qstash` (`chunk-JYPXGFWX.mjs:1148-1152`) la
-comprobación del `sub` del JWT —que es la URL de destino— es condicional:
-`if (request.url !== void 0 && p.sub !== request.url) throw`. Sin `url`, ese
-`if` no entra y el `sub` no se mira.
-
-Escenario: las signing keys de QStash son de **cuenta**, no de endpoint. Un
-mensaje firmado por esta cuenta para cualquier otro destino
-(`sub: "https://otra-cosa/webhook"`) —por ejemplo uno reenviado desde el DLQ de
-la consola de Upstash, o el de un segundo endpoint que se agregue mañana— se
-acepta aquí como legítimo mientras su `exp` no haya vencido. Lo mismo vale para
-un reenvío del mismo mensaje dentro de su ventana de expiración: `jose` valida
-`exp` y `iss`, pero no hay caché de `jti`/nonce, así que un cuerpo repetido se
-vuelve a procesar.
-
-Consecuencia hoy: acotada. Solo existe un endpoint de QStash, y el daño de un
-reproceso está cerrado aguas abajo — `cola/route.ts:62-69` re-lee los gastos con
-`cfdi_uuid is null`, `facturarAlVuelo` re-lee con `.eq('tenant_id', …)`
-(`al_vuelo.ts:186`) y `facturarLoteAlVuelo` también (`al_vuelo.ts:346`), y
-`reclamarIntento` es la carrera real. Cuenta porque es la frontera de confianza
-nueva de esta ronda y la comprobación de destino está a un campo de distancia.
-
-Causa raíz probable: se pasó al `verify()` lo mínimo que hace pasar la prueba
-(firma + cuerpo) sin el tercer campo que ata la firma a ESTE endpoint.
-
----
-
-## CVEs: cuáles descarté y por qué
-
-`npm audit` reporta 13 (2 críticas, 8 altas, 3 moderadas). Una a una:
-
-| Paquete | Sev. | Camino en ESTA app | Veredicto |
+| Paquete | Sev. | Camino real en ESTA app | Veredicto |
 |---|---|---|---|
-| **`sharp` <0.35.0** (GHSA-f88m-g3jw-g9cj: CVE-2026-33327/-33328/-35590/-35591 en libvips) | HIGH | **Sí.** Dependencia de producción, instalada 0.34.5. `cfdi.ts:249` decodifica bytes que un chofer manda por WhatsApp, sin tope de tamaño ni validación de formato, dentro del proceso que tiene `SUPABASE_SERVICE_ROLE_KEY`. | **HALLAZGO ALTO arriba** |
-| **`vitest` <3.2.6** (GHSA-5xrq-8626-4rwp, CVSS 9.8) | CRITICAL | No. Requiere que el **servidor de Vitest UI** esté escuchando. La suite corre con `npx vitest run` (MAPA, compuerta) y no hay `--ui` ni `@vitest/ui` en `package.json`. `vitest` es `devDependency`: no viaja al bundle de Vercel. | **DESCARTADO** |
-| **`@vitest/coverage-v8` ≤3.2.5** | CRITICAL | No. Es solo el arrastre de `vitest` (su `via` es literalmente `["vitest"]`, sin advisory propio). Mismo alcance dev-only. | **DESCARTADO** |
-| **`vite` ≤6.4.2** (GHSA-fx2h-pf6j-xcff, `server.fs.deny` bypass en Windows) | HIGH | No. El bypass es del **dev server** de Vite, que este repo no levanta nunca —Next usa su propio servidor— y además la variante alta es específica de rutas alternas de Windows; el entorno es Linux. `vite` entra solo como dependencia de `vitest`. | **DESCARTADO** |
-| **`vite-node`, `@vitest/mocker`, `esbuild` ≤0.24.2** | MOD | No. Los tres cuelgan de `vite`/`vitest`. El de `esbuild` (GHSA-67mh-4wv8-2f99) exige que el dev server de esbuild esté escuchando y que la víctima visite una web hostil con él encendido. Dev-only. | **DESCARTADO** |
-| **`brace-expansion`** (GHSA-mh99-v99m-4gvg, GHSA-rgw5-rvv9-x895 — DoS por expansión sin cota) | HIGH | No. `npm ls` lo pone bajo `eslint`, `@eslint/config-array`, `@eslint/eslintrc`, `eslint-plugin-import/jsx-a11y/react` y `test-exclude`. Todas dev. Los patrones que expande son los globs de configuración que escribimos nosotros, no entrada de usuario. Un DoS en el linter no es un DoS del producto. | **DESCARTADO** |
-| **`js-yaml` 4.0.0–4.3.0** (GHSA-5p4m-2wfm-xmqj — CPU cuadrática en `!!omap`) | HIGH | No. `npm ls js-yaml` da **un solo** camino: `@eslint/eslintrc` → `js-yaml`. Dev. Ojo con la trampa: las 24 fichas de `normas/` son YAML, pero `src/lib/likida/normas/indice.ts` no pasa por `js-yaml` (no aparece en el árbol de producción) y esas fichas son del repo, no entrada de un tercero. | **DESCARTADO** |
-| **`fast-uri` 3.0.0–3.1.4** (GHSA-7p8r-x3mc-p8w7 — confusión de host por `\`) | HIGH | No. Camino único: `@sentry/nextjs` → `@sentry/webpack-plugin` → `webpack` → `schema-utils` → `ajv` → `fast-uri`. Ese `ajv` valida **esquemas de configuración de webpack** en tiempo de build. Ninguna URL de una petición pasa por ahí; la app no usa `ajv` en runtime (valida con `zod`). | **DESCARTADO** |
-| **`nanoid` <3.3.17** (GHSA-2v37-7h3g-55p8 — bucle infinito con `size = 0` y generador propio) | HIGH | No. Camino único: `postcss` → `nanoid`, y `postcss` lo usa con tamaño fijo para ids de source-map. Nada en este repo llama a `nanoid` con generador propio ni con `size` controlado por un tercero. Build-time. | **DESCARTADO** |
-| **`postcss` ≤8.5.22** (GHSA-6g55-p6wh-862q / -r28c-9q8g-f849 / -fxqj-rqcc-2cmp — lectura de `.map` arbitrarios por `sourceMappingURL`; GHSA-qx2v-qp2m-jg93 XSS por `</style>`) | HIGH | No. El CSS que `postcss` procesa es el nuestro (`@tailwindcss/postcss` sobre `src/**/*.css`), en el build. No hay ninguna ruta que meta CSS de un usuario en postcss en runtime. El XSS por `</style>` requiere CSS de tercero en el stringify: el repo pinta estilos con `style={{}}` (1,178 sitios, `proxy.ts:36-41`), no genera CSS a partir de datos. | **DESCARTADO** |
-| **`next`** (HIGH, agregado) | HIGH | Su `via` son exactamente `postcss` y `sharp`, sin advisory propio de Next. `postcss` queda descartado arriba; `sharp` es el hallazgo ALTO. | **Cubierto por `sharp`** |
+| **`sharp` <0.35.0** (GHSA-f88m-g3jw-g9cj: CVE-2026-33327/-33328/-35590/-35591, corrupción de memoria en los cargadores TIFF/WebP/HEIF de libvips) | HIGH | **Sí.** Producción, instalada **0.34.5**. `cfdi.ts:249` hace `sharp(image).rotate().resize().jpeg().toBuffer()` sobre los bytes que un chofer manda por WhatsApp, bajados sin tope de tamaño ni validación de formato (`meta/client.ts:426`), dentro del proceso que tiene `SUPABASE_SERVICE_ROLE_KEY`. `sharp` enruta por *magic bytes*, no por el mime declarado. | **ABIERTO — hallazgo ALTO del pase 1, reincidente** |
+| `vitest` <3.2.6 (GHSA-5xrq-8626-4rwp, CVSS 9.8) | CRITICAL | No. Exige el **servidor de Vitest UI** escuchando. La suite corre `npx vitest run`; no hay `--ui` ni `@vitest/ui` en `package.json`. `devDependency`: no viaja al bundle de Vercel. | DESCARTADO |
+| `@vitest/coverage-v8` ≤3.2.5 | CRITICAL | No. Su `via` es literalmente `["vitest"]`, sin advisory propio. Mismo alcance dev-only. | DESCARTADO |
+| `vite` ≤6.4.2 (path traversal en `.map` de optimized deps; `server.fs.deny` bypass en Windows; launch-editor NTLMv2 por UNC) | HIGH | No. Los tres son del **dev server** de Vite, que este repo nunca levanta (Next trae el suyo), y dos son específicos de Windows; el entorno es Linux. Entra solo como dependencia de `vitest`. | DESCARTADO |
+| `vite-node`, `@vitest/mocker`, `esbuild` ≤0.24.2 | MOD | No. Cuelgan de `vite`/`vitest`. El de `esbuild` exige su dev server escuchando y que la víctima visite una web hostil con él encendido. Dev-only. | DESCARTADO |
+| `brace-expansion` (GHSA-mh99-v99m-4gvg y dos bypasses de la mitigación de CVE-2026-14257 — DoS por expansión sin cota) | HIGH | No. `npm ls` lo pone bajo `eslint`, `@eslint/config-array`, `@eslint/eslintrc`, los plugins de import/jsx-a11y/react y `test-exclude`. Todas dev. Lo que expande son los globs de configuración que escribimos nosotros. Un DoS del linter no es un DoS del producto. | DESCARTADO |
+| `js-yaml` 4.0.0–4.3.0 (CPU cuadrática en `!!omap`) | HIGH | No. Camino único: `@eslint/eslintrc` → `js-yaml`. **Ojo con la trampa**: las 24 fichas de `normas/` son YAML, pero no pasan por `js-yaml` (no aparece en el árbol de producción) y son archivos del repo, no entrada de un tercero. | DESCARTADO |
+| `fast-uri` 3.0.0–3.1.4 (confusión de host por `\`) | HIGH | No. Camino único `@sentry/nextjs → @sentry/webpack-plugin → webpack → schema-utils → ajv → fast-uri`. Ese `ajv` valida esquemas de configuración de webpack en build. Ninguna URL de petición pasa por ahí; la app valida con `zod`. | DESCARTADO |
+| `nanoid` <3.3.17 (bucle infinito con `size = 0` y generador propio) | HIGH | No. Camino único `postcss → nanoid`, con tamaño fijo para ids de source-map. Nada llama a `nanoid` con generador propio ni con `size` de un tercero. Build-time. | DESCARTADO |
+| `postcss` ≤8.5.22 (lectura de `.map` arbitrarios por `sourceMappingURL`; XSS por `</style>` sin escapar) | HIGH | No. El CSS que procesa es el nuestro (`@tailwindcss/postcss` sobre `src/**/*.css`), en build. No hay ruta que meta CSS de un usuario en postcss en runtime; el repo pinta con `style={{}}`, no genera CSS a partir de datos. | DESCARTADO |
+| `next` (agregado, HIGH) | HIGH | Su `via` son exactamente `postcss` y `sharp`, sin advisory propio de Next. | Cubierto por `sharp` |
 
 **Resumen honesto:** de las 10 críticas/altas, **una sola** tiene camino real de
-explotación en esta app (`sharp`). Las otras nueve son dev-only o build-time y
-las descarto por escrito arriba. Subir `vitest` a 4.x es semver-major y no
-compra seguridad de producción; subir `sharp` a ≥0.35.0 sí.
+explotación en esta app (`sharp`), y sigue exactamente igual que hace un pase.
+Las otras nueve son dev-only o build-time y quedan descartadas por escrito
+arriba. Subir `vitest` a 4.x es semver-major y no compra seguridad de producción.
 
 ---
 
 ## Lo que revisé y está bien
 
-- **Firma del webhook de WhatsApp.** HMAC-SHA256 comparado con
-  `crypto.timingSafeEqual` y guardia de longitud previa
-  (`src/lib/meta/client.ts:40-46`); tope de cuerpo ANTES de leer y otra vez
-  después con `raw.length` (`src/app/api/webhook/whatsapp/route.ts:91-94`) —
-  cierra el hueco de `Transfer-Encoding: chunked` que `ratelimit.ts:99-108`
-  documenta. El challenge del GET también es timing-safe (`client.ts:31-37`).
-- **Firma de Stripe.** Tolerancia de tiempo verificada antes del HMAC, firma
-  sobre el cuerpo crudo, `timingSafeEqual`, y 503 —no 200— si falta
-  `STRIPE_WEBHOOK_SECRET` (`src/lib/saas/stripe.ts:326-354`,
-  `src/app/api/stripe/webhook/route.ts:37-51`). Idempotencia por `evento_stripe`
-  antes de aplicar (`route.ts:64`).
-- **Ningún secreto con fallback derivado de otro secreto.** Barrí todos los
-  `process.env.X ?? …` y `|| …` del árbol: los únicos fallbacks son de URL
-  pública (`NEXT_PUBLIC_APP_URL`), de tenant de demo
-  (`src/lib/auth/tenant-demo.ts:37`) y de entorno de observabilidad. `supabaseAdmin()`
-  **lanza** si falta la service-role key (`src/lib/supabase/admin.ts:12`).
-- **Nada de secretos en el repo.** `88a0ee6` ("CRON_SECRET renovado") es un
-  commit VACÍO: `git show --stat` no lista un solo archivo — el secreto se movió
-  en Vercel, no en git. `.gitignore` cubre `.env*`; el único archivo rastreado es
-  `.env.example`, con todos los valores en blanco. Barrido de
-  `eyJ…`/`sk-…`/`sk_live`/`whsec_…`/`EAA…`/`qstash_…` sobre `*.ts,*.tsx,*.md,*.json,*.sql`:
-  cero aciertos reales (solo cadenas de documentación y un PNG de 1×1 en tests).
-- **URLs firmadas: los cuatro TTL son cortos y proporcionales.** PDF del
-  contralor **60 s** (`api/export/pdf/[id]/route.ts:95`), PDF que se manda por
-  WhatsApp **60 s** (`processor.ts:2123`), PDF en el panel del chofer **600 s**
-  con su razón escrita (`chofer.ts:424`), foto de comprobante **600 s** en el
-  panel del chofer y 3600 s por default en `almacen.ts:93`. Ninguna es una URL
-  pública; los buckets `liquidaciones` y `comprobantes` son privados y sin
-  políticas de storage (0008, 0039), así que solo el service-role firma.
-- **La ruta del PDF tiene las tres puertas.** Rate limit por IP, tenant resuelto
-  desde la sesión (no de la URL), área `dinero` **y** `puedeExportar`, y filtro
-  `.eq('tenant_id')` explícito porque el service-role salta RLS; 404 indistinguible
-  entre "no existe" y "existe sin PDF" (`api/export/pdf/[id]/route.ts:30-91`).
-- **`?tenant=` no se cree nunca.** Solo un superadmin lo honra y el uuid se
-  comprueba contra la tabla, distinguiendo "no existe" de "no pude preguntar"
-  (503) para no escribir en la flota equivocada (`lib/auth/tenant-api.ts:56-73`,
-  `86-100`).
-- **`/dashboard` sí tiene dos capas de rol.** Las 31 `page.tsx` pasan por
-  `resolverTenantEfectivo`, que llama a `puedeVerRuta` antes de resolver nada
-  (`tenant-efectivo.ts:105`). Comprobado con `grep -L`: cero excepciones.
-- **Los server actions no confían en el layout.** Los 24 archivos con
-  `'use server'` re-comprueban rol dentro de la acción: `puedeAdministrar` en
-  políticas (`dashboard/politicas/page.tsx:79`) y en reabrir
-  (`dashboard/[id]/page.tsx:105`), `puedeAsignar` en despacho/unidades/incidencias/pod
-  (`tenantDelAction`), `requireSuperadmin` en flotas/usuarios/mi-perfil/compliance.
-- **Sin rol legible no hay rol.** `SIN_ROL` en vez del viejo `?? 'flota_admin'`
-  (`lib/auth/session.ts:34,96`); toda matriz lo niega por default
-  (`visibilidad.ts:48`, `permisos.ts:17-19`). `rolEfectivo` solo QUITA
-  visibilidad y solo para una sesión real de superadmin (`visibilidad.ts:167-171`).
-- **Sin redirección abierta.** `next` se acota con `startsWith('/dashboard')` en
-  los tres puntos donde se acepta (`login/page.tsx:53,58,74`,
-  `auth/callback/route.ts:13`) — `//evil.com` no pasa.
-- **Enumeración de correos cerrada.** `shouldCreateUser:false` y respuesta
-  idéntica para correo con y sin cuenta, con el motivo solo en el log
-  (`login/page.tsx:90-103`); el exceso de rate limit devuelve el error genérico,
-  no "vas muy rápido".
-- **RLS: ninguna tabla quedó sin activar.** Crucé las 43 `create table` de
-  `supabase/migrations/` contra los `enable row level security` (incluidos los
-  dos bucles `execute format` de 0001:112 y 0047:162): cobertura completa. Las
-  tablas con RLS y sin política (`viaje_lock`, `wa_mensaje_procesado`,
-  `codigo_pendiente`, `foto_pendiente`, `comprobante_huerfano`, `evento_stripe`,
-  `portal_credencial`, `llm_costo_mensual`) niegan todo a `anon`/`authenticated`
-  por default — fallar cerrado, y está dicho en el comentario de la 0063.
-- **Los cierres de las rondas 11–13 siguen puestos.** `not is_operador()` en las
-  7 tablas de la 0078, `tenant` de solo lectura por RLS, `app_user_self` y
-  `bitacora_insercion` de la 0079. Ninguna migración posterior (0080–0085) las
-  vuelve a abrir.
-- **Grants explícitos donde el `revoke from public` no basta.** Cada función
-  `SECURITY DEFINER` nueva lleva `revoke all … from public, anon, authenticated`
-  + `grant … to service_role`; verificado hasta la última (0084:27-28). Las dos
-  de la 0048/0050 recibieron su `revoke from public` en la 0054 cuando se
-  descubrió que `from anon` no revocaba nada.
-- **`search_path` de las cuatro funciones de las que cuelga toda la RLS**
-  (`is_superadmin`, `get_user_tenant_ids`, `is_operador`,
-  `get_user_operador_id`) sigue con `public, pg_temp` de la 0074: ninguna
-  migración posterior las recrea.
-- **Secretos en la base: no hay ninguno.** `portal_credencial` guarda el NOMBRE
-  de la variable, con un CHECK que rechaza cualquier cosa que parezca un secreto
-  (`0063:98-104`), y no tiene políticas RLS. `rastreo_credencial` es de solo
-  lectura para `administra_flota()` y hoy no la escribe nadie
-  (`grep`: un solo lector en `comercial.ts:330`).
-- **Los tres crons fallan cerrado sin `CRON_SECRET`** (500, no 200) y devuelven
-  401 sin cuerpo (`escalar:34-46`, `purgar:53-60`, `facturar:249-256`).
-- **Cabeceras de seguridad y CSP** se aplican en un solo punto y también al
-  redirect a `/login` (`proxy.ts:73-83,139`), con las cookies de refresco
-  arrastradas para no dejar una cookie muerta en bucle.
-- **Compuerta verde a mi paso:** `npx vitest run` → 249 archivos, **3148 pruebas
-  verdes, 1 saltada** — la línea base del MAPA, sin regresiones.
+- **La 0086 NO ensanchó el aislamiento — comprobado policy por policy.**
+  `is_operador()` era `select exists (… where id = auth.uid() and rol =
+  'operador')` (`0045:26-29`). Para `flota_admin`, `contador` y `encargado`
+  devolvía SIEMPRE false, así que `(tenant_id = any(…) and not is_operador())`
+  ≡ `tenant_id = any(…)`. Quitar el predicado es un no-op algebraico para los
+  cuatro roles que quedan, en las 19 tablas del bucle (`0086:38-52`), en
+  `ticket_mensaje` (`0086:56-67`), en `app_user_self` (`0086:70-72`) y en
+  `bitacora_insercion` (`0086:75-77`). Lo que la 0086 sí cambia es que borra el
+  acceso del chofer, no que abra el de nadie.
+- **Las policies de la 0078/0079/0081, una por una:** `tenant_self` sobre
+  `tenant` (solo `select` desde `0078:56`) **no la toca la 0086** y ninguna
+  migración posterior la recrea — la flota sigue sin poder reescribir su RFC ni
+  su política por PostgREST. Los siete `tenant_data` de la 0078 y los dos
+  cierres de la 0079 pasaron al patrón nuevo sin perder el brazo de tenant.
+  `operador_sube_su_pod` (0081) fue **borrada**, no reescrita.
+- **La 0086 no dejó ninguna tabla sin policy.** Crucé `pg_policies`-por-texto:
+  las 20 policies que nombraban `is_operador`/`get_user_operador_id` están todas
+  recreadas ANTES del `drop function` (`0086:80-81`), sin `CASCADE` — si
+  quedara un dependiente, la migración falla en voz alta en vez de tirar RLS.
+  Y el `drop function` sin `cascade` es la red: no puede borrar en silencio.
+- **El dominio de rol se estrecha fallando cerrado.** `0086:96-98` reemplaza
+  el CHECK por `('superadmin','flota_admin','contador','encargado')` dentro de
+  un `do $$` que se niega si queda una fila con `rol='operador'` (el CHECK la
+  rechaza y la migración entera revierte). El tipo `RolAppUser`
+  (`provisionar.ts:16`) ya no lo admite, y una sesión sin fila legible cae a
+  `SIN_ROL` → `areasDe` → `[]` → `/sin-acceso` (`session.ts:34`,
+  `visibilidad.ts:47-48`).
+- **Ninguna ruta se quedó sin guardia al borrarse `/chofer` y `mis-viajes`.**
+  Barrí las 40 `page.tsx` y las 8 `route.ts` del árbol. Las que aparecen sin
+  guardia son públicas por diseño y verificadas una a una: `/`, `/login`,
+  `/sin-acceso`, `/terminos`, `/privacidad`, `/demo`, `/aviso/[tenant]`
+  (público por el art. 16 fr. II, valida forma de UUID antes de consultar y
+  `notFound()` indistinguible), `/auth/callback` (acota `next` con
+  `startsWith('/dashboard')`), `/api/demo` (motor puro, sin DB, con tope de
+  cuerpo de 64 KB y rate limit), `/api/webhook/whatsapp` (HMAC), y
+  `/api/cron/facturar/cola` (firma de QStash). `requireOperador` desapareció y
+  no quedó ningún `import` colgando (`tsc --noEmit` limpio).
+- **`PANEL_PROPIO` vacío no abre nada.** `visibilidad.ts:138` es `{}`, así que
+  `inicioDe` cae a la rama por ÁREA. El comentario declara la trampa que
+  quedaría si alguien le diera un área a un rol de esa tabla; hoy no hay
+  ninguno. `rolEfectivo` (`visibilidad.ts:166-170`) sigue siendo solo-quita y solo para una
+  sesión REAL de superadmin.
+- **`/api/cron/escalar` se autentica con `CRON_SECRET` y falla cerrado.** Sin
+  la variable devuelve **500** —no 200— con `logger.error`
+  (`escalar/route.ts:50-56`); con cabecera equivocada, **401 sin cuerpo**
+  (`:57-60`). Los dos chequeos corren en `try/catch` independientes, así que un
+  fallo de uno no cancela el otro, y los errores viajan en la RESPUESTA además
+  del log. La comparación es `!==` (no `timingSafeEqual`): lo miré y lo
+  descarto — un oráculo de temporización de nanosegundos sobre TLS y el ruteo
+  de Vercel no es explotable, y el secreto no es adivinable por longitud.
+- **El envío nuevo es idempotente de verdad.** `reclamarRecordatorio`
+  (`recordatorio_comprobacion.ts:153-170`) hace `update … .is(campo, null)
+  .select('id')` y solo manda si ganó filas — el sello se pone ANTES del
+  WhatsApp, no después, así que dos corridas solapadas de un cron
+  *at-least-once* no pueden mandar dos veces. Además filtra por `tenant_id` en
+  el UPDATE aunque ya filtre por `id`.
+- **Firma del webhook de WhatsApp.** HMAC-SHA256 con `crypto.timingSafeEqual` y
+  guardia de longitud previa (`meta/client.ts:40-46`); tope de cuerpo ANTES de
+  leer y otra vez con `raw.length` (`webhook/whatsapp/route.ts:91-94`), que
+  cierra el hueco de `Transfer-Encoding: chunked` que `ratelimit.ts:21-23`
+  documenta. El challenge del GET también es timing-safe.
+- **Firma de Stripe.** Tolerancia de tiempo antes del HMAC, firma sobre el
+  cuerpo crudo, `timingSafeEqual`, y **503 —no 200—** si falta
+  `STRIPE_WEBHOOK_SECRET`; idempotencia por `evento_stripe` antes de aplicar.
+- **Ningún secreto con fallback derivado de otro secreto.** Rebarrí todos los
+  `process.env.X ?? …` / `|| …` del árbol tras los 12 commits: los únicos
+  fallbacks siguen siendo URL pública, tenant de demo y entorno de
+  observabilidad. `supabaseAdmin()` **lanza** si falta la service-role key.
+- **Nada de secretos en el repo.** `.gitignore` cubre `.env*`; el único
+  rastreado es `.env.example`, con todos los valores en blanco. Barrido de
+  `eyJ…`/`sk-…`/`sk_live`/`whsec_…`/`EAA…`/`qstash_…` sobre los archivos nuevos
+  de los 12 commits: cero.
+- **URLs firmadas: el inventario encogió y quedó más corto que antes.** Quedan
+  cuatro y todas de **60 s**: PDF del contralor (`api/export/pdf/[id]:95`), PDF
+  por WhatsApp (`processor.ts:2123`) y PDF al contralor (`:2178`). Las de 600 s
+  de `chofer.ts` desaparecieron con el archivo. `ligaComprobante`
+  (`intake/almacen.ts:94`, 3600 s por default) **quedó sin un solo llamador**
+  tras borrar `chofer.ts` — código muerto, no superficie viva. Buckets
+  `liquidaciones` y `comprobantes` siguen privados y sin políticas de storage.
+- **La ruta del PDF conserva sus puertas:** rate limit por IP, tenant de la
+  sesión (no de la URL), área `dinero` **y** `puedeExportar`, `.eq('tenant_id')`
+  explícito porque el service-role salta RLS, y 404 indistinguible entre "no
+  existe" y "existe sin PDF".
+- **`?tenant=` en las rutas de API sigue sin creerse.** `tenant-api.ts:56-73` y
+  `:86-100` solo lo honran para superadmin y distinguen "no existe" (400) de
+  "no pude preguntar" (503).
+- **La vista `factura_saldo` sigue con `security_invoker = true`** (0054:42) —
+  la única vista del esquema; ninguna migración posterior la recrea (un `create
+  or replace view` sí habría reseteado la opción, como pasó con el
+  `search_path` de `config_tenant_valida`).
+- **`search_path` de las funciones de las que cuelga la RLS.**
+  `is_superadmin`, `get_user_tenant_ids`, `ve_finanzas` y `administra_flota`
+  siguen con su `set search_path` y sus `revoke … from public` +
+  `grant … to authenticated` (0054:49-52) — el grant implícito que `revoke from
+  anon` no alcanzaba. Las dos que la 0086 borró ya no son superficie.
+- **CSP: la excepción nueva está acotada.** `proxy.ts:59-68` mete
+  `'unsafe-eval'` SOLO bajo `NODE_ENV === 'development'`; el `script-src` de
+  producción sigue siendo `'self' 'unsafe-inline'`. Verificado que el ternario
+  se evalúa en módulo, no por petición.
+- **Compuerta verde a mi paso:** `npx vitest run` → **255 archivos, 3,168
+  pruebas verdes, 1 saltada**, exactamente la línea base del MAPA del pase 2.
 
 ---
 
 ## Lo que NO alcancé a revisar
 
+- **El estado REAL del catálogo de Postgres.** Todo lo de RLS, grants y
+  `search_path` sale de leer las 85 migraciones y componerlas mentalmente. Sin
+  conexión a Supabase no pude correr `supabase/verificaciones.sql` ni consultar
+  `pg_policies`/`pg_proc.proconfig`. En particular **no pude confirmar que la
+  0086 se haya aplicado a producción**, ni si quedaba alguna fila
+  `app_user.rol='operador'` que la hubiera hecho revertir entera — y si
+  revirtió, el estado vigente es el de antes, con las policies del chofer
+  todavía puestas.
+- **Contar el backlog del recordatorio.** El MEDIO de `0087` depende de cuántos
+  viajes `abierto` con `fecha_inicio ≤ hoy−3` hay hoy. Verifiqué la ausencia
+  del gate, no el tamaño del disparo.
 - **Confirmar en ejecución el hallazgo del layout de `/admin`.** Haría falta
   levantar la app (prohibido `npm run build`, sin entorno) y mandar la petición
-  RSC con `Next-Router-State-Tree` forjado. Lo verificado es estático.
-- **El estado REAL del catálogo de Postgres.** Todo lo de RLS, grants y
-  `search_path` sale de leer las 82 migraciones y componerlas mentalmente. No
-  hay conexión a Supabase desde aquí, así que no pude correr
-  `supabase/verificaciones.sql` ni consultar `pg_policies`/`pg_proc.proconfig`
-  para ver si alguien aplicó algo a mano fuera de las migraciones.
-- **Políticas de `storage.objects` vigentes en el proyecto.** Solo la 0046 crea
-  políticas de storage; si en la consola de Supabase se agregaron otras a mano,
-  no se ven desde el repo. En particular no pude comprobar si existe un bucket
-  `pod` creado fuera de migraciones.
-- **Las claves de firma reales de QStash y la ventana de `exp` de sus JWT.** El
-  análisis de repetición asume el comportamiento por defecto de `jose`
-  (`exp`/`iss` sí, `jti` no); no pude observar un token real.
+  RSC con `Next-Router-State-Tree` forjado. Lo verificado es estático: 20
+  páginas sin puerta propia y un proxy que no mira el rol.
+- **Si la anon key está expuesta por otra vía** (una variable en un Preview de
+  Vercel, un screenshot, la consola de Supabase compartida). Verifiqué que no
+  está en el bundle de cliente de HOY; no puedo verificar los canales de fuera
+  del repo.
+- **Políticas de `storage.objects` creadas a mano** en la consola de Supabase:
+  solo la 0046 crea políticas de storage desde el repo.
 - **`src/lib/agents/` y `src/lib/llm/`** desde el ángulo de inyección de prompt
-  con efectos: el MAPA declara cerrada la superficie por diseño
-  (`properties: {}`) y confirmé que ninguna tool nueva la rompe, pero no audité
-  el contenido de los prompts ni el `registry`.
+  con efectos. El MAPA declara que no tuvieron un solo cambio en los 12 commits
+  y que la superficie está cerrada por diseño (`properties: {}`); confirmé que
+  ninguna tool nueva la rompe, pero no audité prompts ni `registry`.
 - **Superficie de `pruebas-manuales/*.prueba.ts`** (prohibido correrlas) y del
   adaptador de Playwright contra portales reales: solo lectura de código.
