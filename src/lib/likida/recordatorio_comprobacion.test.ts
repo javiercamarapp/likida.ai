@@ -25,21 +25,28 @@ const logger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() };
 vi.mock('@/lib/logger', () => ({ logger }));
 
 let lectura: { data: unknown; error: { message: string } | null } = { data: [], error: null };
+// AUDITORÍA 17 (pase 2), CRÍTICO backend: el mensaje afirma "sin mandarme
+// comprobantes", así que ahora hay una segunda lectura —a `gasto`— que
+// comprueba esa afirmación. El arnés tiene que poder contestar distinto por
+// tabla; por defecto `gasto` devuelve vacío, que es el supuesto de todas las
+// pruebas que ya existían (viajes sin un solo comprobante).
+let lecturaPorTabla: Record<string, { data: unknown; error: { message: string } | null }> = {};
 let resultadosUpdate: Array<{ data?: unknown; error: { message: string } | null }> = [];
 const filtros: Array<[string, unknown[]]> = [];
 const updates: Array<{ fila: Record<string, unknown>; por: Array<[string, unknown]> }> = [];
 
-function cadenaLectura() {
+function cadenaLectura(tabla: string) {
   const nodo: Record<string, unknown> = {};
   for (const m of ['select', 'eq', 'in', 'is', 'not', 'lte', 'limit']) {
     nodo[m] = (...a: unknown[]) => { filtros.push([m, a]); return nodo; };
   }
-  nodo.then = (r: (v: unknown) => unknown) => Promise.resolve(lectura).then(r);
+  nodo.then = (r: (v: unknown) => unknown) =>
+    Promise.resolve(lecturaPorTabla[tabla] ?? lectura).then(r);
   return nodo;
 }
 
 const from = vi.fn((tabla: string) => ({
-  select: (...a: unknown[]) => { filtros.push([`select ${tabla}`, a]); return cadenaLectura(); },
+  select: (...a: unknown[]) => { filtros.push([`select ${tabla}`, a]); return cadenaLectura(tabla); },
   update: (fila: Record<string, unknown>) => {
     const por: Array<[string, unknown]> = [];
     const nodo: Record<string, unknown> = {};
@@ -74,6 +81,7 @@ const fila = (o: Record<string, unknown> = {}) => ({
 
 beforeEach(() => {
   lectura = { data: [], error: null };
+  lecturaPorTabla = { gasto: { data: [], error: null } };
   resultadosUpdate = [{ data: [{ id: 'v-1' }], error: null }];
   filtros.length = 0;
   updates.length = 0;
@@ -233,5 +241,78 @@ describe('enviarRecordatoriosComprobacion', () => {
     lectura = { data: [fila()], error: null };
     await enviarRecordatoriosComprobacion(AHORA);
     expect(logger.info).toHaveBeenCalledWith('viaje.recordatorio_comprobacion', { revisados: 1, recordados: 1, fallos: 0 });
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUDITORÍA 17 (pase 2), CRÍTICO backend — EL MENSAJE AFIRMABA SIN MIRAR.
+//
+// `viajesSinComprobar` seleccionaba por estatus + fecha + sello, y NUNCA
+// preguntaba si el viaje traía gastos. El texto que sale, en cambio, afirma
+// un hecho: "Llevas N días con tu viaje VJ-xxxx *sin mandarme comprobantes*".
+//
+// El viaje del seed del demo (`seed.sql:115-130`) es exactamente ese caso:
+// `VJ-2026-0001`, abierto, operador OP-101 — cuyo teléfono es el de Javier,
+// `529993700779`, el número real del demo por WhatsApp — y con DOS gastos
+// precargados, $4,200 de diésel entre ellos. Tres días después de sembrar,
+// el cron le manda al teléfono del demo un mensaje que dice que no ha
+// mandado comprobantes, mientras el panel de al lado muestra los dos.
+//
+// Y con la flota real es peor: un chofer que mandó 12 recibos y sigue en
+// carretera recibe una reclamación falsa, firmada por el producto que su
+// patrón acaba de comprar.
+//
+// La regla del producto que esto rompe es la primera del CLAUDE.md: *nunca
+// inventar una cifra* — y "N días sin mandar comprobantes" es una cifra.
+// ═══════════════════════════════════════════════════════════════════════════
+describe('el recordatorio solo sale si de verdad no hay comprobantes', () => {
+  it('EL BUG: el viaje del demo tiene 2 gastos y aun así recibía la reclamación', async () => {
+    lectura = { data: [fila({ id: 'v-demo', folio: 'VJ-2026-0001' })], error: null };
+    lecturaPorTabla.gasto = { data: [{ viaje_id: 'v-demo' }, { viaje_id: 'v-demo' }], error: null };
+
+    const r = await enviarRecordatoriosComprobacion(AHORA);
+
+    expect(sendText).not.toHaveBeenCalled();
+    expect(r.recordados).toBe(0);
+    // Tampoco se quema el sello: el viaje no calificaba, así que sigue
+    // disponible para el día en que de verdad no haya mandado nada.
+    expect(updates).toEqual([]);
+  });
+
+  it('CONTROL: el que de verdad no mandó nada sí recibe su recordatorio', async () => {
+    lectura = { data: [fila({ id: 'v-mudo', folio: 'VJ-9' })], error: null };
+    lecturaPorTabla.gasto = { data: [], error: null };
+
+    const r = await enviarRecordatoriosComprobacion(AHORA);
+
+    expect(r.recordados).toBe(1);
+    expect(sendText).toHaveBeenCalledTimes(1);
+    expect(sendText.mock.calls[0][1]).toContain('sin mandarme comprobantes');
+  });
+
+  it('en un lote mixto solo se le escribe al callado, y el otro conserva su sello', async () => {
+    lectura = {
+      data: [fila({ id: 'v-con', folio: 'VJ-CON' }), fila({ id: 'v-sin', folio: 'VJ-SIN' })],
+      error: null,
+    };
+    lecturaPorTabla.gasto = { data: [{ viaje_id: 'v-con' }], error: null };
+
+    const r = await enviarRecordatoriosComprobacion(AHORA);
+
+    expect(r.recordados).toBe(1);
+    expect(updates.map((u) => u.por)).toEqual([[['id', 'v-sin'], ['tenant_id', 't-1']]]);
+    expect(sendText.mock.calls[0][1]).toContain('VJ-SIN');
+  });
+
+  it('FALLA CERRADO: si no se puede leer `gasto`, no se manda nada — no se afirma a ciegas', async () => {
+    // supabase-js reporta por VALOR: sin comprobar `error`, una base caída se
+    // lee como "no tiene gastos" y el producto acusa al chofer por un bache
+    // de red. Es la cuarta regla del CLAUDE.md, fallar cerrado y decirlo.
+    lectura = { data: [fila({ id: 'v-1', folio: 'VJ-1' })], error: null };
+    lecturaPorTabla.gasto = { data: null, error: { message: 'connection reset' } };
+
+    await expect(enviarRecordatoriosComprobacion(AHORA)).rejects.toThrow(/connection reset/);
+    expect(sendText).not.toHaveBeenCalled();
+    expect(updates).toEqual([]);
   });
 });

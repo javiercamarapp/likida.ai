@@ -63,7 +63,7 @@ export async function viajesSinComprobar(ahora: Date = new Date()): Promise<Viaj
   if (error) throw new Error(`viajesSinComprobar: ${error.message}`);
 
   type Rel = { nombre?: string; telefono?: string };
-  return (data ?? []).map((v) => {
+  const candidatos = (data ?? []).map((v) => {
     const rel = v.operador as Rel | Rel[] | null;
     const op = Array.isArray(rel) ? rel[0] : rel;
     return {
@@ -76,6 +76,34 @@ export async function viajesSinComprobar(ahora: Date = new Date()): Promise<Viaj
       fechaInicio: v.fecha_inicio as string,
     };
   });
+
+  if (candidatos.length === 0) return [];
+
+  // ── COMPROBAR LO QUE EL MENSAJE VA A AFIRMAR ────────────────────────────
+  //
+  // AUDITORÍA 17 (pase 2), CRÍTICO. El texto dice, literal, "sin mandarme
+  // comprobantes". Hasta aquí la selección era estatus + fecha + sello: un
+  // viaje con doce recibos ya cargados, abierto porque sigue en carretera,
+  // recibía la misma reclamación que el que no mandó nada. El viaje del seed
+  // del demo es exactamente ese caso (dos gastos, y el teléfono del operador
+  // es el número real del demo).
+  //
+  // Una sola consulta para todo el lote, no una por viaje: el `in` sobre los
+  // ≤100 candidatos y se descartan los que ya tienen algo. Se pide `limit`
+  // amplio porque lo único que importa es la EXISTENCIA de una fila por
+  // viaje, no cuántas.
+  const { data: conGasto, error: errGasto } = await supabaseAdmin()
+    .from('gasto')
+    .select('viaje_id')
+    .in('viaje_id', candidatos.map((c) => c.id));
+
+  // FALLA CERRADO. supabase-js reporta por VALOR: sin comprobar `error`, una
+  // base caída se lee como "ninguno tiene gastos" y el producto sale a acusar
+  // a todos los choferes del lote por un bache de red.
+  if (errGasto) throw new Error(`viajesSinComprobar (gasto): ${errGasto.message}`);
+
+  const tienenGasto = new Set((conGasto ?? []).map((g) => g.viaje_id as string));
+  return candidatos.filter((c) => !tienenGasto.has(c.id));
 }
 
 /** El texto para el CHOFER. Dice cuánto lleva y qué mandar — no regaña: el
