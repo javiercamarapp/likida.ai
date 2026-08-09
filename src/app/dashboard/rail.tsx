@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Maximize2, Minimize2, Sparkles } from 'lucide-react';
 import ChatFlota from './chat';
+import { marcaAsistente, RUTA_SIN_RAIL } from './rail-marca';
 import type { DashboardKpis, Acreditables } from '@/lib/likida/analytics';
 import { mxn } from '@/lib/formato';
 
@@ -43,12 +44,19 @@ export default function RailAsistente() {
   // La marca que el CSS lee para retirar la columna del centro (globals.css).
   // Se limpia al desmontar: si el rail desaparece con la marca puesta, el
   // contenido se queda invisible para siempre y la página se ve vacía.
+  //
+  // AUDITORÍA 17 (pase 2), CRÍTICO: eso es exactamente lo que pasaba al ir a
+  // `/dashboard` con el chat expandido. Ahí el rail devuelve `null` (abajo),
+  // y renderizar `null` NO desmonta: la limpieza no corría y el Resumen del
+  // dueño se quedaba invisible y sin un control para revertirlo. Por eso el
+  // efecto depende también de la ruta, vía `marcaAsistente`.
+  const marca = marcaAsistente(expandido, pathname);
   useEffect(() => {
     const raiz = document.documentElement;
-    if (expandido) raiz.dataset.asistente = 'expandido';
+    if (marca) raiz.dataset.asistente = marca;
     else delete raiz.dataset.asistente;
     return () => { delete raiz.dataset.asistente; };
-  }, [expandido]);
+  }, [marca]);
 
   // Sin `setCargando(true)` síncrono aquí: llamar setState en el cuerpo del
   // efecto encadena un render de más (regla `react-hooks/set-state-in-effect`).
@@ -79,7 +87,7 @@ export default function RailAsistente() {
   // asistente` se hace una vez de más aquí — precio aceptable por no
   // duplicar este componente. En las otras páginas el rail sigue fijo, sin
   // cambios.
-  if (pathname === '/dashboard') return null;
+  if (pathname === RUTA_SIN_RAIL) return null;
 
   return (
     // EXPANDIDO SE SALE DEL FLUJO, no crece dentro de él.
