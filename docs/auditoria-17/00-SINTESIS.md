@@ -1,3 +1,177 @@
+# Auditoría 17 — síntesis · pase 2 · 9-ago-2026
+
+**Ronda de CONTINUACIÓN.** El PR **#9** seguía abierto sobre
+`claude/auditoria-17`, así que esta corrida continuó sobre él en vez de abrir
+uno nuevo. Árbol limpio al arrancar → autofix habilitado. 11 auditores con
+contexto fresco, en paralelo, sobre `origin/master` = `20ecbb1` mergeado a la
+rama.
+
+> La síntesis del pase 1 (8-ago) sigue íntegra más abajo. Esto es lo que cambió
+> en un día.
+
+## Nota global: 4.9/10 (antes 5.8 en el pase 1) — **baja 0.9**
+
+**El código no se pudrió en 24 horas.** Bajó porque en ese día `master` avanzó
+**12 commits** con superficie genuinamente nueva —el rework del dashboard del
+dueño, el recordatorio automático por WhatsApp y el retiro del rol `operador`—
+y esa superficie llegó **sin arnés y sin la letra chica** que el resto del
+producto sí tiene. De los 93 hallazgos con ficha propia de este pase, la
+mayoría de los ALTO nuevos viven en código escrito en los últimos dos días.
+
+Dicho de otra forma: este pase no midió un producto que empeoró, midió
+**funcionalidad nueva entrando más rápido de lo que se ancla**. Es exactamente
+el patrón que la serie histórica existe para hacer visible.
+
+| Rubro | p1 | p2 | | Razón del movimiento |
+|---|:--:|:--:|---|---|
+| Frontend | 6 | **4** | ▼ | deuda que cobró factura: los 5 reincidentes siguen textualmente iguales y los 5 componentes nuevos entraron con 0 pruebas de render |
+| Backend y API | 6 | **5** | ▼ | deuda que cobró factura: el camino nuevo del recordatorio repitió la ceguera del anterior (afirmar sin comprobar, 200 con fallos dentro) |
+| Agéntico | 5 | **4** | ▼ | deuda que cobró factura: un actor nuevo en el ciclo (el recordatorio) sin cierre definido hacia el humano |
+| Tool calling | 7 | **7** | = | **no auditado este pase** — cero archivos del rubro cambiaron |
+| Seguridad | 7 | **6** | ▼ | mirada más profunda: el contador "de solo lectura" puede ESCRIBIR 19 tablas por PostgREST, incluida la bitácora que lo delataría |
+| Fiscal | 4 | **5** | ▲ | **se atacó y subió**: C3 cerrado (régimen 624 = Coordinados) y media superficie del ALTO del peaje |
+| Legal | 4 | **3** | ▼ | deuda que cobró factura: primer contacto por WhatsApp sin aviso, y se borró el único código que implementaba el derecho de acceso |
+| Arquitectura | 6 | **5** | ▼ | deuda que cobró factura: "periodo" definido cuatro veces y `hoy` calculado en UTC para ocho funciones que lo declaran en hora de México |
+| Pruebas | 6 | **5** | ▼ | mirada más profunda: 6 de 8 mutantes no equivalentes sobrevivieron, y apareció la **primera prueba intermitente del repo** |
+| Operabilidad | 6 | **5** | ▼ | deuda que cobró factura: el cron nuevo responde 200 con 40 fallos dentro y pierde la lista de cuáles |
+| Rendimiento | 5 | **4** | ▼ | deuda que cobró factura: 214 consultas por carga de `/dashboard` y el cron a 510 s nominales contra un `maxDuration` de 120 |
+| Modelo de datos | 7 | **6** | ▼ | deuda que cobró factura: tres bloques de `verificaciones.sql` abortan hoy y el test los sigue contando como comprobación |
+
+**93 hallazgos con ficha propia: 7 CRÍTICO · 40 ALTO · 32 MEDIO · 14 BAJO**,
+más los reincidentes que cada auditor lleva en su tabla de estado sin abrirles
+ficha nueva.
+
+**Fiscal es el único que sube, y sube por la única razón que vale:** hay commits
+de la ronda anterior que cerraron un hallazgo suyo, verificados contra el código
+por un auditor que no fue quien los escribió.
+
+## Los 7 CRÍTICOS, uno por uno
+
+Sin cuarta opción: commiteado con prueba, `pendiente` con razón, o `descartado`.
+
+### Cerrados en este pase (2)
+
+**C8 · [frontend] El panel del dueño se queda en blanco al volver del chat expandido** — `d7b71a8`
+`globals.css:217` retira `.columna-centro` (`opacity: 0` + `pointer-events:
+none`) mientras la raíz lleve `data-asistente="expandido"`. `rail.tsx` ponía esa
+marca mirando **solo** `expandido` y la limpiaba en el `return` del efecto, que
+corre al **desmontar**. En `/dashboard` el rail devuelve `null` —el Resumen va a
+ancho completo— y renderizar `null` **no** desmonta: la limpieza nunca corría.
+Dos clics del flujo normal del demo (expandir el chat en `/dashboard/cuadre`,
+luego "Resumen" en el sidebar, que sigue clickeable bajo el chat) dejaban el
+panel del dueño invisible y sin un solo control para revertirlo. A cualquier
+resolución, delante del contralor.
+Prueba: `rail_marca.test.ts` (4 casos, con control) — con la regla vieja fallan 2.
+
+**C9 · [backend] El recordatorio afirmaba "sin mandarme comprobantes" sin haber mirado uno solo** — `709e410`
+`viajesSinComprobar` seleccionaba por estatus + fecha + sello y nunca preguntaba
+si el viaje traía gastos, pero el texto que sale afirma un hecho. El viaje del
+seed del demo es exactamente ese caso: `VJ-2026-0001`, abierto, **dos gastos
+precargados** ($4,200 de diésel entre ellos) y un operador cuyo teléfono es
+`529993700779`, el número real del demo por WhatsApp. Tres días después de
+sembrar, el cron le reclama al teléfono del demo mientras el panel de al lado
+muestra los dos comprobantes. Con una flota real, el chofer que mandó doce
+recibos y sigue en carretera recibe una reclamación falsa firmada por el
+producto que su patrón acaba de comprar.
+Prueba: 4 casos nuevos en `recordatorio_comprobacion.test.ts`, incluido el de
+fallo cerrado — sin el arreglo fallan 3.
+
+### Pendientes (5) — con la razón
+
+**C4 · [fiscal] El 15% se mide contra "el combustible que Likida vio"** — REINCIDENTE
+`engine.ts:337,354` · `repo.ts:831-834`. **Razón:** el denominador correcto
+exige un dato que el producto no tiene (el combustible que NO pasó por Likida).
+Es decisión de producto —declarar el supuesto en el PDF o capturar el total del
+ejercicio—, no un arreglo de código. Se propone, no se inventa.
+
+**C5 · [legal] La foto viaja al modelo externo antes del aviso** — REINCIDENTE
+`processor.ts:470` · `:522-525` contra el bloqueo de `:636`. **Razón:** mover el
+bloqueo antes del intake cambia el flujo de huérfanos (mig. 0040) y puede dejar
+fotos sin recoger. Cambio de diseño del ciclo, no de una línea.
+
+**C6 · [pruebas] El callback de QStash emite CFDI y no tiene una sola prueba** — REINCIDENTE
+`api/cron/facturar/cola/route.ts:40`, 0% de cobertura. **Razón:** el arreglo es
+escribir el arnés de un endpoint que factura de verdad; sesión propia, no una
+vuelta de auditoría.
+
+**C7 · [rendimiento] El cierre no cabe en la reserva que él mismo aparta** — REINCIDENTE, AGRAVADO
+`presupuesto.ts`. El tramo creció 500 ms con el arreglo del pase 1 y la reserva
+no se movió: **13,700 ms nominales contra `MARGEN_CIERRE_MS = 12,000`.**
+**Razón:** subir el margen le quita techo al agente, y eso tiene efecto en el
+demo. Decisión de producto.
+
+**C10 · [legal] Likida hace el PRIMER contacto por WhatsApp sin aviso** — NUEVO
+`operacion.ts:585` → `notificar.ts:170`, contra `normas/lfpdppp-15-16.yaml:59-61`.
+Y por **plantilla**, que sí entrega fuera de la ventana de 24 h. **Razón:** el
+arreglo es texto de aviso + un canal de baja, no código; requiere producto y
+abogado. Mismo expediente que el ToS, reincidente desde hace cinco pases.
+
+## Descartados
+
+Ninguno de los 7 críticos. Los 3 nuevos se abrieron uno por uno contra el código
+antes de anotarlos y los 3 son reales. Lo que sí hubo fueron **dos hipótesis que
+los propios auditores refutaron** con el guardarraíl que ya existía, y eso vale
+tanto como un hallazgo:
+
+- *mis-routing por dos viajes abiertos del mismo operador* → lo cierra
+  `uq_viaje_abierto_por_operador` (mig. 0029).
+- *la mig. 0086 aflojó el aislamiento al quitar `and not is_operador()` de ~20
+  policies* → **no**: `is_operador()` era `rol='operador'`, siempre falso para
+  los cuatro roles que quedan, así que quitarlo es un no-op algebraico. Se leyó
+  policy por policy antes de descartarlo.
+
+## Un arreglo del pase 1 que dejó secuela
+
+El auditor agéntico encontró que, tras cerrar C1 (el PDF del contralor), existe
+un camino donde **el cierre es limpio, el PDF del contralor no se genera, al
+jefe no le llega nada, y el log afirma que sí le llegó**. Queda como ALTO
+abierto, y se anota aquí porque es la clase de hallazgo que solo aparece cuando
+el auditor del pase siguiente no es quien hizo el arreglo.
+
+## Compuerta (salida real, árbol final)
+
+```
+npx tsc --noEmit -p .   → 0 errores
+npx vitest run          → 257 archivos, 3,182 pruebas verdes, 1 saltada
+npm run lint            → 0 errores, 18 warnings (mismo número que la línea base)
+```
+
+Línea base al arrancar el pase 2: 3,168 verdes. Los tres arreglos sumaron 14
+pruebas y ninguno se revirtió: los tres pasaron la suite completa y los tres
+fallan sin su cambio, verificado corriendo la prueba **antes** del arreglo.
+
+Sin `npm run build` y sin `pruebas-manuales/*`: no hay credenciales en la nube y
+esas pruebas hacen llamadas de pago.
+
+## Dos cosas que este pase dice del proceso
+
+- **La referencia contra la que mides puede estar podrida.** El `origin/master`
+  del clon apuntaba a una historia **sin ancestro común** con la línea viva
+  (`git merge-base` devolvía vacío). Medido contra ella, el delta del día era
+  "494 archivos, −50,315 líneas". Un `git fetch origin master` lo corrigió.
+  Auditar ese diff habría producido una ronda entera de hallazgos sobre código
+  que nadie borró.
+- **Dos migraciones se llamaron `0086` al mismo tiempo**, una en master y otra en
+  la rama de auditoría, y nada en el repo lo detecta: se aplican en orden
+  indefinido. Se renumeró la de la auditoría a `0088`. Que la colisión solo se
+  vea al mergear es, en sí, un hallazgo del modelo de datos.
+
+## Lo que NO se hizo, y hay que decirlo
+
+- **Frontend y backend se calificaron ANTES** de que entraran los tres arreglos
+  de este pase. Sus notas (4 y 5) no reflejan esos cierres. La regla del modo
+  desatendido permite relanzar **un** rubro reauditado por ronda; no se usó, para
+  no gastar la ventana en subir un número en vez de encontrar algo. Se remide en
+  la ronda 18.
+- **Tool calling no se auditó.** Conserva 7/10 por rotación, no por revisión.
+- Los **4 CRÍTICOS pendientes** de fiscal, legal, pruebas y rendimiento llevan
+  entre uno y cinco pases abiertos, y **ninguno es un arreglo de código**: los
+  cuatro esperan una decisión de producto. Ese es hoy el cuello de botella real
+  de esta rutina, no la capacidad de encontrar bugs.
+
+---
+---
+
 # Auditoría 17 — síntesis · 8-ago-2026
 
 **Ronda COMPLETA.** 12 auditores con contexto fresco, en paralelo, sobre
