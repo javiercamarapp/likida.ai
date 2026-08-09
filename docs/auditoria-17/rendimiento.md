@@ -1,408 +1,534 @@
-# Rendimiento y costo — auditoría 17
+# Rendimiento y costo — auditoría 17 (pase 2)
 
-**Nota: 5.0/10** (antes 7.5). Razón del movimiento: **deuda que cobró factura**.
-Los dos hallazgos abiertos que traía este rubro siguen abiertos. El barrido anual
-del 15% se declaró resuelto en la ronda 16 con la migración `0084` — y la
-migración está escrita pero **no la llama nadie**: el camino caliente sigue
-paginando exactamente igual que antes, y ahora además hay una prueba que afirma
-lo contrario. QStash no cerró el lote de 8: lo movió a un worker que declara 600 s
-y sigue cortando a los 150 s del presupuesto viejo. Encima, el código nuevo de la
-ronda (`563c507`) volvió a poner en la pantalla de inicio del cliente los barridos
-de tabla completa que la migración `0064` había sacado.
+**Nota: 4/10** (antes 5). Razón del movimiento: **deuda que cobró factura, y encima
+regresión nueva en el camino del demo**. Ninguno de los nueve hallazgos del pase 1
+se cerró. Dos empeoraron por código escrito en este mismo pase: el CRÍTICO del
+cierre creció 500 ms sin que el margen se moviera (se anotó el paso, se subió el
+costo, se dejó la reserva igual), y el cron `escalar` —que ya no cabía en su
+`maxDuration`— recibió un SEGUNDO lote de 100 viajes encadenado detrás del
+primero. Y el rework del dashboard del dueño, que es el foco de este pase,
+multiplicó por ~3 las consultas de la pantalla que el contralor abre en la sala:
+de ~65 viajes de red a **214**, con **cinco barridos completos de `gasto`** donde
+antes había tres, en un archivo donde **`acotada` no aparece ni una vez** y en una
+página que **no declara ningún límite de tiempo**.
 
-**El riesgo mayor hoy:** el CIERRE del webhook —lo que corre después de que el
-agente devuelve— no cabe en la reserva de 12 s que él mismo se aparta, ni con los
-costos nominales que `presupuesto.ts` escribe. Y ese es el único tramo de la ruta
-que no consulta el reloj: `reloj.acotar()` no aparece ni una vez después de
-`runAgent`. Cuando se pasa, Meta ya tiene su 200, la liquidación ya está escrita,
-y nadie se entera.
+**El riesgo mayor hoy:** `/dashboard` es la única superficie caliente del producto
+sin un solo número escrito contra el cual medirla — ni `maxDuration`, ni
+`TOPE_CONSULTA_MS`, ni caché. Sus 214 consultas heredan los 300 s de undici. Un
+socket que acepte y calle en cualquiera de ellas cuelga la primera pantalla del
+comprador, y no hay un límite en el repo que alguien pueda citar para decir que
+eso está mal.
 
 ---
 
-## Sumas de peor caso
+## Estado de los hallazgos del pase 1
 
-Techos REALES vigentes en el árbol: `TOPE_CONSULTA_MS = 8_000`
-(`presupuesto.ts:101`, lo impone `acotada`), `SEND_TIMEOUT_MS = 10_000` y
-`DOWNLOAD_TIMEOUT_MS = 15_000` (`meta/client.ts:10,17`). Los costos *nominales*
-son los que la propia tabla `PASOS_CIERRE` usa: 0.3 s consulta, 1.5 s `sendText`,
-2.5 s `sendDocument`, 0.5 s URL firmada.
+| # | Hallazgo del pase 1 | Estado hoy | Evidencia |
+|---|---|---|---|
+| 1 | **CRÍTICO** — el cierre no cabe en `MARGEN_CIERRE_MS` | **ABIERTO Y PEOR** | `a30f7b0` anotó `createSignedUrl del PDF del contralor` (`presupuesto.ts:53`) → `COSTO_CIERRE_MS` pasó de 8 900 a **9 400** ms. `MARGEN_CIERRE_MS` sigue en **12 000** (`presupuesto.ts:79`). `avisarCierreAlJefe` sigue fuera de la tabla — el propio comentario de `:50-52` lo admite por escrito. Suma nominal: **13 700 ms** (antes 13 200). |
+| 2 | **ALTO REINCIDENTE** — la mig. `0084` no la llama nadie | **ABIERTO, IDÉNTICO** | `grep -rn "sumar_combustible_ejercicio" --include=*.ts` → **una sola línea, y es el string de un test** (`migraciones_verificadas.test.ts:57`). Cero `.rpc(...)`. `getAcumuladoCombustible` (`repo.ts:803-864`) sigue con `PAGINA = 1_000` / `MAX_PAGINAS = 100` y su `for` secuencial en `:819`. **La 0084 sigue sin llamarse: cuarta ronda.** |
+| 3 | **ALTO** — `/api/cron/escalar`: 100 viajes en serie contra 120 s | **ABIERTO Y PEOR** | `c5a7c19` añadió un SEGUNDO bloque secuencial (`escalar/route.ts:78`) con su propio `.limit(100)` y su propio `for` sin reloj. Ver hallazgo R3. |
+| 4 | **ALTO** — el Resumen barre `gasto` entero 3 veces | **CAMBIÓ DE FORMA, PEOR** | `getGastoPorConcepto`/`getGastoPorRuta`/`getOperadoresDetalle` salieron de la landing (bien). En su lugar entraron 12 llamadas nuevas que hacen **14 barridos de `gasto`**, 5 de ellos completos. El barrido doble por carga sigue: `page.tsx:102` y `api/dashboard/asistente/route.ts:77` llaman los dos a `detectarAnomalias`. Ver R1. |
+| 5 | **ALTO** — N+1 sin tope en el CFDI consolidado | **ABIERTO, IDÉNTICO** | `consolidado.ts:259-270`: el `for (const r of resultados)` con `await ligarLineaAGasto` dentro sigue intacto, sin tope de líneas y sin reloj. |
+| 6 | **MEDIO** — QStash corta a 150 s del presupuesto viejo | **ABIERTO, IDÉNTICO** | `cola/route.ts:11` = `600`; `facturar/route.ts:129` sigue siendo `PRESUPUESTO_LOTE_MS = maxDuration * 1000` con el `maxDuration = 300` del cron (`:25`). |
+| 7 | **MEDIO** — la foto va a visión sin redimensionar | **ABIERTO, IDÉNTICO** | `ocr.ts:253-260` sigue pasando `images: [principal]` crudo; `openrouter.ts:381-384` sigue adjuntando `image_url: { url }` sin `detail` ni preproceso. |
+| 8 | **MEDIO** — `cola/route.ts` declara 600 s contra el techo verificado de 300 | **ABIERTO, IDÉNTICO** | `cola/route.ts:11` vs `webhook/whatsapp/route.ts:69-71`. `vercel.json` sigue sin bloque `functions`. |
+| 9 | **BAJO** — 12 de 14 `traerTodo` no piden `conteo()` | **ABIERTO Y PEOR** | De los **29** `traerTodo` que dispara la landing hoy, **25 no piden `conteo()`** (los 4 que sí son los de `fiscal.ts:731`). Son 25 páginas vacías pagadas por carga. |
 
-| # | Cadena | Suma a mano | Límite escrito | ¿Cabe? |
-|---|---|---|---|---|
-| A | **Cierre feliz del webhook**, NOMINAL: `COSTO_CIERRE_MS` 8.9 s − 0.3 s (guardia usa snapshot, no reconsulta) + `avisarCierreAlJefe` (0.3 telefonosJefe + 0.3 resumenDeCierre + 1.5 sendText jefe + 2.5 sendDocument jefe = 4.6 s) | **13.2 s** | `MARGEN_CIERRE_MS = 12_000` (`presupuesto.ts:72`) | **NO** — 1.2 s de más, y eso ANTES de que nada salga lento |
-| B | **Cierre feliz**, con cada paso en SU TECHO: 7×8 s (registrarCosto, vincularCostosALiquidacion, registrarCostoWhatsApp ×2, createSignedUrl, saveConversation, releaseViajeLock) = 56 + 4×10 s (sendText respuesta, sendDocument PDF, sendText jefe, sendDocument jefe) = 40 | **96 s** + 2 consultas SIN techo | reserva 12 s / ruta `maxDuration = 120` (`webhook/whatsapp/route.ts:77`) | **NO** — 8× la reserva |
-| C | **Cierre con barrera vencida y recuperación parcial**: B + getGastos 8 + sendText aviso 10 + registrarCostoWhatsApp 8 + `cuadrarDesdeDB` (viaje‖gastos‖config 8 + getOperador 8 + getAcumuladoCombustible ≥8) | **146 s** | 120 s de invocación entera | **NO** — la invocación muere antes de terminar el cierre |
-| D | **`/api/cron/escalar`**, NOMINAL: `limit(100)` viajes × (0.3 claim + 1.5 sendText chofer + 1.5 sendText jefe) | **330 s** | `maxDuration = 120` (`cron/escalar/route.ts:10`) | **NO** — muere en el viaje ~36 de 100 |
-| E | **`/api/cron/escalar`**, en techos: 100 × (claim sin techo + 10 + 10 + 10) | **≥3 000 s** | 120 s | **NO** |
-| F | **Worker de QStash**, peor caso: flota 1 abre a t≈0 y corre 147 s; flota 2 abre a t=147 (< 150) y corre a t=294; flota 3 se corta | **294 s usados** | `cola/route.ts:11` declara **600 s**, pero `PRESUPUESTO_LOTE_MS` sale del `maxDuration=300` del cron (`cron/facturar/route.ts:129`) y `MARGEN_LOTE_MS=150_000` | Cabe, **pero solo procesa 2 de 8 flotas por corrida**: 306 s de los 600 declarados se quedan sin usar |
-| G | **CFDI consolidado en el webhook**: 1 `UPDATE` secuencial por línea conciliada (`consolidado.ts:268`), sin tope de líneas | 300 líneas × 0.3 s = **90 s** nominal; 400 líneas = **120 s**; en techo 300 × 8 s = **2 400 s** | 120 s de la invocación | **NO** a partir de ~400 líneas — y un TAG mensual de 20 unidades trae miles |
-| H | **`/dashboard` (Resumen de flota)**: 12 llamadas de analytics; `gasto` barrido ENTERO 3 veces, `viaje` 2, `liquidacion` 1. Con 10 800 `gasto` / 2 160 `viaje` / 2 000 `liquidacion` | **≈65 viajes de red**, cadena secuencial más larga 12 páginas, ≈38 700 filas transferidas | ninguno: la página **no declara `maxDuration`**; `traerTodo` LANZA a las 100 páginas (`pg.ts:48`) | El propio archivo (`analytics.ts:325`) fecha el tope de `gasto` en **mes 5** de operación |
+**Cerrado: 0 de 9.**
+
+---
+
+## La suma del peor caso
+
+Costos unitarios: los que el propio repo escribe (`presupuesto.ts:35`) — 0.3 s una
+consulta, 1.5 s un `sendText`, 2.5 s un `sendDocument`, 0.5 s una URL firmada.
+Techos: `TOPE_CONSULTA_MS = 8_000` (`presupuesto.ts:108`, solo donde se usa
+`acotada`), `SEND_TIMEOUT_MS = 10_000` (`meta/client.ts:17`), y el default de
+undici (**300 000 ms**) donde no hay ninguno de los dos.
+
+| # | Tramo | ms nominales | Límite escrito | archivo:línea del límite | ¿Cabe? |
+|---|---|---|---|---|---|
+| A | **Cierre feliz del webhook**, nominal: `COSTO_CIERRE_MS` 9 400 − 300 (guardia usa snapshot) + `avisarCierreAlJefe` (0.3 `telefonoJefeDe` ‖ 0.3 `resumenDeCierre` + 1.5 sendText jefe + 2.5 sendDocument jefe = 4 600) | **13 700** | `MARGEN_CIERRE_MS = 12_000` | `presupuesto.ts:79` | **NO** — 1 700 ms de más, sin que nada salga lento |
+| B | **Cierre en techos**: 9 pasos Supabase con `acotada` (9×8 000) + 3 Meta (3×10 000) + `telefonoJefeDe` **sin acotada** (300 000) + `resumenDeCierre` **sin acotada** (300 000) + 2 envíos al jefe (2×10 000) | **722 000** | `maxDuration = 120` | `webhook/whatsapp/route.ts:77` | **NO** — 6× la invocación entera |
+| C | **`/api/cron/escalar`**, nominal: `escalarViajesSinAceptar` 100 × 3.3 s = 330 000 **+** `enviarRecordatoriosComprobacion` 300 + 100 × 1.8 s = 180 300 (secuenciales) | **510 300** | `maxDuration = 120` | `cron/escalar/route.ts:11` | **NO** — 4.25×; muere en el viaje ~36 del PRIMER lote |
+| D | **`/api/cron/escalar`**, solo el recordatorio nuevo, aislado | **180 300** | 120 000 | `cron/escalar/route.ts:11` | **NO** — no cabe ni él solo |
+| E | **`/dashboard` (Resumen del dueño)**, 1 año a 66 comprobantes/día (24 090 `gasto`, 960 `viaje`, 960 `liquidacion`) | **214 viajes de red**, ~167 900 filas; cadena secuencial más larga **26 páginas** = 7 800 ms nominales | **ninguno** — la página no declara `maxDuration` y ninguna consulta pasa por `acotada` | `src/app/dashboard/page.tsx` (no hay línea: no existe) | **No se puede decir** — y eso es el hallazgo |
+| F | **`/dashboard`** al volumen que el propio archivo llama de diseño (660/día → 240 900 `gasto`/año) | 5 barridos completos × 100 páginas = **500 viajes de red desperdiciados**, y los 5 lanzan `LecturaIncompleta` | `MAX_PAGINAS = 100` | `pg.ts:47` | **NO** — 5 de las 12 secciones se apagan a la vez |
+| G | **CFDI consolidado en el webhook**: 1 `UPDATE` por línea, sin tope | 400 líneas × 300 = **120 000**; en techo 400 × 8 000 = 3 200 000 | 120 000 | `webhook/whatsapp/route.ts:77` | **NO** a partir de ~400 líneas |
+| H | **Worker QStash**: 2 flotas × ~147 s | **294 000** usados | 600 000 declarados, corte real a 150 000 | `cola/route.ts:11` vs `facturar/route.ts:129` | Cabe, pero procesa **2 de 8** |
 
 ---
 
 ## Hallazgos
 
-### [CRÍTICO] El cierre del webhook no cabe en la reserva que él mismo se aparta, ni con sus propios números nominales
-`src/lib/likida/presupuesto.ts:37-72` (tabla `PASOS_CIERRE` y `MARGEN_CIERRE_MS`)
-· `src/lib/likida/processor.ts:2160` (`avisarCierreAlJefe`, ausente de la tabla)
-· `src/lib/likida/avisar_cierre.ts:52-58,95,109,127`
+### [CRÍTICO · REINCIDENTE, AGRAVADO] El cierre del webhook creció 500 ms y su reserva no se movió: 13 700 ms nominales contra 12 000
+`src/lib/likida/presupuesto.ts:53` (paso nuevo) · `:61` (`COSTO_CIERRE_MS`) · `:79` (`MARGEN_CIERRE_MS`)
+· `src/lib/likida/processor.ts:2178,2190` · `src/lib/likida/avisar_cierre.ts:52-57,95,103,109,127`
+· `src/lib/likida/contactos.ts:118`
 
-**Escenario:** un viaje cierra con una diferencia que el jefe tiene que decidir
-(`requiereDecision === true` en `armarAvisoJefe`). El agente devuelve, y a partir
-de ahí el código NO vuelve a consultar `reloj` ni una sola vez —`reloj.acotar()`
-aparece por última vez en `processor.ts:1853`—. Los pasos que corren son:
-
-```
-COSTO_CIERRE_MS declarado                              8 900 ms
- − guardiaCifras→cuadrarDesdeDB (usa el snapshot,
-   guardia.ts:105, no reconsulta en el camino feliz)     −300 ms
- + telefonoJefeDe        → contactos.ts:118               300 ms
- + resumenDeCierre       → avisar_cierre.ts:53            300 ms
- + sendText al jefe      → avisar_cierre.ts:109         1 500 ms
- + sendDocument al jefe  → avisar_cierre.ts:127         2 500 ms
-                                                     ───────────
-                                                       13 200 ms   vs MARGEN_CIERRE_MS = 12 000
-```
-
-Como `restante() = 120 000 − 12 000 − transcurrido`, el agente puede legítimamente
-devolver en t = 108 s. Cierre nominal → t = 121.2 s contra `maxDuration = 120`.
-Con los techos reales en vez de los nominales (fila B), 96 s de cierre → t = 204 s.
-Y dos de esos pasos **no tienen techo ninguno**: `telefonosJefe`
-(`contactos.ts:118`) y `resumenDeCierre` (`avisar_cierre.ts:52-58`) llaman a
-`supabaseAdmin()` en crudo, sin `acotada`, así que heredan el default de undici:
-300 000 ms. Un solo socket que acepte y calle ahí se lleva la invocación entera.
-
-**Consecuencia:** Vercel mata la función. La liquidación YA está en la base, el
-`viaje` ya está `liquidado`, el chofer ya recibió su PDF — pero `saveConversation`
-(`processor.ts:2189`) nunca corre, así que el turno se pierde y el agente vuelve
-sin memoria de haber cerrado; `releaseViajeLock` del `finally` nunca corre, así
-que el lease queda tomado; el contralor —el comprador— **no recibe el aviso de
-cierre ni el PDF** que es justo lo que archiva para su contador; y no hay ni una
-línea de log, porque el proceso muere antes del `catch`. Meta tiene su 200 desde
-`route.ts:250`: no reintenta.
-
-**Causa raíz probable:** la reserva se calibró contra una tabla escrita a mano y
-su prueba es un checksum (`presupuesto.test.ts:107-119`: `toHaveLength(13)` +
-`suma === COSTO_CIERRE_MS`), que por construcción no puede detectar un paso que
-nadie anotó — y `avisarCierreAlJefe`, con sus dos consultas y sus dos envíos, no
-se anotó. Además la tabla usa costos *promedio* para dimensionar una reserva cuyo
-propósito es sobrevivir al *peor* caso.
-
----
-
-### [ALTO · REINCIDENTE] El barrido anual del 15% sigue paginando: la migración `0084` está escrita y no la llama nadie
-`supabase/migrations/0084_sumar_combustible_ejercicio.sql`
-· `src/lib/likida/repo.ts:803-869` (`getAcumuladoCombustible`, sigue paginando)
-· `src/lib/likida/cuadre/desde_db.ts:78` · `src/lib/likida/tools.ts:109`
-· `src/lib/likida/migraciones_verificadas.test.ts:56`
-
-**Escenario:** `grep -rn "sumar_combustible_ejercicio" --include=*.ts` sobre todo
-el repo devuelve **una sola línea, y es un comentario de prueba**. No hay ni un
-`.rpc('sumar_combustible_ejercicio', …)`. `getAcumuladoCombustible` sigue siendo
-el bucle de `repo.ts:819-853`: `PAGINA = 1 000`, `MAX_PAGINAS = 100`, páginas
-**secuenciales**, cada una envuelta en `acotada` (8 s de techo). Una flota con
-9 000 cargas de diésel en el ejercicio = 10 viajes de red seguidos, ~3 s nominales
-y **80 s en techos**, dentro de un turno acotado a 40 s y de una invocación de
-120 s. Y corre por dos caminos calientes a la vez: `cuadrarDesdeDB` (todo cierre)
-y la tool `consultar_periodo` que el modelo puede pedir.
-
-Agravante medido por el propio repo: `openrouter.ts:565-571` documenta que con
-llaves de caché rotas el ciclo repitió `cuadrar_viaje` **3 veces en un turno**, y
-cada una arrastra este barrido completo. La caché por nombre ya está arreglada,
-pero el barrido sigue siendo el costo unitario que se multiplica.
-
-Y lo peor: `migraciones_verificadas.test.ts:56` afirma *"RPC
-sumar_combustible_ejercicio: si falta, getAcumuladoCombustible lanza ruidoso en el
-primer cuadre (el RPC no existe)"*. Es falso —`getAcumuladoCombustible` no invoca
-ningún RPC— y esa línea verde es la que hace que el hallazgo se lea como cerrado.
-
-**Consecuencia:** la operación fiscal más cara del cierre sigue costando N viajes
-de red que crecen con el histórico del cliente; a 100 páginas (100 000 cargas)
-lanza y el contador del 15% de la RFA 2026 regla 2.9 se apaga con un `warn`
-(`desde_db.ts:80`), dejando el efectivo marcado "a revisar" en la liquidación que
-el contralor está mirando.
-
-**Causa raíz probable:** se escribió la migración y se dio por hecho el cableado;
-la prueba que debía cubrirlo verifica que el archivo SQL existe, no que alguien lo
-llame.
-
----
-
-### [ALTO] `/api/cron/escalar` procesa 100 viajes en serie con 3 envíos cada uno, contra 120 s
-`src/app/api/cron/escalar/route.ts:10` (`maxDuration = 120`)
-· `src/lib/likida/escalar_viaje.ts:92` (`.limit(100)`) · `:192-268` (el `for`)
-
-**Escenario:** `viajesSinAceptar` trae hasta 100 filas. El `for` de `:192` no
-consulta el reloj ni una vez. Por viaje: `reclamarEscalacion` (1 `UPDATE`) +
-`sendText` al chofer + (si rebota) `avisarAlChofer` + `sendText` al jefe + (si
-rebota) `sendTemplate`. Nominal 0.3 + 1.5 + 1.5 = **3.3 s** → 100 × 3.3 = **330 s
-contra 120**. Vercel corta alrededor del viaje 36.
-
-Peor todavía: **ningún** acceso a Supabase de este archivo pasa por `acotada`
-(`grep -c acotada escalar_viaje.ts` → 1, y es un comentario). `viajesSinAceptar`
-(`:84`) y `reclamarEscalacion` (`:307`) heredan los 300 s de undici, o sea 2.5×
-el `maxDuration` de la ruta.
-
-**Consecuencia:** `reclamarEscalacion` marca `escalado_en` **antes** de mandar
-nada, y el propio archivo documenta que ese sello es definitivo y sin ventana de
-reintento (`:288-296`). El viaje que estaba en vuelo cuando cayó el hacha queda
-marcado como escalado **para siempre, sin que nadie haya avisado a nadie**: el
-jefe de flota nunca se entera de que su chofer lleva 5 h sin aceptar el viaje, y
-el cron se ve verde en el panel de Vercel. Es el modo de falla que el encabezado
-de esa misma ruta (`:19-26`) declara querer evitar.
-
-**Causa raíz probable:** el lote se dimensionó por lo que cabe en una consulta
-(`limit(100)`), no por lo que cabe en el presupuesto de la invocación. `MARGEN_LOTE_MS`
-—el corte por reloj que `cron/facturar` sí tiene— no se replicó aquí.
-
----
-
-### [ALTO] El "Resumen de flota" barre `gasto` entero tres veces por carga de página
-`src/app/dashboard/page.tsx:87-113` (12 llamadas en `Promise.all`)
-· `analytics.ts:135` (detectarAnomalias) · `:537` (getGastoPorConcepto)
-· `:562-570` (getGastoPorRuta, nuevo en `563c507`) · `:608-628` (getOperadoresDetalle)
-
-**Escenario:** el commit `563c507` pasó la landing del cliente de 5 a 12 consultas.
-Las nuevas **no reciben `ventana`** —`getGastoPorConcepto(tenantId)`,
-`getGastoPorRuta(tenantId)`, `getOperadoresDetalle(tenantId)`,
-`contarViajes(tenantId)`— así que cada una lee la tabla del tenant **completa, sin
-filtro de fecha**, paginando de 1 000 en 1 000 de forma secuencial. Contando
-viajes de red con 10 800 `gasto`, 2 160 `viaje`, 2 000 `liquidacion`, 60 `operador`:
+**Escenario, con números.** El commit `a30f7b0` hizo lo que el archivo pide —anotar
+el paso nuevo (`createSignedUrl del PDF del contralor`, `processor.ts:2178`)— y
+`COSTO_CIERRE_MS` subió de 8 900 a **9 400 ms**. `MARGEN_CIERRE_MS` sigue en
+**12 000**. El paso que faltaba en el pase 1 sigue faltando: `avisarCierreAlJefe`
+(`processor.ts:2190`) no está en `PASOS_CIERRE`, y son cuatro viajes de red más:
 
 ```
-detectarAnomalias    gasto  11 pág. + 1 vacía = 12
-getGastoPorConcepto  gasto  11 + 1            = 12
-getGastoPorRuta      gasto  11 + 1  +  viaje 3+1 = 16
-getOperadoresDetalle operador 2 + viaje 4 + liquidacion 3 = 9
-getValorAhorro (RPC 0064)                      =  5
-getKpis / getAcreditables / porDia / getViajes / 2×contarViajes / getPorFacturar ≈ 11
-                                              ────
-                                              ≈ 65 viajes de red, ≈38 700 filas
+COSTO_CIERRE_MS (14 pasos, presupuesto.ts:61)          9 400 ms
+ − guardiaCifras→cuadrarDesdeDB (snapshot, camino feliz) −300
+ + telefonoJefeDe        contactos.ts:118                 300
+ + resumenDeCierre       avisar_cierre.ts:52-57 (2 en ‖)  300
+ + sendText al jefe      avisar_cierre.ts:109           1 500
+ + sendDocument al jefe  avisar_cierre.ts:127           2 500
+                                                    ──────────
+                                                      13 700 ms  vs MARGEN_CIERRE_MS = 12 000
 ```
 
-…para pintar una dona de 6 rebanadas y 5 barras. La página **no declara
-`maxDuration`**. Y el rail del asistente (`dashboard/chrome.tsx:100` →
-`rail.tsx:59` → `api/dashboard/asistente/route.ts:21`) llama otra vez a
-`detectarAnomalias`: **el mismo barrido completo de `gasto` corre dos veces por
-carga de la landing**, en dos procesos, sin caché entre ellos.
+Como `restante() = 120 000 − 12 000 − transcurrido` (`presupuesto.ts:222`), el
+agente puede devolver legítimamente en t = 108 000 ms. Cierre nominal → **t =
+121 700 ms** contra `maxDuration = 120` (`webhook/whatsapp/route.ts:77`). Y desde
+`processor.ts:1853` —el último `reloj.acotar()` del archivo— **nada del cierre
+vuelve a consultar el reloj**: `grep -n "reloj\." processor.ts` no devuelve una
+sola línea después de 1853.
 
-**Consecuencia:** con el volumen que el propio `analytics.ts:325` toma como
-diseño (~660 comprobantes/día), `gasto` pasa de 100 000 filas en el **mes 5** y
-`traerTodo` lanza `LecturaIncompleta` (`pg.ts:48,172`). `safe()` en
-`page.tsx:32` se lo traga y devuelve `null` → tres tarjetas del Resumen se
-apagan a la vez sin decir por qué, en la pantalla del comprador. Es exactamente
-la caducidad que la migración `0064` se escribió para eliminar de esta misma
-página, reintroducida.
+Los dos pasos nuevos que faltan son además los únicos del cierre **sin techo de
+ninguna clase**: `telefonoJefeDe` (`contactos.ts:118`) y `resumenDeCierre`
+(`avisar_cierre.ts:52`) llaman a `supabaseAdmin()` en crudo, sin `acotada`, así
+que heredan los 300 000 ms de undici. Uno solo de ellos colgado son 300 s contra
+una invocación de 120.
 
-**Causa raíz probable:** se reusó el patrón de "traer todo y agrupar en memoria"
-de `getStatsPorOperador` (lo dice el mensaje del commit) sin pasarle la ventana
-del `GlobalFilter` que la página ya tiene resuelta en `r`.
+**Consecuencia.** Vercel mata la función con la liquidación ya escrita y el
+`viaje` ya `liquidado`. `saveConversation` (`processor.ts:2217`) no corre → el
+turno se pierde y el agente vuelve sin memoria de haber cerrado. `releaseViajeLock`
+(`:2267`, en el `finally`) no corre → el lease queda tomado. Y el contralor —el
+comprador— no recibe ni el aviso de cierre ni el PDF, que es justo el documento
+que `avisar_cierre.ts:14-19` dice existir para entregarle. No hay log: el proceso
+muere antes del `catch`. Meta tiene su 200 desde `route.ts` y no reintenta.
 
----
-
-### [ALTO] N+1 sin tope: un `UPDATE` por línea de CFDI consolidado, dentro del webhook
-`src/lib/likida/intake/consolidado.ts:259-270` · `:168-181` (`ligarLineaAGasto`)
-· `src/lib/likida/processor.ts:1370-1375` (llamada, sin presupuesto)
-
-**Escenario:** la oficina reenvía por WhatsApp el CFDI mensual del TAG o del
-monedero de combustible. `esConsolidado` solo pide `lineas.length > 1`
-(`cfdi_xml.ts:126`) — **no hay tope de líneas en ningún lado**. Por cada línea
-conciliada se hace un `UPDATE` secuencial. Una flota de 20 unidades con ~12
-casetas al día y 22 días operados son ~5 000 líneas; el TAG las manda en un solo
-CFDI. Nominal: 300 líneas = 90 s, 400 = 120 s = la invocación entera. En techo
-(8 s por `acotada`): 300 × 8 = 2 400 s. `guardarYConciliarConsolidado` no recibe
-el `reloj` y no lo consulta.
-
-**Consecuencia, y es la mala:** el `upsert` de `cfdi_xml` va **antes** del bucle
-(`:202-221`) y el `insert` de `cfdi_consolidado_linea` va **después**. Si Vercel
-mata la invocación a media pasada, queda: fila en `cfdi_xml`, K gastos con
-`cfdi_uuid` escrito, y **cero** filas en `cfdi_consolidado_linea`. El guardia de
-idempotencia de `:229-236` solo dispara con `existentes.length > 0`, así que al
-reenviar el archivo vuelve a correr el JOIN — y los K gastos ya ligados quedan
-fuera de `candidatosDb` (filtra `.is('cfdi_uuid', null)`), así que **sus líneas se
-reportan como huérfanas**. Es literalmente el fallo que el comentario de `:222-229`
-dice estar evitando. El operador recibe un resumen que dice que N líneas no
-conciliaron cuando sí lo hicieron, y el contralor persigue facturas que ya están.
-
-Agravante en la misma función: `candidatosDb` (`:241-247`) se lee **sin `traerTodo`
-y sin `.range()`** → PostgREST la recorta a 1 000 filas en silencio, que es la
-trampa que `pg.ts` existe para cerrar.
-
-**Causa raíz probable:** el camino consolidado se escribió como excepción del
-camino de foto (1 comprobante = 1 escritura) y heredó su forma secuencial, sin
-revisar que aquí el N lo elige el emisor del CFDI y no el chofer.
+**Causa raíz probable.** La prueba que custodia la reserva es un checksum
+(`presupuesto.test.ts:106-119`: `toHaveLength(14)` + `MARGEN ≥ COSTO`), y por
+construcción no puede ver un paso que nadie anotó. Al subir el costo sin subir el
+margen, la holgura pasó de 3 100 a 2 600 ms — la prueba siguió verde porque solo
+exige `MARGEN ≥ COSTO + masCaro × 0.5` (= 10 650).
 
 ---
 
-### [MEDIO] QStash movió el hallazgo del lote de 8, no lo cerró: el worker declara 600 s y corta a los 150 s del presupuesto viejo
-`src/app/api/cron/facturar/cola/route.ts:11,75` · `src/app/api/cron/facturar/route.ts:25,129,158,469,509`
+### [ALTO] Una carga de `/dashboard` dispara 214 consultas y barre `gasto` completo cinco veces — y el 60% de ese trabajo es para vistas que el usuario no está mirando
+`src/app/dashboard/page.tsx:95-127` (12 llamadas en `Promise.all`)
+· `analytics.ts:170-180` (`getSeriesKpiCards` → 3 × `getSerieComparativa` = **9** `traerTodo`)
+· `analytics.ts:432-442` (`getGastoPorSemanaSeries` = 3) · `:489-499` (`getLiquidadoPorSemanaSeries` = 3)
+· `analytics.ts:1023-1039` (`getTopRutasPorGastoSeries` = 3 × 2 = 6) · `:509-519` (`getViajesPorMes`)
+· `fiscal.ts:826-848` (`getGastosFiscalesSeries` = 3 × `getGastosFiscales`)
 
-**Escenario:** el callback declara `maxDuration = 600` y su comentario dice que
-existe porque *"el techo de 300 s de una invocación directa es justo lo que esta
-cola existe para romper"*. Pero llama a `procesarLoteEnCola`, que es la MISMA
-función del cron y usa la MISMA constante de módulo:
-`PRESUPUESTO_LOTE_MS = maxDuration * 1000` donde `maxDuration` es el **300 del
-cron** (`route.ts:129`). El corte de `:469` y `:509` sigue siendo
-`Date.now() − inicioLote >= 300 000 − 150 000 = 150 s`.
+**Escenario, con números.** Escenario: flota de 20 unidades, un año operando,
+**66 comprobantes/día** — la décima parte del volumen que el propio archivo llama
+de diseño (`analytics.ts:648`: *"~660 comprobantes al día, ~240 mil al año"*). Eso
+son 24 090 filas de `gasto`, 960 de `viaje`, 960 de `liquidacion`. Las 12 llamadas
+del `Promise.all` se resuelven en **29 `traerTodo` + 4 `.in()` + 2 sueltas**, y
+cada `traerTodo` pagina **secuencialmente** de 1 000 en 1 000 (`pg.ts:46,152`):
 
-Cuenta con el peor caso medido de una sesión de portal (~147 s, `:135-141`):
-flota 1 abre a t≈0 y termina a t=147; flota 2 pasa el corte (147 < 150) y termina
-a t=294; flota 3 en adelante se corta. **2 flotas por corrida, de las 8 del lote**,
-usando 294 s de los 600 declarados. Ocho flotas con un ticket cada una tardan
-**4 horas** en drenar.
+```
+gasto        14 barridos → 178 viajes de red, 158 928 filas
+  detectarAnomalias        SIN filtro de fecha     24 090 → 26 páginas
+  getGastoPorSemana(52)                            24 024 → 26
+  getSerieComparativa(3650)                        24 090 → 26
+  getGastosFiscalesSeries.historico  ('todo')      24 090 → 25
+  getTopRutasPorGasto.historico   SIN ventana      24 090 → 26
+  + 9 barridos con ventana (7d…221d)                      → 49
+viaje         7 barridos →  14 viajes de red,   4 995 filas
+liquidacion   8 barridos →  16 viajes de red,   3 984 filas
++ getViajes(100) 1 + getConfig 1 + 4 × viaje.in() 4
+                                    ─────────────────────────
+                                    214 viajes de red · ~167 900 filas
+```
 
-**Consecuencia:** el hallazgo reincidente "el lote de 8 no cabe" sigue vivo con
-otra forma: ya no se muere a medias (eso sí lo arregló `MARGEN_LOTE_MS`), pero el
-lote tampoco se procesa. Y la respuesta lo reporta como `sinTiempo`, que es
-honesto — pero el operador del sistema ve un cron verde cada hora facturando 2 de
-8 tickets y no tiene señal de que el worker está dejando la mitad de su
-presupuesto sin tocar.
+Los cinco barridos completos de `gasto` traen **la misma tabla cinco veces en la
+misma request**, y cuatro de ellos piden un subconjunto estricto de columnas del
+quinto: `COLUMNAS` de `fiscal.ts:698` ya incluye `viaje_id, concepto, monto,
+fecha, folio, cfdi_uuid` — exactamente lo que necesitan `detectarAnomalias`
+(`analytics.ts:271`), `getSerieComparativa.gasto` (`:107`), `getGastoPorSemana`
+(`:388`) y `getTopRutasPorGasto.gasto` (`:981`). Es trabajo repetido, no trabajo
+distinto.
 
-**Causa raíz probable:** el presupuesto se extrajo junto con la lógica sin
-parametrizarse; sigue siendo una constante de módulo del archivo del cron.
+Y el reparto importa: **`PanelPeriodo`, `KpiPeriodo` y `MotorFiscalPeriodo` son
+Client Components** (`'use client'` en `panel-periodo.tsx:1`, `kpi-periodo.tsx:1`,
+`motor-fiscal-periodo.tsx:1`) que reciben las TRES vistas ya resueltas y cambian
+en el navegador. O sea: el modo "Histórico" —el más caro, el que dispara los cinco
+barridos completos— **se paga en cada carga aunque nadie toque el selector**. De
+los 214 viajes de red, 128 (60%) son de vistas que el usuario probablemente no
+verá.
+
+`getTopRutasPorGasto` (`analytics.ts:987-990`) es el caso más claro: su consulta
+de `viaje` **nunca recibe la ventana**, ni siquiera en el modo semanal, así que
+`getTopRutasPorGastoSeries` barre la tabla `viaje` completa **tres veces** para
+pintar 5 barras.
+
+**El límite contra el que medirlo no existe.** `src/app/dashboard/page.tsx` no
+exporta `maxDuration` — y ninguna página del repo lo hace (`grep -rn maxDuration
+src/app/` devuelve 6 rutas de API y cero páginas). `vercel.json` no trae bloque
+`functions`. La cadena secuencial más larga son 26 páginas × 0.3 s = **7.8 s
+nominales**, dentro del default de plataforma (10 s Hobby / 15 s Pro; el repo
+verificó plan Pro en `webhook/whatsapp/route.ts:69-71`) — pero solo a este
+volumen: a 50 páginas por barrido (50 000 filas de `gasto`, o sea **el mes 2.5 al
+volumen de diseño**) la cadena son 15 s y la página se corta a media carga. Y
+`acotada` **no se usa ni una vez** en `analytics.ts`, `fiscal.ts` ni `pg.ts`
+(`grep -n acotada` sobre los tres devuelve un comentario que dice *"acotada a las
+plazas más comunes"*): las 214 consultas heredan los 300 000 ms de undici.
+
+**Consecuencia.** Al volumen de diseño (240 900 `gasto`/año), `traerTodo` lanza
+`LecturaIncompleta` a las 100 páginas (`pg.ts:47,181`) y ahora **lanza en cinco
+sitios a la vez**, no en uno: `safe()` (`page.tsx:37`) se los traga y devuelve
+`null`, así que KPIs, Motor fiscal, Gasto por categoría, Top rutas y Actividad se
+apagan simultáneamente en la primera pantalla del comprador, sin decir por qué —
+después de haber quemado 500 viajes de red inútiles. Es la caducidad que la mig.
+`0064` se escribió para eliminar de esta misma página, reintroducida por
+quintuplicado.
+
+**Causa raíz probable.** El selector Semanal/Mensual/Histórico se implementó
+resolviendo las tres vistas en el servidor y mandándolas juntas al cliente (para
+que el switch sea instantáneo), y cada vista se construyó como una llamada
+independiente a la función que ya existía, en vez de una lectura del rango más
+ancho bucketeada en memoria — que es exactamente el patrón que
+`getSerieComparativa` documenta y aplica bien en `analytics.ts:78-80` ("UNA SOLA
+CONSULTA POR TABLA, no `pasos` consultas") y que `getSeriesKpiCards` deshace tres
+líneas más abajo llamándola tres veces.
 
 ---
 
-### [MEDIO] La foto va al modelo de visión a resolución nativa — el mismo archivo ya sabe redimensionar, pero solo para lo gratis
-`src/lib/likida/intake/ocr.ts:253-261` · `src/lib/llm/openrouter.ts:379-384`
-· `src/lib/likida/intake/cfdi.ts:249` (el contraste)
+### [ALTO · REINCIDENTE, CUARTA RONDA] La migración `0084` sigue sin que nadie la llame: el barrido anual del 15% pagina igual que hace cuatro rondas
+`supabase/migrations/0084_sumar_combustible_ejercicio.sql:11`
+· `src/lib/likida/repo.ts:803-864` · `src/lib/likida/cuadre/desde_db.ts` · `src/lib/likida/migraciones_verificadas.test.ts:57`
 
-**Escenario:** `downloadMediaAsDataUrl` (`meta/client.ts:426-427`) devuelve el
-JPEG **tal cual lo mandó el teléfono**, en base64. `extraerComprobante` lo pasa a
-`generateStructured({ images: [principal] })`, y `openrouter.ts:383` lo adjunta
-como `image_url: { url }` sin `detail` ni preprocesado. Un teléfono de gama media
-manda 4 000 × 3 000 px. Gemini tesela en cuadros de 768 px: `ceil(4000/768) ×
-ceil(3000/768) = 6 × 4 = 24` teselas ≈ **6 200 tokens de entrada**. La misma foto
-a 1 024 px de ancho —más que suficiente para un ticket térmico— son 2 teselas ≈
-**520 tokens**: **~12× menos entrada por comprobante**.
+**Verificado en el árbol de hoy:** `grep -rn "sumar_combustible_ejercicio"
+--include=*.ts .` devuelve **una sola coincidencia, y es el texto de un test**.
+No existe ningún `.rpc('sumar_combustible_ejercicio', …)`. **La 0084 sigue sin
+llamarse.**
 
-Lo que lo hace un descuido y no una decisión: `decodeCodigosFromImage`
-(`cfdi.ts:249`) YA usa `sharp(...).rotate().resize({ width: 1600 })` sobre la
-misma imagen, y su comentario explica que la pasada a resolución nativa "cuesta
-segundos y no encuentra nada". O sea: se redimensiona para el lector de códigos,
-que es gratis, y no para la llamada de visión, que es lo que se paga.
+**Escenario, con números.** `getAcumuladoCombustible` (`repo.ts:803`) sigue siendo
+el bucle de `:819`: `PAGINA = 1_000`, `MAX_PAGINAS = 100`, páginas **secuenciales**,
+cada una envuelta en `acotada` (`:820`, 8 000 ms de techo). Una flota con 9 000
+cargas de diésel en el ejercicio = **10 viajes de red seguidos**, 3 000 ms
+nominales y **80 000 ms en techos**, dentro de un turno que `processor.ts:1853`
+acota a 40 000 ms y de una invocación de 120 000. Corre por dos caminos calientes:
+`cuadrarDesdeDB` (todo cierre) y la tool `consultar_periodo`.
 
-**Consecuencia:** el costo por comprobante está dominado por tokens de imagen que
-nadie midió — la medición del 4-ago (`models.ts:36-47`) comparó **modelos** con
-la misma imagen inflada, así que el ahorro de entrada no aparece en esa tabla.
-Y a 5 fotos en vuelo (`MAX_EN_PARALELO`, `route.ts:40`) son 5 payloads de varios
-MB de base64 saliendo a la vez de la función, con la copia de `subirComprobante`
-en memoria además.
-
-**Causa raíz probable:** el redimensionado se añadió cuando se optimizó el lector
-de códigos por latencia; la llamada de visión nunca se revisó por costo de
-entrada porque el costo se midió por modelo, no por payload.
+**Consecuencia.** La operación fiscal más cara del cierre sigue costando N viajes
+de red que crecen con el histórico del cliente. A 100 000 cargas lanza, y el
+contador del 15% (RFA 2026 regla 2.9) se apaga con un `warn` dejando el efectivo
+marcado "a revisar" en la liquidación que el contralor está mirando. Y
+`migraciones_verificadas.test.ts:57` sigue afirmando en verde *"si falta,
+getAcumuladoCombustible lanza ruidoso en el primer cuadre (el RPC no existe)"* —
+una frase falsa sobre una función que no invoca ningún RPC, y es la línea que hace
+que este hallazgo se lea como cerrado cuatro rondas seguidas.
 
 ---
 
-### [MEDIO] `cola/route.ts` declara `maxDuration = 600` contra el techo de 300 s que este mismo repo verificó
+### [ALTO · REINCIDENTE, AGRAVADO] `/api/cron/escalar` ahora encadena DOS lotes de 100 viajes con envíos: 510 s nominales contra 120 — y el recordatorio nuevo nunca llega a correr
+`src/app/api/cron/escalar/route.ts:11` (`maxDuration = 120`) · `:67-84` (los dos bloques, secuenciales)
+· `src/lib/likida/escalar_viaje.ts:92` (`.limit(100)`) · `:192-278` (el `for`)
+· `src/lib/likida/recordatorio_comprobacion.ts:61` (`.limit(100)`) · `:112-141` (el `for`)
+
+**Escenario, con números.** `c5a7c19` añadió `enviarRecordatoriosComprobacion()`
+**detrás** de `escalarViajesSinAceptar()` en la misma invocación, en dos `await`
+consecutivos (`route.ts:68` y `route.ts:78`). Ninguno de los dos `for` consulta un
+reloj — `grep -n "Date.now\|presupuesto\|reloj" escalar_viaje.ts
+recordatorio_comprobacion.ts` no devuelve nada dentro de los bucles.
+
+```
+escalarViajesSinAceptar   100 × (0.3 claim + 1.5 sendText chofer + 1.5 sendText jefe) = 330 000 ms
+enviarRecordatoriosComprobacion  0.3 lectura + 100 × (0.3 claim + 1.5 sendText)       = 180 300 ms
+                                                                                  ─────────────
+                                                                                     510 300 ms
+                                                            contra maxDuration = 120 000  (route.ts:11)
+```
+
+**Con 37 viajes sin aceptar (120 000 / 3 300 = 36.4), el recordatorio nuevo nunca
+arranca**: la invocación muere dentro del primer `for`. Y aislado tampoco cabe:
+100 × 1 800 = 180 300 ms, o sea **1.5× su propio `maxDuration` sin ayuda de
+nadie**, a partir de 67 viajes vencidos.
+
+En techos es peor: `reclamarRecordatorio` (`recordatorio_comprobacion.ts:154-165`)
+llama a `admin.from('viaje').update(...)` **sin `acotada`** → 300 000 ms de undici
+por fila; `viajesSinComprobar` (`:56`) igual. `sendText` sí tiene su
+`SEND_TIMEOUT_MS = 10_000`.
+
+**El primer arranque es el peor.** La mig. `0087` añade
+`recordatorio_comprobacion_en timestamptz` **sin backfill**
+(`0087_recordatorio_comprobacion.sql:13-14`), así que en la primera corrida tras
+el despliegue **todo** viaje `abierto`/`en_cuadre` con `fecha_inicio` de más de 3
+días califica de golpe: 100 mensajes a choferes reales en la primera hora, 100 en
+la segunda, hasta drenar.
+
+**Consecuencia.** `reclamarRecordatorio` sella `recordatorio_comprobacion_en`
+**antes** de mandar el mensaje (`:154`, decisión documentada y correcta contra la
+carrera), igual que `reclamarEscalacion` (`escalar_viaje.ts:307`). Cuando Vercel
+corta a mitad del bucle, el viaje en vuelo queda sellado **para siempre** y su
+chofer nunca recibe el recordatorio — y el archivo declara explícitamente que el
+sello es definitivo y sin ventana de reintento. Peor: el feature completo que
+Javier pidió el 8-ago-2026 ("sale solo, no depende de que el jefe apriete un
+botón") **está muerto al nacer** en cualquier tenant con 37+ viajes escalables, y
+el cron se ve verde en el panel de Vercel porque los dos bloques tienen su propio
+`try/catch` y el que no corrió no deja rastro.
+
+**Causa raíz probable.** El chequeo nuevo se metió en la ruta existente por
+afinidad temática ("los dos son viaje abierto que se está pasando de tiempo",
+`route.ts:19-30`), sin revisar que el presupuesto de la ruta ya estaba desbordado
+por el primero. `MARGEN_LOTE_MS` —el corte por reloj que `cron/facturar` sí tiene
+(`facturar/route.ts:158`)— no se replicó en ninguno de los dos.
+
+---
+
+### [ALTO] Los mensajes de WhatsApp del cierre y de los crons no pasan por el medidor: ~40% del costo por liquidación es invisible
+`src/lib/likida/costos.ts:86-88` (`registrarCostoWhatsApp`, único registrador)
+· llamado SOLO desde `src/lib/likida/processor.ts:625` y `:2143`
+· NO llamado desde `src/lib/likida/avisar_cierre.ts:109,127` · `escalar_viaje.ts:222,258,262` · `recordatorio_comprobacion.ts:135`
+
+**Escenario, con números.** `grep -rn "registrarCostoWhatsApp" src/ | grep -v test`
+devuelve **dos sitios de llamada, los dos en `processor.ts`**. Los demás emisores
+de WhatsApp del producto no registran nada. A `WHATSAPP_MSG_USD_DEFAULT = 0.008`
+(`costos.ts:47`):
+
+| Camino | Mensajes | Registrados | USD invisibles |
+|---|---|---|---|
+| Cierre de una liquidación (`processor.ts`) | 3 | 3 | — |
+| Aviso de cierre al jefe (`avisar_cierre.ts:109,127`) | hasta 2 | **0** | **$0.016** |
+| Escalación por viaje (`escalar_viaje.ts`) | hasta 3 | **0** | hasta $0.024 |
+| Recordatorio por viaje (`recordatorio_comprobacion.ts:135`) | 1 | **0** | $0.008 |
+
+Una liquidación cerrada con aviso al jefe manda **5** mensajes y registra **3**:
+el componente WhatsApp del costo está subvaluado en **40%**. En dinero, los
+$0.016 invisibles son **32–53% del costo total por liquidación** que `models.ts:17`
+promete ($0.03–0.05), y son **más de 10 veces** lo que cuesta una extracción OCR
+con el modelo que la medición del 4-ago dejó configurado
+($0.0015/comprobante, `models.ts:38`).
+
+En los crons el volumen es el que manda: una corrida llena de `escalar` son hasta
+300 + 100 = **400 mensajes = $3.20/hora = ~$2 300 USD/mes** que no aparecen en
+`llm_costo` en absoluto, y `wa_mensaje_procesado` tampoco los puede atribuir
+porque no tiene `tenant_id` (trampa ya documentada).
+
+**Consecuencia.** `costos.ts:5-9` abre diciendo, con todas sus letras, que *"un
+costo no registrado tiene que verse distinto de un costo bajo"* porque *"es la
+cifra con la que se fija el precio del producto"*. Aquí se ve idéntico: el panel
+de costo por flota reporta el 60% de los mensajes que de verdad se pagaron, y el
+error va **a la baja** — la dirección que nadie revisa. Un producto que va a
+cobrar por liquidación está fijando su precio contra un número que ignora sus dos
+mensajes más caros (el sendText + el sendDocument que el contralor archiva).
+
+**Causa raíz probable.** El registro se cableó por llamada de envío y no en el
+borde: `sendText`/`sendDocument` de `meta/client.ts` no cobran nada por sí solos,
+así que cada emisor nuevo tiene que acordarse — y ninguno de los tres emisores
+nuevos de las últimas rondas se acordó.
+
+---
+
+### [ALTO · REINCIDENTE] N+1 sin tope: un `UPDATE` por línea de CFDI consolidado, dentro del webhook
+`src/lib/likida/intake/consolidado.ts:259-270` · `:168-181` (`ligarLineaAGasto`) · `:241-247` (`candidatosDb`)
+
+**Escenario, con números.** Sin cambios desde el pase 1, verificado línea por
+línea. `esConsolidado` solo pide `lineas.length > 1` — no hay tope de líneas en
+ningún lado. Por cada línea conciliada, un `UPDATE` secuencial (`:268`). Una flota
+de 20 unidades con ~12 casetas al día y 22 días operados son ~5 000 líneas en un
+CFDI del TAG. Nominal: 300 líneas = 90 000 ms, **400 líneas = 120 000 ms = la
+invocación entera** (`webhook/whatsapp/route.ts:77`). En techo (`acotada`, 8 s):
+300 × 8 000 = 2 400 000 ms. `guardarYConciliarConsolidado` no recibe el reloj.
+
+**Consecuencia.** El `upsert` de `cfdi_xml` va **antes** del bucle y el `insert`
+de `cfdi_consolidado_linea` **después**: si Vercel corta a media pasada queda fila
+en `cfdi_xml`, K gastos con `cfdi_uuid` escrito, y **cero** líneas de auditoría.
+El guardia de idempotencia solo dispara con `existentes.length > 0`, así que al
+reenviar el archivo los K gastos ya ligados quedan fuera de `candidatosDb`
+(`.is('cfdi_uuid', null)`) y **sus líneas se reportan como huérfanas**. El
+contralor persigue facturas que ya están conciliadas. Agravante en la misma
+función: `candidatosDb` (`:241-247`) se lee **sin `traerTodo` y sin `.range()`** →
+PostgREST la recorta a 1 000 filas en silencio.
+
+---
+
+### [MEDIO] `getGastosFiscales` resuelve el contexto de viaje con un `.in()` sin paginar, y ahora corre 4 veces por carga — una de ellas sin cota de fecha
+`src/lib/likida/fiscal.ts:743-751` · llamada 4× desde `dashboard/page.tsx:116,121` vía `fiscal.ts:840-844`
+
+**Escenario, con números.** Tras el barrido paginado, `getGastosFiscales` junta
+todos los `viaje_id` distintos y hace **una** consulta `.in('id', viajeIds)`
+**sin `.range()` y sin `traerTodo`** (`:746-750`). `getGastosFiscalesSeries`
+(nuevo, `fiscal.ts:840`) la llama tres veces más, y la tercera usa
+`resolverPeriodo('todo')` — **`desde` y `hasta` ambos `null`**, o sea todos los
+gastos que ha tenido el tenant en su vida, o sea **todos sus `viaje_id`**.
+
+- Con 960 viajes: el `.in()` manda un GET con 960 UUIDs en el query string ≈ **37 KB
+  de URL**. El límite documentado de Cloudflare (que fronterea a Supabase) son
+  16 KB: se pasa a partir de ~410 viajes. `exigir()` lanza (`:751`) → `safe()`
+  devuelve `null` → **la tarjeta "Tu motor fiscal" completa desaparece**.
+- Si la URL sí pasa, PostgREST recorta el resultado a 1 000 filas en silencio
+  (`pg.ts:39-43` documenta exactamente esta trampa): a partir de 1 000 viajes,
+  `viajeFolio` y `operadorNombre` vuelven `null` para el resto, y la pantalla
+  fiscal enseña comprobantes sin folio de viaje sin decir que le faltó leer.
+
+Y son 4 GETs de decenas de KB **por cada carga del panel**, uno de ellos siempre
+del tamaño máximo.
+
+**Consecuencia.** La sección del producto que es su diferenciador (el motor
+fiscal) se apaga entera, o miente por omisión, en función de cuántos viajes lleva
+la flota — sin log, porque el 414 sube como excepción a `safe()`. El propio
+comentario de `:741-742` explica que la segunda consulta existe para no confiar en
+el join anidado de PostgREST *"que no pagina el lado embebido"*: se cambió un
+recorte silencioso por otro.
+
+**Causa raíz probable.** `getGastosFiscalesSeries` reusó `getGastosFiscales` tal
+cual para el modo `'todo'`, y ese modo nunca había existido en este llamador —
+antes la ventana más ancha era el ejercicio en curso.
+
+---
+
+### [MEDIO · REINCIDENTE] QStash movió el hallazgo del lote de 8, no lo cerró: el worker declara 600 s y corta a los 150 s del presupuesto del cron
+`src/app/api/cron/facturar/cola/route.ts:11` · `src/app/api/cron/facturar/route.ts:25,129`
+
+Sin cambios. `cola/route.ts:11` declara `maxDuration = 600` y su comentario dice
+que existe porque *"el techo de 300 s de una invocación directa es justo lo que
+esta cola existe para romper"* — pero llama a `procesarLoteEnCola`, que usa la
+constante de módulo del cron: `PRESUPUESTO_LOTE_MS = maxDuration * 1000` con el
+`maxDuration = 300` de `route.ts:25`. El corte sigue siendo
+`300 000 − 150 000 = 150 000 ms`. Con el peor caso medido de una sesión de portal
+(~147 s): flota 1 termina en t = 147 s, flota 2 pasa el corte y termina en
+t = 294 s, flota 3 se corta. **2 flotas de las 8 del lote, usando 294 s de los
+600 declarados.** Ocho flotas con un ticket cada una tardan 4 horas en drenar, y
+el cron se ve verde.
+
+---
+
+### [MEDIO · REINCIDENTE] La foto va al modelo de visión a resolución nativa, mientras el mismo repo ya redimensiona para lo que es gratis
+`src/lib/likida/intake/ocr.ts:253-260` · `src/lib/llm/openrouter.ts:379-384` · `src/lib/likida/intake/cfdi.ts:249`
+
+Sin cambios. `downloadMediaAsDataUrl` devuelve el JPEG tal cual lo mandó el
+teléfono; `extraerComprobante` lo pasa a `generateStructured({ images:
+[principal] })` (`ocr.ts:257`) y `openrouter.ts:383` lo adjunta como `image_url:
+{ url }` sin `detail` ni preproceso. Un teléfono de gama media manda 4 000 × 3 000
+px; Gemini tesela en cuadros de 768: `ceil(4000/768) × ceil(3000/768) = 24`
+teselas ≈ **6 200 tokens de entrada**. A 1 024 px de ancho —de sobra para un
+ticket térmico— son 2 teselas ≈ **520 tokens**: **~12× menos entrada por
+comprobante**. Lo que lo hace descuido y no decisión: `decodeCodigosFromImage`
+(`cfdi.ts:249`) YA hace `sharp(...).rotate().resize({ width: 1600 })` sobre la
+misma imagen. Se redimensiona para el lector de códigos, que es gratis, y no para
+la llamada de visión, que es lo que se paga. La medición del 4-ago
+(`models.ts:36-47`) comparó **modelos** con la misma imagen inflada, así que este
+ahorro no aparece en esa tabla.
+
+---
+
+### [MEDIO · REINCIDENTE] `cola/route.ts` declara 600 s contra el techo de 300 s que este mismo repo verificó
 `src/app/api/cron/facturar/cola/route.ts:11` vs `src/app/api/webhook/whatsapp/route.ts:69-71`
 
-**Escenario:** el webhook documenta una verificación explícita: *"VERIFICADO el
-28-jul-2026 contra la API de Vercel: el equipo `likida` … está en plan **pro**,
-donde el tope es 300 s"*, y por eso se quedó en 120 en vez de subir más. El
-callback de QStash declara 600. `vercel.json` no trae bloque `functions` ni nada
-que declare Fluid Compute. Si Fluid no está activo, la plataforma no honra 600:
-la función se corta en 300 s.
-
-**Consecuencia:** hoy no muerde, porque el corte real es a los 150 s (hallazgo
-anterior). Muerde el día que alguien arregle el `PRESUPUESTO_LOTE_MS`: el worker
-creería tener 600 s, abriría una sesión de portal a t=440 s en modo `emitir`, y
+Sin cambios. El webhook documenta *"VERIFICADO el 28-jul-2026 contra la API de
+Vercel: … plan **pro**, donde el tope es 300 s"*. El callback declara 600.
+`vercel.json` (leído hoy) no trae bloque `functions` ni nada que declare Fluid
+Compute — solo `ignoreCommand` y `crons`. Hoy no muerde porque el corte real es a
+los 150 s; muerde el día que alguien arregle `PRESUPUESTO_LOTE_MS`: el worker
+creería tener 600 s, abriría una sesión de portal en `emitir` a t = 440 s y
 moriría a los 300 con el CFDI posiblemente timbrado en el SAT y `cfdi_uuid` sin
-escribir — que es exactamente el escenario que `MARGEN_LOTE_MS` documenta como
-inaceptable (`route.ts:100-109`). Dos números que dicen cosas distintas sobre el
-mismo plan; uno de los dos está mal y no hay prueba que los enfrente (la que
-existe, `presupuesto.test.ts:80-89`, solo cubre el webhook).
-
-**Causa raíz probable:** el 600 se copió del `timeout: 600` de QStash
-(`route.ts:321`), que es el tope del **publisher**, no el de la función.
+escribir. Dos números que dicen cosas distintas del mismo plan, y ninguna prueba
+los enfrenta.
 
 ---
 
-### [BAJO] 12 de 14 `traerTodo` no piden `conteo()` y pagan una página vacía de más
-`src/lib/likida/pg.ts:126-131,158-166` · `analytics.ts:968,1023` (los dos únicos que sí)
+### [BAJO · REINCIDENTE, PEOR] 25 de los 29 `traerTodo` de la landing no piden `conteo()` y pagan una página vacía cada uno
+`src/lib/likida/pg.ts:66` (`conteo`) · `:186-190` (la página vacía como prueba)
+· los 4 que sí lo piden: `fiscal.ts:731`
 
-**Escenario:** `traerTodo` prueba que trajo todo por una de dos vías: el `count`
-de PostgREST (gratis, viene en la primera respuesta) o **una página vacía**. Los
-llamadores que no piden `conteo(desde)` caen siempre a la segunda: un viaje de
-red extra por barrido, siempre. En la landing del dashboard son 8 barridos sin
-`conteo` → **+8 viajes de red de los ~65**, ~12% del total, por no pasar un
-argumento que el helper ya expone y que dos llamadores ya usan.
+`traerTodo` demuestra que trajo todo por el `count` de PostgREST (**gratis**, viene
+en la primera respuesta) o por una página vacía. En el pase 1 eran 12 de 14
+llamadores sin `conteo`; hoy, con el rework, son **25 de 29** en la landing —
+`grep -c "conteo(" analytics.ts` devuelve 2 sitios, ambos en funciones que la
+landing no llama. Son **25 viajes de red de los 214 (12%)** por no pasar un
+argumento que el helper ya expone. Es el único hallazgo de la lista cuyo tamaño no
+crece con el cliente, y el más barato.
 
-**Consecuencia:** latencia constante añadida a la primera pantalla que ve el
-contralor. Es el hallazgo más barato de la lista y el único cuyo tamaño no crece
-con el cliente.
+---
 
-**Causa raíz probable:** `conteo()` se añadió después que la mayoría de los
-llamadores y solo se retrofiteó donde se estaba tocando el código.
+### [BAJO] El índice de la mig. `0087` lidera con `tenant_id`, que su único consumidor nunca filtra
+`supabase/migrations/0087_recordatorio_comprobacion.sql:19-21` · `src/lib/likida/recordatorio_comprobacion.ts:55-62`
+
+`idx_viaje_recordatorio_pendiente` es
+`(tenant_id, estatus, fecha_inicio) where recordatorio_comprobacion_en is null`.
+La única consulta que existe, `viajesSinComprobar` (`:56-62`), filtra por
+`estatus IN (...)`, `fecha_inicio <= limite` y `recordatorio_comprobacion_en IS
+NULL` — y **no filtra por `tenant_id`**: es un cron global. Con la columna líder
+sin restringir, Postgres no puede hacer *seek* por `fecha_inicio`; tiene que
+recorrer el índice parcial entero filtrando fila por fila. La mig. `0058`, misma
+familia y mismo patrón, lo hizo bien: `viaje_sin_aceptar_idx on viaje (avisado_en)
+where aceptado_en is null and escalado_en is null and estatus = 'abierto'` — la
+columna del rango primero, todo lo constante en el predicado. Hoy el índice
+parcial es chico y no duele; duele cuando `recordatorio_comprobacion_en IS NULL`
+cubra los viajes de todos los tenants que aún no ha alcanzado el lote de 100/hora.
 
 ---
 
 ## Lo que revisé y está bien
 
-- **El reloj compartido de la invocación** (`presupuesto.ts:213-231`,
-  `processor.ts:351`) hace lo que dice hasta que el agente devuelve:
-  `esperarIntake` (`:1718`), el mutex (`:1751`, `:1390`), el OCR (`:525`, `:798`)
-  y `runAgent` (`:1853`) piden todos por `reloj.acotar()`/`reloj.senal()`, así que
-  la fase pre-agente no puede sumar 20+12+40 = 72 s a ciegas. `senal()` devuelve
-  una señal YA abortada cuando no queda nada (`:227`) en vez de agendar un
-  `timeout(0)` — detalle correcto y probado.
-- **`acotada()`** (`presupuesto.ts:148-169`) impone `abortSignal` **y** una
-  carrera contra temporizador, y devuelve el fallo por el mismo canal
-  `{data:null,error}` que Postgres, así que no cambia la semántica de ningún
-  llamador. `repo.ts` y `costos.ts` la usan en todas sus llamadas.
-- **Los timeouts del cliente de Meta** ya existen: `SEND_TIMEOUT_MS = 10_000`,
-  `DOWNLOAD_TIMEOUT_MS = 15_000` (`meta/client.ts:10,17`) en las 10 llamadas.
-  El comentario de `presupuesto.ts:66-70` que dice que siguen con `fetch` pelado
-  a 300 s está **desactualizado** (no lo cuento como hallazgo: no hay daño).
-- **El pool de 5 del webhook** (`route.ts:40-59`): el índice sin candado es
-  correcto, `fn` nunca lanza, y la justificación del 5 está anclada en una
-  medición del bloqueo síncrono de zxing-wasm, no en una corazonada.
-- **Caché de prompt en el ciclo de tools** (`openrouter.ts:645-669`): el
-  breakpoint va en el system, que es el bloque invariante, y solo para
-  `anthropic/`. Medido contra liquidaciones reales (~72 000 tokens reenviados en
-  8 vueltas). Es la optimización correcta y está bien puesta.
-- **La llave de caché de tools sin parámetros** (`openrouter.ts:565-593`): el bug
-  medido —3 rondas, 0 aciertos, porque el modelo variaba el JSON de `arguments`—
-  está cerrado llaveando por nombre cuando el schema no declara propiedades.
-- **`MARGEN_LOTE_MS` en `cron/facturar`** (`route.ts:158,469,509`): el corte por
-  reloj antes de cada `conNavegador` y antes de cada portal nuevo dentro de una
-  flota es correcto, y lo no intentado NO se marca. El mecanismo está bien; lo que
-  falla es la constante de la que se alimenta (hallazgo MEDIO de arriba).
-- **Agregados movidos a SQL de la 0064**: `resumen_documentos_tenant` y
-  `resumen_costo_ia_tenant` (`analytics.ts:337-388`, `costos.ts:295-318`) sí están
-  cableados y sí eliminaron los dos barridos que caducaban en día 50 y mes 5.
-  El patrón funciona — por eso duele que `0084` no lo siga.
-- **`traerTodo` avanza por filas leídas y no por número de página** (`pg.ts:145-152`),
-  lo que lo hace correcto ante un `max_rows` bajo de proyecto, y falla cerrado
-  con `LecturaIncompleta` en vez de devolver una cifra corta.
-- **`consultarCFDI`** (`intake/sat.ts:36-48`) acotado a 4 s y grácil a
-  `'pendiente'`: la llamada externa dentro del OCR no puede colgar el turno.
-- **El freno de presupuesto antes del agente** (`processor.ts:1834-1846`): si no
-  alcanzan 15 s se manda el resumen determinístico en vez de arrancar un ciclo
-  que se va a cortar. Es el patrón correcto — el problema es que no existe su
-  gemelo para el cierre.
+- **`acotada()`** (`presupuesto.ts:155-176`) sigue haciendo lo que dice: impone
+  `abortSignal` **y** una carrera contra temporizador, y devuelve el fallo por el
+  mismo canal `{data:null,error}` que Postgres, sin cambiar la semántica de
+  ningún llamador. El problema no es el mecanismo, es dónde no se usa.
+- **`traerTodo` avanza por filas leídas y no por número de página**
+  (`pg.ts:171-175`) y falla cerrado con `LecturaIncompleta` en vez de devolver una
+  cifra corta. Correcto ante un `max_rows` bajo de proyecto.
+- **`getSerieComparativa` internamente hace lo correcto**: trae el rango completo
+  UNA vez por tabla y bucketea en memoria (`analytics.ts:78-80,133-149`), en vez
+  de una consulta por paso. Es el patrón bueno; lo que falla es que
+  `getSeriesKpiCards` lo llama tres veces.
+- **`getViajesPorMes`** (`analytics.ts:501-528`) hace bien en NO reusar el
+  `getViajes(limite=100)` que la página ya tiene: un tope de 100 en la vista
+  "Histórico" se leería como la serie completa. Paga un barrido, y el barrido está
+  justificado por escrito.
+- **`contarFilas`** (`analytics.ts:628-639`) usa `head: true` y lanza si el
+  `count` no es número, en vez de devolver un 0 inventado. Es el patrón correcto
+  para un conteo, y es exactamente el que los 5 barridos completos de la landing
+  deberían estar usando.
+- **El reloj compartido de la invocación** (`presupuesto.ts:220-238`) sigue siendo
+  correcto hasta que el agente devuelve: `esperarIntake` (`processor.ts:1718`), el
+  mutex (`:1751`, `:1390`), el OCR (`:525`, `:798`) y `runAgent` (`:1853`) piden
+  todos por `reloj.acotar()`/`reloj.senal()`. `senal()` devuelve una señal YA
+  abortada cuando no queda nada (`:234`).
+- **`MARGEN_LOTE_MS` en `cron/facturar`**: el corte por reloj antes de cada
+  `conNavegador` y antes de cada portal nuevo es correcto, y lo no intentado no se
+  marca. El mecanismo está bien; falla la constante que lo alimenta.
+- **Los timeouts del cliente de Meta** siguen en su sitio: `SEND_TIMEOUT_MS =
+  10_000`, `DOWNLOAD_TIMEOUT_MS = 15_000` (`meta/client.ts:10,17`).
+- **Caché de prompt en el ciclo de tools** (`openrouter.ts`): el breakpoint va en
+  el system, que es el bloque invariante, y solo para `anthropic/`. Medido contra
+  liquidaciones reales. Sin cambios en los 12 commits, y sigue bien puesta.
+- **`reclamarRecordatorio`** (`recordatorio_comprobacion.ts:154-165`): el claim
+  condicional antes del envío es el patrón correcto contra el *at-least-once* de
+  Vercel Cron, copiado bien de `escalar_viaje.ts`. Lo que falta alrededor es el
+  presupuesto, no el candado.
 
 ---
 
 ## Lo que NO alcancé a revisar
 
 - **Latencia real Vercel ↔ Supabase.** Todas mis sumas usan los costos nominales
-  que el repo escribe (0.3 s/consulta) y los techos que impone. Nadie ha medido
-  el p99 real, y `presupuesto.ts:97-99` lo admite. Si el p99 está por encima de
-  0.3 s, todas las filas de la tabla empeoran proporcionalmente.
+  que el repo escribe (0.3 s/consulta) y los techos que impone. Nadie ha medido el
+  p99 real y `presupuesto.ts:97-99` lo admite. Si el p99 real de una página de
+  1 000 filas es 0.6 s en vez de 0.3, la fila E de la tabla pasa de 7.8 a 15.6 s y
+  cruza el default de plataforma **hoy**, no en el mes 2.5.
+- **Qué `maxDuration` hereda de verdad una página del App Router en este
+  proyecto.** Verifiqué que no se declara en ningún lado (ni en la página, ni en
+  `vercel.json`, ni en `next.config.ts`); no pude verificar contra la API de
+  Vercel si el equipo tiene Fluid Compute activo, que cambiaría el default de 15 s
+  a 300 s. Ese número decide si la fila E es un ALTO o un MEDIO.
+- **El costo por liquidación medido de punta a punta.** `models.ts:17` promete
+  $0.03–0.05 y hay mediciones por comprobante (18 tickets, 4-ago). No encontré una
+  medición del ciclo completo con la caché de prompt activa. Sin ese número no se
+  puede afirmar "el costo por operación está medido" — y el hallazgo de los
+  mensajes sin registrar dice que el número que existe está mal a la baja.
+- **El plan de ejecución real de las consultas de `analytics.ts` en Postgres.**
+  Conté viajes de red y filas transferidas; no corrí un `EXPLAIN` contra una base
+  con datos, así que no sé cuáles de los 29 barridos usan índice y cuáles hacen
+  seq scan. `idx_gasto_acumulado` (0023) es `(tenant_id, concepto, fecha)` y varias
+  de las consultas nuevas ordenan por `id`, no por `fecha`.
+- **`/api/export/liquidaciones` y `/api/export/pdf/[id]`**: ninguno declara
+  `maxDuration`; no sumé su peor caso.
+- **`api/cron/purgar`**: es un solo RPC, el trabajo pesado vive en
+  `mantenimiento_de_datos` en SQL. No leí la función de la base.
 - **Los topes internos de `pagina_playwright.ts` y `capufe.ts`.** Tomé el ~147 s
-  del peor caso de una sesión como dado (viene de la auditoría 10 y está citado
-  en `route.ts:135-141`); no volví a sumar cada tope del adaptador.
-- **`/api/export/liquidaciones` y `/api/export/pdf/[id]`**: vi que el primero usa
-  `traerTodo` con ventana, pero no sumé su peor caso contra su `maxDuration`
-  (ninguno de los dos declara uno).
-- **Costo por liquidación medido de punta a punta.** `models.ts` promete
-  $0.03–0.05 y hay mediciones por comprobante (18 tickets, 4-ago), pero no
-  encontré una medición del ciclo completo con la caché de prompt ya activa. Sin
-  ese número, "el costo por operación está medido" no se puede afirmar.
-- **`/dashboard` bajo carga real.** Conté viajes de red y filas; no medí tiempo
-  de pared contra un Supabase real ni verifiqué qué `maxDuration` hereda una
-  página del App Router en este proyecto.
-- **`api/cron/purgar`**: es un solo RPC (`route.ts:68`), así que el trabajo pesado
-  vive en `mantenimiento_de_datos` en SQL. No leí la función de la base.
+  del peor caso de una sesión como dado (viene de la auditoría 10 y está citado en
+  `facturar/route.ts:135-141`).
