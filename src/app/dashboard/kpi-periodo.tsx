@@ -64,7 +64,10 @@ export function KpiPeriodo({
     <KpiDegradado
       icono={icono}
       etiqueta={`${nombre} — ${ETIQUETA_MODO[modo]}`}
-      valor={valorActual ?? 0}
+      // Sin `?? 0`: `costoPorViaje` es `number | null` a propósito
+      // (`analytics.ts:58-61`) y aplanarlo pintaba "$0.00 Costo por viaje"
+      // junto a "$18,400 Gasto total" — AUDITORÍA 17 (pase 2), ALTO.
+      valor={valorActual ?? null}
       formato={formato}
       tendencia={pct === null ? null : { pct, bueno: subeEsBueno ? pct >= 0 : pct <= 0 }}
       flechas={

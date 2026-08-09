@@ -97,7 +97,16 @@ export function KpiDegradado({
 }: {
   icono: ReactNode;
   etiqueta: string;
-  valor: number;
+  /** `null` = no hay con qué medir, y se pinta '—'.
+   *
+   *  AUDITORÍA 17 (pase 2), ALTO. Esta firma era `number` a secas, así que el
+   *  único llamador que sí tiene un dato opcional (`KpiPeriodo`, con
+   *  `costoPorViaje`) lo aplanaba a cero y pintaba "$0.00" — exactamente lo
+   *  que `analytics.ts:58-61` prohíbe por escrito: *"$0/viaje se leería como
+   *  que salió gratis, no como que no hay con qué medir"*. Un cero MEDIDO se
+   *  sigue pintando como cero; lo que cambia es que ahora se pueden
+   *  distinguir. Mismo criterio que `cifra-grande.tsx:57-60`. */
+  valor: number | null;
   formato?: FormatoPreset;
   tendencia?: { pct: number; bueno: boolean } | null;
   /** Controles de paginación de periodo (`KpiPeriodo`, cliente) — viven
@@ -114,7 +123,7 @@ export function KpiDegradado({
     >
       <div className="min-w-0">
         <div className="text-xs font-medium opacity-85 truncate">{etiqueta}</div>
-        <div className="text-xl font-semibold tracking-tight tabular mt-1 truncate">{fmt(valor)}</div>
+        <div className="text-xl font-semibold tracking-tight tabular mt-1 truncate">{valor === null ? '—' : fmt(valor)}</div>
         {tendencia && (
           <div className="text-[11px] font-semibold mt-1 tabular" style={{ color: tendencia.bueno ? '#bbf7d0' : '#fecaca' }}>
             {tendencia.pct >= 0 ? '↑' : '↓'} {Math.abs(tendencia.pct)}% vs periodo anterior
