@@ -1,447 +1,346 @@
-# Cumplimiento legal — auditoría 17
+# Cumplimiento legal — auditoría 17 (pase 2)
 
-**Nota: 4/10** (antes 7). Razón del movimiento: **mirada más profunda** sobre
-caminos que las rondas anteriores no habían recorrido. Los tres abiertos que me
-tocaban están, dos de ellos, cerrados de verdad (ARCO sí se ve en `/dashboard`;
-`vence_en` usa 20 y no 15), pero al abrir el camino del chofer que manda fotos
-**antes** de que la oficina le abra el viaje aparece el supuesto que este mismo
-repo declara inadmisible: la foto se descarga, se guarda y se remite al modelo
-externo sin que el aviso se haya puesto a disposición. Y de los cuatro derechos
-ARCO que el aviso promete, tres no tienen ni compuerta que los reconozca ni
-código que los ejecute.
+**Nota: 3/10** (antes 4). Razón del movimiento: **deuda que cobró factura**. De
+los 14 hallazgos del pase 1 no se cerró **ninguno** —el `git diff 94c0733..HEAD`
+acotado a la superficie legal devuelve un solo archivo cambiado, y es el latido
+de `normas/`—, y encima los dos commits del foco empujaron en la misma
+dirección: `c5a7c19` abre un canal donde **Likida inicia** el contacto y no pasa
+por el aviso, y `31babfd` borra el único código del repo que implementaba el
+derecho de acceso del titular sobre sus propios datos. Con el C5 abierto y un
+segundo camino de primer contacto sin aviso, el ancla del rubro ("3 o menos si
+hay transferencia de datos personales sin cobertura") ya no admite un 4.
 
-**El riesgo mayor de hoy:** el bloqueo "sin aviso no hay tratamiento" solo
-protege la rama con viaje abierto; la rama sin viaje —la que el propio código
-documenta como el caso más común del chofer real— manda la imagen del
-comprobante a OpenRouter antes de que exista aviso ni constancia.
+**El riesgo mayor de hoy:** el producto tiene tres caminos que le escriben al
+chofer por WhatsApp **antes** de que exista el aviso —el de asignación de viaje
+(que sí entrega, porque va por plantilla), el recordatorio nuevo y la
+escalación—, y ninguno de los tres llama a `ponerAvisoADisposicion`. El bloqueo
+"sin aviso no hay tratamiento" solo vigila la puerta de entrada; la de salida no
+tiene guardia.
+
+---
+
+## Estado de los hallazgos del pase 1
+
+Verificación mecánica primero: `git diff --stat 94c0733..HEAD` sobre
+`privacidad.ts`, `repo.ts`, `dashboard/arco/`, `admin/compliance/`,
+`app/privacidad/`, `app/terminos/`, `meta/client.ts`, `lib/llm/`,
+`intake/sanitizar.ts`, `api/cron/facturar/`, `docs/conocimiento/`, `normas/` y
+`seed.sql` → **1 archivo, `normas/.latido-vigilancia`**. Ningún hallazgo del
+pase 1 pudo cerrarse. Además abrí uno por uno y confirmé el texto en la línea:
+
+| # | Hallazgo pase 1 | Sev. | Estado |
+|---|---|---|---|
+| 1 | Foto → modelo externo antes del aviso, rama sin viaje (`processor.ts:520-525` vs `:636`) | CRÍTICO | **REINCIDENTE**. Verificado línea por línea abajo. |
+| 2 | "Que borren mis datos" no abre el canal ARCO (`privacidad.ts:351-361` vs `:602-609`) | ALTO | **REINCIDENTE**. `pideAtencionPrivacidad` sigue exigiendo `mis datos personales`; `tipoDeSolicitudArco:604` sigue entrenado para `borr…`. |
+| 3 | La revocación del consentimiento no la detecta nada (`privacidad.ts:546` vs `:351-361`) | ALTO | **REINCIDENTE**. El texto del integral sigue diciendo "retirar tu consentimiento"; la compuerta no lo conoce. |
+| 4 | La oposición se registra y no apaga nada (`privacidad.ts:516-522`, `repo.ts:877-900`) | ALTO | **REINCIDENTE**, y **empeorado**: ver el ALTO nuevo del recordatorio. |
+| 5 | Nada borra: la cancelación se "resuelve" con un texto (`repo.ts:985-1007`) | ALTO | **REINCIDENTE**. Sigue sin existir una ruta de supresión. |
+| 6 | "Vencen pronto (≤ 5 días)" se enciende el día del vencimiento (`dashboard/arco/page.tsx:71`, `:87`) | ALTO | **REINCIDENTE**. Confirmado: `venceEn(s.venceEn) <= hoy` bajo el rótulo "≤ 5 días". |
+| 7 | Likida publica aviso y ToS sin decir quién es el responsable (`app/privacidad/page.tsx:40-41`, `app/terminos/page.tsx:38-41`) | ALTO | **REINCIDENTE**. `razonSocial: null`, `domicilio: null`, `jurisdiccion: null`. |
+| 8 | Upstash/QStash recibe filas de `gasto` y no está en el anexo de subencargados | ALTO | **REINCIDENTE**. `api/cron/facturar` y `52-anexo-subencargados.md` sin cambios. |
+| 9 | ToS reincidente: "No timbra facturas" (`app/terminos/page.tsx:57`, `:174`) | MEDIO | **REINCIDENTE, quinta ronda**. Literal en pantalla, y el 🔴 de contrato de encargado pendiente de firma sigue ahí. |
+| 10 | La plantilla ARCO manda el literal `'la flota'` (`meta/client.ts:467`) | MEDIO | **REINCIDENTE**. Verificado: `parameters: [{ type: 'text', text: 'la flota' }, …]`. |
+| 11 | Se cita la ley abrogada: "LFPDPPP art. 32" para los plazos ARCO | MEDIO | **REINCIDENTE**. `privacidad.ts:612` sigue diciendo "La LFPDPPP art. 32 fija 15". |
+| 12 | El aviso de Likida omite al procesador de pagos y al PAC (`app/privacidad/page.tsx:79`) | MEDIO | **REINCIDENTE**. Las cuatro categorías siguen siendo las mismas. |
+| 13 | La liga sembrada del aviso apunta a `likida.ai`, no a `app.likida.ai` (`seed.sql:55`) | BAJO | **REINCIDENTE**. |
+| 14 | `normas/lfpdppp-15-16.yaml:65` apunta a `src/lib/cuadra/privacidad.ts` (borrado) | BAJO | **REINCIDENTE**. Sigue literal. |
 
 ---
 
 ## Hallazgos
 
-### [CRÍTICO] La foto viaja al modelo externo antes del aviso cuando no hay viaje abierto
+### [CRÍTICO] La foto viaja al modelo externo antes del aviso cuando no hay viaje abierto — REINCIDENTE (C5)
 `src/lib/likida/processor.ts:470` (apertura de `if (!viajeId)`), `:522`, `:524`,
-`:525`, `:602` (cierre de la rama) y `:636` (donde por fin se llama a
+`:525`, `:604` (cierre de la rama), `:636` (donde por fin corre
 `ponerAvisoADisposicion`).
 
-Escenario: operador `o1` de la flota `t1`, dado de alta hoy, con
-`operador.aviso_privacidad_en = NULL`. Termina ruta a las 21:40, la oficina aún
-no le abre viaje, y manda sus 11 fotos de golpe —el caso que el comentario de
-`:513-517` describe con esas palabras—. `processInbound` resuelve al operador
-(`:467`), `getOpenViaje` devuelve `null`, y dentro de esa rama, para cada foto:
-`downloadMediaAsDataUrl` (`:522`) baja la imagen, `subirComprobante` (`:524`) la
-persiste en el bucket, y `extraerComprobante` (`:525`) la manda a
-OpenRouter → Gemini. Recién en `:636`, ciento sesenta líneas después y solo si
-hubo viaje, se ejecuta el bloqueo `avisoPuesto !== 'puesto'`.
+Reverificado línea por línea en el árbol post-merge: el orden es idéntico al del
+pase 1. Escenario, con valores: operador `o1` de `t1`, `aviso_privacidad_en =
+NULL`; la oficina no le ha abierto viaje; manda once fotos. `getOpenViaje`
+devuelve `null` (`:468`) y por cada foto corren `downloadMediaAsDataUrl`
+(`:522`), `subirComprobante` (`:524`) y `extraerComprobante` (`:525` → OpenRouter
+→ Gemini). El bloqueo `avisoPuesto !== 'puesto'` está 166 líneas más abajo, en
+`:637`, dentro de la rama **con** viaje.
 
-Consecuencia: once imágenes de comprobantes de una persona física identificada
-—montos, fechas, folios, plaza, y lo que salga en la foto— salen del país hacia
-un subencargado sin que el titular haya recibido el aviso simplificado que el
-art. 16 fr. II exige "cuando los datos sean obtenidos por medio electrónico". Es
-literalmente lo que `processor.ts:206-209` declara como el motivo de existir del
-bloqueo: *"la foto se descargaba y se mandaba a un modelo externo igual. Eso es
-una transferencia de datos personales sin el aviso que la ampare"*. Ante la
-autoridad la carga de probar la puesta a disposición es del responsable —la
-flota— y en este camino no hay ni fila que la sostenga.
+Consecuencia: once comprobantes de una persona física identificada salen hacia un
+subencargado en el extranjero sin que el titular haya recibido el aviso
+simplificado del art. 16 fr. II, y sin fila que acredite la puesta a disposición
+—que es la carga del responsable, o sea la flota. Es exactamente lo que
+`processor.ts:638-639` declara como el motivo de existir del bloqueo.
 
-Causa raíz probable: la rama "la foto tampoco se tira" se agregó después del
-bloqueo y quedó por encima de él en el orden de ejecución; el único test que
-ejercita el bloqueo (`aviso_bloqueo.test.ts:24`) mockea
-`getOpenViaje: async () => 'v1'`, así que el camino sin viaje nunca se mide.
+Causa raíz probable: la rama "la foto tampoco se tira" quedó por encima del
+bloqueo en el orden de ejecución, y el único test que lo ejercita
+(`aviso_bloqueo.test.ts:23`) mockea `getOpenViaje: vi.fn(async () => 'v1')`, así
+que el camino sin viaje nunca se mide.
 
 ---
 
-### [ALTO] "Que borren mis datos" no abre el canal ARCO: la compuerta es más angosta que el clasificador
-`src/lib/likida/privacidad.ts:351-361` (`pideAtencionPrivacidad`) contra
-`:602-609` (`tipoDeSolicitudArco`).
+### [CRÍTICO] Likida hace el PRIMER contacto por WhatsApp sin aviso — y por plantilla, que sí entrega
+`src/lib/likida/operacion.ts:585` (`crearViaje` → `avisarAlChofer`), `:646-657`;
+`src/lib/likida/notificar.ts:16-21`, `:43`, `:50`, `:170-172`.
+Contra `normas/lfpdppp-15-16.yaml:59-61`: *"tiene que darle el mecanismo para
+ponerlo a disposición **en el primer contacto por WhatsApp**, y guardar
+constancia de que se puso."*
 
-Escenario: el operador escribe `quiero que borren mis datos`. La compuerta pide
-`privacidad` | `arco` | `mis datos personales` | `dar de baja mis datos`, o uno
-de los patrones de oposición. Ninguno casa: la frase dice "mis datos", no "mis
-datos personales". `pideAtencionPrivacidad` devuelve `false`, el mensaje cae al
-agente conversacional, no se inserta nada en `solicitud_arco` y no se manda
-`respuestaPrivacidad`. Mientras tanto `tipoDeSolicitudArco:604` tiene una rama
-de cancelación entrenada para `borr…`, `elimin…`, `suprim…`, `quita mis datos`,
-`ya no usen`, `ya no traten` — vocabulario que la compuerta rechaza, así que esa
-rama es inalcanzable salvo que la misma frase traiga además una de las cuatro
-llaves. Mismo resultado con `quita mis datos` y `ya no usen mis datos`.
+Escenario, con los valores del seed del demo: el encargado da de alta al operador
+`33333333-0000-0000-0000-000000000001` — Juan Pérez Ramírez, teléfono
+`529993700779`, `aviso_privacidad_en = NULL`, `aviso_privacidad_claim_en =
+NULL` — y crea el viaje `VJ-2026-0001` (Silao, GTO → Nuevo Laredo, TAM, anticipo
+$10,600.00). `crearViaje` (`operacion.ts:585`) llama a `avisarAlChofer` en cuanto
+vuelve el insert, y `notificarAsignacion` (`notificar.ts:170`) manda
+`sendTemplate('viaje_asignado', …)` con los cuatro parámetros de
+`piezasDeDatos`: `["Viaje VJ-2026-0001", "Ruta: Silao, GTO → Nuevo Laredo, TAM",
+"Salida: 9 ago 2026", "Unidad: falta asignarte una, anticipo $10,600.00"]`, más
+el cuerpo aprobado que cierra con `CIERRE` (`:50`): **"Manda por aquí la foto de
+cada ticket."** Nada en ese camino toca `ponerAvisoADisposicion`. El aviso solo
+existe en `processor.ts:636`, que es el camino de **entrada**, y se ejecuta
+cuando Juan contesta — es decir, después.
 
-Consecuencia: el derecho de cancelación —el que ejerce quien se acaba de ir de
-la flota— no se registra, la flota no se entera, y el plazo del art. 31 no
-empieza a correr porque nadie sabe que hay solicitud. El titular cree que pidió
-la baja.
+Y esto **sí llega**, a diferencia del recordatorio nuevo: el propio archivo
+razona (`notificar.ts:16-21`) que va por plantilla justamente porque Likida
+inicia la conversación y fuera de la ventana de 24 h WhatsApp solo entrega
+plantillas aprobadas.
 
-Causa raíz probable: la compuerta se calibró para la palabra clave que el aviso
-enseña (`PRIVACIDAD`) y para la oposición (auditorías 6, 8 y 9); el clasificador
-de tipo se escribió después, contra el lenguaje natural, y nadie cruzó las dos
-listas.
+Consecuencia: el primer mensaje que un titular recibe de este producto no es el
+aviso de privacidad: es un mensaje que le dice de qué viaje se trata, con cuánto
+dinero, y que le **pide** que empiece a mandar comprobantes. El art. 16 fr. II
+exige la modalidad simplificada al obtener los datos por medio electrónico, y la
+constancia (`operador.aviso_privacidad_en`, mig. 0033) queda en NULL mientras el
+canal ya está abierto y solicitando datos. Frente a la autoridad, la flota no
+tiene con qué probar la puesta a disposición del periodo en que su chofer ya
+estaba recibiendo instrucciones por el canal. La misma ficha que el repo trata
+como fuente de verdad nombra el momento —"el primer contacto por WhatsApp"— y es
+el que se salta.
 
----
-
-### [ALTO] La revocación del consentimiento que el aviso enseña con esas palabras no la detecta nada
-`src/lib/likida/privacidad.ts:546` (el texto: *"Puedes **retirar tu
-consentimiento** en cualquier momento"*) contra `:351-361`.
-
-Escenario: el operador abre el integral en `/aviso/<tenant>`, lee la sección
-"Cómo revocar tu consentimiento" y contesta por el chat `quiero retirar mi
-consentimiento` (o `revoco mi consentimiento`, o `ya no doy mi consentimiento`).
-Ninguna de las tres casa con la compuerta: no hay `privacidad`, ni `arco`, ni
-`mis datos personales`, ni `opon…`, ni `oposicion`, ni el patrón
-`no (quiero|autorizo|acepto) que … (revisen|analicen|usen|traten)`. El mensaje
-va al agente, que le contesta sobre su viaje.
-
-Consecuencia: art. 7 último párrafo y Reglamento art. 21 exigen que la
-revocación se pueda hacer **por el mismo medio** y de forma sencilla y gratuita.
-El producto anuncia el medio y luego no escucha las palabras que él mismo puso
-en la boca del titular. Es exactamente el fallo que la auditoría 6 corrigió para
-la oposición (`:286-293` lo razona), dejado abierto para la revocación.
-
-Causa raíz probable: `OPOSICION` se amplió con las conjugaciones reales del
-español hablado; la revocación nunca recibió el mismo tratamiento y se apoyó
-solo en que el titular teclee la palabra clave.
+Causa raíz probable: el aviso se cableó al **procesador de entrada**
+(`processInbound`), y todo lo que sale por iniciativa del sistema
+—`notificar.ts`, `escalar_viaje.ts`, `recordatorio_comprobacion.ts`,
+`avisar_cierre.ts`— se construyó después, cada uno con su propio `sendText` /
+`sendTemplate`, sin una puerta común que exigiera la constancia.
 
 ---
 
-### [ALTO] La oposición al tratamiento automatizado se registra y no apaga nada
-`src/lib/likida/privacidad.ts:516-522` (la promesa), `src/lib/likida/repo.ts:877-900`
-(el registro), `src/lib/likida/repo.ts:976-1007` (la resolución). Ningún otro
-archivo de `src/` lee `solicitud_arco`: solo `admin/compliance/page.tsx` y
-`dashboard/arco/page.tsx`, las dos pantallas que la listan.
+### [ALTO] El recordatorio nuevo no pregunta si hay aviso, ni si el operador sigue activo, ni si pidió que dejaran de escribirle
+`src/lib/likida/recordatorio_comprobacion.ts:54-61` (la consulta) y `:109-145`
+(el envío). La consulta selecciona `id, tenant_id, folio, operador_id,
+fecha_inicio, operador(nombre, telefono)` filtrando por `estatus`,
+`recordatorio_comprobacion_en is null` y `fecha_inicio <= limite`. No lee
+`operador.aviso_privacidad_en`, no lee `operador.activo` (que existe desde
+`0001_init.sql:34`), y no consulta `solicitud_arco`. Ningún archivo del repo lee
+`solicitud_arco` fuera de `admin/compliance/page.tsx` y `dashboard/arco/page.tsx`.
 
-Escenario: el operador escribe `me opongo a que un programa revise mis
-comprobantes`. La compuerta sí lo reconoce, se inserta
-`solicitud_arco(tipo='oposicion', estado='recibida')` y se le contesta que su
-solicitud queda registrada. Al día siguiente manda sus fotos: `cuadrarViaje`, el
-cotejo de hash contra sus viajes anteriores y las diferencias corren idénticos,
-y el mismo veredicto automatizado llega al contralor. No existe columna en
-`operador`, ni bandera en `tenant.config`, ni lectura de `solicitud_arco` en el
-camino del cuadre que cambie una sola decisión.
+Escenario A — el tenant sin aviso posible. Flota `t9` con
+`tenant.razon_social = NULL`: `getDatosResponsable` devuelve `null`,
+`avisoSimplificado` devuelve `null`, y cuando su operador `o9` escribe con viaje
+abierto, `processor.ts:637-653` bloquea el tratamiento y le contesta *"No puedo
+procesar tus comprobantes todavía: tu empresa aún no ha terminado de configurar
+su aviso de privacidad"*. Ese mensaje entrante abre la ventana de 24 h. Si el
+viaje `VJ-9001` lleva 3 días abierto, la corrida del cron de la hora siguiente
+(`vercel.json`, `0 * * * *`) le manda por `sendText`: *"Llevas 3 días con tu
+viaje **VJ-9001** sin mandarme comprobantes. 📋 Mándame las fotos de tus recibos
+(diésel, casetas, lo que traigas) para irlos anotando."* El producto acaba de
+negarse a tratar sus datos por falta de aviso y tres días después se los pide.
 
-Consecuencia: el aviso integral dice, con negritas, *"tienes derecho a oponerte
-a que se decida así"* y *"oponerte a esta revisión no detiene tu liquidación: la
-empresa la hará a mano"*. La segunda frase describe un comportamiento que el
-producto no tiene y que tampoco le ofrece a la flota una palanca para producir.
-Es el único derecho que este producto activa por sí mismo (art. 26 fr. II) y es
-el que menos efecto tiene.
+Escenario B — el que se opuso. Operador `o5` escribe `me opongo a que un programa
+revise mis comprobantes`; `pideAtencionPrivacidad` lo reconoce, se inserta
+`solicitud_arco(tipo='oposicion', estado='recibida')` y se le contesta que queda
+registrada. Su viaje `VJ-5501` sigue abierto: al tercer día el mismo cron le
+insiste para que mande más comprobantes al mismo tratamiento automatizado al que
+se opuso. No hay palabra de baja en el texto (`armarRecordatorioComprobacion:84-92`
+no ofrece ninguna) ni columna que la soporte.
 
-Causa raíz probable: el trabajo de las rondas 12-16 se concentró en registrar y
-mostrar la solicitud; ejecutarla quedó implícitamente delegada a "la flota lo
-hará a mano", sin que el panel tenga con qué.
+Escenario C — el que ya no trabaja ahí. `operador.activo = false` desde el
+12-jul-2026, pero su viaje `VJ-4407` quedó en `abierto` porque nadie lo cerró.
+`viajesSinComprobar` no mira `activo`, así que sigue siendo candidato; y como la
+migración `0087` **no rellena** `recordatorio_comprobacion_en` para las filas
+existentes, en la primera corrida tras el despliegue entran de golpe todos los
+viajes abiertos con `fecha_inicio` vieja, hasta 100 por hora
+(`recordatorio_comprobacion.ts:61`), con el `dias` calculado en `:134` dando
+cifras de tres dígitos.
 
----
+Consecuencia: el único derecho que este producto activa por sí mismo (art. 26
+fr. II) ahora tiene, además, un canal que le escribe al titular para pedirle más
+datos del mismo tratamiento; y el art. 15 fr. IV —"opciones y medios para limitar
+el uso"— no tiene expresión en el canal que Likida inicia. Para el titular, la
+lectura es que oponerse no sirvió de nada.
 
-### [ALTO] Nada borra: la cancelación se "resuelve" escribiendo un texto
-`src/lib/likida/repo.ts:985-1007` (`resolverSolicitudArco`),
-`src/app/privacidad/page.tsx:104-108` ("Cómo pedir que se borre tu cuenta").
-Los únicos `.delete()` de producción en todo `src/` son
-`api/stripe/webhook/route.ts:82` (eventos), `repo.ts:548` (código pendiente),
-`administracion.ts:440` (liquidación) y `conv.ts:628` (claim de idempotencia).
-
-Escenario: llega una solicitud de cancelación (por la vía que sí funciona: el
-titular escribió `dar de baja mis datos`). El contralor abre `/dashboard/arco`,
-teclea `Se eliminaron sus datos` y aprieta Responder. `resolverSolicitudArco`
-marca `estado='resuelta'`, guarda esa frase como `resolucion` y manda al titular
-`Tu solicitud de derechos ARCO fue atendida por FLOTA DEMO SA DE CV: Se
-eliminaron sus datos`. Las filas de `operador`, `gasto`, `conversacion` y los
-objetos del bucket `comprobantes` quedan intactos: no hay una sola ruta de
-supresión ni de bloqueo en el producto.
-
-Consecuencia: el sistema produce y entrega al titular una afirmación falsa sobre
-el ejercicio de su derecho, y deja en la base una constancia de "resuelta" que
-es justamente la prueba que la flota exhibiría en una verificación. La misma
-página `/privacidad` promete a los usuarios de Likida un borrado de cuenta que
-tampoco tiene implementación.
-
-Causa raíz probable: la resolución se modeló como un campo de texto libre
-(igual que un ticket de soporte) sin distinguir que dos de los cuatro derechos
-—cancelación y rectificación— exigen una operación sobre los datos, no una nota.
+Causa raíz probable: `recordatorio_comprobacion.ts` se escribió como clon de
+`escalar_viaje.ts` (el propio encabezado lo dice tres veces) y heredó su modelo
+mental —"un viaje que se pasa de tiempo"—, que es de operación; nadie preguntó
+del lado del titular. Sus 15 pruebas no mencionan privacidad ni una vez.
 
 ---
 
-### [ALTO] La flota nunca se entera a tiempo: no hay aviso de solicitud nueva, y el único indicador se enciende el día del vencimiento
-`src/app/dashboard/arco/page.tsx:71` y `:87`.
+### [ALTO] Se borró el único código que implementaba el derecho de acceso del titular, y el aviso lo sigue prometiendo
+`31babfd` borra `src/lib/likida/chofer.ts` (499 líneas). En el árbol anterior,
+`git show 31babfd^:src/lib/likida/chofer.ts:294-308` documentaba `misComprobantes`
+con estas palabras: *"Aquí el que mira es el TITULAR de esos datos mirando los
+suyos —derecho de acceso, **LFPDPPP art. 22**— y es además quien tomó la foto."*
+Contra `src/lib/likida/privacidad.ts:536-538`, que sigue prometiendo *"Tienes
+derecho a **Acceder** a tus datos"*.
 
-```
-const vencenPronto = solicitudes.filter((s) => … && venceEn(s.venceEn) <= hoy);
-…
-<KpiTile etiqueta="Vencen pronto (≤ 5 días)" valor={vencenPronto.length} />
-```
+Escenario: Juan Pérez escribe por WhatsApp `qué datos tienen de mí`.
+`pideAtencionPrivacidad` no casa (no dice `privacidad`, ni `arco`, ni `mis datos
+personales`) — pero aun casando, el camino termina en
+`registrarSolicitudArco(tipo='acceso')` y en que el contralor escriba a mano un
+texto libre en `/dashboard/arco`. Antes del 7-ago-2026 tenía además
+`/chofer/comprobantes`, que le enseñaba sus propios gastos con liga firmada de
+vida corta a **su propia foto**, y `/chofer/liquidacion` y `/mis-viajes` con su
+historial. Hoy eso devuelve 404 y no hay sustituto: `consulta_chofer.ts` solo
+contesta saldo/faltantes/último **del viaje abierto**, `processor.ts:2131` le
+manda el PDF de la liquidación **en el momento del cierre**, y ninguna de las dos
+cosas es acceso a sus datos ni existe si no hay viaje en curso.
 
-Escenario: solicitud recibida el 8-ago-2026 → `vence_en = venceArco(hoy)` = 20
-días hábiles = 2026-09-04. El 2026-09-02, con dos días para responder, el filtro
-`venceEn <= hoy` da `false` y el mosaico rotulado "Vencen pronto (≤ 5 días)"
-muestra **0**. Solo el 2026-09-04 —el día del vencimiento— pasa a 1, y a partir
-del 5 sigue contando como "vence pronto" algo ya vencido. Y no hay nada más: el
-repo tiene cron de escalación de viajes sin aceptar (`api/cron/escalar`) que
-manda WhatsApp al jefe de flota en menos de una hora, pero para una solicitud
-ARCO no hay correo, ni WhatsApp, ni badge; depende de que alguien entre a la
-página. (`admin/compliance/page.tsx:180` sí usa una ventana, pero de 5 días
-**naturales** bajo el rótulo "≤ 5 días hábiles".)
+Consecuencia: el derecho de acceso (art. 22) pasó de tener una implementación
+—self-service, instantánea, gratuita, con la foto incluida— a depender al 100 %
+de que el contralor de la flota conteste un ticket a mano dentro de 20 días
+hábiles, en un panel que además no le avisa cuando llega uno (hallazgo 6 del pase
+1, reincidente). Y quien más lo va a ejercer es justamente el ex-chofer, que ya
+no tiene viaje abierto ni razón para escribirle al bot.
 
-Consecuencia: el rótulo miente en la dirección que cuesta —dice "no hay nada
-próximo a vencer" cuando queda un día— y el mecanismo que sí existe para cosas
-menos graves (un viaje sin aceptar) no existe para el plazo que la ley impone al
-responsable.
-
-Causa raíz probable: el umbral se escribió como "vencidas o vencen hoy" y el
-rótulo se copió del panel de `/admin`, que sí resta 5 días; nadie comparó los
-dos.
-
----
-
-### [ALTO] Likida publica su propio aviso de privacidad y su contrato sin decir quién es el responsable
-`src/app/privacidad/page.tsx:40-41` (`razonSocial: null`, `domicilio: null`) y
-`src/app/terminos/page.tsx:36-40` (lo mismo para el prestador y la jurisdicción).
-
-Escenario: el 6-ago el contralor abre `app.likida.ai/privacidad` —la URL que
-Meta exige para sacar la app de `dev_mode`— y lee, arriba de todo, el recuadro
-"Falta capturar la razón social y el domicilio fiscal de la empresa que opera
-Likida". Ahí Likida no es encargada: es **responsable** de los datos del
-contralor (nombre, correo, teléfono, RFC de su empresa, registros de uso), y el
-art. 15 fr. I es el primer elemento del aviso. En `/terminos`, §1 dice que
-entrar al panel equivale a aceptar un contrato cuyo obligado no tiene nombre.
-
-Consecuencia: el único elemento que este repo trata como innegociable para una
-flota —`getDatosResponsable` devuelve `null` y `/aviso/[tenant]` responde 404 si
-falta la razón social— se publica con el hueco cuando el responsable es Likida.
-Frente a la autoridad, el aviso del responsable incumple la fr. I; frente al
-comprador, es lo primero que se ve en la sala.
-
-Causa raíz probable: los datos son de Javier y nunca se capturaron; se eligió
-declarar el hueco (criterio correcto del repo) pero sin bloquear la publicación,
-que es lo que sí se hace en el caso simétrico.
+Causa raíz probable: el borrado se justificó por seguridad y superficie de auth
+—que es un argumento correcto en su propio rubro— sin que nadie inventariara qué
+obligaciones del titular estaban implementadas dentro de esa carpeta. El commit
+no menciona datos personales; la migración `0086` sí aclara que la **tabla**
+`operador` no se toca, pero no que el acceso del titular se iba con el login.
 
 ---
 
-### [ALTO] Upstash/QStash recibe filas completas de `gasto` y no aparece en ningún documento legal
-`src/app/api/cron/facturar/route.ts:312-322` y el tipo `FilaCola` en `:161-171`;
-`docs/conocimiento/52-anexo-subencargados.md:52-62` (la cadena declarada, cinco
-subencargados, sin Upstash); `src/lib/likida/privacidad.ts:562` y
-`src/app/privacidad/page.tsx:79` (las enumeraciones que se le dan al titular).
+### [MEDIO] El sello del recordatorio dice "se le mandó" también cuando Meta no entregó nada, y no queda constancia de qué se mandó
+`src/lib/likida/recordatorio_comprobacion.ts:116-141` (el claim va antes del
+envío, a propósito) y `supabase/migrations/0087_recordatorio_comprobacion.sql:18`,
+cuyo `comment on column` dice: *"Cuándo se le mandó al operador el recordatorio
+automático… NULL = no se ha mandado."*
 
-Escenario: con `UPSTASH_QSTASH_TOKEN` puesto en producción (ronda 16, commits
-`4568121`, `4cd1eb4`, `88a0ee6` "verificación end-to-end del cron"), cada
-corrida del cron de facturación hace
-`q.publishJSON({ url: …/cola, body: { lote, quedaron } })` hacia
-`qstash-us-east-1.upstash.io`, con hasta 8 filas de `gasto` que llevan
-`id, tenant_id, concepto, monto, fecha, folio, rfc_emisor, cfdi_uuid, ocr_extra`.
-`ocr_extra` es el contenido leído del comprobante del operador. QStash conserva y
-muestra el cuerpo del mensaje en su consola.
+Escenario, con valores: operador `o7`, viaje `VJ-7702`, `fecha_inicio =
+2026-08-04`, sin mensajes entrantes desde el 2026-08-04 (la ventana de 24 h está
+cerrada). El 2026-08-07 a las 14:00 el cron gana el claim y escribe
+`recordatorio_comprobacion_en = '2026-08-07T14:00:00Z'`; después llama a
+`sendText` (`:135`), Meta lo rechaza con `131047` porque es texto libre fuera de
+ventana, `sendText` devuelve `null` y el código apunta `"VJ-7702: WhatsApp
+rechazó el envío"` en `fallos`. La fila queda para siempre diciendo que se le
+mandó, y como el filtro es `is('recordatorio_comprobacion_en', null)`, `o7` no
+vuelve a ser candidato nunca. A diferencia de `escalar_viaje.ts:224-232`, este
+camino **no tiene plantilla de respaldo**, así que ese es el desenlace normal y no
+el excepcional.
 
-Consecuencia: un subencargado nuevo, en EE. UU., que retiene el cuerpo, y que no
-está en el anexo que sostiene la autorización de subcontratación (Regl. arts. 54
-y 55 — la carga de acreditar que la flota la otorgó es del encargado, o sea de
-Likida). Tampoco cae en ninguna de las categorías que el aviso le enumera al
-titular: "mensajería de WhatsApp", "alojamiento de la base de datos" y "modelos
-de lenguaje" no incluyen una cola de mensajes. El aviso, tal como está escrito,
-se lee como una lista cerrada.
+Consecuencia: dos capas, y la segunda es la del rubro. (a) El operador que más
+falta hace que reciba el recordatorio es precisamente el que lleva días sin
+escribir, y es el único que nunca lo va a recibir. (b) La base guarda una
+afirmación de comunicación con el titular que no ocurrió, y es la misma familia
+de error que este repo ya cerró para el aviso de privacidad en `0033`
+(constancia separada de la reserva, escrita solo tras un id de Meta). Aquí no hay
+ni id de Meta guardado ni copia del texto: `sendText` devuelve el `wamid` y
+`:135` lo descarta con `if (enviado)`. Si mañana un titular reclama un mensaje que
+no autorizó, Likida no puede exhibir qué se le mandó ni cuándo llegó.
 
-Causa raíz probable: QStash se introdujo como decisión de infraestructura
-(evitar el timeout de 300 s) sin pasar por el anexo de subencargados, que se
-mantiene a mano y lleva la fecha del 28-jul.
-
----
-
-### [MEDIO] ToS reincidente, cuarta ronda: "No timbra facturas" sigue publicado y el borrador vive solo en `docs/`
-`src/app/terminos/page.tsx:57` contra
-`docs/conocimiento/legal/tos-mandato-borrador.md:1-8` y `:29-40`.
-`src/app/terminos/page.tsx:174` declara además: *"🔴 El contrato de encargado
-del tratamiento está pendiente de firma."*
-
-Escenario: el cliente activa la facturación (`FACTURACION_MODO`), Likida emite
-CFDI con su RFC vía Facturapi (`src/lib/saas/facturapi.ts:178-185`) y entra a
-portales de terceros presentando sus datos fiscales. El documento que ese cliente
-aceptó dice, en la §2, que Likida **no timbra facturas**, y no contiene la
-cláusula de mandato que el borrador redacta desde `91c41db`. El borrador nunca se
-cableó a `/terminos`: no hay `import` ni referencia a ese archivo en `src/`.
-
-Consecuencia: dos capas. (a) El contrato contradice al producto en lo que más
-importa —actuar en nombre del cliente ante terceros sin mandato escrito—.
-(b) Sin contrato de encargado firmado, la autorización de subcontratación del
-Reglamento art. 54 no está acreditada por ninguna vía, y ese es el papel que
-sostiene que OpenRouter, Meta, Supabase, Vercel, Sentry y ahora Upstash sean
-subencargados y no terceros.
-
-Causa raíz probable: la corrección se escribió como documento de trabajo "hasta
-el visto bueno legal" y quedó fuera del camino que la auditoría revisa.
+Causa raíz probable: el patrón "reclamar antes de enviar" se copió de
+`escalar_viaje.ts` sin copiar su otra mitad —la caída a plantilla— ni el criterio
+de `0033` sobre qué es reserva y qué es constancia.
 
 ---
 
-### [MEDIO] La plantilla ARCO manda el literal "la flota" donde el código documenta que va la razón social
-`src/lib/meta/client.ts:467` contra `src/lib/likida/repo.ts:997-1002`.
+### [BAJO] El panel le dice al contralor que su chofer ve sus datos en `/mis-viajes`, y esa ruta ya no existe
+`src/app/dashboard/usuarios/page.tsx:8-17`: el comentario dice *"Los cinco roles
+que la base admite (`app_user.rol`, check constraint)"* —son cuatro desde
+`0086`— y la línea `:16` describe el rol así:
+`operador: 'No entra a este panel: usa WhatsApp y /mis-viajes'`.
 
-Escenario: el titular escribió PRIVACIDAD el lunes; la flota responde el jueves,
-fuera de la ventana de 24 h. `enviarRespuestaArco` cae a la plantilla
-`respuesta_arco_v2` y publica
-`parameters: [{ text: 'la flota' }, { text: respuesta }]`. `repo.ts:997-999`
-había leído `tenant.razon_social` justamente para esto, y su comentario dice
-*"AUDITORÍA 16, MEDIO: la plantilla lleva {{1}} = razón social REAL de la flota
-(no el literal 'la flota')"*. El literal sigue ahí.
+Escenario: el contralor de la flota abre `/dashboard/usuarios` el 9-ago-2026 para
+decidir cómo contestar una solicitud de acceso de su chofer. La única frase del
+panel que le dice por dónde el chofer consulta sus propios datos le nombra una
+ruta que devuelve 404 desde el 7-ago (`proxy.ts:104`). Es el mismo hueco del ALTO
+de arriba, visto desde la única pantalla donde el responsable lo leería.
 
-Consecuencia: el titular recibe una respuesta a su ejercicio de derechos en la
-que `{{1}}` no identifica al responsable —lo único que el art. 15 fr. I
-persigue—, y la razón social solo aparece embebida a media frase de `{{2}}`. El
-panel, mientras tanto, reporta "la respuesta se envió al titular por WhatsApp".
+Consecuencia: el responsable —que es quien responde el ARCO— tiene en pantalla
+una creencia falsa sobre el mecanismo de acceso de sus titulares.
 
-Causa raíz probable: el arreglo de la ronda 16 se aplicó en `repo.ts` (armando
-el texto) y no en el sitio que construye los parámetros de la plantilla; el
-comentario quedó describiendo la mitad que sí se hizo.
+Causa raíz probable: `31babfd` barrió `guard.ts`, `visibilidad.ts` y `permisos.ts`
+pero no los textos de catálogo del panel.
 
 ---
 
-### [MEDIO] Se cita la ley abrogada en pantalla: "LFPDPPP art. 32" para los plazos ARCO
-`src/app/dashboard/arco/page.tsx:23` y `:80` (visible al cliente),
-`src/app/admin/compliance/page.tsx:25`, `src/lib/likida/repo.ts:870-871`,
-`src/lib/likida/processor.ts:153-154`, `src/lib/likida/privacidad.ts:612`,
-`src/lib/likida/privacidad.test.ts:367`,
-`supabase/migrations/0053_cuentas_bitacora_arco_campanias.sql:96` y `:120`.
-La tabla de equivalencias del propio repo
-(`docs/conocimiento/11-datos-personales.md:48`) dice: **Plazos ARCO — 2010:
-art. 32 · 2025: art. 31**.
+### [BAJO] No hay ficha en `normas/` de los artículos ARCO, que son los únicos que el producto cita en pantalla con numeración abrogada
+`normas/` tiene cuatro fichas de LFPDPPP: `15-16`, `2-XII-XX`, `26-II` y `59`.
+Ninguna cubre los arts. 22-33 (derechos ARCO y plazos). Mientras tanto,
+`src/app/dashboard/arco/page.tsx:23` y `:80` imprimen al cliente "LFPDPPP art. 32:
+20 días hábiles", y `src/lib/likida/privacidad.ts:612` razona sobre "La LFPDPPP
+art. 32 fija 15" — la numeración de la ley abrogada el 20-mar-2025 (hallazgo 11
+del pase 1, reincidente).
 
-Escenario: el contralor abre `/dashboard/arco` y lee "Solicitudes de tus
-operadores y cómo responderlas a tiempo (LFPDPPP art. 32: 20 días hábiles)". La
-ley vigente desde el 21-mar-2025 no numera ahí los plazos ARCO; el art. 32 es
-numeración de la ley abrogada el mismo día. Encima, cuatro comentarios y el
-título de una prueba siguen diciendo "15 días hábiles para contestar", cifra que
-corresponde al plazo de **ejecución**, no al de respuesta.
+Escenario: la vigilancia normativa (`skill vigilancia-normativa`) detecta una
+reforma a los plazos ARCO y calcula el radio de impacto por `usado_en_codigo`. No
+hay ficha que consultar, así que el radio es cero y las ocho ocurrencias de
+"art. 32" siguen ahí. Es la contraparte del hallazgo 14: una ficha apunta a un
+archivo borrado; esta familia entera no tiene ficha a la que apuntar.
 
-Consecuencia: el argumento entero de este rubro es "citamos la norma y se puede
-verificar"; una cita a ley derogada delante del comprador —que es contralor y
-tiene abogado— destruye eso más rápido que no citar nada. El número (20) y el
-cálculo (`DIAS_HABILES_ARCO = 20`, `privacidad.ts:615`) sí son correctos: el
-hallazgo es la cita y los comentarios que la contradicen, no el plazo.
+Consecuencia: el mecanismo que este repo construyó para que una norma contradicha
+llegue al código no cubre la única familia de artículos que el producto cita mal
+hoy.
 
-Causa raíz probable: los comentarios se escribieron en la ronda 12 contra la
-numeración vieja y el número se corrigió después sin barrer las citas.
-
----
-
-### [MEDIO] El aviso de Likida enumera a sus encargados y omite al procesador de pagos y al PAC
-`src/app/privacidad/page.tsx:79` (la lista) contra
-`src/lib/saas/stripe.ts:257-270` y `src/lib/saas/facturapi.ts:178-185`.
-
-Escenario: el contralor contrata el plan. `crearSuscripcion` crea el customer en
-Stripe con `email`, `name` y `tax_id_data: [{ type: 'mx_rfc', value: rfc }]`;
-`emitirFactura` manda a Facturapi `legal_name`, `tax_id` y `email` del receptor.
-La sección "Con quién se comparten" que esa misma persona leyó enumera cuatro
-categorías —alojamiento, mensajería de WhatsApp, monitoreo de errores y modelos
-de lenguaje— y ninguna cubre un procesador de pagos ni un PAC.
-
-Consecuencia: la enumeración se lee como cerrada y no lo es; art. 15 fr. III y
-art. 35 se apoyan en que el titular sepa por dónde pasan sus datos. Aquí Likida
-es responsable, no encargada, así que la omisión es suya.
-
-Causa raíz probable: `/privacidad` se escribió el 1-ago contra el flujo de
-WhatsApp; el circuito de cobro y facturación del SaaS es de otra ronda y no
-volvió a este archivo.
-
----
-
-### [BAJO] La liga sembrada del aviso integral apunta al dominio de la landing, no al de la app
-`supabase/seed.sql:55` (`https://likida.ai/aviso/1111…`) contra `README.md:19`
-y `:94` ("En producción: app.likida.ai"), `scripts/deploy-vercel.sh:27`
-(`APP_URL_PRODUCCION='https://app.likida.ai'`) y `CLAUDE.md:86`.
-
-Escenario: `url_aviso_privacidad` es una URL absoluta guardada en la base; no se
-deriva de `NEXT_PUBLIC_APP_URL`. El comentario del seed (`:46-51`) dice que la
-línea "NO se adelanta" a la mudanza porque `app.likida.ai` daba 404 el 31-jul;
-el README y el script de despliegue dicen que la mudanza ya ocurrió y que
-`likida.ai` queda para la landing. Si la landing no sirve `/aviso/<uuid>`, el
-operador recibe en su aviso simplificado una liga que `revisarAvisoIntegral`
-califica `ok` —es una revisión de forma— y que no abre; y la base guarda la
-constancia de habérselo entregado.
-
-Consecuencia: es el bug que `dominio_propio.test.ts` y la migración 0033 vinieron
-a cerrar, en su versión nueva. El único guardián real es
-`verificarAvisoDePrivacidad` (`startup.ts:253-281`), que sondea la liga al
-arrancar, solo para `DEMO_TENANT_ID` y solo escribiendo un `logger.error`.
-No pude confirmar el código HTTP: no hay salida a red en este entorno.
-
-Causa raíz probable: la URL del aviso vive en datos, no en configuración, así que
-la mudanza de dominio no la arrastra y ninguna prueba cruza el seed contra
-`APP_URL_PRODUCCION`.
-
----
-
-### [BAJO] La ficha de la norma que sostiene el aviso apunta a un archivo que ya no existe
-`normas/lfpdppp-15-16.yaml:65`: `usado_en_codigo: ["src/lib/cuadra/privacidad.ts"]`.
-
-Escenario: `normas/` es la fuente de verdad declarada (MAPA, `normas/README.md:51`:
-*"`usado_en_codigo` apunta a los archivos y líneas que dependen de la ficha"*).
-El día que la LFPDPPP se reforme y la vigilancia normativa calcule el radio de
-impacto de los arts. 15 y 16, apuntará a `src/lib/cuadra/privacidad.ts`, que el
-renombre de `87426f8` borró. El archivo vivo es `src/lib/likida/privacidad.ts`.
-
-Consecuencia: el mecanismo que existe para que una ficha contradicha llegue al
-código no llega. Es la única ficha del rubro de datos personales que declara uso
-en código, así que el radio de impacto queda vacío justo donde hay 600 líneas
-que dependen de ella.
-
-Causa raíz probable: el renombre barrió `src/` y `docs/` pero no los YAML de
-`normas/` (quedan también `cff-69-B.yaml` y `lft-110-111-263.yaml`).
+Causa raíz probable: las fichas se crearon por lo que el motor de cuadre
+necesitaba (aviso, encargado, decisión automatizada, sanciones); los plazos ARCO
+se escribieron directo en el código en la ronda 12, antes de que `normas/`
+existiera como fuente de verdad.
 
 ---
 
 ## Lo que revisé y está bien
 
-- **Aviso integral, los once elementos.** `privacidad.ts:477-591` los cubre uno
-  por uno con su fundamento, y `aviso_integral.test.ts:37-53` los mide por
-  contenido, no por texto exacto. Las citas son a la ley de 2025 (arts. 15, 26
-  fr. II, 29, 35, 7) y no a la abrogada.
-- **Constancia separada de la reserva.** `0033_aviso_reserva_aparte.sql` divide
-  `aviso_privacidad_claim_en` (reserva con TTL de 5 min) de
-  `aviso_privacidad_en/_version` (constancia del art. 16, que solo escribe
-  `confirmar_aviso_privacidad` tras un id de Meta y que `liberar_…` nunca
-  toca). `processor.ts:239-249` lo respeta en el orden correcto.
-- **La versión del aviso se deriva del texto.** `versionAviso` (`:255-262`) hace
-  que un cambio de razón social, domicilio o liga reenvíe el aviso solo
-  (art. 15 fr. VI), sin depender de que alguien suba un contador.
-- **No se finge lo que falta.** `getDatosResponsable:659` devuelve `null` sin
-  razón social o domicilio, `/aviso/[tenant]:69` responde 404, y la sección del
-  art. 29 se marca `pendiente` y lo dice en pantalla
-  (`aviso/[tenant]/page.tsx:100-109`).
-- **`data_collection: 'deny'` en las tres salidas al modelo.** `PROVIDER_OPTS`
-  (`openrouter.ts:207-213`) se aplica en `:271`, `:423` y `:705`; no hay ningún
-  otro cliente HTTP hacia un proveedor de IA en `src/`. Y el aviso ya no promete
-  un contrato de retención cero que nadie firmó (`privacidad.ts:554-562`).
-- **Filtro de datos sensibles colados por el ticket.** `sanitizar.ts:71-119`
-  descarta `producto` entero ante señales de salud, vida sexual o creencias, y
-  documenta su propio límite (la imagen ya viajó; `emisor` no se filtra).
-- **Custodia de credenciales.** `portal_credencial` (0063:68-101) guarda usuario
-  y **referencia** al secreto, con un CHECK que rechaza cualquier cosa con pinta
-  de contraseña; `rastreo_credencial` (0050:112-130) separa `token_cifrado` de
-  `token_ultimos4` y no expone el token al panel. Las dos tablas están vacías.
-- **Redacción en el pipeline de logs.** RFC y teléfono se borran, el UUID se
-  pseudonimiza (`logger.ts`), `sendDefaultPii: false` en Sentry — verificado
-  contra `52-anexo-subencargados.md:63-101`.
-- **El medio ARCO responde a quien ya no es operador.** `processor.ts:371-383`
-  atiende antes de resolver identidad y antes del corte por viaje abierto, y
-  contesta con la verdad cuando no hay flota atribuible.
-- **`/dashboard/arco` existe y está en el menú** (`rutas.ts:68`,
-  área `operacion` en `visibilidad.ts:76`), con fail-cerrado en la lectura
-  (`page.tsx:62-68`): una base caída no se pinta como "ninguna solicitud". El
-  abierto de la ronda 13 ("nadie lo lee") está cerrado en cuanto a *poder* verlo;
-  lo que sigue abierto es enterarse a tiempo (ver el ALTO de arriba).
-- **`vence_en` usa 20 días hábiles**, que es lo que promete el aviso y lo que
-  fija el art. 31 vigente para responder (`privacidad.ts:615-627`). El abierto
-  "15 vs 20" está resuelto en el cálculo; sobrevive solo en comentarios.
+- **La consulta del recordatorio falla cerrado.** `recordatorio_comprobacion.ts:63`
+  lanza ante `error` en vez de devolver lista vacía, y el UPDATE del claim va
+  acotado por `tenant_id` además de por `id` (`:161-163`), con prueba propia
+  (`recordatorio_comprobacion.test.ts:207`). No hay fuga entre flotas por este
+  camino nuevo.
+- **El texto del recordatorio no evalúa a la persona.** `armarRecordatorioComprobacion:84-92`
+  dice días y qué mandar; no puntúa, no compara con otros choferes y no emite
+  juicio — así que no abre un supuesto nuevo de art. 26 fr. II más allá del que ya
+  existe con el cuadre.
+- **`0086` no borró la tabla `operador` ni `app_user.operador_id`**, y lo dice en
+  su encabezado (`:15-17`). El retiro del rol no destruyó datos del titular: lo
+  que se fue es el login. Verifiqué que las 22 policies se reescriben explícitas,
+  sin `CASCADE`, así que no hay tabla que se haya quedado sin RLS y expuesta.
+- **El recordatorio no toca al modelo externo.** No hay llamada a `lib/llm/` en
+  el camino nuevo: es consulta + plantilla de texto armada en código. No agrega
+  una salida de datos personales hacia un tercero.
+- **Contenido de la conversación acotado.** `conv.ts:306` y `:384` recortan a
+  `MAX_TURNS` por viaje y descartan los turnos al cambiar de viaje, así que
+  `wa_conversacion.estado` no crece sin techo con el contenido de los mensajes que
+  el aviso integral enumera como dato tratado.
+- **`data_collection: 'deny'` sigue en las tres salidas al modelo**
+  (`openrouter.ts:207-213`, aplicado en `:271`, `:423`, `:705`); `lib/llm/` no
+  tiene un solo cambio en los 12 commits del pase 2 y no aparecieron clientes HTTP
+  nuevos hacia proveedores de IA.
+- **`sanitizar.ts` intacto**: sigue descartando `producto` entero ante señales de
+  salud, vida sexual o creencias, y sigue documentando su propio límite.
+- **Custodia de credenciales sin cambios y sin uso**: `portal_credencial` (0063)
+  con su CHECK contra cualquier cosa con pinta de contraseña, y
+  `rastreo_credencial` (0050) con `token_cifrado` separado de `token_ultimos4`.
+  Ninguna migración del pase 2 las toca.
+- **`export.ts` no exporta datos personales del chofer más allá del nombre**
+  (`:68`, `r.viaje?.operador?.nombre ?? ''`): no lleva teléfono, ni licencia, ni
+  RFC del operador al CSV del ERP.
 
 ## Lo que NO alcancé a revisar
 
-- **Verificación en red.** El entorno no tiene salida (`CONNECT tunnel failed,
-  403`), así que no pude comprobar qué devuelve `likida.ai/aviso/<uuid>` ni
-  `app.likida.ai/aviso/<uuid>`, ni si la plantilla `respuesta_arco_v2` está
-  aprobada por Meta. El BAJO del dominio queda sostenido solo por la
-  contradicción interna del repo.
-- **Los textos de `/soporte`, `/dashboard/politicas` y `/dashboard/usuarios`**,
-  donde puede haber promesas sobre datos personales que no crucé contra el aviso.
-- **El registro de aceptación del ToS.** El borrador lo anota como pendiente
-  ("no tiene versión congelada ni registro de qué versión aceptó cada flota") y
-  no busqué si existe algo equivalente para el aviso de la flota hacia Likida.
-- **Retención efectiva de la conversación y del bucket `comprobantes`.** El
-  único purgador es `0072` sobre `wa_mensaje_procesado`; no medí si el contenido
-  de `conversacion` (que el aviso enumera como dato tratado) tiene algún plazo
-  declarado en alguna parte.
-- **`docs/conocimiento/11-huecos.md` y `31-cumplimiento-continuo.md`**, que
-  probablemente listan pendientes de este rubro que no crucé.
+- **Verificación en red**, otra vez: el entorno no tiene salida, así que no pude
+  comprobar si las plantillas `viaje_asignado`, `respuesta_arco_v2` y
+  `recordatorio_cierre` están aprobadas por Meta, ni qué devuelve
+  `likida.ai/aviso/<uuid>`. El CRÍTICO del primer contacto depende de que
+  `viaje_asignado` esté aprobada; si estuviera en revisión (132001) el mensaje no
+  saldría, pero el hueco de orden en el código es el mismo.
+- **Retención efectiva del bucket `comprobantes` y de las filas de `operador` tras
+  la baja.** El único purgador sigue siendo `0072` sobre `wa_mensaje_procesado`
+  (30 días). Los comprobantes tienen justificación declarada (CFF 30, cinco años,
+  y el aviso integral lo dice), pero no encontré plazo declarado para
+  `wa_conversacion` ni para el operador dado de baja, y no medí si existe en algún
+  documento fuera de `src/`.
+- **`avisar_cierre.ts`, `facturacion/avisar.ts` y `administracion.ts`**, los otros
+  tres emisores de WhatsApp iniciados por el sistema. Los abrí lo justo para saber
+  que existen y que no llaman a `ponerAvisoADisposicion`; no tracé sus escenarios
+  con valores, así que no los reporto.
+- **El rework del dashboard del dueño (8 commits, `analytics.ts` +454)** desde la
+  óptica de datos personales: si alguna de las consultas nuevas (`top-rutas`,
+  `actividad`) expone al operador por nombre en pantallas donde antes no aparecía.
+- **`docs/conocimiento/11-huecos.md` y `31-cumplimiento-continuo.md`**, que sigo
+  sin cruzar.
