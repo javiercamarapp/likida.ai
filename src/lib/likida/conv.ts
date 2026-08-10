@@ -4,7 +4,7 @@
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
 import type { TenantContext } from '@/lib/agents/types';
-import { acotada } from './presupuesto';
+import { acotada, TTL_LOCK_VIAJE_MS } from './presupuesto';
 import { violaIndice } from './pg_errores';
 
 export interface ResolvedOperador {
@@ -416,7 +416,12 @@ function rpcAusente(error: { code?: string; message?: string }): boolean {
  * devuelve false si no logró el lease (otro after() lo tiene vigente).
  */
 export async function acquireViajeLock(viajeId: string, opts?: { ttlMs?: number; maxWaitMs?: number }): Promise<boolean> {
-  const ttlMs = opts?.ttlMs ?? 60_000;
+  // El default TIENE que cubrir el turno que este candado serializa: un lease
+  // más corto vence solo, con el primer turno vivo, y le concede el viaje a un
+  // segundo mensaje (AUDITORÍA 17 pase 3, CRÍTICO backend). Los 60s de antes
+  // eran menores que el peor caso que `presupuesto.ts` ya declaraba (72s).
+  // El llamador puede seguir pidiendo otro —`startup.ts` pide 1ms a propósito.
+  const ttlMs = opts?.ttlMs ?? TTL_LOCK_VIAJE_MS;
   const maxWaitMs = opts?.maxWaitMs ?? 12_000;
   const admin = supabaseAdmin();
   const start = Date.now();

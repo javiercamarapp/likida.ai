@@ -194,6 +194,34 @@ export async function acotada<T>(consulta: PromiseLike<T>, etiqueta: string): Pr
  */
 export const PRESUPUESTO_WEBHOOK_MS = 120_000;
 
+/**
+ * PEOR CASO DE UN TURNO, sumando los eslabones que el comentario de arriba ya
+ * declaraba en prosa: lock (≤12s) + espera de intake (20s) + cuadre (~40s).
+ *
+ * Estaba escrito y no estaba disponible para nadie, que es cómo un número
+ * documentado deja de gobernar el código que describe.
+ */
+export const PEOR_CASO_TURNO_MS = 72_000;
+
+/**
+ * TTL DEL LEASE DEL MUTEX POR VIAJE (`try_lock_viaje`, mig. 0005).
+ *
+ * TIENE QUE CUBRIR EL TURNO QUE SERIALIZA. Un lease más corto que el turno no
+ * falla ruidoso: vence solo, con el primer turno todavía cuadrando, y entonces
+ * `try_lock_viaje` le concede el viaje a un segundo mensaje. Los dos cierran, y
+ * ninguno de los dos caminos lanza —`guardar_liquidacion` no mira
+ * `viaje.estatus`, el `on conflict do update` de la 0013 sobrescribe la fila y
+ * el `upsert: true` sobrescribe el PDF—, así que los dos reportan éxito: la
+ * doble liquidación que la 0005 existe para impedir, causada por el reloj del
+ * propio candado.
+ *
+ * Se ata a `PRESUPUESTO_WEBHOOK_MS` y no al peor caso estimado: el peor caso es
+ * una suma de eslabones que puede quedarse corta, mientras que `maxDuration` es
+ * el techo DURO por encima del cual el turno ya no existe. Un lease que llega
+ * hasta ahí no puede vencer con el turno vivo.
+ */
+export const TTL_LOCK_VIAJE_MS = PRESUPUESTO_WEBHOOK_MS;
+
 export interface Presupuesto {
   /** Milisegundos utilizables que quedan, ya descontado el margen de cierre. */
   restante(): number;
