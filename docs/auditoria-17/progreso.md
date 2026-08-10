@@ -107,9 +107,25 @@ Dos cosas que costaron tiempo y conviene dejar escritas:
   indefinido. La de la auditoría se renumeró a `0088` y su bloque de
   `verificaciones.sql` de 62 a 63.
 
-## Rubro NO auditado en el pase 2
+## Rubro NO auditado en el pase 2 (ver también el pase 3, al final)
 
 **Tool calling**, y por una razón verificable: `git diff --name-only
 94c0733..origin/master | grep -iE "agent|tool|llm"` devuelve **vacío**. Conserva
 su 7/10 marcado *no auditado este pase*. La cobertura por rotación es
 deliberada; repetir un auditor sobre código idéntico no produce señal.
+
+---
+
+# PASE 3 — ronda de CONTINUACIÓN (10-ago-2026)
+
+| # | Acción | Resultado | sha |
+|---|---|---|---|
+| 38 | `git status` al arrancar | **limpio** (HEAD detached en `53c9d49`) → autofix HABILITADO | — |
+| 39 | Decisión de tamaño: PR **#9 abierto** sobre `claude/auditoria-17` | **CONTINUACIÓN** sobre esa rama, sin PR nuevo | — |
+| 40 | Delta de `master` desde el merge del pase 2 | **1 commit, 1 archivo, cero código**: `53c9d49` toca solo `normas/.latido-vigilancia` | — |
+| 41 | `npm ci` | 623 paquetes, exit 0 | — |
+| 42 | Compuerta base `npx tsc --noEmit -p .` | **0 errores** | — |
+| 43 | Compuerta base `npm run lint` | **0 errores, 18 warnings** (mismo número que las dos líneas base previas) | — |
+| 44 | Compuerta base `npx vitest run` | **257 archivos, 3,182 pasan, 1 saltada** — idéntico al cierre del pase 2, sin deriva | — |
+| 45 | `MAPA.md` actualizado con el delta y con la lista de qué se relanza y por qué | ok | — |
+| 46 | **3** auditores lanzados en paralelo (frontend · backend · pruebas) | — | — |
