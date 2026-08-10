@@ -129,3 +129,28 @@ deliberada; repetir un auditor sobre código idéntico no produce señal.
 | 44 | Compuerta base `npx vitest run` | **257 archivos, 3,182 pasan, 1 saltada** — idéntico al cierre del pase 2, sin deriva | — |
 | 45 | `MAPA.md` actualizado con el delta y con la lista de qué se relanza y por qué | ok | — |
 | 46 | **3** auditores lanzados en paralelo (frontend · backend · pruebas) | — | — |
+| 47 | Frontend entregó | 5/10 (antes 4) · 0 CRÍTICO · 5 MEDIO, 1 BAJO nuevos · 2 cerrados, 10 reincidentes, 1 AGRAVADO | — |
+| 48 | Backend entregó | 4/10 (antes 5) · **1 CRÍTICO nuevo** · 3 ALTO, 1 BAJO · 1 CRÍTICO cerrado | — |
+| 49 | Verificación adversarial del CRÍTICO del lease, abriendo los tres archivos | **real**: `conv.ts:419` pide 60s, `presupuesto.ts:188-190` documenta 72s de peor caso, `processor.ts:1751` no pasa `ttlMs`, y `grep ttlMs\|locked_until\|p_ttl_ms` sobre `conv_lock.test.ts` da **cero** | — |
+| 50 | Vuelta 1 — prueba que reproduce el CRÍTICO del lease | **2 de 5 en rojo** (`expected 60000 to be greater than or equal to 72000`), 3 controles verdes | — |
+| 51 | Vuelta 1 — arreglo: el lease se ata a `PRESUPUESTO_WEBHOOK_MS` | verde; suite **3,187** en worktree aislado | `3404616` |
+| 52 | Verificación adversarial del ALTO agravado de frontend | **real**: `page.tsx:274` conserva `?? 0`, y `resumenPerdidas` es null cuando `safe()` se comió la consulta | — |
+| 53 | Vuelta 2 — prueba que reproduce el ALTO agravado | **2 de 3 en rojo**, control verde; reverificada en las dos direcciones tras editar la prueba | — |
+| 54 | Vuelta 2 — arreglo: `?? null` en el KPI de Ahorro, alcance de una celda | verde; suite **3,190** | `b9a191c` |
+
+## Nota de proceso del pase 3 — el árbol compartido
+
+Los tres auditores corren sobre el MISMO árbol de trabajo, y el de pruebas hace
+experimentos de mutación (rompe una función a propósito, corre la suite,
+revierte). Durante esa ventana `git status` muestra archivos de producción
+modificados que **no son de nadie que esté arreglando nada**, y una corrida de
+`npx tsc` de otro agente llegó a reportar un error irreproducible.
+
+Dos consecuencias prácticas, ya aplicadas:
+
+- **No se commitea un archivo de producción que no escribiste tú en esta vuelta.**
+  Un mutante commiteado es una verificación de firma desactivada entrando al PR.
+- **La suite de la vuelta 1 se corrió en un `git worktree` aparte** (`HEAD` +
+  solo los tres archivos del arreglo, con `node_modules` enlazado), porque el
+  árbol principal tenía un mutante en vuelo. Una suite verde medida sobre el
+  experimento de otro no prueba nada del arreglo propio.
