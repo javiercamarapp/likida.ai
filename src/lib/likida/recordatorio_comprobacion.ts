@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
 import { sendText } from '@/lib/meta/client';
+import { traerTodo, conteo } from './pg';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // EL OPERADOR QUE LLEVA DÍAS SIN MANDAR NADA.
@@ -88,21 +89,37 @@ export async function viajesSinComprobar(ahora: Date = new Date()): Promise<Viaj
   // del demo es exactamente ese caso (dos gastos, y el teléfono del operador
   // es el número real del demo).
   //
-  // Una sola consulta para todo el lote, no una por viaje: el `in` sobre los
-  // ≤100 candidatos y se descartan los que ya tienen algo. Se pide `limit`
-  // amplio porque lo único que importa es la EXISTENCIA de una fila por
-  // viaje, no cuántas.
-  const { data: conGasto, error: errGasto } = await supabaseAdmin()
-    .from('gasto')
-    .select('viaje_id')
-    .in('viaje_id', candidatos.map((c) => c.id));
+  // Una sola LECTURA para todo el lote, no una por viaje: el `in` sobre los
+  // ≤100 candidatos y se descartan los que ya tienen algo.
+  //
+  // AUDITORÍA 17 (pase 3): esto era una consulta suelta, y su comentario decía
+  // que "se pide `limit` amplio". No se pedía ninguno, y sin `range` ni `count`
+  // PostgREST aplica `max_rows` (1,000) y RECORTA EN SILENCIO — no lanza, no
+  // avisa. Con 100 viajes de 12 gastos son 1,200 filas: los gastos de los
+  // últimos ~16 viajes se quedaban fuera del Set, esos viajes se leían como
+  // "sin un solo comprobante", y sus choferes recibían la acusación falsa que
+  // el arreglo del pase 2 existe para impedir. El bug se reabría solo al
+  // crecer la flota, con una consulta que "comprueba" dando falsa confianza.
+  //
+  // `traerTodo` es el guardarraíl que este repo ya tiene para exactamente este
+  // borde: pagina hasta PROBAR que trajo todo (conteo exacto en la primera
+  // página) y LANZA si no puede demostrarlo, en vez de devolver el recorte.
+  // El `order('id')` es lo que hace que las páginas no se encimen.
+  const conGasto = await traerTodo<{ viaje_id: string }>(
+    (d, h) => supabaseAdmin()
+      .from('gasto')
+      .select('viaje_id', conteo(d))
+      .in('viaje_id', candidatos.map((c) => c.id))
+      .order('id')
+      .range(d, h),
+    'viajesSinComprobar (gasto)',
+  );
 
-  // FALLA CERRADO. supabase-js reporta por VALOR: sin comprobar `error`, una
-  // base caída se lee como "ninguno tiene gastos" y el producto sale a acusar
-  // a todos los choferes del lote por un bache de red.
-  if (errGasto) throw new Error(`viajesSinComprobar (gasto): ${errGasto.message}`);
-
-  const tienenGasto = new Set((conGasto ?? []).map((g) => g.viaje_id as string));
+  // FALLA CERRADO igual que antes: `traerTodo` propaga el error de lectura por
+  // `exigir()` y lanza `LecturaIncompleta` si la página se quedó corta. Sin eso,
+  // una base caída se lee como "ninguno tiene gastos" y el producto sale a
+  // acusar a todos los choferes del lote por un bache de red.
+  const tienenGasto = new Set(conGasto.map((g) => g.viaje_id));
   return candidatos.filter((c) => !tienenGasto.has(c.id));
 }
 

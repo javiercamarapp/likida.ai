@@ -37,11 +37,20 @@ const updates: Array<{ fila: Record<string, unknown>; por: Array<[string, unknow
 
 function cadenaLectura(tabla: string) {
   const nodo: Record<string, unknown> = {};
-  for (const m of ['select', 'eq', 'in', 'is', 'not', 'lte', 'limit']) {
+  // `order`/`range`: AUDITORÍA 17 (pase 3). La lectura de `gasto` pasó a
+  // `traerTodo` porque sin `range` ni `count` PostgREST recortaba a 1,000 filas
+  // en silencio y los viajes cortados recibían la acusación falsa.
+  for (const m of ['select', 'eq', 'in', 'is', 'not', 'lte', 'limit', 'order', 'range']) {
     nodo[m] = (...a: unknown[]) => { filtros.push([m, a]); return nodo; };
   }
-  nodo.then = (r: (v: unknown) => unknown) =>
-    Promise.resolve(lecturaPorTabla[tabla] ?? lectura).then(r);
+  nodo.then = (r: (v: unknown) => unknown) => {
+    const res = lecturaPorTabla[tabla] ?? lectura;
+    // `count` con el total real: es lo que le permite a `traerTodo` DEMOSTRAR
+    // que la lectura vino completa y devolver tras la primera página. Sin él
+    // pediría páginas hasta agotar las 100 y lanzaría `LecturaIncompleta`.
+    const count = Array.isArray(res.data) ? res.data.length : undefined;
+    return Promise.resolve({ ...res, count }).then(r);
+  };
   return nodo;
 }
 
