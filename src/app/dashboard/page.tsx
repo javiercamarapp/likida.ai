@@ -271,7 +271,12 @@ export async function InicioContenido({
                       nombre="Costo por viaje" campo="costoPorViaje" formato="mxn" subeEsBueno={false} series={seriesKpis} />
                     <KpiDegradado icono={<PiggyBank width={17} height={17} strokeWidth={1.75} />}
                       etiqueta={`Ahorro generado — ${periodoFiscal.etiqueta}`}
-                      valor={resumenPerdidas?.montoRecuperable ?? 0} formato="mxn" />
+                      // Sin `?? 0`: `resumenPerdidas` es null cuando `cfgFiscal`
+                      // o `gastosFiscales` se cayeron (`safe()` se come el
+                      // fallo), así que el cero no decía "no ahorró nada", decía
+                      // "no se pudo leer" — y en el KPI que es el diferenciador
+                      // del producto. AUDITORÍA 17 (pase 3), ALTO agravado.
+                      valor={resumenPerdidas?.montoRecuperable ?? null} formato="mxn" />
                   </div>
                 ) : (
                   <p className="text-sm" style={{ color: 'var(--muted)' }}>No se pudo cargar el comparativo de KPIs.</p>
