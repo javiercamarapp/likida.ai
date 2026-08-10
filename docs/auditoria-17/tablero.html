@@ -3,13 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Likida — Auditoría 17 · pase 2 · 9-ago-2026</title>
+<title>Likida — Auditoría 17 · pase 3 · 10-ago-2026</title>
 <style>
   :root{
+    --bg:#f7f8fa; --panel:#ffffff; --line:#e2e6ec; --ink:#141a21; --muted:#5d6b7a;
+    --crit:#c92a2f; --alto:#b46a12; --medio:#2b6cb0; --bajo:#6b7784;
+    --up:#2f8552; --down:#c92a2f; --flat:#6b7784;
+    --grid:#e8ebf0;
+  }
+  :root:not([data-theme="light"]){
+    @media (prefers-color-scheme: dark){
+      --bg:#0f1216; --panel:#171c22; --line:#252c35; --ink:#e8edf3; --muted:#93a1b0;
+      --crit:#e5484d; --alto:#e08c2e; --medio:#3b82c4; --bajo:#5a6672;
+      --up:#3fa96a; --down:#e5484d; --flat:#7d8894; --grid:#222a33;
+    }
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0f1216; --panel:#171c22; --line:#252c35; --ink:#e8edf3; --muted:#93a1b0;
+      --crit:#e5484d; --alto:#e08c2e; --medio:#3b82c4; --bajo:#5a6672;
+      --up:#3fa96a; --down:#e5484d; --flat:#7d8894; --grid:#222a33;
+    }
+  }
+  :root[data-theme="dark"]{
     --bg:#0f1216; --panel:#171c22; --line:#252c35; --ink:#e8edf3; --muted:#93a1b0;
     --crit:#e5484d; --alto:#e08c2e; --medio:#3b82c4; --bajo:#5a6672;
-    --up:#3fa96a; --down:#e5484d; --flat:#7d8894;
-    --n-mal:#e5484d; --n-medio:#e08c2e; --n-bien:#3fa96a;
+    --up:#3fa96a; --down:#e5484d; --flat:#7d8894; --grid:#222a33;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);
@@ -19,215 +38,258 @@
   header{border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:22px}
   h1{margin:0 0 4px;font-size:21px;letter-spacing:.2px}
   .sub{color:var(--muted);font-size:13px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:12px;margin-bottom:22px}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);
+     margin:26px 0 10px;font-weight:600}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:12px;margin-bottom:8px}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:13px 15px}
   .card .k{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.7px}
   .card .v{font-size:26px;font-weight:640;margin-top:5px;font-variant-numeric:tabular-nums}
   .card .n{color:var(--muted);font-size:11.5px;margin-top:3px}
-  h2{font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);
-     margin:24px 0 10px;font-weight:600}
   .scroll{overflow-x:auto}
   table{width:100%;border-collapse:collapse;background:var(--panel);
-        border:1px solid var(--line);border-radius:9px;overflow:hidden}
+        border:1px solid var(--line);border-radius:9px;overflow:hidden;min-width:720px}
   th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);font-size:13px;vertical-align:top}
   th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.6px;font-weight:600}
   tr:last-child td{border-bottom:none}
   td.num{text-align:right;font-variant-numeric:tabular-nums}
-  .nota{font-weight:700;font-variant-numeric:tabular-nums}
+  .nota{font-weight:700;font-variant-numeric:tabular-nums;font-size:15px}
+  .n-mal{color:var(--crit)} .n-med{color:var(--alto)} .n-bien{color:var(--up)}
   .pill{display:inline-block;min-width:19px;padding:1px 6px;border-radius:4px;
         font-size:11.5px;font-weight:600;text-align:center;color:#fff}
   .p-c{background:var(--crit)} .p-a{background:var(--alto)}
   .p-m{background:var(--medio)} .p-b{background:var(--bajo)}
-  .zero{color:#4a545f}
   .dn{color:var(--down);font-weight:600} .up{color:var(--up);font-weight:600}
   .fl{color:var(--flat)}
-  .bar{height:7px;border-radius:4px;background:#222a33;overflow:hidden;min-width:74px}
-  .bar>i{display:block;height:100%}
+  .na{color:var(--muted);font-style:italic;font-size:12px}
   .gate{display:flex;gap:9px;flex-wrap:wrap;margin-top:6px}
-  .ok{background:#12301f;border:1px solid #1f5c39;color:#6ee7a0;
-      padding:5px 11px;border-radius:6px;font-size:12px}
-  figure{margin:0}
+  .ok{background:rgba(47,133,82,.12);border:1px solid var(--up);color:var(--up);
+      padding:5px 11px;border-radius:6px;font-size:12px;font-weight:600}
   svg{display:block;max-width:100%;background:var(--panel);
       border:1px solid var(--line);border-radius:9px}
   .foot{color:var(--muted);font-size:11.5px;margin-top:26px;
         border-top:1px solid var(--line);padding-top:13px}
-  code{background:#0b0e11;padding:1px 5px;border-radius:4px;font-size:12px}
-  .est{font-size:11px;font-weight:600;padding:1px 6px;border-radius:4px;white-space:nowrap}
-  .e-ok{background:#12301f;color:#6ee7a0;border:1px solid #1f5c39}
-  .e-pend{background:#33210f;color:#f0b072;border:1px solid #6b4415}
+  code{background:var(--bg);border:1px solid var(--line);padding:1px 5px;border-radius:4px;font-size:12px}
+  .est{font-size:11px;font-weight:600;padding:1px 6px;border-radius:4px;white-space:nowrap;display:inline-block}
+  .e-ok{background:rgba(47,133,82,.12);color:var(--up);border:1px solid var(--up)}
+  .e-pend{background:rgba(180,106,18,.12);color:var(--alto);border:1px solid var(--alto)}
+  .e-rein{background:rgba(201,42,47,.12);color:var(--crit);border:1px solid var(--crit)}
+  .banner{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--medio);
+          border-radius:8px;padding:12px 15px;margin-bottom:20px;font-size:13px;color:var(--ink)}
 </style>
 </head>
 <body>
 <div class="wrap">
 
 <header>
-  <h1>Likida — Auditoría 17 · pase 2</h1>
-  <div class="sub">
-    9-ago-2026 · ronda de <strong>CONTINUACIÓN</strong> sobre el PR #9 · 11 auditores
-    en paralelo sobre <code>20ecbb1</code> mergeado · rama <code>claude/auditoria-17</code>
-  </div>
-  <div class="gate">
-    <span class="ok">tsc — 0 errores</span>
-    <span class="ok">vitest — 3,182 verdes, 1 saltada</span>
-    <span class="ok">eslint — 0 errores, 18 warnings</span>
-  </div>
+  <h1>Likida — Auditoría 17 · pase 3</h1>
+  <div class="sub">10-ago-2026 · ronda de <strong>CONTINUACIÓN</strong> sobre el PR #9 · rama <code>claude/auditoria-17</code></div>
 </header>
 
-<div class="grid">
-  <div class="card"><div class="k">Nota global</div><div class="v">4.9<span style="font-size:15px;color:var(--muted)"> /10</span></div>
-    <div class="n"><span class="dn">▼ 0.9</span> contra el pase 1 (5.8)</div></div>
-  <div class="card"><div class="k">Hallazgos con ficha</div><div class="v">93</div>
-    <div class="n">+ reincidentes en tablas de estado</div></div>
-  <div class="card"><div class="k">Críticos</div><div class="v" style="color:var(--crit)">7</div>
-    <div class="n">3 cerrados con prueba · 4 pendientes</div></div>
-  <div class="card"><div class="k">Rubros que bajan</div><div class="v">9</div>
-    <div class="n">1 sube · 1 no auditado</div></div>
-  <div class="card"><div class="k">Arreglos</div><div class="v">3</div>
-    <div class="n">tope de 3 vueltas agotado</div></div>
+<div class="banner">
+  <strong>La global no se movió, y eso es el hallazgo.</strong> Frontend subió 1 y backend
+  bajó 1: se cancelan. El código que se arregló mejoró de verdad, y al mirarlo de cerca
+  apareció un CRÍTICO que llevaba rondas invisible. Un promedio quieto puede esconder
+  dos movimientos grandes en direcciones opuestas — por eso la tabla manda sobre el número.
 </div>
 
-<h2>Los doce rubros</h2>
+<h2>Estado de la compuerta — árbol final</h2>
+<div class="gate">
+  <span class="ok">tsc &nbsp;0 errores</span>
+  <span class="ok">vitest &nbsp;260 archivos · 3,194 verdes · 1 saltada</span>
+  <span class="ok">eslint &nbsp;0 errores · 18 warnings</span>
+  <span class="ok">61 s</span>
+</div>
+<p class="sub" style="margin-top:8px">
+  Sin <code>npm run build</code> y sin <code>pruebas-manuales/*</code>: en la nube no hay
+  Supabase/OpenRouter/Facturapi/Upstash, y esas pruebas hacen llamadas de pago.
+  Línea base al arrancar el pase: <strong>3,182</strong> verdes → los tres arreglos sumaron 12 pruebas.
+</p>
+
+<h2>Los 12 rubros</h2>
+<div class="grid">
+  <div class="card"><div class="k">Global</div><div class="v">4.9</div><div class="n">= 0.0 contra el pase 2</div></div>
+  <div class="card"><div class="k">Rubros auditados</div><div class="v">3 <span style="font-size:15px;color:var(--muted)">/ 12</span></div><div class="n">continuación: solo los que cambiaron</div></div>
+  <div class="card"><div class="k">Críticos</div><div class="v">1 <span style="font-size:15px;color:var(--muted)">nuevo</span></div><div class="n">cerrado con prueba · 5 pendientes</div></div>
+  <div class="card"><div class="k">Arreglos</div><div class="v">3</div><div class="n">3 vueltas · 0 revertidos</div></div>
+</div>
+
 <div class="scroll">
 <table>
   <thead><tr>
-    <th>Rubro</th><th class="num">p1</th><th class="num">p2</th><th></th>
-    <th style="width:88px">Nivel</th>
-    <th class="num">C</th><th class="num">A</th><th class="num">M</th><th class="num">B</th>
-    <th>Razón del movimiento</th>
+    <th>Rubro</th><th class="num">p2</th><th class="num">p3</th><th>Δ</th><th>Razón del movimiento</th>
   </tr></thead>
-  <tbody id="filas"></tbody>
+  <tbody>
+    <tr><td><strong>Frontend</strong></td><td class="num">4</td><td class="num nota n-med">5</td><td class="up">▲</td>
+        <td><strong>se atacó y subió</strong> — <code>d7b71a8</code> y <code>e47b124</code> cierran de verdad, verificados por quien no los escribió. Primer pase en 4 rondas sin un solo CRÍTICO.</td></tr>
+    <tr><td><strong>Backend y API</strong></td><td class="num">5</td><td class="num nota n-mal">4</td><td class="dn">▼</td>
+        <td><strong>mirada más profunda</strong> — el lease del mutex (60 s) era más corto que el turno que protege (72 s documentados) y nadie lo había mirado nunca.</td></tr>
+    <tr><td><strong>Sistema agéntico</strong></td><td class="num">4</td><td class="num nota n-mal">4</td><td class="fl">=</td><td class="na">no auditado este pase</td></tr>
+    <tr><td><strong>Tool calling</strong></td><td class="num">7</td><td class="num nota n-bien">7</td><td class="fl">=</td><td class="na">no auditado — cero archivos del rubro cambiaron desde <code>94c0733</code> (2 pases por rotación)</td></tr>
+    <tr><td><strong>Seguridad</strong></td><td class="num">6</td><td class="num nota n-med">6</td><td class="fl">=</td><td class="na">no auditado este pase</td></tr>
+    <tr><td><strong>Cumplimiento fiscal</strong></td><td class="num">5</td><td class="num nota n-med">5</td><td class="fl">=</td><td class="na">no auditado este pase</td></tr>
+    <tr><td><strong>Cumplimiento legal</strong></td><td class="num">3</td><td class="num nota n-mal">3</td><td class="fl">=</td><td class="na">no auditado este pase</td></tr>
+    <tr><td><strong>Arquitectura</strong></td><td class="num">5</td><td class="num nota n-med">5</td><td class="fl">=</td><td class="na">no auditado este pase</td></tr>
+    <tr><td><strong>Pruebas</strong></td><td class="num">5</td><td class="num nota n-med">5</td><td class="fl">=</td>
+        <td><strong>se atacó y subió</strong> (los 3 arreglos del PR mueren al revertirlos) compensado por <strong>deuda que cobró factura</strong> (C6 va en su tercer pase idéntico).</td></tr>
+    <tr><td><strong>Operabilidad y DX</strong></td><td class="num">5</td><td class="num nota n-med">5</td><td class="fl">=</td><td class="na">no auditado este pase</td></tr>
+    <tr><td><strong>Rendimiento y costo</strong></td><td class="num">4</td><td class="num nota n-mal">4</td><td class="fl">=</td><td class="na">no auditado este pase</td></tr>
+    <tr><td><strong>Modelo de datos</strong></td><td class="num">6</td><td class="num nota n-med">6</td><td class="fl">=</td><td class="na">no auditado este pase</td></tr>
+  </tbody>
 </table>
 </div>
 
-<h2>Serie histórica de la nota global</h2>
-<figure><svg id="serie" viewBox="0 0 1140 250" role="img"
-  aria-label="Nota global por ronda: 6.2 en la 2, sube a 7.7, baja a 7.2 en la 13, 5.8 en el pase 1 de la 17 y 4.9 en el pase 2."></svg></figure>
+<h2>Serie histórica de la global</h2>
+<svg viewBox="0 0 900 240" role="img" aria-label="Global por ronda: 7.2 en la 13, 5.8 en la 17 pase 1, 4.9 en el pase 2, 4.9 en el pase 3">
+  <line x1="60" y1="30"  x2="860" y2="30"  stroke="var(--grid)" stroke-width="1"/>
+  <line x1="60" y1="80"  x2="860" y2="80"  stroke="var(--grid)" stroke-width="1"/>
+  <line x1="60" y1="130" x2="860" y2="130" stroke="var(--grid)" stroke-width="1"/>
+  <line x1="60" y1="180" x2="860" y2="180" stroke="var(--grid)" stroke-width="1"/>
+  <text x="34" y="34"  fill="var(--muted)" font-size="11">8</text>
+  <text x="34" y="84"  fill="var(--muted)" font-size="11">7</text>
+  <text x="34" y="134" fill="var(--muted)" font-size="11">6</text>
+  <text x="34" y="184" fill="var(--muted)" font-size="11">5</text>
+  <polyline points="150,70 400,140 650,185 860,185"
+            fill="none" stroke="var(--down)" stroke-width="2.5"/>
+  <circle cx="150" cy="70"  r="5" fill="var(--down)"/>
+  <circle cx="400" cy="140" r="5" fill="var(--down)"/>
+  <circle cx="650" cy="185" r="5" fill="var(--down)"/>
+  <circle cx="860" cy="185" r="5" fill="var(--flat)"/>
+  <text x="150" y="56"  fill="var(--ink)" font-size="13" font-weight="700" text-anchor="middle">7.2</text>
+  <text x="400" y="126" fill="var(--ink)" font-size="13" font-weight="700" text-anchor="middle">5.8</text>
+  <text x="650" y="171" fill="var(--ink)" font-size="13" font-weight="700" text-anchor="middle">4.9</text>
+  <text x="845" y="171" fill="var(--ink)" font-size="13" font-weight="700" text-anchor="middle">4.9</text>
+  <text x="150" y="215" fill="var(--muted)" font-size="11" text-anchor="middle">ronda 13</text>
+  <text x="400" y="215" fill="var(--muted)" font-size="11" text-anchor="middle">17 · pase 1 (8-ago)</text>
+  <text x="650" y="215" fill="var(--muted)" font-size="11" text-anchor="middle">17 · pase 2 (9-ago)</text>
+  <text x="845" y="215" fill="var(--muted)" font-size="11" text-anchor="middle">17 · pase 3 (10-ago)</text>
+</svg>
 
-<h2>Los siete críticos</h2>
+<h2>Arreglados en este pase — con prueba que los reproduce</h2>
 <div class="scroll">
 <table>
-  <thead><tr><th>Rubro</th><th>Crítico</th><th>Estado</th></tr></thead>
-  <tbody id="crits"></tbody>
+  <thead><tr><th>ID</th><th>Sev.</th><th>Hallazgo</th><th>Prueba</th><th>Estado</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>C11</strong></td><td><span class="pill p-c">C</span></td>
+      <td><strong>El lease del mutex del viaje era más corto que el turno que protege.</strong>
+          <code>conv.ts:419</code> pedía 60 s; <code>presupuesto.ts:188-190</code> documenta 72 s de peor caso
+          (lock 12 s + intake 20 s + cuadre 40 s) y <code>processor.ts:1751</code> nunca pasaba <code>ttlMs</code>.
+          El lease vence solo, un segundo mensaje toma el viaje y los dos cierran sin que ninguno lance:
+          el chofer se queda con un PDF de $5,600 y la base con $7,000.</td>
+      <td><code>conv_lock_expira.test.ts</code> · 5 casos · sin el arreglo fallan 2
+          (<em>expected 60000 to be greater than or equal to 72000</em>)</td>
+      <td><span class="est e-ok">arreglado · 3404616</span></td>
+    </tr>
+    <tr>
+      <td><strong>A-fe</strong></td><td><span class="pill p-a">A</span></td>
+      <td><strong>«Ahorro generado» inventaba un cero.</strong> <code>page.tsx:274</code> aplanaba con
+          <code>?? 0</code> un valor que es null cuando <code>safe()</code> se comió la consulta fiscal.
+          Con el motor caído, el KPI que ES el diferenciador pintaba <strong>$0.00</strong> sin banda de aviso.
+          AGRAVADO: el pase 2 arregló la celda de al lado y dejó esta.</td>
+      <td><code>ahorro_sin_dato.test.ts</code> · 3 casos · sin el arreglo fallan 2 · verificado en las dos direcciones</td>
+      <td><span class="est e-ok">arreglado · b9a191c</span></td>
+    </tr>
+    <tr>
+      <td><strong>A-be</strong></td><td><span class="pill p-a">A</span></td>
+      <td><strong>El arreglo del pase 2 se reabría solo en una flota grande.</strong> La consulta de
+          comprobación no llevaba <code>limit</code>, <code>range</code> ni <code>count</code> —su comentario
+          decía que sí—, así que PostgREST recortaba a 1,000 filas en silencio. Con 100 viajes × 12 gastos,
+          <strong>16 choferes</strong> recibían la acusación falsa que el pase 2 cerró.</td>
+      <td><code>recordatorio_lote_truncado.test.ts</code> · 4 casos · sin el arreglo fallan 3
+          (<em>expected 1000 to be 1200</em>)</td>
+      <td><span class="est e-ok">arreglado · ea23059</span></td>
+    </tr>
+  </tbody>
 </table>
 </div>
 
-<h2>Hallazgos por rubro y severidad</h2>
-<figure><svg id="sev" viewBox="0 0 1140 260" role="img"
-  aria-label="Hallazgos con ficha propia, por rubro y severidad."></svg></figure>
+<h2>Críticos pendientes (5) — con la razón, sin cuarta opción</h2>
+<div class="scroll">
+<table>
+  <thead><tr><th>ID</th><th>Rubro</th><th>Hallazgo y razón</th><th>Estado</th></tr></thead>
+  <tbody>
+    <tr><td><strong>C6</strong></td><td>Pruebas</td>
+        <td><strong>El callback de QStash emite CFDI y no tiene una sola prueba.</strong>
+            <code>api/cron/facturar/cola/route.ts:40,66</code>. Re-verificado en vivo hoy con mutante doble
+            (firma desactivada + sin re-validar <code>cfdi_uuid</code>): <strong>3,182 pruebas siguen verdes</strong>.
+            <em>Razón:</em> el arreglo es escribir el arnés de un endpoint que factura de verdad — sesión propia,
+            no una vuelta de auditoría.</td>
+        <td><span class="est e-rein">reincidente · 3er pase</span></td></tr>
+    <tr><td><strong>C4</strong></td><td>Fiscal</td>
+        <td><strong>El 15% se mide contra «el combustible que Likida vio».</strong>
+            <code>engine.ts:337,354</code>. <em>Razón:</em> el denominador correcto exige un dato que el producto
+            no tiene. Decisión de producto, no de código: o se declara el supuesto en el PDF, o se captura el
+            total del ejercicio. Se propone, no se inventa.</td>
+        <td><span class="est e-pend">pendiente</span></td></tr>
+    <tr><td><strong>C5</strong></td><td>Legal</td>
+        <td><strong>La foto viaja al modelo externo antes del aviso.</strong>
+            <code>processor.ts:522-525</code> contra el bloqueo de <code>:636</code>. <em>Razón:</em> mover el
+            bloqueo antes del intake cambia el flujo de huérfanos (mig. 0040) y puede dejar fotos sin recoger.
+            Cambio de diseño del ciclo, no de una línea.</td>
+        <td><span class="est e-rein">reincidente</span></td></tr>
+    <tr><td><strong>C7</strong></td><td>Rendimiento</td>
+        <td><strong>El cierre no cabe en la reserva que él mismo aparta.</strong>
+            <code>presupuesto.ts</code>: <code>COSTO_CIERRE_MS</code> = 9,400 ms y
+            <code>avisarCierreAlJefe</code> sigue sin presupuestar, contra <code>MARGEN_CIERRE_MS</code> = 12,000.
+            <em>Razón:</em> subir el margen le quita techo al agente y eso tiene efecto en el demo. Decisión de producto.</td>
+        <td><span class="est e-rein">reincidente · agravado</span></td></tr>
+    <tr><td><strong>C10</strong></td><td>Legal</td>
+        <td><strong>Likida hace el PRIMER contacto por WhatsApp sin aviso.</strong>
+            <code>operacion.ts:585</code> → <code>notificar.ts:170</code>, contra
+            <code>normas/lfpdppp-15-16.yaml:59-61</code>. <em>Razón:</em> el arreglo es texto de aviso y un canal
+            de baja — producto y abogado, no código. Mismo expediente que el ToS.</td>
+        <td><span class="est e-rein">reincidente · 5 pases</span></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>Lo que el auditor de pruebas encontró sobre los arreglos anteriores</h2>
+<div class="scroll">
+<table>
+  <thead><tr><th>Sev.</th><th>Hallazgo</th><th>Estado</th></tr></thead>
+  <tbody>
+    <tr><td><span class="pill p-a">A</span></td>
+        <td><strong>El CRÍTICO del panel en blanco se puede devolver entero y la suite sigue verde.</strong>
+            <code>rail.tsx:53-59</code>. La prueba de <code>d7b71a8</code> cubre la <em>regla</em>
+            (<code>rail-marca.ts</code>, 6 statements, 100%) pero no el <em>cableado</em>
+            (<code>rail.tsx</code>, 93 statements, 0%), que es donde vivía el bug. El patrón
+            «arnés que aparenta» reproducido dentro de un arreglo de este mismo PR.</td>
+        <td><span class="est e-pend">propuesto</span></td></tr>
+    <tr><td><span class="pill p-a">A</span></td>
+        <td><code>agente.ts:325</code> — <code>ok: true</code> clavado: 17 archivos y 303 pruebas verdes con el mutante puesto.</td>
+        <td><span class="est e-pend">propuesto</span></td></tr>
+    <tr><td><span class="pill p-a">A</span></td>
+        <td><code>api/dashboard/asistente/route.ts:43,56</code> — IDOR documentado, las dos puertas removibles sin que nada se ponga rojo.</td>
+        <td><span class="est e-pend">propuesto</span></td></tr>
+    <tr><td><span class="pill p-a">A</span></td>
+        <td><code>api/cron/purgar/route.ts:51,55,62</code> — <code>DIAS_WA = 0</code> y las compuertas fuera, suite verde.</td>
+        <td><span class="est e-pend">propuesto</span></td></tr>
+    <tr><td><span class="pill p-m">M</span></td>
+        <td><strong>Primera prueba intermitente del repo, confirmada.</strong> <code>actividad.test.ts</code>,
+            15 corridas en 5 zonas: verde en UTC / Mexico_City / Kiritimati,
+            <code>4 failed | 2 passed</code> en Asia/Tokyo y Etc/GMT+12.</td>
+        <td><span class="est e-rein">reincidente</span></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>Refutados por los propios auditores</h2>
+<p class="sub" style="margin-top:0">
+  Se muestran porque son la prueba de que la verificación ocurrió.
+  <strong>Ningún hallazgo de este pase resultó falso</strong> — los tres que se arreglaron se abrieron
+  uno por uno contra el código antes de anotarlos. Lo que sí hubo fue una hipótesis que el propio
+  auditor de pruebas cerró a su favor: <code>repo_escritura.test.ts:124</code> <strong>sí caza</strong>
+  el cambiazo comprobado↔anticipo y <code>p_ieps</code>←IVA en <code>saveLiquidacion</code>
+  (<code>1 failed | 3181 passed</code>). La escritura del dinero está anclada de verdad.
+  De 11 mutaciones, 7 sobrevivieron; las 11 se revirtieron una por una.
+</p>
 
 <div class="foot">
-  El delta se mide contra el <strong>pase 1 de esta misma ronda</strong> (8-ago), no contra la 13:
-  es el mismo PR, continuado. Bajó porque master avanzó 12 commits con superficie nueva
-  —el rework del dashboard, el recordatorio automático y el retiro del rol operador— y
-  esa superficie llegó sin arnés: de los 93 hallazgos con ficha, la mayoría de los ALTO
-  nuevos viven en código escrito en los últimos dos días. <strong>Tool calling no se
-  auditó</strong> en este pase (cero archivos suyos cambiaron) y conserva su nota.
-  Frontend y backend se calificaron ANTES de que entraran los tres arreglos de la ronda.
+  Ronda de continuación sobre el PR #9 · 3 de 12 rubros reauditados (los que cambiaron desde que se
+  escribió su archivo) · 3 vueltas de arreglo, tope agotado, 0 revertidos ·
+  <code>master</code> avanzó 1 commit desde el pase 2 y toca solo <code>normas/.latido-vigilancia</code>: cero código.
 </div>
 
 </div>
-
-<script>
-// [rubro, pase1, pase2, C, A, M, B, razón]
-const R = [
-  ["Frontend",       6, 4, 1,6,3,0, "deuda que cobró factura: 5 reincidentes intactos y la superficie nueva sin una prueba de render"],
-  ["Backend y API",  6, 5, 1,3,1,2, "deuda que cobró factura: el camino nuevo del recordatorio repitió la ceguera del anterior"],
-  ["Agéntico",       5, 4, 0,3,5,1, "deuda que cobró factura: un actor nuevo en el ciclo (recordatorio) sin cierre hacia el humano"],
-  ["Tool calling",   7, 7, 0,0,0,0, "no auditado este pase — cero archivos del rubro cambiaron"],
-  ["Seguridad",      7, 6, 0,2,1,1, "mirada más profunda: el contador 'de solo lectura' escribe 19 tablas por PostgREST"],
-  ["Fiscal",         4, 5, 1,5,8,2, "se atacó y subió: C3 cerrado (régimen 624) y media superficie del peaje"],
-  ["Legal",          4, 3, 2,2,1,2, "deuda que cobró factura: primer contacto sin aviso y se borró el único código de acceso ARCO"],
-  ["Arquitectura",   6, 5, 0,3,1,1, "deuda que cobró factura: 'periodo' definido cuatro veces y `hoy` calculado en UTC"],
-  ["Pruebas",        6, 5, 1,5,5,1, "mirada más profunda: 6 de 8 mutantes sobrevivieron y apareció la primera prueba intermitente"],
-  ["Operabilidad",   6, 5, 0,4,2,1, "deuda que cobró factura: el cron nuevo responde 200 con 40 fallos dentro"],
-  ["Rendimiento",    5, 4, 1,5,4,2, "deuda que cobró factura: 214 consultas por carga de /dashboard y el cron a 510s contra 120"],
-  ["Modelo de datos",7, 6, 0,2,1,1, "deuda que cobró factura: tres bloques de verificaciones.sql abortan y el test los cuenta igual"],
-];
-
-const CRITS = [
-  ["frontend",   "Expandir el asistente y volver a Resumen deja el panel del dueño en blanco", "cerrado", "d7b71a8"],
-  ["backend",    "El recordatorio afirma «sin mandarme comprobantes» sin haber mirado uno solo", "cerrado", "709e410"],
-  ["fiscal",     "El 15% se mide contra «el combustible que Likida vio», no contra el total del ejercicio", "pendiente", "decisión de producto: el denominador exige un dato que el producto no tiene"],
-  ["legal",      "La foto viaja al modelo externo antes del aviso cuando no hay viaje abierto", "pendiente", "mover el bloqueo cambia el flujo de huérfanos (mig. 0040)"],
-  ["legal",      "Likida hace el PRIMER contacto por WhatsApp sin aviso, y por plantilla, que sí entrega", "pendiente", "requiere texto de aviso y baja del canal: producto y abogado, no código"],
-  ["pruebas",    "El callback de QStash emite CFDI sin una sola prueba; la firma se apaga y la suite no se entera", "pendiente", "escribir el arnés de un endpoint que factura de verdad: sesión propia"],
-  ["rendimiento","El cierre del webhook: 13,700 ms nominales contra MARGEN_CIERRE_MS = 12,000", "pendiente", "subir el margen le quita techo al agente: decisión de producto"],
-];
-
-const SERIE = [["R2",6.2],["R5",6.8],["R8",5.7],["R10",7.0],["R13",7.2],["R17·p1",5.8],["R17·p2",4.9]];
-
-const color = (n) => n <= 4 ? "var(--n-mal)" : (n <= 6 ? "var(--n-medio)" : "var(--n-bien)");
-
-document.getElementById("filas").innerHTML = R.map(([r,a,b,c,al,m,ba,razon]) => {
-  const d = +(b - a).toFixed(1);
-  const flecha = d < 0 ? `<span class="dn">▼ ${Math.abs(d)}</span>`
-               : d > 0 ? `<span class="up">▲ ${d}</span>` : `<span class="fl">=</span>`;
-  const cel = (v, cls) => v ? `<td class="num"><span class="pill ${cls}">${v}</span></td>`
-                            : `<td class="num zero">0</td>`;
-  return `<tr>
-    <td><strong>${r}</strong></td>
-    <td class="num" style="color:var(--muted)">${a}</td>
-    <td class="num nota" style="color:${color(b)}">${b}</td>
-    <td>${flecha}</td>
-    <td><div class="bar"><i style="width:${b*10}%;background:${color(b)}"></i></div></td>
-    ${cel(c,"p-c")}${cel(al,"p-a")}${cel(m,"p-m")}${cel(ba,"p-b")}
-    <td style="color:var(--muted)">${razon}</td>
-  </tr>`;
-}).join("");
-
-document.getElementById("crits").innerHTML = CRITS.map(([r,t,est,nota]) => `<tr>
-  <td style="color:var(--muted)">${r}</td>
-  <td>${t}</td>
-  <td><span class="est ${est==="cerrado"?"e-ok":"e-pend"}">${est}</span>
-      <div style="color:var(--muted);font-size:11.5px;margin-top:4px">${est==="cerrado"?"<code>"+nota+"</code> · con prueba que lo reproduce":nota}</div></td>
-</tr>`).join("");
-
-// ── Serie histórica ──────────────────────────────────────────────────────
-(() => {
-  const W=1140,H=250,L=52,Rg=20,T=20,B=34, w=W-L-Rg, h=H-T-B;
-  const x=(i)=>L+(w*i)/(SERIE.length-1), y=(v)=>T+h-(h*(v-3))/(10-3);
-  let g="";
-  for (let v=3; v<=10; v+=1) {
-    g+=`<line x1="${L}" y1="${y(v)}" x2="${W-Rg}" y2="${y(v)}" stroke="#252c35" stroke-width="1"/>`
-     + `<text x="${L-9}" y="${y(v)+4}" fill="#93a1b0" font-size="11" text-anchor="end">${v}</text>`;
-  }
-  const pts=SERIE.map(([,v],i)=>`${x(i)},${y(v)}`).join(" ");
-  g+=`<polyline points="${pts}" fill="none" stroke="#3b82c4" stroke-width="2.5"/>`;
-  SERIE.forEach(([et,v],i)=>{
-    g+=`<circle cx="${x(i)}" cy="${y(v)}" r="4.5" fill="${color(v)}"/>`
-     + `<text x="${x(i)}" y="${y(v)-12}" fill="#e8edf3" font-size="12" font-weight="600" text-anchor="middle">${v}</text>`
-     + `<text x="${x(i)}" y="${H-11}" fill="#93a1b0" font-size="11" text-anchor="middle">${et}</text>`;
-  });
-  document.getElementById("serie").innerHTML=g;
-})();
-
-// ── Hallazgos por rubro y severidad ──────────────────────────────────────
-(() => {
-  const W=1140,H=260,L=20,Rg=20,T=16,B=58, w=W-L-Rg, h=H-T-B;
-  const max=Math.max(...R.map(([,,,c,a,m,b])=>c+a+m+b),1);
-  const paso=w/R.length, an=Math.min(paso-16,66);
-  let g="";
-  R.forEach(([r,,,c,a,m,b],i)=>{
-    const cx=L+paso*i+paso/2;
-    let acc=0;
-    [[c,"#e5484d"],[a,"#e08c2e"],[m,"#3b82c4"],[b,"#5a6672"]].forEach(([v,col])=>{
-      if(!v) return;
-      const alto=(h*v)/max;
-      g+=`<rect x="${cx-an/2}" y="${T+h-acc-alto}" width="${an}" height="${alto}" fill="${col}"/>`;
-      acc+=alto;
-    });
-    const tot=c+a+m+b;
-    if(tot) g+=`<text x="${cx}" y="${T+h-acc-6}" fill="#e8edf3" font-size="11" font-weight="600" text-anchor="middle">${tot}</text>`;
-    g+=`<text x="${cx}" y="${T+h+16}" fill="#93a1b0" font-size="10" text-anchor="middle">${r.split(" ")[0]}</text>`;
-  });
-  const leyenda=[["Crítico","#e5484d"],["Alto","#e08c2e"],["Medio","#3b82c4"],["Bajo","#5a6672"]];
-  leyenda.forEach(([et,col],i)=>{
-    const lx=L+i*118;
-    g+=`<rect x="${lx}" y="${H-24}" width="11" height="11" fill="${col}" rx="2"/>`
-     + `<text x="${lx+17}" y="${H-14}" fill="#93a1b0" font-size="11">${et}</text>`;
-  });
-  document.getElementById("sev").innerHTML=g;
-})();
-</script>
 </body>
 </html>

@@ -1,3 +1,639 @@
+# Pruebas — auditoría 17 · pase 3 (10-ago-2026)
+
+**Nota: 5/10** (antes 5). Razón del movimiento: **se atacó y subió** en los tres
+arreglos del PR —los tres mueren al revertirlos, y de paso verifiqué que la
+**escritura** del dinero (`saveLiquidacion`) sí tiene arnés y caza un cambiazo de
+parámetros—, y **deuda que cobró factura** por el otro lado: el CRÍTICO **C6**
+lleva tres pases idéntico, y aparecieron **dos rutas más** (0% de cobertura)
+cuyas puertas se quitan enteras con la suite verde. Se compensan; la nota no se
+mueve.
+
+> **El riesgo mayor del rubro, hoy:** el patrón que el pase 2 bautizó *«arnés que
+> aparenta»* **se reprodujo dentro de un arreglo de este mismo PR**. El CRÍTICO
+> de `d7b71a8` se movió a un archivo puro nuevo (`rail-marca.ts`, 6 statements,
+> **100% de cobertura**) y se le puso una prueba que sí mata a su mutante — pero
+> el archivo que tenía el bug (`rail.tsx`, 93 statements) sigue al **0%**, y le
+> devolví el bug entero con la suite en **3,182 verdes, tsc limpio y lint
+> limpio**. La cobertura subió, el número se ve mejor, y el panel del dueño se
+> puede volver a quedar en blanco delante del contralor sin que nada avise.
+
+---
+
+## Compuerta, verificada por mí hoy
+
+```
+npx tsc --noEmit -p .   → 0 errores
+npx vitest run          → 258 archivos · 3,187 verdes · 1 saltada
+npx eslint src/         → 0 errores · 18 warnings
+npx vitest run --coverage
+   Statements 68.8% (12909/18763) · Branches 84.57% · Functions 81.28% · Lines 68.8%
+   umbrales: 67 / 84 / 79 → PASA (el margen más chico sigue siendo RAMAS: 0.57 pt;
+   FUNCIONES bajó de 81.5 a 81.28, margen 2.28 pt)
+```
+
+**Nota sobre el árbol durante mi corrida.** Empecé en `a2c7dda` (257 archivos ·
+3,182 pruebas) y terminé en `3404616`: otros auditores del pase 3 commitearon
+mientras yo corría, y por momentos vi en el árbol trabajo suyo **sin commitear**
+(`conv.ts`, `presupuesto.ts`, `page.tsx` modificados y
+`conv_lock_expira.test.ts` / `ahorro_sin_dato.test.ts` sin trackear). No toqué
+nada de eso. Donde importa lo digo: la corrida del mutante de `agente.ts:325`
+salió con 2 fallos en `conv_lock_expira.test.ts`, que **no son míos ni de mi
+mutante** — por eso lo re-corrí acotado a los 17 archivos de facturación.
+
+Cobertura por archivo de lo que audité (v8, statements):
+
+```
+   0.0%   33  src/app/api/cron/purgar/route.ts          ← NUEVO en mi radar (BORRA filas)
+   0.0%   35  src/app/api/demo/route.ts
+   0.0%   37  src/app/api/cron/escalar/route.ts
+   0.0%   39  src/app/api/dashboard/asistente/route.ts  ← NUEVO en mi radar (IDOR documentado)
+   0.0%   41  src/app/dashboard/top-rutas.tsx
+   0.0%   42  src/app/api/export/liquidaciones/route.ts
+   0.0%   43  src/app/dashboard/motor-fiscal-periodo.tsx
+   0.0%   47  src/app/api/cron/facturar/cola/route.ts   ← C6, TERCER pase sin mover
+   0.0%   63  src/app/dashboard/gasto-semanal-chart.tsx
+   0.0%   64  src/app/dashboard/contador/cfdi/export/route.ts
+   0.0%   84  src/app/dashboard/panel-periodo.tsx
+   0.0%   93  src/app/dashboard/rail.tsx                ← el archivo que tenía el CRÍTICO
+   0.0%  106  src/app/api/export/pdf/[id]/route.ts
+   0.0%  200  src/lib/likida/comercial.ts
+  22.3%  175  src/lib/saas/stripe.ts
+  28.8%  146  src/lib/likida/facturacion/agente.ts
+  40.9%   66  src/app/dashboard/resumen-visual.tsx      ← subió de 0% (e47b124)
+  56.7%  557  src/lib/likida/repo.ts
+  62.1%  116  src/app/api/stripe/webhook/route.ts
+  77.0%  460  src/lib/likida/fiscal.ts
+  90.1%  800  src/lib/likida/analytics.ts
+  97.6%   42  src/app/dashboard/kpi-periodo.tsx         ← subió de 0% (e47b124)
+  98.9%   94  src/lib/likida/recordatorio_comprobacion.ts
+ 100.0%    6  src/app/dashboard/rail-marca.ts           ← el archivo nuevo del arreglo
+ 100.0%  461  src/lib/likida/cuadre/engine.ts
+```
+
+Las dos últimas líneas, juntas, son el hallazgo de la portada: **100% sobre 6
+statements, 0% sobre los 93 de al lado.**
+
+---
+
+## Estado de los hallazgos que traía
+
+### C6 primero — **REINCIDENTE, tercer pase, VERIFICADO HOY EN VIVO**
+
+`src/app/api/cron/facturar/cola/route.ts:40` y `:66` — 0.0%, 47 statements.
+
+`git diff 94c0733..HEAD -- src/app/api/cron/facturar/cola` sigue **vacío**. El
+directorio sigue teniendo **un solo archivo**, sin `*.test.ts`.
+
+**Mutante exacto que puse hoy** (las dos cosas a la vez, tal como el pase 2):
+
+```ts
+// :40 — la firma de QStash se calcula y se tira
+-    if (!valido) {
++    if (false && !valido) {
+       logger.warn('qstash.cola.firma_invalida', {});
+       return NextResponse.json({ error: 'Firma inválida' }, { status: 401 });
+     }
+
+// :62-66 — se deja de re-validar que el gasto siga sin CFDI
+   const { data: vigentes, error } = await supabaseAdmin()
+     .from('gasto')
+     .select('id')
+-    .in('id', ids)
+-    .is('cfdi_uuid', null);
++    .in('id', ids);
+```
+
+**Resultado real, con los dos mutantes puestos:**
+
+```
+ Test Files  257 passed (257)
+      Tests  3182 passed | 1 skipped (3183)
+
+npx tsc --noEmit -p .  → 0 errores
+```
+
+Cero fallos y cero quejas del typechecker. Este endpoint es **público por
+diseño** (no lleva `CRON_SECRET`: su única puerta es la firma) y del otro lado
+llama `procesarLoteEnCola(...)`, que con `FACTURACION_MODO=emitir` **emite CFDI**
+en el portal del proveedor. Con la firma bypasseada, un `POST` con
+`{"lote":[{"id":"<uuid de gasto>", …}]}` dispara la emisión; y sin la
+re-validación de `cfdi_uuid`, un reintento de QStash (`retries: 2`) vuelve a
+facturar un ticket **que ya tiene CFDI**.
+
+**Consecuencia:** un CFDI no se deshace. El duplicado le queda al cliente en su
+contabilidad y cancelarlo fuera de plazo es su problema, no el nuestro. Sigue
+siendo el único CRÍTICO abierto del rubro.
+
+**Causa raíz probable:** tres pases sobre un CRÍTICO documentado sin que nadie lo
+tome ya no es descuido; es una decisión implícita de no atenderlo.
+
+### El resto, uno por uno
+
+| Hallazgo | Estado hoy | Evidencia |
+|---|---|---|
+| **[CRÍTICO] C6 — cola de CFDI sin una sola prueba** | **REINCIDENTE (3.er pase)** | Arriba: mutante doble, 257 archivos / 3,182 verdes, tsc limpio |
+| **[ALTO] la prueba "DOS CORRIDAS SOLAPADAS" no prueba el claim** | **REINCIDENTE** | `recordatorio_comprobacion.ts:191`. Borré `.is('recordatorio_comprobacion_en', null)` del UPDATE del claim → `Test Files 2 passed · Tests 39 passed`. La exención de la 0087 sigue textual en `migraciones_verificadas.test.ts:53`. `709e410` sumó 4 pruebas al archivo y **ninguna toca el claim** |
+| **[ALTO] el cron `escalar` a 0%** | **REINCIDENTE** | Sigue 0.0% / 37 stmts, sin `*.test.ts` en el directorio. No re-corrí el mutante 7 (el archivo no cambió); en su lugar corrí el mismo experimento sobre `purgar`, que **también** BORRA datos — ver hallazgo nuevo 4 |
+| **[ALTO] las consultas del Resumen pierden el filtro de tenant** | **REINCIDENTE, re-corrido hoy** | `analytics.ts:108`, quité `.eq('tenant_id', tenantId)` de la consulta de `gasto` en `getSerieComparativa` → `Test Files 257 passed · Tests 3182 passed \| 1 skipped`. `analytics.ts` sigue al 90.1% |
+| **[ALTO] las tres descargas de dinero a 0%** | **REINCIDENTE** | Coverage de hoy: `export/liquidaciones` 0.0%/42, `export/pdf/[id]` 0.0%/106, `contador/cfdi/export` 0.0%/64. Los tres directorios siguen con un solo `route.ts`. `dinero_por_area.test.ts:55-72` sigue barriendo solo `src/app/dashboard/*/page.tsx` + `vista.tsx` — nunca `src/app/api/` — y su regla es que la puerta se **mencione** (`const PUERTA = /puedeVerArea\(/`, `:48`), no que gatee. No gasté una corrida en re-demostrar el mutante 8 |
+| **[ALTO] el rollback del candado de Stripe sin aseverar** | **REINCIDENTE, byte-idéntico** | `route.test.ts:95-96` sigue diciendo `expect(r.status).toBe(500);` y debajo `// desmarcar se verifica indirectamente: el evento no queda clavado.` Nada más. `route.ts` al 62.1% |
+| **[MEDIO] `actividad.test.ts` intermitente por reloj y zona** | **REINCIDENTE, confirmado con 15 corridas** | Ver sección propia abajo |
+| **[MEDIO] las 5 pantallas del Resumen a 0% + `?? 0` en `kpi-periodo`** | **MITAD CERRADO** | `e47b124` cerró la mitad que importaba: `kpi-periodo.tsx` pasó de 0.0% a **97.6%** y `resumen-visual.tsx` de 0% a **40.9%**, con prueba de render real que muere al revertir. Siguen a 0%: `panel-periodo.tsx` (84), `gasto-semanal-chart.tsx` (63), `motor-fiscal-periodo.tsx` (43), `top-rutas.tsx` (41) |
+| **[MEDIO] el ancla estructural del PGRST201 se fue con `mis-viajes`** | **REINCIDENTE** | `grep -rln "PGRST201\|liquidacion_viaje_id_fkey" src/` sigue **vacío**. No hay violación viva; sigue sin despertador |
+| **[MEDIO] `verificaciones.sql` sin corredor** | **REINCIDENTE** | `.github/workflows/ci.yml` byte-idéntico: `npm ci`, typecheck, lint, `test:coverage`, `npx vitest run fundamento duplicados`, `build`. Ninguno ejecuta SQL. **Atenuante nuevo:** la 0088 **sí** trajo su bloque 63 (`verificaciones.sql:3052`, régimen 624) en vez de eximirse — el mecanismo no se volvió a usar para saltarse nada |
+| **[MEDIO] `comercial.ts` 0% y `agente.ts` 28.8%** | **REINCIDENTE Y AGRAVADO** | Byte-idénticos y con la misma cobertura. Agravado porque esta vez sí fui a mutar `agente.ts` — ver hallazgo nuevo 2 |
+| **[BAJO] `fiscal_series.test.ts` afirma por índice de llamada** | **REINCIDENTE** | `git diff` vacío para el archivo. No re-verificado con mutante: la fragilidad es de forma, no de resultado |
+| **[BAJO] la prueba saltada / los 18 warnings** | **SIN CAMBIO, y sigue siendo correcto** | 1 saltada de 3,188 (falta `TICKET_PATH`, no un `it.skip`); 18 warnings de `no-unused-vars` |
+
+---
+
+## Verificación de los tres arreglos de este PR
+
+Para cada uno reverti **solo el cambio de producción** dejando la prueba nueva
+intacta, corrí, y revertí con `git checkout --` antes de pasar al siguiente.
+
+| sha | prueba nueva | ¿muere al revertir? | evidencia (salida real) |
+|---|---|---|---|
+| `d7b71a8` | `rail_marca.test.ts` (4 casos) | ✅ **SÍ** al revertir la **regla**… ❌ **NO** al revertir el **cableado** | Ver abajo: dos mutantes distintos, dos resultados opuestos |
+| `709e410` | +4 casos en `recordatorio_comprobacion.test.ts` | ✅ **SÍ** | `Tests 3 failed \| 16 passed (19)` |
+| `e47b124` | `kpi-periodo.test.tsx` (6 casos) | ✅ **SÍ** | `Tests 2 failed \| 4 passed (6)` |
+
+### `d7b71a8` — el único con dos caras
+
+**Mutante A — revierto la REGLA** (`rail-marca.ts:26-30`, vuelve a mirar solo
+`expandido`):
+
+```ts
+ export function marcaAsistente(expandido: boolean, pathname: string): 'expandido' | null {
+   if (!expandido) return null;
+-  if (pathname === RUTA_SIN_RAIL) return null;
++  void pathname;
+   return 'expandido';
+ }
+```
+
+```
+ × EL BUG: expandido y en /dashboard NO debe marcar…
+ × la secuencia completa del demo: expandir en /cuadre, luego ir a Resumen
+   AssertionError: expected 'expandido' to be null   (rail_marca.test.ts:49)
+ Test Files  1 failed (1)
+      Tests  2 failed | 2 passed (4)
+```
+
+**MURIÓ**, con el mensaje exacto y en la línea que narra el bug. Eso está bien
+hecho.
+
+**Mutante B — revierto el CABLEADO** (`rail.tsx:53-59`, el archivo donde vivía el
+bug; dejo `rail-marca.ts` intacto):
+
+```tsx
+-  const marca = marcaAsistente(expandido, pathname);
++  void marcaAsistente;
+   useEffect(() => {
+     const raiz = document.documentElement;
+-    if (marca) raiz.dataset.asistente = marca;
++    if (expandido) raiz.dataset.asistente = 'expandido';
+     else delete raiz.dataset.asistente;
+     return () => { delete raiz.dataset.asistente; };
+-  }, [marca]);
++  }, [expandido]);
+```
+
+```
+ Test Files  257 passed (257)
+      Tests  3182 passed | 1 skipped (3183)
+ npx tsc --noEmit -p .          → 0 errores
+ npx eslint src/app/dashboard/rail.tsx → limpio
+```
+
+**SOBREVIVIÓ.** El bug CRÍTICO está de vuelta, completo, en el componente real, y
+las tres puertas del CI (tsc, lint, pruebas) lo dejan pasar. Se detalla como
+hallazgo nuevo 1.
+
+### `709e410` — muere bien
+
+Mutante: `viajesSinComprobar` vuelve a devolver los candidatos sin consultar
+`gasto` (un `return candidatos;` antes del bloque nuevo de
+`recordatorio_comprobacion.ts:80-106`).
+
+```
+ × EL BUG: el viaje del demo tiene 2 gastos y aun así recibía la reclamación
+ × en un lote mixto solo se le escribe al callado, y el otro conserva su sello
+ × FALLA CERRADO: si no se puede leer `gasto`, no se manda nada
+ Test Files  1 failed (1)
+      Tests  3 failed | 16 passed (19)
+```
+
+Tres de los cuatro casos nuevos mueren, incluido el de fallar cerrado. El cuarto
+es el CONTROL y pasa a propósito. Es la forma correcta.
+
+### `e47b124` — muere bien, y de punta a punta
+
+Mutante (los dos archivos de producción, dejando el tipo `number | null` para que
+compile):
+
+```tsx
+// kpi-periodo.tsx:67
+-      valor={valorActual ?? null}
++      valor={valorActual ?? 0}
+// resumen-visual.tsx:126
+-      {valor === null ? '—' : fmt(valor)}
++      {fmt(valor ?? 0)}
+```
+
+```
+ × KpiDegradado — sin dato no es cero > EL BUG: `valor` sin medición pintaba $0.00…
+ × KpiPeriodo — la tarjeta del Resumen del dueño > EL BUG, de punta a punta…
+ Test Files  1 failed (1)
+      Tests  2 failed | 4 passed (6)
+```
+
+Y los 4 controles siguen verdes, incluido *«un cero REAL medido se sigue pintando
+como cero»* — que es la distinción que de verdad importa. Además usa
+`renderToStaticMarkup` sobre el componente REAL, no una copia: es la primera
+prueba de render del repo y abre un camino que no existía.
+
+---
+
+## La prueba intermitente: sigue intermitente
+
+`src/app/dashboard/actividad.test.ts:13-18` (los helpers) ·
+`src/app/dashboard/actividad.tsx:20-25` (el código)
+
+`git log -1` de los dos archivos devuelve `75715b5`, o sea **no se han tocado**
+desde antes de la auditoría.
+
+**15 corridas**, tres por zona horaria, sobre el árbol limpio (solo cambia la
+variable `TZ` del proceso; hora de la máquina `Mon Aug 10 11:11 UTC 2026`):
+
+```
+TZ=UTC                  ×3  →  Tests  6 passed (6)
+TZ=America/Mexico_City  ×3  →  Tests  6 passed (6)
+TZ=Asia/Tokyo           ×3  →  Tests  4 failed | 2 passed (6)
+TZ=Etc/GMT+12           ×3  →  Tests  4 failed | 2 passed (6)
+TZ=Pacific/Kiritimati   ×3  →  Tests  6 passed (6)
+```
+
+```
+AssertionError: expected '2026-08-09' to be '2026-08-10' // Object.is equality
+AssertionError: expected +0 to be 1 // Object.is equality
+```
+
+Determinista por zona, intermitente por reloj: las dos mitades miden "hoy" con
+relojes distintos —el helper con `new Date().toISOString().slice(0,10)` (día
+**UTC**), `bucketsPorDia` con `hoy.setHours(0,0,0,0)` y de ahí `.toISOString()`
+(medianoche **local**)—, así que falla exactamente cuando el día local y el día
+UTC no coinciden. Para México (UTC−6) eso empieza **todas las tardes a las 18:00
+local**. En CI (UTC) no se ve nunca.
+
+---
+
+## Hallazgos nuevos
+
+### [ALTO] El arreglo del CRÍTICO del panel en blanco se ancló en un archivo de 6 líneas al 100%, y el de 93 que tenía el bug sigue al 0%: le devolví el bug y la suite ni parpadeó
+
+`src/app/dashboard/rail.tsx:53-59` (0.0%, 93 statements) contra
+`src/app/dashboard/rail-marca.ts:26-30` (100%, 6 statements) y
+`src/app/dashboard/rail_marca.test.ts:39-63`
+
+**Escenario (mutante B, corrido hoy):** dejé `rail-marca.ts` y su prueba
+intactos, y en `rail.tsx` volví a poner el efecto exactamente como estaba antes
+de `d7b71a8` — `if (expandido) raiz.dataset.asistente = 'expandido'` con
+`}, [expandido])`. El resultado:
+
+```
+ Test Files  257 passed (257)
+      Tests  3182 passed | 1 skipped (3183)
+ npx tsc --noEmit -p .                  → 0 errores
+ npx eslint src/app/dashboard/rail.tsx  → limpio
+```
+
+Las cuatro pruebas de `rail_marca.test.ts` pasan felices: siguen preguntándole a
+la función pura, que no toqué. Nadie le pregunta al componente.
+
+Con ese mutante, el flujo de dos clics que el propio encabezado de la prueba
+narra vuelve a funcionar: en `/dashboard/cuadre` se aprieta "Expandir chat a
+pantalla completa" → la raíz queda con `data-asistente="expandido"`; se aprieta
+"Resumen" en el sidebar → `pathname` pasa a `/dashboard`, `rail.tsx:90` devuelve
+`null`, el botón de contraer desaparece de la pantalla, y como renderizar `null`
+**no desmonta**, el `return` del efecto no corre y la marca se queda puesta. El
+Resumen del dueño se pinta con `opacity: 0` y `pointer-events: none`.
+
+**Consecuencia:** el contralor de la flota ve una pantalla en blanco, sin un solo
+control visible para revertirlo, en medio del demo. Es el mismo CRÍTICO que este
+PR dio por cerrado, y hoy nada en el CI impide que vuelva.
+
+**Lo que hace esto más que un hueco de cobertura:** el arreglo **subió** la
+cobertura (`rail-marca.ts` entra al 100%) sin subir la protección de la línea que
+falla. Es exactamente el mecanismo que el pase 2 documentó en
+`recordatorio_comprobacion.ts` —98.8% y el claim sin probar— repitiéndose dentro
+de un arreglo escrito *durante esta auditoría*. La nota al pie de
+`rail_marca.test.ts:66-73` es honesta y dice que el cableado no queda anclado; el
+problema no es que mienta, es que nadie leyó esa nota como una deuda.
+
+**Causa raíz probable:** el repo no tiene jsdom ni testing-library
+(`vitest.config.ts` no declara `environment`, y `node_modules` no los trae), así
+que el efecto de un componente cliente hoy no es testeable — pero `e47b124`
+acaba de demostrar con `renderToStaticMarkup` que parte de la UI **sí** lo es.
+
+---
+
+### [ALTO] El `ok` que el propio código llama "la clase de verde que este repo paga caro" se puede clavar en `true` y 303 pruebas de facturación siguen verdes
+
+`src/lib/likida/facturacion/agente.ts:325` (28.8%, 146 statements) ·
+la declaración de la garantía en `:168-175`
+
+El campo está documentado así, textual, en la interfaz:
+
+```ts
+  /**
+   * Entró algo. Se DERIVA de `porGasto` y no lo declara el adaptador: un
+   * `ok: true` con cero gastos incluidos es la clase de verde que este repo
+   * paga caro.
+   */
+  ok: boolean;
+```
+
+**Mutante exacto:**
+
+```ts
+- return { ...bruto, modo, porGasto, ok: porGasto.some((p) => p.incluido) };
++ return { ...bruto, modo, porGasto, ok: true };
+```
+
+**Resultado real** (acotado a los 17 archivos de facturación para aislarlo del
+trabajo sin commitear de otro auditor que había en el árbol):
+
+```
+$ npx vitest run al_vuelo agente facturar facturacion
+ Test Files  17 passed (17)
+      Tests  303 passed (303)
+```
+
+La derivación que el comentario declara *como el arreglo* no tiene una sola
+aserción. Con `ok: true` clavado, un lote donde **ningún** ticket entró
+(`porGasto` con todos los `incluido: false`) deja de caer en
+`al_vuelo.ts:260-262` —el `logger.warn('autofactura.fallo', …)`— y se va por la
+rama de abajo, que lo registra como `autofactura.ensayo` con el texto *«ensayo:
+se llenó el portal y no se emitió»*.
+
+**Consecuencia:** el equipo que mañana vaya a averiguar "por qué esta flota no
+tiene ni un CFDI" encuentra un log que dice **ensayo**, no fallo, para tickets
+que sí se intentaron y sí fallaron. Es el modo de falla exacto que el comentario
+de `al_vuelo.ts:264-269` dice haber cerrado en la dirección contraria — y esa
+dirección sí quedó explicada, pero ninguna de las dos quedó probada. El daño es
+tiempo del equipo y facturas que vencen su plazo mientras nadie sabe que están
+atoradas.
+
+**Causa raíz probable:** `al_vuelo.test.ts` mockea `facturarLoteConAgente`, así
+que la derivación de `ok` queda del lado del mock; y `agente.test.ts` son 2
+pruebas, ambas sobre `pideCaptcha`.
+
+---
+
+### [ALTO] `/api/dashboard/asistente` tiene el arreglo de un IDOR escrito en sus comentarios, 0% de cobertura, y las dos puertas se quitan sin que nada falle
+
+`src/app/api/dashboard/asistente/route.ts:43` y `:56` (0.0%, 39 statements)
+
+El archivo documenta su propia puerta en `:31-42`: *«Faltaba, y era el mismo IDOR
+que ya se cerró en los dos endpoints de export… Este handler devuelve IVA e IEPS
+acreditables, litros de diésel, el comprobado total y las diferencias de TODAS
+las liquidaciones de la flota, leídos con `supabaseAdmin()` — que salta RLS… El
+proxy no ayuda: su matcher excluye `/api`, así que esta línea es la única
+puerta.»*
+
+**Mutante exacto (las dos puertas):**
+
+```ts
+// :43 — la puerta de rol
+-  if (!puedeVerArea(sesion.rol, 'dinero')) {
++  if (false) {
+     return NextResponse.json({ error: 'sin acceso' }, { status: 403 });
+   }
+
+// :56 — el `?tenant=` deja de ser privilegio de superadmin
+-  if (pedido && sesion.rol === 'superadmin') {
++  if (pedido) {
+```
+
+**Resultado real:**
+
+```
+ Test Files  258 passed (258)
+      Tests  3187 passed | 1 skipped (3188)
+```
+
+**Escenario con valores:** un `encargado` de Transportes Innovativos, con sesión
+válida y sin ningún permiso de dinero (la matriz de la 0044 le da solo el área
+`operacion` y la base lo excluye de `ve_finanzas()`), hace
+`GET /api/dashboard/asistente?tenant=<uuid de otra flota>` desde el navegador.
+Con las dos puertas caídas la respuesta trae `kpis` y `acred` de **otra flota**:
+IVA e IEPS acreditables, litros de diésel y el comprobado total.
+
+**Consecuencia:** dos cosas a la vez, cruce de tenants y exposición de cifras
+fiscales a un rol que la matriz de roles excluye a propósito. El aislamiento
+entre flotas es lo único que un contralor no puede verificar por sí mismo, y es
+justo lo que compra.
+
+**Causa raíz probable:** el archivo se escribió con el arreglo bien razonado en
+prosa y sin `route.test.ts` al lado — el mismo patrón que las tres descargas de
+dinero, en la ruta que alimenta el rail de **las 20 páginas** del panel.
+
+---
+
+### [ALTO] El cron que BORRA filas también está a 0%: se le quitan las dos puertas y se le pone la ventana de retención en cero, y la suite sigue verde
+
+`src/app/api/cron/purgar/route.ts:51` (`DIAS_WA`), `:55` y `:62` (las puertas) —
+0.0%, 33 statements
+
+El encabezado del archivo (`:40-47`) dice por qué esas líneas existen: *«esta
+ruta BORRA FILAS. Sin `CRON_SECRET` devuelve 500 y no 200… Y sin el secreto,
+cualquiera que conociera la URL podría disparar borrados a voluntad.»*
+
+**Mutante exacto (las tres cosas a la vez):**
+
+```ts
+-const DIAS_WA = 30;
++const DIAS_WA = 0;
+
+-  if (!secreto) {
++  if (false) {
+     logger.error('cron.purgar.sin_secreto', {});
+     return NextResponse.json({ error: 'CRON_SECRET no está configurado…' }, { status: 500 });
+   }
+-  if (req.headers.get('authorization') !== `Bearer ${secreto}`) {
++  if (false) {
+     return new NextResponse(null, { status: 401 });
+   }
+```
+
+**Resultado real:**
+
+```
+ Test Files  257 passed (257)
+      Tests  3182 passed | 1 skipped (3183)
+```
+
+**Escenario con valores:** `GET https://app.likida.ai/api/cron/purgar` desde
+cualquier navegador, sin encabezado `Authorization`, llama
+`mantenimiento_de_datos(p_dias_wa => 0)` — que borra `wa_mensaje_procesado`
+**entera**, incluidas las filas de hoy. Esa tabla es la de idempotencia de
+WhatsApp: vaciada, el siguiente reintento de Meta (que reintenta durante horas)
+vuelve a procesar mensajes ya procesados. Un ticket que ya se cargó se vuelve a
+cargar, y el cuadre del viaje sale con el gasto duplicado.
+
+**Consecuencia:** el chofer recibe respuestas repetidas, la flota ve gastos
+duplicados en su liquidación, y el `DIAS_WA` de 30 días —el número que el archivo
+justifica como *«más de un orden de magnitud por encima de la ventana de
+reintentos de Meta»*— se puede cambiar a cualquier valor sin que ninguna prueba
+lo note. Nótese que el hash de imagen (`uq_gasto_img_hash`) ataja el duplicado
+por foto idéntica, pero no el reprocesamiento de un mensaje de texto ni un
+segundo envío de la misma foto recomprimida.
+
+**Causa raíz probable:** de los 11 `route.ts` bajo `src/app/api` y
+`src/app/dashboard`, **ocho no tienen ningún `*.test.ts` en su directorio**, y los
+tres que sí (`facturar`, `stripe/webhook`, `webhook/whatsapp`) demuestran que el
+repo sabe probar una ruta. No es que no se sepa: es que no se hizo.
+
+---
+
+## Lo que revisé y está bien
+
+- **La ESCRITURA del dinero sí tiene arnés, y es bueno.**
+  `src/lib/likida/repo_escritura.test.ts:124` (*«manda los DOCE parámetros a su
+  lugar, no solo los totales»*). Mutante que puse: en `repo.ts:608-614` intercambié
+  `p_total_comprobado: liq.totalComprobado` ↔ `p_total_anticipo: liq.totalAnticipo`
+  **y** cambié `p_ieps: liq.iepsAcreditable` por `liq.ivaAcreditable`.
+  **MURIÓ:** `Test Files 1 failed | 256 passed (257) · Tests 1 failed | 3181 passed`.
+  Era la pregunta central de mi rubro —"¿el dinero se escribe sin arnés?"— y para
+  `saveLiquidacion` la respuesta es **no**. Sus 12 casos cubren además el `0` que
+  no se guarda como `NULL`, el `false` que no se guarda como `NULL`, y que un
+  error de la RPC **sí** se lanza.
+- **Los tres arreglos de este PR mueren al revertirlos.** Es la primera ronda de
+  la auditoría 17 en la que eso se cumple para todos. `709e410` incluso trae el
+  caso de fallar cerrado, y `e47b124` prueba sobre el componente REAL con
+  `renderToStaticMarkup` — no un `grep` de proxy, no una copia.
+- **`kpi-periodo.test.tsx` abre un camino que el repo no tenía.** El
+  `vitest.config.ts` dice que la UI *«necesita jsdom + testing-library, sesión
+  dedicada post-demo»*; este archivo demuestra que para todo lo que no depende de
+  efectos alcanza con `renderToStaticMarkup`, sin dependencias nuevas. Cuatro de
+  sus seis casos son controles explícitos.
+- **La 0088 trajo su bloque en vez de eximirse.** `verificaciones.sql:3052`,
+  bloque 63: intenta `insert into tenant … regimen_fiscal '624'` y espera que
+  pase, y `'699'` y espera el rechazo. El mecanismo de exención de
+  `migraciones_verificadas.test.ts` **no** se volvió a usar para saltarse un
+  bloque, que era el agravante del pase 2.
+- **El CI sigue corriendo en cada push de cada rama** (`ci.yml:20-23`,
+  `branches: ['**']` + `pull_request`), con `concurrency` y `cancel-in-progress`,
+  y sus seis puertas intactas — incluido `npx vitest run fundamento duplicados`,
+  que recupera las dos pruebas de tiempo que `--coverage` salta.
+- **El trinquete de cobertura subió por trabajo real:** 68.41 → **68.8** en
+  líneas. Los dos componentes que subieron (`kpi-periodo.tsx` 0→97.6,
+  `resumen-visual.tsx` 0→40.9) lo hicieron por pruebas nuevas, no por poda.
+  **Aviso:** ramas sigue con **0.57 pt** de margen y funciones bajó de 81.5 a
+  81.28.
+- **Ninguna prueba toca la red.** Los 20 archivos que mencionan `fetch(` o `http`
+  lo hacen contra mocks o como cadenas de URL; la suite corrió 6 veces completa
+  en este entorno sin salida a internet y sin un solo fallo atribuible a ello.
+- **La suite es reproducible con `TZ=UTC` y `TZ=America/Mexico_City`.** Barrí las
+  258 corridas bajo `Asia/Tokyo` y `Etc/GMT+12` en el pase 2 y hoy re-verifiqué
+  acotado: **solo** `actividad.test.ts` falla; las dos pruebas de tiempo
+  (`fundamento`, `duplicados`) no parpadearon en ninguna zona.
+- **El motor de cuadre sigue al 100%** (`engine.ts`, 461 statements). No repetí el
+  mutante del 15% de la RFA 2.9 porque `cuadre/` no se ha tocado; el resultado del
+  pase 1 (murió en `engine.test.ts:1470` con el número exacto) sigue vigente.
+- **La firma de Stripe sí está probada.** `verificarFirmaStripe`
+  (`src/lib/saas/stripe.ts:326-355`, con `TOLERANCIA_S = 300` y
+  `crypto.timingSafeEqual`) aparece en `stripe.test.ts` y en
+  `webhook/route.test.ts`. Es el contraste exacto con C6: la misma clase de
+  verificación de firma, una probada y la otra no.
+
+---
+
+## Lo que NO alcancé a revisar
+
+- **`engine.test.ts` (86 KB, ~600 casos).** Tercer pase sin barrerlo buscando
+  aserciones flojas. El 100% de cobertura de `engine.ts` dice que se ejecuta
+  entero, no que se afirme sobre el valor. Es la mitad del rubro que sigue
+  faltando.
+- **`al_vuelo.test.ts` (46 KB).** Confirmé que mockea `facturarLoteConAgente` y
+  que por eso el mutante de `agente.ts:325` sobrevive, pero no audité caso por
+  caso si sus aserciones son sobre valor o sobre "se llamó".
+- **`repo.ts` al 56.7% de 557 líneas.** Verifiqué `saveLiquidacion` y `addGasto`
+  (los dos bien anclados). Quedan ~26 funciones exportadas sin revisar, entre
+  ellas `getAcumuladoCombustible`, `reclamarEnvioAviso` y `resolverSolicitudArco`.
+- **`src/lib/saas/stripe.ts` al 22.3% de 175.** Probé que la firma está anclada;
+  `crearCheckout`, `crearSuscripcionPorTransferencia` y `leerPrecio` no los toqué.
+  Es el dinero que Likida cobra, no el que la flota liquida — por eso quedó al
+  final de la fila.
+- **`processor.ts` al 81.8% de 962.** No mapeé qué 18% falta ni si es zona de
+  dinero.
+- **Cobertura de RAMAS por archivo.** Tercer pase sin saber qué archivo sostiene
+  el 84.57% global, que sigue siendo el umbral con menos margen (0.57 pt).
+- **`fiscal.ts` al 77% de 460.** Intenté derivar las líneas sin ejecutar del
+  reporte HTML de v8 y me dio un mapeo falso (el reporte lista 460 entradas para
+  un archivo de 1,010 líneas — son índices de statement, no números de línea).
+  Lo digo para que nadie repita el atajo. `causasDe` y `resumirPerdidas` **sí**
+  tienen ~30 aserciones en `fiscal.test.ts:112-280`; el 23% que falta está en
+  otro lado y no lo localicé.
+- **`pruebas-manuales/` (16 arneses).** Por instrucción, no se corren. Tampoco
+  revisé si alguno quedó desalineado con el retiro del rol operador.
+- **`comercial.ts` (0%, 200 stmts).** No gasté una corrida en re-mutar
+  `margenPct`: el archivo es byte-idéntico al pase 1 y sigue sin
+  `comercial.test.ts`. El atenuante sigue vivo (`cliente`, `factura_emitida`,
+  `pago_recibido` e `ingreso_flete` vacías).
+
+---
+
+## Estado del árbol
+
+`git status --short` **después** de escribir este archivo:
+
+```
+ M docs/auditoria-17/pruebas.md
+```
+
+Al terminar mis experimentos, **antes** de escribirlo, se veía así:
+
+```
+ M src/app/dashboard/page.tsx
+?? src/app/dashboard/ahorro_sin_dato.test.ts
+```
+
+**Ninguno de esos dos era mío** (ya se commitearon mientras yo redactaba). Son
+trabajo sin commitear de otro auditor del
+pase 3 corriendo en paralelo (durante mi corrida también vi y dejé en paz
+`src/lib/likida/conv.ts`, `src/lib/likida/presupuesto.ts` y
+`src/lib/likida/conv_lock_expira.test.ts`, que después se commitearon en
+`3404616`). No toqué ninguno.
+
+**De los míos: cero.** Las **once** mutaciones de este pase se revirtieron con
+`git checkout -- <archivo>` inmediatamente después de cada corrida, una a la vez,
+y verifiqué el árbol entre una y otra:
+
+| # | Archivo | Mutante | ¿Murió? |
+|---|---|---|---|
+| 1 | `api/cron/facturar/cola/route.ts:40,66` | firma a `false &&` + sin `.is('cfdi_uuid', null)` | ❌ **SOBREVIVIÓ** (C6) |
+| 2 | `dashboard/rail-marca.ts:28` | quitar el chequeo de `pathname` | ✅ CAZADA *(control de `d7b71a8`)* |
+| 3 | `dashboard/rail.tsx:53-59` | devolver el efecto a `[expandido]` | ❌ **SOBREVIVIÓ** |
+| 4 | `likida/recordatorio_comprobacion.ts:80` | `return candidatos;` (revierte `709e410`) | ✅ CAZADA, 3 de 4 |
+| 5 | `likida/recordatorio_comprobacion.ts:191` | borrar `.is('recordatorio_comprobacion_en', null)` | ❌ **SOBREVIVIÓ** (reincidente) |
+| 6 | `dashboard/kpi-periodo.tsx:67` + `resumen-visual.tsx:126` | revertir `e47b124` | ✅ CAZADA, 2 de 6 |
+| 7 | `api/cron/purgar/route.ts:51,55,62` | `DIAS_WA = 0` + ambas puertas a `false` | ❌ **SOBREVIVIÓ** |
+| 8 | `likida/analytics.ts:108` | quitar `.eq('tenant_id', tenantId)` | ❌ **SOBREVIVIÓ** (reincidente) |
+| 9 | `likida/repo.ts:608-614` | intercambiar comprobado↔anticipo y `p_ieps`←IVA | ✅ **CAZADA** |
+| 10 | `likida/facturacion/agente.ts:325` | `ok: true` | ❌ **SOBREVIVIÓ** |
+| 11 | `api/dashboard/asistente/route.ts:43,56` | ambas puertas abiertas | ❌ **SOBREVIVIÓ** |
+
+**7 de 11 sobrevivieron.** Los tres controles de los arreglos del PR murieron en
+la primera corrida y con el mensaje exacto, y el de `saveLiquidacion` también:
+el método distingue. Lo que no distingue es la suite, en las rutas.
+
+El experimento de zona horaria no tocó ningún archivo (solo la variable `TZ` del
+proceso). No hice ningún commit.
+
+---
+
 # Pruebas — auditoría 17 (pase 2)
 
 **Nota: 5/10** (antes 6). Razón del movimiento: **mirada más profunda** ·

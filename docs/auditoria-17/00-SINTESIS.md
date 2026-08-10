@@ -1,3 +1,184 @@
+# Auditoría 17 — síntesis · pase 3 · 10-ago-2026
+
+**Ronda de CONTINUACIÓN.** El PR **#9** seguía abierto sobre `claude/auditoria-17`,
+así que esta corrida continuó sobre él en vez de abrir uno nuevo. Árbol limpio al
+arrancar (HEAD detached en `53c9d49`) → autofix habilitado.
+
+> Las síntesis de los pases 1 y 2 siguen íntegras más abajo.
+
+## Nota global: 4.9/10 (igual que el pase 2) — **= 0.0**
+
+Y el empate es el hallazgo, no la ausencia de uno. **Frontend subió 1 y backend
+bajó 1, y se cancelaron.** Un promedio quieto puede esconder dos movimientos
+grandes en direcciones opuestas; por eso la tabla manda sobre el número.
+
+Lo que pasó de verdad en este pase es más interesante que el 4.9:
+
+1. **Los arreglos del pase 2 sí sirvieron** — un auditor que no los escribió los
+   abrió uno por uno y confirmó que cierran. Frontend cierra su primer pase en
+   cuatro rondas **sin un solo CRÍTICO**.
+2. **Y al mirar de cerca apareció lo que llevaba rondas invisible:** un CRÍTICO
+   de concurrencia que ninguna ronda anterior había tocado, y dos formas en que
+   los arreglos del pase 2 quedaron a medio camino.
+
+**`master` avanzó un solo commit desde el pase 2** (`20ecbb1` → `53c9d49`) y toca
+únicamente `normas/.latido-vigilancia`: **cero código**. Por eso se relanzaron
+**3 de 12** rubros — los que cambiaron desde que se escribió su archivo— y los
+otros nueve conservan su nota marcados *no auditado este pase*.
+
+| Rubro | p2 | p3 | | Razón del movimiento |
+|---|:--:|:--:|---|---|
+| Frontend | 4 | **5** | ▲ | **se atacó y subió**: `d7b71a8` y `e47b124` cierran de verdad, verificados por quien no los escribió |
+| Backend y API | 5 | **4** | ▼ | **mirada más profunda**: el lease del mutex (60s) era más corto que el turno que protege (72s documentados) y nadie lo había mirado nunca |
+| Agéntico | 4 | **4** | = | *no auditado este pase* |
+| Tool calling | 7 | **7** | = | *no auditado* — cero archivos del rubro cambiaron desde `94c0733` (2 pases por rotación) |
+| Seguridad | 6 | **6** | = | *no auditado este pase* |
+| Fiscal | 5 | **5** | = | *no auditado este pase* |
+| Legal | 3 | **3** | = | *no auditado este pase* |
+| Arquitectura | 5 | **5** | = | *no auditado este pase* |
+| Pruebas | 5 | **5** | = | **se atacó y subió** (los 3 arreglos del PR mueren al revertirlos) compensado por **deuda que cobró factura** (C6 en su tercer pase idéntico) |
+| Operabilidad | 5 | **5** | = | *no auditado este pase* |
+| Rendimiento | 4 | **4** | = | *no auditado este pase* |
+| Modelo de datos | 6 | **6** | = | *no auditado este pase* |
+
+## Por qué la nota de backend BAJA en el pase donde su arreglo funcionó
+
+Merece decirse claro porque parece una contradicción. `709e410` cerró su CRÍTICO
+y el auditor lo confirmó: falla cerrado de verdad, no quema el sello, no deja
+secuela en el cron. Aun así el rubro baja de 5 a 4, y la razón escrita es
+**mirada más profunda**: el CRÍTICO del lease del mutex **no es nuevo en el
+código** —lleva ahí desde que existe el mutex—, es nuevo en *lo que sabemos*.
+Un rubro cuya nota sube porque arregló lo que él mismo rompió, mientras arrastra
+un defecto de concurrencia que nadie había buscado, es exactamente la nota
+inflada que esta serie existe para desinflar.
+
+## Los arreglos de este pase (3) — tope de 3 vueltas agotado
+
+**C11 · [backend] El lease del mutex era más corto que el turno que protege** — `3404616`
+`conv.ts:419` pedía el candado con `p_ttl_ms = 60_000`. `presupuesto.ts:188-190`
+documenta un peor caso de **~72s** para el turno que ese candado serializa
+(lock ≤12s + intake 20s + cuadre ~40s), dentro de una invocación presupuestada a
+120s, y `processor.ts:1751` nunca pasaba `ttlMs`. El fallo no es ruidoso: **el
+lease vence solo**. A los 60s `try_lock_viaje` considera el viaje libre, un
+segundo mensaje entra al ciclo completo mientras el primero sigue cuadrando, y
+los dos cierran. Ninguno lanza —`guardar_liquidacion` no mira `viaje.estatus`,
+el `on conflict do update` de la 0013 sobrescribe la fila, el `upsert: true`
+sobrescribe el PDF—, así que los dos reportan éxito: el chofer se queda con un
+PDF de $5,600 y la base con $7,000. La doble liquidación que la 0005 existe para
+impedir, causada por el reloj del propio candado.
+Prueba: `conv_lock_expira.test.ts` (5 casos) — sin el arreglo fallan 2
+(`expected 60000 to be greater than or equal to 72000`). Fija la **invariante**,
+no el número: si alguien sube el techo del agente sin subir el lease, se pone rojo.
+
+**A · [frontend] «Ahorro generado» inventaba un cero** — `b9a191c` · ALTO AGRAVADO
+`page.tsx:274` seguía con `resumenPerdidas?.montoRecuperable ?? 0`, dos celdas a
+la derecha de la que `e47b124` arregló en el mismo grid. `resumenPerdidas` es
+null exactamente cuando `cfgFiscal` o `gastosFiscales` vinieron nulos, y esos
+salen de `safe()`, que se come el fallo de la consulta: el `?? 0` no cubría "la
+flota no ahorró nada", cubría **"no se pudo leer"**. Con el motor fiscal caído el
+panel del dueño pintaba `Ahorro generado — Ejercicio 2026   $0.00` en el KPI que
+ES el diferenciador del producto, sin banda de aviso.
+Prueba: `ahorro_sin_dato.test.ts` (3 casos), verificada en las dos direcciones.
+
+**A · [backend] El arreglo del pase 2 se reabría solo en una flota grande** — `ea23059`
+La consulta de comprobación que agregó `709e410` no llevaba `limit`, ni `range`,
+ni `count`, ni pasaba por `traerTodo` — y su propio comentario afirmaba que "se
+pide `limit` amplio". Sin acotar, PostgREST aplica `max_rows` (1,000) y **recorta
+en silencio**. Con 100 viajes abiertos de 12 gastos son 1,200 filas: los gastos
+de los últimos **16 viajes** quedaban fuera del `Set`, esos viajes se leían como
+"sin un solo comprobante", y a sus choferes les salía por WhatsApp la acusación
+falsa que el pase 2 acababa de cerrar — mientras el panel del contralor mostraba
+sus doce recibos. Peor que el original, porque ahora había una consulta que
+"comprueba" dando falsa confianza.
+Prueba: `recordatorio_lote_truncado.test.ts` (4 casos) — sin el arreglo fallan 3
+(`expected 1000 to be 1200`), con dos controles: que el escenario exceda el tope
+de verdad, y que un viaje SIN gastos se siga señalando.
+
+## Los 5 CRÍTICOS pendientes — con la razón
+
+Ninguno es un arreglo de código pendiente por falta de ganas; **cuatro esperan
+una decisión de producto** y el quinto es una sesión de trabajo propia.
+
+- **C6 · [pruebas] El callback de QStash emite CFDI sin una sola prueba** —
+  REINCIDENTE, **tercer pase idéntico**. Re-verificado en vivo hoy con mutante
+  doble (verificación de firma desactivada **y** sin re-validar `cfdi_uuid`):
+  **3,182 pruebas siguen verdes**, tsc y lint limpios. *Razón:* el arreglo es
+  escribir el arnés de un endpoint que factura de verdad; sesión propia.
+- **C4 · [fiscal] El 15% se mide contra "el combustible que Likida vio"** —
+  *Razón:* el denominador correcto exige un dato que el producto no tiene.
+- **C5 · [legal] La foto viaja al modelo externo antes del aviso** —
+  *Razón:* mover el bloqueo cambia el flujo de huérfanos (mig. 0040).
+- **C7 · [rendimiento] El cierre no cabe en la reserva que él mismo aparta** —
+  REINCIDENTE AGRAVADO. Verificado hoy: `avisarCierreAlJefe` sigue **fuera** de
+  `PASOS_CIERRE` y `MARGEN_CIERRE_MS` sigue en 12,000. *Razón:* subir el margen
+  le quita techo al agente, y eso tiene efecto en el demo.
+- **C10 · [legal] Likida hace el PRIMER contacto por WhatsApp sin aviso** —
+  REINCIDENTE, 5 pases. *Razón:* texto de aviso y canal de baja; producto y abogado.
+
+## Descartados
+
+**Ninguno de este pase resultó falso.** Los tres hallazgos que se arreglaron se
+abrieron uno por uno contra el código antes de anotarlos, y los tres son reales.
+Lo que sí hubo fue una hipótesis que el propio auditor de pruebas cerró **a favor
+del código**, y vale tanto como un hallazgo: `repo_escritura.test.ts:124` **sí
+caza** el cambiazo comprobado↔anticipo y `p_ieps`←IVA en `saveLiquidacion`
+(`1 failed | 3181 passed`). La *escritura* del dinero está anclada de verdad.
+De 11 mutaciones intentadas, 7 sobrevivieron; las 11 se revirtieron una por una y
+el árbol quedó limpio.
+
+## Lo que este pase dice del proceso
+
+- **Un arreglo verificado no es un arreglo completo.** Los dos arreglos de
+  frontend del pase 2 cierran lo que dicen cerrar, y los dos dejaron trabajo a
+  medias a dos celdas de distancia: el mismo commit que habilitó `number | null`
+  no lo aplicó al llamador de su propia fila. Sale solo cuando el que revisa no
+  es el que arregló.
+- **Un arreglo puede reabrir el bug que cerró, a otra escala.** La consulta de
+  comprobación era correcta para 8 viajes y falsa para 100. El comentario decía
+  que estaba acotada y no lo estaba: la prosa de un commit no es evidencia.
+- **El «arnés que aparenta» se reprodujo dentro de este mismo PR.** La prueba de
+  `d7b71a8` cubre la regla (`rail-marca.ts`, 100%) y no el cableado
+  (`rail.tsx`, 0%), que es donde vivía el bug: se puede devolver el CRÍTICO
+  entero y la suite sigue verde. Queda como ALTO propuesto.
+- **El árbol de trabajo es compartido.** Los auditores corren sobre el mismo
+  checkout y el de pruebas hace mutaciones en vivo; durante esa ventana
+  `git status` muestra archivos de producción modificados que no son de nadie
+  que esté arreglando nada. La suite de la primera vuelta se corrió en un
+  `git worktree` aparte por eso. **Nunca se commiteó un archivo mutado.**
+
+## Compuerta (salida real, árbol final)
+
+```
+npx tsc --noEmit -p .   → 0 errores
+npx vitest run          → 260 archivos, 3,194 pruebas verdes, 1 saltada
+npm run lint            → 0 errores, 18 warnings (mismo número que las tres líneas base)
+```
+
+Línea base al arrancar el pase 3: **3,182** verdes (idéntica al cierre del pase 2,
+sin deriva). Los tres arreglos sumaron **12** pruebas y ninguno se revirtió: los
+tres pasan la suite completa y los tres fallan sin su cambio, verificado
+corriendo la prueba **antes** del arreglo.
+
+Sin `npm run build` y sin `pruebas-manuales/*`: no hay credenciales en la nube y
+esas pruebas hacen llamadas de pago.
+
+## Lo que NO se hizo, y hay que decirlo
+
+- **Nueve rubros no se auditaron.** No es descuido: `master` no movió una línea
+  de código desde el pase 2, y repetir un auditor sobre código idéntico no
+  produce señal. Sus notas son del pase 2, no de hoy.
+- **Tool calling lleva dos pases sin auditar** por rotación. Su 7/10 es el más
+  alto de la tabla y el menos reciente: conviene relanzarlo en la ronda 18
+  aunque su código no cambie, para que la nota no descanse indefinidamente.
+- **Backend y frontend se recalificaron con los arreglos de HOY sin auditar.**
+  Los tres commits de este pase (`3404616`, `b9a191c`, `ea23059`) entraron
+  después de que sus auditores escribieran. Se remiden en la 18.
+- **Los 4 ALTO nuevos del auditor de pruebas quedan propuestos**, no arreglados:
+  el tope de 3 vueltas se agotó con el CRÍTICO y los dos ALTO de mayor daño.
+
+---
+---
+
 # Auditoría 17 — síntesis · pase 2 · 9-ago-2026
 
 **Ronda de CONTINUACIÓN.** El PR **#9** seguía abierto sobre

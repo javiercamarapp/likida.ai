@@ -154,3 +154,10 @@ Dos consecuencias prácticas, ya aplicadas:
   solo los tres archivos del arreglo, con `node_modules` enlazado), porque el
   árbol principal tenía un mutante en vuelo. Una suite verde medida sobre el
   experimento de otro no prueba nada del arreglo propio.
+| 55 | Pruebas entregó (el último de los 3) | 5/10 (se queda) · 0 CRÍTICO nuevo · 4 ALTO · C6 REINCIDENTE verificado en vivo | — |
+| 56 | Verificación adversarial del ALTO del lote truncado | **real y peor de lo reportado**: el comentario dice "se pide limit amplio" y NO hay `.limit()` — riding del `max_rows` de PostgREST | — |
+| 57 | Vuelta 3 — prueba que reproduce el lote truncado | **3 de 4 en rojo**: 16 folios acusados en falso, `expected 1000 to be 1200` | — |
+| 58 | Vuelta 3 — arreglo: la lectura de `gasto` pasa por `traerTodo` | verde; suite **3,194** | `ea23059` |
+| 59 | Tope de 3 vueltas AGOTADO | 5 CRÍTICOS pendientes con razón; 4 ALTO nuevos propuestos | — |
+| 60 | Tablero reescrito para el pase 3 + captura + **mirada** | 12 rubros contados, notas suman 59 → 4.9, color por nota y no por delta | — |
+| 61 | `00-SINTESIS.md` y `RESULTADO.md` del pase 3 | ok | — |
