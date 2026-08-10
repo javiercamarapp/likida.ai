@@ -1,3 +1,504 @@
+# Frontend — auditoría 17 · pase 3 (10-ago-2026)
+
+**Nota: 5/10** (antes 4). Razón del movimiento: **se atacó y subió**. Los dos
+arreglos del pase 2 (`d7b71a8`, `e47b124`) **cierran de verdad** lo que dicen
+cerrar —los abrí, seguí el cableado línea por línea y corrí sus pruebas—, y con
+ellos el rubro pasa de 1 CRÍTICO abierto a 0 y de **0 pruebas** sobre los cinco
+componentes nuevos a dos archivos con 10 casos (4 puros + 6 de render real con
+`renderToStaticMarkup`). Lo que impide subir más: **11 de los 13 hallazgos
+abiertos siguen textualmente iguales**, uno de ellos en su **5ª ronda**, y el
+peor de los ALTO quedó a **una línea** de su propio arreglo — `e47b124` cambió
+la firma de `KpiDegradado` a `number | null` y no aplicó el cambio en el
+llamador de al lado (`page.tsx:274`, 200 px a la derecha en la misma fila).
+
+Riesgo mayor hoy: "Ahorro generado — Ejercicio 2026 · **$0.00**" con la consulta
+fiscal caída, en la fila de KPIs de la pantalla de aterrizaje del dueño, sin
+banda de aviso y con la cifra verdadera dos tarjetas abajo — el diferenciador
+del producto anunciándose en cero mientras se contradice solo.
+
+---
+
+## Verificación de los dos arreglos de este PR
+
+### `d7b71a8` — el Resumen del dueño en blanco · **SÍ CIERRA**
+
+Cómo lo verifiqué:
+
+- `src/app/dashboard/rail-marca.ts:26-30` — `marcaAsistente(expandido, pathname)`
+  devuelve `null` cuando `pathname === RUTA_SIN_RAIL`.
+- `src/app/dashboard/rail.tsx:53` calcula `marca` en el cuerpo del render (no
+  dentro del efecto), y `:54-59` es el efecto con deps **`[marca]`**, no
+  `[expandido]`. La transición `/dashboard/cuadre` → `/dashboard` cambia
+  `marca` de `'expandido'` a `null`, así que el efecto **sí** vuelve a correr:
+  el cleanup borra `dataset.asistente` y la rama `else` lo vuelve a borrar.
+- `src/app/dashboard/rail.tsx:90` usa `RUTA_SIN_RAIL`, la MISMA constante que
+  `marcaAsistente` — la desincronización de fondo (el `return null` y la marca
+  mirando cosas distintas) queda cerrada por construcción, no por disciplina.
+- `npx vitest run src/app/dashboard/rail_marca.test.ts` → 4 verdes.
+
+Lo que la prueba NO ancla (y su propio pie lo dice): que `rail.tsx` llame a la
+función con el `pathname` vivo. Eso lo verifiqué a ojo sobre `rail.tsx:53`, no
+con una prueba — el repo no tiene jsdom.
+
+Secuela: **sí la hay**, ver el MEDIO 1. El arreglo apaga la *marca* pero no el
+*estado* `expandido`, y al quitar la marca también quitó la única señal en
+pantalla de que ese estado seguía encendido.
+
+### `e47b124` — "Costo por viaje $0.00" · **SÍ CIERRA, y deja la mitad del trabajo hecha**
+
+Cómo lo verifiqué:
+
+- `src/app/dashboard/resumen-visual.tsx:109` — `valor: number | null`.
+- `src/app/dashboard/resumen-visual.tsx:126` —
+  `{valor === null ? '—' : fmt(valor)}`. El cero MEDIDO se sigue pintando cero:
+  la distinción que importa está bien hecha.
+- `src/app/dashboard/kpi-periodo.tsx:70` — `valor={valorActual ?? null}`, y
+  `:59-61` ya devolvía `pct = null` cuando `valorActual === null`, así que la
+  tarjeta tampoco pinta una tendencia sobre un dato ausente.
+- `npx vitest run src/app/dashboard/kpi-periodo.test.tsx` → 6 verdes, 2 de ellas
+  de punta a punta sobre `<KpiPeriodo campo="costoPorViaje">`. Son las
+  **primeras pruebas de render** que tocan los cinco componentes nuevos del
+  rework.
+
+Secuela: **sí**, y es la que más pesa en la nota. El commit habilitó `null` en
+`KpiDegradado` y **no tocó el otro llamador de la misma fila**:
+`src/app/dashboard/page.tsx:274` sigue siendo
+`valor={resumenPerdidas?.montoRecuperable ?? 0}`. Es el ALTO 3 del pase 2, que
+antes tenía la excusa de "el `?? 0` es el único camino que compila" — hoy ya no
+la tiene. Ver el estado de hallazgos: pasa de REINCIDENTE a **AGRAVADO**.
+
+---
+
+## Estado de los hallazgos que traía
+
+### Del pase 1 (arrastrados)
+
+| # | Hallazgo | Estado | archivo:línea hoy |
+|---|---|---|---|
+| 1 | "Vencen pronto (≤ 5 días)" cuenta solo lo ya vencido | **REINCIDENTE** | `dashboard/arco/page.tsx:71`, rótulo en `:87`, `hoy` UTC en `:31` |
+| 2 | "Comprobación del periodo" no filtra por fecha | **REINCIDENTE** | `dashboard/cuadre/page.tsx:67` (`getKpis(tenantId)` sin ventana), `:87`, `:117` |
+| 3 | "PDF por liquidación" pierde el `?tenant=` | **REINCIDENTE** | `dashboard/analitica/page.tsx:121` (`href="/dashboard/cuadre"` pelón; el `extra` sigue calculado sin usar en `:51`) |
+| 4 | Asistente expandido bajo 1280 px deja el panel en blanco | **REINCIDENTE (5ª ronda)** | `dashboard/rail.tsx:105` sigue `hidden xl:flex`; el gemelo `admin/asistente-expandible.tsx:61` + `:47` (`opacity: expandido ? 0 : 1`) tampoco cambió |
+| 6 | "Litros elegibles: 0.00 L" con la cita legal al lado | **REINCIDENTE** | `dashboard/combustible-casetas/page.tsx:183` (`acred?.litrosDiesel ?? 0` + `nota="LIF 2026, Art. 20-A"`); el vecino de `:186` sigue usando `vacio` bien |
+| 8 | El panel manda al chofer a `/mis-viajes` (404) | **REINCIDENTE** | `dashboard/usuarios/page.tsx:16`, con `ROLES: Record<string, string>` en `:12` |
+
+**Sobre el 4, que ya va por su quinta ronda.** `d7b71a8` cerró la vía de
+navegación, no la de viewport. `marcaAsistente` (`rail-marca.ts:26`) decide con
+`expandido` y `pathname`; **no sabe nada del ancho de la ventana**. El aside
+sigue siendo `hidden xl:flex` (`rail.tsx:105`), o sea `display:none` bajo 1280
+px, mientras `globals.css:217-223` sigue retirando `.columna-centro`. Expandir
+el chat a 1440 px y arrastrar la ventana a 1200 (o conectar un proyector que
+baje la resolución) deja el panel invisible y sin ningún control: el botón de
+contraer vive dentro del aside que acaba de desaparecer. Es el mismo modo de
+falla que el CRÍTICO cerrado, por la otra puerta.
+
+### Del pase 2
+
+| Hallazgo | Estado |
+|---|---|
+| **CRÍTICO** — expandir el asistente y volver a "Resumen" deja el panel en blanco | **CERRADO** por `d7b71a8` (verificado arriba) |
+| **ALTO 1** — un pill gobierna 5 ventanas de tiempo y no rotula ninguna | **REINCIDENTE** |
+| **ALTO 2** — "Ahorro generado $0.00" con la consulta caída | **AGRAVADO** |
+| **ALTO 3** — "Aún no hay viajes registrados" con `getViajesPorMes` caída | **REINCIDENTE** |
+| **ALTO 4** — "Costo por viaje $0.00" | **CERRADO** por `e47b124` |
+| **ALTO 5** — "Gasto por categoría" desborda su columna en Mensual/Histórico | **REINCIDENTE** |
+| **ALTO 6** — 16 páginas del panel sin un solo link | **REINCIDENTE** |
+| **MEDIO 1** — "Aún no hay gastos capturados" con la consulta caída | **REINCIDENTE** |
+| **MEDIO 2** — flechas de periodo de 16 × 16 px | **REINCIDENTE** |
+| **MEDIO 3** — `/mis-viajes` y el rol `operador` en `usuarios` | **REINCIDENTE** (= el 8 del pase 1) |
+
+Detalle de los que cambiaron de grado o piden línea nueva:
+
+**ALTO 2 · AGRAVADO.** `src/app/dashboard/page.tsx:274` sigue letra por letra:
+`valor={resumenPerdidas?.montoRecuperable ?? 0}`. Lo que cambió es el contexto:
+`resumen-visual.tsx:109` ya acepta `number | null` y `:126` ya pinta `'—'`. El
+arreglo existe, está probado (`kpi-periodo.test.tsx:44-52`) y no se aplicó al
+llamador que está **en el mismo `<div className="grid grid-cols-1 sm:grid-cols-3">**
+(`page.tsx:267-275`), dos posiciones a la derecha del que sí se arregló. Ni
+`resumenPerdidas` ni `gastosFiscales` están en `estadoPanel` (`estado.ts:30`),
+así que sigue sin haber banda de "parcial".
+
+**ALTO 1 · REINCIDENTE.** `panel-periodo.tsx:44-51` sigue derivando las cinco
+secciones de un solo `modo`; `:70`, `:93`, `:103`, `:125` siguen siendo
+`TituloSeccion` sin ventana; el pill de `:55-64` sigue sin `aria-pressed` ni rol
+de grupo. Las tres tablas de ventanas (`analytics.ts` `SEMANAS_POR_MODO`,
+`getSeriesKpiCards`, `getTopRutasPorGasto`) siguen siendo tres.
+
+**ALTO 3 · REINCIDENTE.** `page.tsx:324` sigue `porMes={viajesPorMes ?? []}` y
+`actividad.tsx:54` sigue haciendo `porMes.every((d) => d.valor === 0)` sobre ese
+`[]` → `true` → `:59` "Aún no hay viajes registrados." `estado.ts:30` sigue
+mirando solo cuatro consultas de las doce.
+
+**ALTO 5 · REINCIDENTE.** `gasto-semanal-chart.tsx:50` sigue siendo
+`className="relative flex-1 flex items-end gap-3 …"` sin `min-w-0`, la celda de
+`panel-periodo.tsx:91` sigue sin `overflow-x`, y el primer ancestro que recorta
+sigue siendo `page.tsx:179` (`glass-panel overflow-hidden`).
+
+**ALTO 6 · REINCIDENTE.** `rutas.ts:78-81` (`TODAS_LAS_RUTAS`, 31 entradas)
+contra `:92-101` (`SIDEBAR_PRINCIPAL`, 8) + `FISCAL` (6) + Resumen = 15
+pintadas en `sidebar-nav.tsx:120,132`. Las 16 huérfanas son las mismas, ARCO
+incluida.
+
+**MEDIO 1 · REINCIDENTE.** `panel-periodo.tsx:95-99` sigue colapsando `null` y
+`[]` en "Aún no hay gastos capturados.", mientras sus dos hermanas de `:108-111`
+y `:127-131` siguen distinguiéndolos bien. La dona de `:72-79` igual.
+
+**MEDIO 2 · REINCIDENTE.** `kpi-periodo.tsx:10` sigue siendo
+`const BOTON = 'w-4 h-4 …'` y `:76` sigue `gap-0.5`;
+`motor-fiscal-periodo.tsx:7` idéntico. 16 × 16 px con centros a 18 px: falla el
+mínimo de 24 × 24 de WCAG 2.2 SC 2.5.8 **y** su excepción de espaciado.
+
+---
+
+## Hallazgos nuevos
+
+### [MEDIO] Secuela de `d7b71a8`: el chat se queda "expandido" sin nada que lo diga, y secuestra la siguiente página que abras
+
+`src/app/dashboard/rail.tsx:40` (el `useState(false)` que nadie apaga),
+`:90` (`if (pathname === RUTA_SIN_RAIL) return null;`),
+`src/app/dashboard/rail-marca.ts:26-30`,
+`src/app/marco.ts:73` (`MARCO_ASISTENTE_EXPANDIDO`)
+
+`marcaAsistente` apaga la **marca** en `/dashboard`, pero el estado `expandido`
+del componente sigue en `true`: `RailAsistente` vive en `chrome.tsx:100`, dentro
+del layout, y no se desmonta al navegar.
+
+Escenario, con los mismos clics del demo:
+
+1. `/dashboard/cuadre` → "Expandir chat a pantalla completa" (`rail.tsx:113`).
+   `expandido = true`, marca puesta, chat a pantalla completa. Correcto.
+2. Clic en "Resumen" del sidebar → `/dashboard`. `marca = null`: el Resumen se
+   ve perfecto (esto es lo que arregló `d7b71a8`) y el aside devuelve `null`.
+   **En pantalla no queda un solo píxel que diga que el chat sigue expandido.**
+3. Clic en "Facturación" (o Cuadre, o Cobranza) → `pathname` vuelve a tener
+   rail, `marca` vuelve a `'expandido'`, y el aside se monta con
+   `fixed top-4 right-4 bottom-4 left-[264px] z-20` mientras `globals.css:217`
+   retira `.columna-centro`.
+
+Sale: el contralor pidió Facturación y le apareció el chat a pantalla completa
+tapándola. Se recupera en un clic (el botón de contraer sí está a la vista, a
+diferencia del CRÍTICO), pero se repite en **cada** navegación mientras nadie lo
+contraiga, y el paso 2 borró la única pista de que iba a pasar.
+
+Consecuencia: en la sala, el presentador navega tres pantallas y el chat se le
+mete encima en las tres; se lee como que el producto no sabe dónde está. Antes
+de `d7b71a8` el usuario recargaba (F5) al ver el panel en blanco y el estado se
+reseteaba solo; ahora no hay motivo para recargar y el estado sobrevive.
+
+Causa raíz probable: la ruta que no pinta el rail apaga la marca pero no el
+estado que la produce, así que `/dashboard` se volvió un almacén invisible de
+`expandido = true`.
+
+---
+
+### [MEDIO] El mensaje crudo de PostgREST se imprime en la pantalla del contador
+
+`src/app/dashboard/contador/comun.tsx:96` (`{f.que}: {f.detalle}`),
+`:45` (`detalle: e instanceof Error ? e.message : String(e)`),
+`src/lib/likida/pg.ts:34` (`throw new Error(\`${consulta}: ${res.error.message}\`)`);
+montado en `contador/page.tsx:124`, `contador/deducciones/page.tsx:109`,
+`contador/combustible/page.tsx:97`
+
+`AvisoDeFallo` tiene dos ramas. La de `incompleta: true` sí imprime prosa
+domesticada (`LecturaIncompleta`, `pg.ts:84-87`: *"solo se leyeron 850 de 1,200
+filas"*). La de `incompleta: false` —cualquier otra excepción— cae al mismo
+`<li>` de `:96` con `f.detalle` **completo y sin truncar**. El docstring de
+`:59-61` afirma lo contrario: *"El `detalle` técnico se pinta en pequeño y sin
+nombres de columna crudos hacia el usuario final"*.
+
+Escenario con valores: rotan la service-role key en Supabase, o un `grant`
+cambia. `getGastosFiscales` llama `exigir(res, 'getGastosFiscales.viaje')`
+(`fiscal.ts:751`), PostgREST devuelve
+`{ message: "permission denied for table gasto" }`, y `pg.ts:34` lanza
+`getGastosFiscales.viaje: permission denied for table gasto`. El contador de la
+flota abre `/dashboard/contador` y lee, bajo "No se pudo leer el dato de esta
+pantalla":
+
+> Comprobantes del periodo: getGastosFiscales.viaje: permission denied for table gasto
+
+Con un host caído el texto es `TypeError: fetch failed`; con una columna
+renombrada, `column gasto.<nombre> does not exist`.
+
+Consecuencia: el usuario que menos puede hacer con eso —el contador de la
+flota, no un ingeniero— recibe el nombre de la tabla, el de la función interna y
+el mensaje del driver. No es un stack completo, pero se lee como uno, y en la
+pantalla fiscal, que es la que el comprador abre para confiar. `arco/page.tsx:97`
+comete lo mismo pero al menos corta a 120 caracteres; aquí no hay corte.
+
+Causa raíz probable: `safe()` guarda `e.message` de cualquier excepción, y el
+componente asume que todas las excepciones son `LecturaIncompleta`.
+
+---
+
+### [MEDIO] Tercera copia del mapa de conceptos, fuera del test de sincronía, y etiqueta "Diésel" una cubeta que incluye gasolina
+
+`src/app/dashboard/gasto-semanal-chart.tsx:9-13` (`CONCEPTO_LABEL`),
+contra `src/lib/likida/cuadre/engine.ts:1191-1202` (`etiquetaConcepto`/`label`) y
+`src/lib/likida/etiquetas_sincronizadas.test.ts:36-56`
+
+El test de sincronía vigila **dos** fuentes: el motor (`engine.ts:1201`) y el
+panel de detalle (`[id]/page.tsx:27`). El rework del 8-ago introdujo una
+**tercera** en el Resumen del dueño y el test no la conoce (`grep CONCEPTO_LABEL
+src/**/*.test.*` solo la nombra para prohibirla en `pdf.ts`).
+
+Y difiere en lo que importa. `etiquetaConcepto('diesel', ocrExtra)`
+(`engine.ts:1191-1197`) **se salta el mapa a propósito** y respeta el producto
+impreso en el ticket: `producto: 'MAGNA'` → `"Combustible Magna"`, sin producto
+→ `"Combustible"`, solo `producto` con "diesel" → `"Diésel"`. El comentario de
+`[id]/page.tsx:382-388` explica por qué, con la norma: *"el estímulo de IEPS es
+SOLO diésel (LIF 20-A fr. IV), así que etiquetar gasolina como diésel invita a
+acreditar algo que no aplica"*.
+
+`gasto-semanal-chart.tsx:10` hace exactamente eso: `diesel: 'Diésel'` sobre la
+clave del `concepto`, sin mirar `ocr_extra`.
+
+Escenario con valores: una flota carga 8 tickets de la semana bajo
+`concepto='diesel'`, de los cuales 2 son Magna por $3,100 (`ocr_extra.producto =
+'MAGNA'`) y 6 son diésel por $57,900. En `/dashboard/[id]` y en el PDF esos 2 se
+llaman **"Combustible Magna"**. En el Resumen del dueño, la leyenda y el tooltip
+de "Gasto por categoría" (`:40`, `:75`) dicen **"Diésel · $61,000"**. La misma
+pantalla que vende el motor fiscal mete $3,100 de gasolina dentro de la barra
+rotulada Diésel.
+
+Consecuencia: el contralor cruza "Diésel $61,000" del Resumen contra el
+acumulado de diésel de su contador y no cuadra por $3,100, sin ninguna pista de
+por qué. Y es la cifra que alimenta la conversación del estímulo, que es
+diésel-only. De paso, `caseta: 'Casetas'` y `otro: 'Otros'` también difieren del
+motor (`'Caseta'`, `'Otro'`) — eso sí es plural de categoría y no cambia el
+significado; el de diésel sí.
+
+Causa raíz probable: el componente nació el 8-ago con su propio literal en vez de
+importar `etiquetaConcepto`, y el test que existe para cazar justo esto está
+anclado por nombre de archivo a las dos copias viejas.
+
+---
+
+### [MEDIO] `/admin/model-ops` rotula 3 de las 6 fases y enseña las otras 3 con su clave cruda — la misma dona que en otras tres pantallas sí las traduce
+
+`src/app/admin/model-ops/page.tsx:29` (`FASE_LABEL` con 3 claves),
+`:108` (la dona que la usa), `:31-34` (el comentario que afirma que solo hay
+tres); el dominio en `src/lib/likida/costos.ts:41`
+(`FaseCosto = 'ocr' | 'cuadre' | 'escalacion' | 'chat' | 'router' | 'whatsapp'`)
+
+Las otras cuatro copias del mismo mapa listan las **seis** (`admin/page.tsx:21`,
+`admin/analitica/page.tsx:11`, `admin/costos-facturacion/page.tsx:63`,
+`dashboard/valor-ahorro/page.tsx:12`). `model-ops` tiene tres, y su comentario
+de `:31-33` dice *"Las TRES fases reales del pipeline… No hay una cuarta fase"*
+— lo cual es falso desde que existe `faseDeModelo` (`costos.ts:102-105`):
+**cualquier llamada con un modelo `opus` se registra como `escalacion`**, y ese
+es el camino que `processor.ts:1879` toma en el cuadre.
+
+Escenario con valores: hay $12.40 USD de gasto en `escalacion`, $3.10 en `chat`
+y $0.90 en `router` en `llm_costo`. Javier abre `/admin` y la dona "Costo por
+fase" dice **"Agente de Escalación · 74%"**. Abre `/admin/model-ops`, la misma
+dona sobre los mismos datos (`r.porFase`, `getResumenNegocio()`) y dice
+**"escalacion · 74%"**, en minúscula y sin acento, junto a "chat" y "router".
+
+Consecuencia: la consola de costos de IA nombra la misma rebanada de dos formas
+en dos pantallas contiguas, y la que peor lo hace es precisamente la que se
+llama "Model Ops". Es el modo de falla dominante del rubro —un mapa literal que
+ya no cuadra con el tipo— y el `Record<string, string>` es lo que impide que
+`tsc` lo cace: `Record<FaseCosto, string>` habría fallado la compilación el día
+que se escribió.
+
+Causa raíz probable: el mapa se recortó a mano a las 3 fases que la página
+lista como tarjetas, sin notar que la dona de más abajo consume el conjunto
+completo.
+
+---
+
+### [MEDIO] "Actividad" bucketea los días con la zona horaria del proceso: el servidor pinta un día que en México todavía no empezó
+
+`src/app/dashboard/actividad.tsx:20-27` (`hoy.setHours(0,0,0,0)` +
+`d.toISOString().slice(0,10)`), `:53` (los dos llamadores),
+importado desde `panel-periodo.tsx:8`, que es `'use client'`
+
+El docstring de `:5-13` presume de no parsear `fechaInicio` —y es cierto, ahí no
+hay bug—, pero el arreglo de los buckets sí depende de la zona del proceso:
+`new Date()` + `setHours` da medianoche **local**, y `toISOString()` la convierte
+a **UTC**. `TZ_MX` (`formato.ts:34`) existe y no se usa aquí.
+
+`Actividad` no lleva `'use client'` propio, pero se importa desde un componente
+cliente: Next lo renderiza **las dos veces**, en el servidor (Vercel = UTC) y en
+el navegador (México = UTC−6).
+
+Escenario con valores: 9 de agosto de 2026, 19:30 hora de Ciudad de México
+(= 10 de agosto, 01:30 UTC). El HTML que sale del servidor trae los 7 buckets
+`2026-08-04 … 2026-08-10`, con el último —un día que en México no ha
+empezado— en 0 viajes. El navegador hidrata y calcula `2026-08-03 … 2026-08-09`.
+Los 7 `key={d.dia}` de `BarChartSimple` (`charts.tsx:129`) no coinciden con los
+del servidor: React reporta mismatch de hidratación y vuelve a pintar la barra.
+
+Sale: entre las 18:00 y la medianoche de México —seis horas de cada día, que es
+justo la franja en la que un contralor de flota revisa el corte del día— la
+gráfica "Actividad" se sirve corrida un día, con una barra vacía de "mañana", y
+salta al hidratar. Con la red lenta o el JS bloqueado, se queda corrida.
+
+Consecuencia: el eje de días de la única gráfica de operación del Resumen no
+dice el mismo día que el resto de la pantalla (`page.tsx:89` sí resuelve `hoy`
+en el servidor y se lo pasa a las consultas). Es la clase de desfase que el
+propio archivo dice haber pagado ya una vez con `created_at`.
+
+Causa raíz probable: `bucketsPorDia` evitó parsear la columna `date` (correcto)
+pero generó los días con la zona del proceso en vez de con `TZ_MX`.
+
+---
+
+### [BAJO] El eje de pesos de "Gasto por categoría" mezcla centavos y enteros en las mismas cinco marcas
+
+`src/app/dashboard/gasto-semanal-chart.tsx:47`
+(`{mxn(v).replace('.00', '')}`), `:17-19` (`marcasEje`)
+
+`marcasEje` devuelve `max × {1, .75, .5, .25, 0}` — no un múltiplo redondo,
+pese a que su docstring de `:15-16` promete *"un múltiplo legible, no el máximo
+exacto de los datos"*. Y `.replace('.00','')` solo quita los centavos cuando la
+fracción cae exacta en peso entero.
+
+Escenario con valores: `max = 61,237.50` (el mayor gasto semanal de una
+categoría). El eje se pinta, de arriba abajo: `$61,237.50`, `$45,928.13`,
+`$30,618.75`, `$15,309.38`, `$0`. Cinco números de anchos distintos en una
+columna de 44 px (`:45`), cuatro con centavos y el último sin ellos.
+
+Consecuencia: el eje de la gráfica de dinero de la pantalla de aterrizaje no se
+puede leer de un vistazo, que es lo único que un eje hace. Deuda que va a
+cobrar factura el día que alguien intente leer una cifra de ahí en la sala.
+
+Causa raíz probable: el `.replace` se agregó para acortar el eje sin cambiar
+`marcasEje`, así que solo acorta por accidente.
+
+---
+
+## Lo que revisé y está bien
+
+**Los dos arreglos del PR.** Detallado arriba: los dos cierran, con prueba, y
+los verifiqué en el código además de correr sus archivos.
+
+**Los mapas literales contra `src/types/` y los dominios de la base**
+(trabajo obligatorio del rubro — los recorrí todos, no una muestra):
+
+- `ETIQUETA_MODO` (`kpi-periodo.tsx:14-18`, `motor-fiscal-periodo.tsx:11-13`) —
+  `Record<Modo, string>` con `Modo` cerrado a tres literales. Un cuarto modo
+  rompe la compilación. Patrón correcto.
+- `ROL_LABEL` de `admin/equipo/page.tsx:13` — `Record<RolAppUser, string>` con
+  las cuatro claves exactas de `provisionar.ts:16`. El único mapa de roles del
+  producto que `tsc` protege.
+- `ROL_BADGE` (`chrome.tsx:26-32`), `NOMBRE` (`aviso-rol.tsx:7-11`) y
+  `ROL_LABEL` (`admin/mi-perfil/page.tsx:9`) — traen `operador`, un rol que ya
+  no existe en `RolAppUser`, pero son inocuos: son fallbacks de insignia con
+  `??`, no nombran una ruta y no cambian ninguna cifra. El que sí daña es
+  `usuarios/page.tsx:16`, ya reportado.
+- `ESTATUS` (`estatus.ts:17-21`) — cubre los tres de `EstatusLiquidacion`, con
+  `etiquetaEstatus` (`:26`) devolviendo la clave cruda en gris para un cuarto, y
+  `etiquetas_sincronizadas.test.ts:117` verificando la cobertura contra el tipo.
+- `ESTATUS_VIAJE` (`viajes/vista.tsx:23-27`) — los tres del constraint
+  `viaje_estatus_dominio`, con `??`.
+- `CONCEPTO` (`[id]/page.tsx:27-31`) y `etiquetaGasto` (`:392-395`) — el panel
+  del expediente delega en el motor y usa el literal solo como red; el test de
+  `etiquetas_sincronizadas.test.ts:46-63` lo ata a `ConceptoGasto`. Bien hecho;
+  el problema es la tercera copia que ese test no ve (MEDIO 3).
+- `COLOR_REGION` (`top-rutas.tsx:9-16`) — parcial a propósito, `colorDe` (`:14`)
+  cae a `--muted` y el texto a "Sin clasificar" (`:50`).
+- `FASE_LABEL` en `admin/page.tsx:21`, `admin/analitica/page.tsx:11`,
+  `admin/costos-facturacion/page.tsx:63` y `dashboard/valor-ahorro/page.tsx:12`
+  — las cuatro copias son idénticas entre sí y cubren las 6 de `FaseCosto`. La
+  quinta (`model-ops`) es la que no; ver MEDIO 4.
+
+**Estados de error del panel.** `dashboard/error.tsx` pinta el `digest` en
+pantalla, `select-all`, y lo manda al logger (`:41-48`) — con el import perezoso
+correcto para no arrastrar el logger de servidor al cliente. `global-error.tsx`
+reemplaza el `<html>` con estilos en línea (no depende de `globals.css`, que es
+lo que puede no haber cargado) y usa `<a>` en vez de `<Link>` a propósito. Las
+dos redes están puestas y son las correctas.
+
+**Fallar cerrado en las secciones que sí lo hacen.** `MotorFiscal`
+(`resumen-visual.tsx:167-169`), `MotorFiscalPeriodo`
+(`motor-fiscal-periodo.tsx:39-41`), `PanelPeriodo` → Liquidado
+(`panel-periodo.tsx:108-111`) y Top rutas (`:127-131`), `cuadre/page.tsx:89`
+("No se pudo cargar esta sección"), `arco/page.tsx:95-99` (que además dice *"no
+hay forma de saber si hay solicitudes pendientes hasta que la base responda"*) —
+todos distinguen `null` de vacío y ninguno pinta un cero.
+
+**Formato de cifras.** Sigue habiendo una sola fuente: `lib/formato.ts`.
+`resumen-visual.tsx:126` formatea con `resolverFormato`, no a mano; el nuevo
+`valor === null ? '—'` no introduce una segunda representación —usa el mismo
+guion que `cifra-grande.tsx:57-60`—. `formato.test.ts` (la prueba que bloquea
+`toLocaleString('es-MX')` fuera del archivo) sigue verde.
+
+**Claves de React en listas de dinero.** Recorridas todas:
+`HBars` (`admin/ui/graficas.tsx:93`, `key={d.etiqueta}`) tiene un contrato débil
+pero sus seis call sites hoy pasan claves únicas —nombre de flota
+(`admin/flotas:189`), teléfono (`admin/conversaciones:47`), modelo
+(`admin/model-ops:118`), `FASE_LABEL[...]` (`valor-ahorro:121`), y
+`etiquetaConcepto(concepto)` en `combustible-casetas:197` y `analitica:95`, que
+agrupan por `concepto` distinto—. `Dona` (`charts.tsx:239,251`,
+`key={s.etiqueta}`) igual. `TopRutas` (`top-rutas.tsx:42`) usa
+`` `${r.origen}→${r.destino}` ``, que es la llave de agrupación real.
+`BarChartSimple` (`charts.tsx:129,158`) usa `d.dia`. Ninguna clave inestable
+sobre una fila de dinero.
+
+**Crashes por serie degenerada.** `AreaChartSimple` (`charts.tsx:57-58`)
+revienta con `datos = []` (`xy[xy.length-1]` es `undefined`), pero los dos
+llamadores del panel lo blindan antes: `panel-periodo.tsx:112`
+(`liquidadoModo.some(...)` es `false` para `[]`) y `actividad.tsx:54`
+(`[].every(...)` es `true`). No es alcanzable hoy — lo dejo escrito porque el
+guardarraíl vive en el llamador, no en el componente.
+
+**Zonas horarias del resto del rework.** `getSerieComparativa`
+(`analytics.ts:130,142`) bucketea `liquidacion.created_at` por día local MX;
+`page.tsx:89` resuelve `hoy` en el servidor con `ahoraMs()` y se lo pasa a las
+seis consultas `*Series`. La única pieza que se salió de esa disciplina es
+`bucketsPorDia` (MEDIO 5).
+
+**Autorización de la UI.** `sidebar-nav.tsx` sigue filtrando con la misma
+`puedeVerRuta` que gatea la página, `rolMenu` replica `rolEfectivo`, y el sufijo
+`?tenant=`/`?vista=`/`?rol=` viaja en cada link. `page.tsx:198-200` sigue
+poniendo `AvisoSinFlota` **antes** de cualquier cifra.
+
+**Compuerta.** `npx tsc --noEmit -p .` → **0 errores**.
+`npx vitest run src/app/dashboard/rail_marca.test.ts src/app/dashboard/kpi-periodo.test.tsx`
+→ **10 verdes**.
+
+---
+
+## Lo que NO alcancé a revisar
+
+- **Nada se renderizó, otra vez.** Sin credenciales y con `npm run build`
+  prohibido, todo lo visual está leído y calculado: el desbordamiento de
+  `GastoSemanalChart` (ALTO 5) sigue saliendo de aritmética de layout; el MEDIO 1
+  sale de la lógica de montaje de Next; el MEDIO 5 sale de la semántica de
+  `toISOString`, no de un mismatch observado en consola. **No pude confirmar que
+  `d7b71a8` se vea bien en un navegador**, solo que la regla y el cableado son
+  correctos.
+- **La prueba del CRÍTICO no cubre el cableado.** `rail_marca.test.ts` ancla la
+  función pura; que `rail.tsx:53` la llame con el `pathname` vivo y escriba en
+  `document.documentElement` sigue sin prueba (el repo no tiene jsdom). Si
+  alguien vuelve a poner `[expandido]` en las deps del efecto, la suite sigue
+  verde.
+- **No corrí la suite completa** (`npx vitest run` a secas), solo los dos
+  archivos de los arreglos. La cifra global de este pase no la verifiqué.
+- **Los tres componentes nuevos que siguen sin prueba de render:**
+  `panel-periodo.tsx`, `top-rutas.tsx`, `gasto-semanal-chart.tsx`. `e47b124`
+  demostró que `renderToStaticMarkup` alcanza en este repo, así que ya no hay
+  excusa técnica. No verifiqué su comportamiento con series degeneradas (un solo
+  bucket, todos ceros, valores negativos) más allá de lo que se lee en el código.
+- **Las 16 páginas huérfanas por dentro.** Confirmé otra vez que no tienen link
+  entrante; no abrí su contenido.
+- **`/admin` en profundidad.** Solo entré a `asistente-expandible.tsx`
+  (reincidente 4), a las cinco copias de `FASE_LABEL` y a los call sites de
+  `HBars`/`Dona`. Las ~20 páginas de la consola interna siguen sin abrirse
+  completas, igual que en los pases 1 y 2. Tampoco hay `admin/error.tsx`: un
+  fallo ahí sube hasta `global-error.tsx` y recarga el documento entero; no lo
+  perseguí porque esa consola solo la usa Javier.
+- **`/dashboard` del encargado (`inicio-operacion.tsx`).** Sin releer.
+- **Accesibilidad más allá de contraste y tamaño de toque.** El pill de
+  `panel-periodo.tsx:57-63` sigue sin `aria-pressed` ni rol de grupo de radio
+  (lo dejo anotado, no lo cuento como hallazgo por segunda vez); no verifiqué
+  orden de foco, teclado en los formularios de despacho/incidencias/POD, ni
+  `aria-live` tras las server actions.
+- **Responsive por debajo de `md`.** Los `grid-cols-1 md:grid-cols-2/3` del
+  Resumen los leí, no los medí; el ALTO 5 solo está calculado a 1440 px.
+
+---
 # Frontend — auditoría 17 (pase 2)
 
 **Nota: 4/10** (antes 6). Razón del movimiento: **deuda que cobró factura**. El
