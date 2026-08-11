@@ -16,8 +16,24 @@ import { DatoInvalido } from '@/lib/likida/errores';
 // y no lo puede deducir.
 // ═══════════════════════════════════════════════════════════════════════════
 
-/** Catálogo `c_RegimenFiscal` del SAT, acotado a lo que aplica aquí. */
+/**
+ * Catálogo `c_RegimenFiscal` del SAT, acotado a lo que aplica aquí.
+ *
+ * `624` VA PRIMERO Y NO ES COSMÉTICO (auditoría 17, pase 4, ALTO). Este es el
+ * catálogo con el que la FLOTA captura su propio régimen desde Plan &
+ * Facturación, y escribe la MISMA columna (`tenant.regimen_fiscal`) de la que
+ * `administracion.ts:128` deriva `regimenElegible` contra `['624','612']` — la
+ * facilidad del combustible en efectivo de la RFA 2026 regla 2.9.
+ *
+ * Sin `624` aquí, un coordinado dado de alta correctamente en `/admin/flotas`
+ * perdía la facilidad al guardar esta forma: el `<select>` de `forma.tsx` usa
+ * `defaultValue` sin opción vacía, así que un `624` guardado no empataba
+ * ninguna `<option>` y el navegador seleccionaba la primera. El dueño entraba
+ * a corregir su código postal y salía tributando en `601`, que el propio repo
+ * documenta como NO elegible (Título II general, no su Capítulo VII).
+ */
 export const REGIMENES = [
+  { clave: '624', nombre: 'Coordinados (Título II Cap. VII)' },
   { clave: '601', nombre: 'General de Ley Personas Morales' },
   { clave: '603', nombre: 'Personas Morales con Fines no Lucrativos' },
   { clave: '612', nombre: 'Personas Físicas con Actividades Empresariales' },

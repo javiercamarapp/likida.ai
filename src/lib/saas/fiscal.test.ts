@@ -14,6 +14,32 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // arregla con un reintento; se arregla devolviendo dinero.
 // ═══════════════════════════════════════════════════════════════════════════
 
+import { readFileSync, readdirSync } from 'node:fs';
+
+/**
+ * Las claves que el CHECK de la columna acepta HOY, leídas de la última
+ * migración que redefine ese dominio. Las migraciones corren en orden de
+ * número, así que la última que lo toca es la vigente.
+ */
+function dominioVigente(columna: 'regimen_fiscal' | 'uso_cfdi'): string[] {
+  const dir = 'supabase/migrations';
+  // Los comentarios `--` del bloque traen paréntesis ("(Titulo II general)"),
+  // así que se quitan ANTES de recortar: si no, el recorte termina dentro de
+  // un comentario y el dominio sale de una sola clave.
+  const re = new RegExp(
+    `add constraint tenant_${columna}_dominio\\s+check \\(\\s*${columna} is null or ${columna} in \\(([\\s\\S]*?)\\)\\s*\\)\\s*;`,
+    'i',
+  );
+  let ultimo: string[] | null = null;
+  for (const f of readdirSync(dir).sort()) {
+    const sql = readFileSync(`${dir}/${f}`, 'utf8').replace(/--[^\n]*/g, '');
+    const m = sql.match(re);
+    if (m) ultimo = [...m[1].matchAll(/'([A-Z0-9]+)'/g)].map((x) => x[1]);
+  }
+  if (!ultimo) throw new Error(`ninguna migración define tenant_${columna}_dominio`);
+  return ultimo;
+}
+
 const update = vi.fn(() => ({ eq: vi.fn(async () => ({ error: null })) }));
 vi.mock('@/lib/supabase/admin', () => ({
   supabaseAdmin: () => ({ from: () => ({ update }) }),
@@ -91,9 +117,32 @@ describe('guardarDatosFiscales', () => {
   });
 
   it('los catálogos que ofrece la pantalla son los que la base acepta', () => {
-    // La migración 0056 tiene un CHECK con estas mismas claves. Si divergen, el
-    // formulario ofrece una opción que el insert rechaza.
-    expect(REGIMENES.map((r) => r.clave)).toEqual(['601', '603', '612', '621', '626']);
-    expect(USOS_CFDI.map((u) => u.clave)).toEqual(['G03', 'G01', 'I04']);
+    // Si divergen, el formulario ofrece una opción que el insert rechaza — o,
+    // al revés, la base acepta una clave que la pantalla no deja capturar.
+    //
+    // SE LEE EL CHECK VIVO, NO UNA COPIA. Hasta la auditoría 17 (pase 4) esta
+    // prueba comparaba contra la lista de la 0056 escrita a mano aquí, y por
+    // eso NO se enteró de que la `0088` (arreglo del CRÍTICO fiscal C3) agregó
+    // `624` al dominio: la base llevaba días aceptando un régimen que la
+    // pantalla no ofrecía, con el CHECK y el catálogo divergidos y la prueba
+    // que los vigila en verde. Congelar una lista es congelar la fecha en que
+    // dejó de ser cierta.
+    //
+    // ES SUBCONJUNTO, NO IGUALDAD, y esa es la dirección que importa: lo que
+    // rompe es ofrecer una opción que el insert rechaza. Al revés no —
+    // `uso_cfdi` acepta `S01` ("sin efectos fiscales, público en general") y la
+    // pantalla NO lo ofrece a propósito: una flota que deduce su suscripción
+    // nunca lo quiere, y ofrecerlo sería invitarla a un CFDI que su contador no
+    // puede usar. Exigir igualdad obligaría a ofrecerlo.
+    const regimenesDeLaBase = new Set(dominioVigente('regimen_fiscal'));
+    const usosDeLaBase = new Set(dominioVigente('uso_cfdi'));
+    expect(
+      REGIMENES.map((r) => r.clave as string).filter((c) => !regimenesDeLaBase.has(c)),
+      'la pantalla ofrece regímenes que el CHECK de la base rechaza',
+    ).toEqual([]);
+    expect(
+      USOS_CFDI.map((u) => u.clave as string).filter((c) => !usosDeLaBase.has(c)),
+      'la pantalla ofrece usos de CFDI que el CHECK de la base rechaza',
+    ).toEqual([]);
   });
 });
