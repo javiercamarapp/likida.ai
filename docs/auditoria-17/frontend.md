@@ -25,7 +25,7 @@ una pantalla de las nueve que existen.
 | **P1-1** "Vencen pronto (≤ 5 días)" cuenta solo lo ya vencido | **REINCIDENTE** (4ª ronda) | `dashboard/arco/page.tsx:71` (`venceEn(s.venceEn) <= hoy`), rótulo en `:87`, `hoy` UTC en `:31` |
 | **P1-2** "Comprobación del periodo" no filtra por fecha | **CERRADO POR SUPRESIÓN** | el archivo ya no existe (`dashboard/cuadre/`, borrado en `2be4b1c`) |
 | **P1-3** "PDF por liquidación" pierde el `?tenant=` | **CERRADO POR SUPRESIÓN** | el archivo ya no existe (`dashboard/analitica/`, borrado en `2be4b1c`) |
-| **P1-4** Asistente expandido bajo 1280 px deja el panel en blanco | **REINCIDENTE** (6ª ronda) | `dashboard/rail.tsx:105` sigue `hidden xl:flex`; `globals.css:216-223` sigue retirando `.columna-centro`; el gemelo `admin/asistente-expandible.tsx` tampoco cambió |
+| **P1-4** Asistente expandido bajo 1280 px deja el panel en blanco | **REINCIDENTE** (6ª ronda) | `dashboard/rail.tsx:105` sigue `hidden xl:flex`; `globals.css:213-223` sigue retirando `.columna-centro`; el gemelo `admin/asistente-expandible.tsx` tampoco cambió |
 | **P1-6** "Litros elegibles: 0.00 L" con la cita legal al lado | **REINCIDENTE** (4ª ronda) | `dashboard/combustible-casetas/page.tsx:188` (`acred?.litrosDiesel ?? 0` + `nota="LIF 2026, Art. 20-A"`); el vecino de `:191` sigue usando `vacio` bien |
 | **P1-8 / P2-MEDIO 3** El panel manda al chofer a `/mis-viajes` (404) | **REINCIDENTE** | `dashboard/usuarios/page.tsx:16`, con `ROLES: Record<string, string>` en `:12` |
 | **P2-CRÍTICO** Expandir el asistente y volver a "Resumen" deja el panel en blanco | **CERRADO POR ARREGLO** (`d7b71a8`, verificado en el pase 3) | `rail-marca.ts:26-30`, `rail.tsx:53-59` |
@@ -35,7 +35,7 @@ una pantalla de las nueve que existen.
 | **P2-ALTO 4** "Costo por viaje $0.00" | **CERRADO POR ARREGLO** (`e47b124`) | `kpi-periodo.tsx:70` (`valor={valorActual ?? null}`) |
 | **P2-ALTO 5** "Gasto por categoría" desborda su columna en Mensual/Histórico | **REINCIDENTE** (aritmética recalculada abajo) | `gasto-semanal-chart.tsx:50` sigue sin `min-w-0`; la celda de `panel-periodo.tsx:91-101` sigue sin `overflow-x`; el ancestro que recorta sigue siendo `page.tsx:165` (`glass-panel overflow-hidden`) |
 | **P2-ALTO 6** 16 páginas del panel sin un solo link | **REINCIDENTE Y AGRAVADO → subsumido en el CRÍTICO nuevo** | ya no son 16 de 31: son **8 de 8** (`rutas.ts:40,67` vacíos; `sidebar-nav.tsx:6`) |
-| **P2-MEDIO 1** "Aún no hay gastos capturados" con la consulta caída | **REINCIDENTE** | `panel-periodo.tsx:95-100` sigue colapsando `null` y `[]`; sus hermanas de `:110-119` y `:129-133` siguen distinguiéndolos |
+| **P2-MEDIO 1** "Aún no hay gastos capturados" con la consulta caída | **REINCIDENTE** | `panel-periodo.tsx:95-99` sigue colapsando `null` y `[]`; sus hermanas de `:108-111` (Liquidado) y `:127-131` (Top rutas) siguen distinguiéndolos |
 | **P2-MEDIO 2** Flechas de periodo de 16 × 16 px | **REINCIDENTE** | `kpi-periodo.tsx:10` (`const BOTON = 'w-4 h-4 …'`) + `:77` (`gap-0.5`); `motor-fiscal-periodo.tsx:7` + `:49` (`gap-0`) |
 | **P3-MEDIO 1** Secuela de `d7b71a8`: el chat se queda "expandido" sin nada que lo diga | **REINCIDENTE, escenario degradado** | `rail.tsx:40` (el `useState(false)` que nadie apaga), `:90`. El estado sigue sobreviviendo a la navegación, pero el escenario que reportaba —tres clics de sidebar— ya no existe: no hay links que clicar (ver el CRÍTICO). Hoy solo se alcanza tecleando URLs. |
 | **P3-MEDIO 2** El mensaje crudo de PostgREST se imprime en la pantalla del contador | **CERRADO POR SUPRESIÓN** | el archivo ya no existe (`dashboard/contador/comun.tsx`, borrado en `003c88a`). Sobrevive la variante *truncada* que ya reporté como menos grave: `dashboard/arco/page.tsx:97` (`errorCarga.slice(0, 120)`) |
@@ -261,7 +261,9 @@ pintados: `combustible-casetas/page.tsx:177-178` (`porConcepto === null` →
 consolidado" de "la consulta falló" —el patrón correcto del repo—;
 `suscripcion/page.tsx:236-249` (los datos bancarios incompletos NO se muestran a
 medias), `:270-275`, `:377-378`, `:420-427`, `:456-460` ("Sin timbrar" para una
-factura pagada sin CFDI, que es un estado real y se ve);
+factura pagada sin CFDI, que es un estado real y se ve; `:284-286` y `:296-297`
+dicen "Sin precio configurado"/"Sin fecha de corte" en vez de $0 o una fecha
+inventada);
 `arco/page.tsx:95-99` (fail-cerrado explícito);
 `configuracion/page.tsx:46-49`; `usuarios/page.tsx:71-72`;
 `inicio-operacion.tsx:96` (`tablero?.viajesActivos ?? '—'`, no `?? 0`),
