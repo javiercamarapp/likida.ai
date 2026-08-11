@@ -14,7 +14,42 @@ Una línea por acción, con su sha. Se escribe MIENTRAS avanza, no al cerrar.
 | 6 | Compuerta base `npx vitest run` | **258 archivos, 3,105 verdes, 1 saltada** (p3: 260 / 3,194) | — |
 | 7 | Compuerta base `npm run lint` | **0 errores, 17 warnings** (p3: 18) | — |
 | 8 | `MAPA.md` — sección PASE 4 | ok | — |
-| 9 | **7 auditores** lanzados en paralelo (frontend, backend, seguridad, fiscal, arquitectura, pruebas, rendimiento) | — | — |
+| 9 | **7 auditores** lanzados en paralelo (frontend, backend, seguridad, fiscal, arquitectura, pruebas, rendimiento) | 7 archivos entregados | — |
+| 10 | Los 7 entregaron | 108 fichas: 5 CRÍTICO · 44 ALTO · 39 MEDIO · 20 BAJO | — |
+| 11 | Verificación adversarial del CRÍTICO de navegación, abriendo el código | real; **dos auditores llegaron a él por separado** (frontend y arquitectura) | — |
+| 12 | Vuelta 1 — prueba que reproduce el CRÍTICO de navegación | 4 de 5 casos en rojo; `hrefsPintados('contador').length` = **0** | — |
+| 13 | Vuelta 1 — arreglo: el sidebar pinta también NEGOCIO y GESTION | verde; suite 3,110 | `8d6ac51` |
+| 14 | Verificación adversarial del ALTO fiscal del régimen | **el defecto es real, la consecuencia que declara NO**: la elegibilidad del 15% vive en `config`, no en `regimen_fiscal` | — |
+| 15 | Vuelta 2 — prueba que reproduce el ALTO del régimen | 2 de 3 casos en rojo | — |
+| 16 | Vuelta 2 — arreglo: `624` en el catálogo de la flota | verde; suite 3,113 | `12cc8c6` |
+| 17 | Vuelta 2 — la suite atrapó una prueba congelada contra la mig. 0056 | se hizo derivar del CHECK vigente y afirmar **subconjunto**, no igualdad; verificada con mutante (clave `699` → roja) | `12cc8c6` |
+| 18 | Vuelta 3 — prueba que reproduce el ALTO de `/dashboard/[id]` | 19 de 21 casos en rojo, con el `22P02` llegando a `exigir()` | — |
+| 19 | Vuelta 3 — primer intento: guarda en `getLiquidacionDetalle` | **RECHAZADO por la suite: 15 fallos.** Dejaba inalcanzable el caso de fail-closed de `analytics.test.ts`. Revertido con `git checkout`. | — |
+| 20 | Vuelta 3 — arreglo en la capa correcta: la guarda vive en la página | verde; suite 3,134 | `58c44f9` |
+| 21 | Tope de 3 vueltas AGOTADO | 4 CRÍTICOS quedan pendientes con razón escrita | — |
+| 22 | Tablero + captura, mirada | 12 rubros contados, notas cuadran con la síntesis | — |
+
+Ningún arreglo se revirtió al final: los tres pasan la suite completa y los tres
+mueren sin su cambio (verificado corriendo la prueba con el arreglo fuera).
+
+**El intento fallido de la vuelta 3 vale tanto como los tres arreglos.** Poner la
+guarda del uuid en `getLiquidacionDetalle` se veía más limpio —una sola línea, en
+el único sitio que consulta— y la suite lo tumbó con 15 fallos por la razón
+correcta: con la guarda ahí, el caso *"la base se cayó y esto DEBE lanzar"* se
+volvía inalcanzable para cualquier id que no fuera uuid, y quince pruebas de
+`analytics.test.ts` —incluida la del fail-closed— dejaban de probar lo que dicen.
+Es exactamente el arnés que aparenta, y esta vez lo cazó la suite antes que un
+auditor.
+
+**Una prueba existente se ajustó, y aquí está por qué.**
+`saas/fiscal.test.ts` afirmaba *"los catálogos que ofrece la pantalla son los que
+la base acepta"* contra una lista escrita a mano copiada de la migración `0056`.
+La `0088` —arreglo del CRÍTICO fiscal C3, de este mismo PR— agregó `624` al CHECK
+hace tres días y la prueba no se enteró: la base aceptaba un régimen que la
+pantalla no ofrecía, con el guardarraíl en verde. Ahora lee el CHECK vigente de
+`supabase/migrations/` y afirma **subconjunto** en vez de igualdad, porque la
+dirección que rompe es ofrecer una opción que el insert rechaza — al revés no:
+`uso_cfdi` acepta `S01` y la pantalla no lo ofrece a propósito.
 
 
 | # | Acción | Resultado | sha |

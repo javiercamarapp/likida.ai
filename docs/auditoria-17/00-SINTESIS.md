@@ -1,3 +1,195 @@
+# Auditoría 17 — síntesis · pase 4 · 11-ago-2026
+
+**Ronda de CONTINUACIÓN.** El PR **#9** seguía abierto sobre `claude/auditoria-17`,
+así que esta corrida continuó sobre él en vez de abrir uno nuevo. Árbol limpio al
+arrancar (HEAD detached en `003c88a`) → autofix habilitado.
+
+> Las síntesis de los pases 1, 2 y 3 siguen íntegras más abajo.
+
+## Nota global: 4.8/10 (antes 4.9) — **▼ 0.1**
+
+Y el −0.1 miente por lo bajo. Debajo de ese décimo hay **frontend cayendo dos
+puntos** y backend subiendo uno: la global se movió menos que cualquiera de los
+rubros que la componen, otra vez. La tabla manda sobre el número.
+
+**Lo que pasó en este pase, en una línea: `master` borró 6,000 líneas del panel
+del cliente y el panel se quedó sin puertas.**
+
+`2be4b1c` y `003c88a` borraron **35 páginas** —el panel del Contador entero y las
+17 de "dueño de flota"— para rehacerlas desde cero. La decisión es del dueño y no
+se audita. Lo que sí se audita es el estado en que quedó el árbol, y quedó así:
+
+1. **El sidebar dejó de tener items.** `sidebar-nav.tsx` importaba exactamente
+   las dos listas que el borrado vació, y las otras dos —vivas, con siete páginas
+   que funcionan— nunca llegaban al render. El dueño se quedaba con **un** link y
+   el contador con **ninguno**. Arreglado (`8d6ac51`).
+2. **18 URLs viejas empezaron a contestar con la pantalla de error**, no con un
+   404, porque el segmento crudo llegaba a una columna `uuid`. Arreglado
+   (`58c44f9`).
+3. **Se cerraron pantallas, no bugs.** De los hallazgos abiertos, los que murieron
+   con su página fueron pocos y ninguno del motor: fiscal cerró 4 de 16 por
+   supresión y los 12 restantes siguen en `engine.ts`, `repo.ts`, `fiscal.ts`;
+   arquitectura cerró **cero** de 5, porque los cinco viven en el Resumen, que es
+   justo la página que sobrevivió.
+
+## La tabla
+
+| Rubro | p3 | p4 | | Razón del movimiento |
+|---|:--:|:--:|---|---|
+| Frontend | 5 | **3** | ▼▼ | **deuda que cobró factura**: el borrado dejó el panel sin navegación —1 CRÍTICO nuevo— y de los hallazgos abiertos solo 3 murieron con su página; 13 siguen vivos, uno en su 6ª ronda |
+| Backend y API | 4 | **5** | ▲ | **se atacó y subió**: el lease del mutex (`3404616`) y el recorte a 1,000 filas (`ea23059`) cierran de verdad, verificados por quien no los escribió. Cero CRÍTICOS abiertos |
+| Agéntico | 4 | **4** | = | *no auditado este pase* — cero archivos de `src/lib/agents/` cambiaron |
+| Tool calling | 7 | **7** | = | *no auditado* — cero cambios en `tools.ts`/`llm/`/`agents/` desde `94c0733` (3 pases por rotación) |
+| Seguridad | 6 | **6** | = | **se atacó y subió** (la reescritura de `visibilidad.ts` es estrictamente restrictiva, verificada línea por línea) compensado por **deuda que cobró factura**: los 3 ALTO de RLS siguen los tres |
+| Fiscal | 5 | **5** | = | **se atacó y subió** (4 hallazgos cerrados por supresión) compensado por **deuda que cobró factura**: 4 nuevos, dos de ellos en `src/lib/saas/`, territorio que dos pases declararon *no revisado* |
+| Legal | 3 | **3** | = | *no auditado este pase* |
+| Arquitectura | 5 | **4** | ▼ | **deuda que cobró factura**: 4 de sus 5 hallazgos siguen palabra por palabra, y el borrado dejó 29 símbolos sin llamador, 2 módulos sin importador y un **tercer** mapa concepto→etiqueta ya divergido — el ejemplo canónico del rubro, reproducido |
+| Pruebas | 5 | **5** | = | **se atacó y subió** (ninguna de las 89 pruebas perdidas anclaba dinero; la única intermitente del repo quedó arreglada) compensado por **deuda que cobró factura**: C6 llega a su **cuarto** pase idéntico |
+| Operabilidad y DX | 5 | **5** | = | *no auditado este pase* |
+| Rendimiento y costo | 4 | **4** | = | **deuda que cobró factura**: ninguno de los 11 abiertos se cerró, y el reconteo tumbó la premisa de que el borrado los aliviaba |
+| Modelo de datos | 6 | **6** | = | *no auditado este pase* |
+
+**Suma 57 / 12 = 4.75 → 4.8.**
+
+Dos apuntes sobre cómo se escribieron estas notas, porque el proceso importa
+tanto como el número:
+
+- **Frontend se queda en 3 aunque su CRÍTICO ya esté arreglado en este PR.** El
+  arreglo entró después de que su auditor escribiera el archivo, y quien lo
+  arregló fui yo. Subirle la nota por mi propio commit es exactamente la nota
+  inflada que esta serie existe para desinflar: lo verifica el pase 5, con ojos
+  que no lo escribieron. Es la misma regla que le dio a backend su +1 hoy.
+- **La razón de arquitectura venía escrita como "se ignoró y bajó"**, que no es
+  ninguna de las tres formas admitidas. Se normalizó a **deuda que cobró
+  factura**, que es lo que su propio texto describe. Se deja anotado en vez de
+  corregirlo en silencio.
+
+## El reconteo que tumbó mi propia premisa
+
+Vale más que un hallazgo. Al despachar al auditor de rendimiento le escribí que
+su ALTO de "214 consultas por carga de `/dashboard`" había que recontarlo porque
+*"el 60% de ese trabajo era para vistas que ya no existen"*. Volvió con el
+número medido: **siguen siendo 214 en el SSR, y 244 por carga de navegador** —los
+30 extra son el rail del layout, que repite `getKpis` y un segundo barrido
+completo de `gasto`. Las 214 nunca vivieron en las páginas borradas: viven en
+`dashboard/page.tsx:90-122`, que sobrevivió intacto (su diff completo son 41
+líneas y ninguna toca ese `Promise.all`).
+
+Un orquestador que le pasa su hipótesis a un auditor le pasa también su sesgo. La
+línea que la corrigió fue *"recuéntalo con el código de hoy"*, no *"confirma que
+bajó"*.
+
+## Los tres arreglos de este pase — tope de 3 vueltas agotado
+
+**CRÍTICO · [frontend + arquitectura] El panel del cliente se quedó sin puertas** — `8d6ac51`
+`sidebar-nav.tsx:6` importaba **solo** `SIDEBAR_PRINCIPAL` y `FISCAL`, y `2be4b1c`
+vació las dos. `NEGOCIO` y `GESTION` —que `rutas.ts:26-28` declara explícitamente
+como *"no se tocó, pedido de Javier"*— nunca llegaban al render. Medido, no
+inferido: con `?rol=contador` el `<nav>` de `chrome.tsx:65` sale **vacío**
+(`puedeVerRuta('contador','/dashboard')` es false, porque `/dashboard` es área
+`operacion`), y esa es la vista que el demo abre desde `admin/selector-vista.tsx:54`.
+Con `?rol=flota_admin` sale **un** item: "Resumen", la página en la que ya estás.
+Siete páginas que funcionan quedaban alcanzables solo tecleando la URL, entre
+ellas `/dashboard/arco` (plazo de 20 días hábiles del art. 32 LFPDPPP, cuatro
+rondas sin link) y `combustible-casetas`, donde vive la cita de la LIF 20-A que es
+el argumento de venta.
+El guardarraíl que debía cazarlo (`visibilidad.test.ts:85-125`) sigue verde porque
+arma su lista de las **seis** constantes de sección, no de las dos que el
+componente lee: cubre la regla y no el cableado.
+Prueba: `sidebar_puerta.test.tsx` (5 casos) — renderiza el componente REAL y
+afirma sobre los `href` del HTML, en las dos direcciones (ninguna puerta falta,
+ninguna sobra). Sin el arreglo fallan 4.
+
+**ALTO · [fiscal] El catálogo de la flota no tenía `624`, y guardar reescribía el régimen** — `12cc8c6`
+`saas/fiscal.ts` —el catálogo con el que el **dueño** captura su régimen en Plan &
+Facturación— no traía `624`, mientras `admin/flotas/page.tsx:223` sí lo trae desde
+el arreglo del CRÍTICO C3. Los dos escriben `tenant.regimen_fiscal`.
+`forma.tsx:174-178` pinta el `<select>` con `defaultValue` y sin opción vacía, así
+que un `624` guardado no empataba ninguna `<option>` y el navegador seleccionaba
+la primera: el dueño entraba a corregir su código postal y salía en `601`.
+Prueba: `regimen_no_se_pierde.test.ts` (3 casos) — sin el arreglo fallan 2.
+
+**ALTO · [backend + seguridad] Un marcador viejo enseñaba la pantalla de error, no un 404** — `58c44f9`
+Las 18 carpetas borradas empatan ahora con el segmento dinámico `[id]`. El
+segmento llegaba crudo a `.eq('id','viajes')` sobre una columna `uuid`, Postgres
+contesta `22P02`, y `exigir()` —que falla cerrado a propósito— lo convertía en
+excepción. Es un modo de falla que el borrado **estrenó**: hasta ayer esas 18
+rutas resolvían a su propia página, y cada URL pegada en un WhatsApp del demo
+apunta ahí.
+Prueba: `id_no_uuid.test.ts` (21 casos), que cubre la regla **y** el cableado — el
+último caso lee el código fuente de la página y exige que la guarda esté antes de
+la consulta, porque el bug no era la regla sino que nadie la llamaba.
+
+## Un hallazgo verificado a la baja (y por qué se anota)
+
+**El auditor fiscal declaró que el régimen reescrito "le apaga a un coordinado la
+facilidad del 15%". Eso es falso, y el arreglo entró igual.**
+
+La elegibilidad para la facilidad de la RFA 2.9 vive en
+`tenant.config.facilidadCombustibleEfectivo` (`cuadre/desde_db.ts:56`,
+`likida/fiscal.ts:220`, `tools.ts:116`), que solo escriben `crearFlota` y
+`actualizarFacilidad15`. `guardarDatosFiscales` **nunca toca `config`**: el motor
+de cuadre no se entera de que el régimen cambió. La cadena causal del auditor se
+rompe en el último eslabón, y con ella su afirmación de que "reabre el CRÍTICO C3
+por otra puerta". No lo reabre.
+
+Lo que sí pasa, y por eso el hallazgo sobrevive como ALTO con la consecuencia
+corregida: `regimen_fiscal` es la columna que viaja al receptor del CFDI que
+Likida le emite a la flota (`flota_fiscal.ts:84` → `adaptadores/registro.ts:133` →
+`facturapi.ts:183`, `tax_system`). Un coordinado recibe su factura timbrada con
+el régimen equivocado, y de paso `regimen_fiscal` queda contradiciendo a
+`config.regimenElegible` sobre la misma flota sin que nada lo señale.
+
+Un hallazgo con el daño exagerado y el defecto real es más peligroso que uno
+falso: el falso se descarta, este se arregla creyendo que cerró otra cosa.
+
+## Los 4 CRÍTICOS pendientes — con la razón, sin cuarta opción
+
+- **C6 · [pruebas] El callback de QStash emite CFDI sin una sola prueba** —
+  REINCIDENTE, **cuarto pase**. `api/cron/facturar/cola/route.ts:40,66`, 0.0% de
+  47 statements, byte-idéntico desde antes de la ronda 17. *Razón:* el arreglo es
+  escribir el arnés de un endpoint que factura de verdad; sesión propia. El
+  auditor no volvió a correr el mutante y lo dijo: ya se demostró verde en los
+  pases 2 y 3 sobre el mismo archivo sin cambios, y gastó esa corrida en código
+  nuevo. Es la decisión correcta.
+- **C4 · [fiscal] El 15% se mide contra "el combustible que Likida vio"** —
+  `engine.ts:337,354`, ficha `rfa-2026-2.9.yaml` (verificada). `git diff` de esos
+  archivos contra el merge: vacío. *Razón:* el denominador correcto exige un dato
+  que el producto no tiene. Decisión de producto.
+- **C7 · [rendimiento] El cierre no cabe en la reserva que él mismo aparta** —
+  13,700 ms nominales contra `MARGEN_CIERRE_MS` = 12,000, y ningún paso del cierre
+  consulta el reloj. *Razón:* subir el margen le quita techo al agente, y eso
+  tiene efecto en el demo.
+- **C10 · [legal] Likida hace el PRIMER contacto por WhatsApp sin aviso** —
+  rubro *no auditado este pase*; conserva su estado del pase 3. *Razón:* texto de
+  aviso y canal de baja; producto y abogado.
+
+**C5 (legal, la foto al modelo externo antes del aviso)** también sigue abierto y
+tampoco se auditó este pase: su nota y su estado se conservan sin tocar.
+
+**El CRÍTICO de navegación fue el quinto, y se cerró.**
+
+## Lo que este pase dice del proceso
+
+- **Un borrado grande cierra pantallas, no bugs.** El instinto era que quitar
+  6,000 líneas bajaría la cuenta de hallazgos. Bajó poco y muy desigual: fiscal
+  cerró 4 de 16, frontend 3, backend 1, arquitectura **cero**. Lo que se borró
+  fueron las páginas; la lógica que las alimentaba sigue en `lib/likida/` sin
+  tocar, y ahí es donde vivían los hallazgos.
+- **Y estrena modos de falla propios.** Los dos ALTO que arreglé hoy no existían
+  anteayer: los dos son consecuencia del borrado, no del código borrado. Un
+  `git rm` limpio deja el árbol compilando y la navegación rota.
+- **La suite rechazó un arreglo mío por la razón correcta.** El primer intento de
+  la vuelta 3 ponía la guarda del uuid en la capa de datos; 15 pruebas de
+  `analytics.test.ts` se pusieron rojas porque dejaba inalcanzable su caso de
+  fail-closed. Se revirtió y se puso en la página. El bucle retuvo lo que mejora.
+- **Una prueba que congela una lista congela la fecha en que dejó de ser cierta.**
+  `saas/fiscal.test.ts` comparaba contra la lista de la migración `0056` escrita a
+  mano; la `0088` la movió hace tres días y la prueba no se enteró. Ahora lee el
+  CHECK vigente.
+
+---
+
 # Auditoría 17 — síntesis · pase 3 · 10-ago-2026
 
 **Ronda de CONTINUACIÓN.** El PR **#9** seguía abierto sobre `claude/auditoria-17`,
