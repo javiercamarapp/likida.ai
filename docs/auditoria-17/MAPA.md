@@ -1,6 +1,71 @@
-# MAPA — auditoría 17 (8-ago · pase 2 el 9-ago · pase 3 el 10-ago-2026)
+# MAPA — auditoría 17 (8-ago · p2 9-ago · p3 10-ago · p4 11-ago-2026)
+
+## PASE 4 — ronda de CONTINUACIÓN (11-ago-2026)
+
+El PR **#9** (`claude/auditoria-17`) sigue **abierto** → continuación sobre esa
+rama, sin PR nuevo. Árbol limpio al arrancar (HEAD detached en `003c88a`) →
+autofix habilitado.
+
+**Lo que cambió en `master` desde el merge del pase 3 (`20ecbb1` → `003c88a`):
+9 commits, 54 archivos, +385 / −6,158. El cambio dominante es un BORRADO.**
+
+```
+$ git log --oneline 20ecbb1..origin/master
+003c88a feat(dashboard)!: borra el panel del Contador para rehacerlo desde cero
+2be4b1c feat(dashboard)!: borra las 17 páginas de "dueño de flota" para rehacerlas desde cero
+0f709fb feat(despacho): rediseño con el lenguaje visual de Resumen
+a47d1d7 refactor(cuadre): mueve getLiquidaciones a analytics.ts
+0bc0935 docs+refactor: inventario de datos de las 17 páginas antes de borrarlas
+6463e93 fix(dashboard): server actions no pueden cerrar sobre funciones locales
+621cc0e chore(normas): latido de vigilancia — undécima corrida bloqueada por egress
+086b9f3 chore(salud): latido de la primera corrida — PR #10, issues #11 y #12
+53c9d49 chore(normas): latido de vigilancia — décima corrida bloqueada por egress
+```
+
+**35 páginas del panel del cliente dejaron de existir** (`contador/` entero,
+`viajes`, `unidades`, `operadores`, `mapa`, `pod`, `incidencias`, `documentos`,
+`facturacion`, `rentabilidad`, `valor-ahorro`, `cotizador`, `cuadre`, `despacho`,
+`clientes`, `cobranza`, `analitica`, `chat`). Entró una sola:
+`dashboard/tablero-operacion.tsx` (103 líneas). `rutas.ts` se recortó de 96
+líneas a 34. Esto **cierra por supresión** una parte de los hallazgos abiertos de
+los pases 1–3, y el trabajo de este pase es decir **cuáles**, con archivo y
+línea, en vez de dejarlos flotando como "ya no aplica".
+
+Merge de `origin/master` a la rama: **limpio, sin conflicto**.
+
+### Qué se relanzó y por qué (7 de 12)
+
+| Rubro | Archivos suyos que cambiaron |
+|---|---|
+| **Frontend** | 35 páginas borradas, `tablero-operacion.tsx` nueva, `dashboard/page.tsx`, `inicio-operacion.tsx`, `suscripcion/page.tsx`, `combustible-casetas/page.tsx`, `admin/page.tsx`, `admin/flotas/page.tsx`, `admin/selector-vista.tsx` |
+| **Backend y API** | `analytics.ts` (+32, `getLiquidaciones` movida desde `cuadre/`), `fiscal.ts` (+21), `visibilidad.ts` (61 líneas), `contador/cfdi/export/route.ts` borrada |
+| **Seguridad** | `src/lib/auth/visibilidad.ts` reescrita (61 de 61 líneas) — es la capa que decide qué ve cada rol |
+| **Fiscal** | `src/lib/likida/fiscal.ts` +21; y 6 de las pantallas con veredicto fiscal citado desaparecieron |
+| **Arquitectura** | `rutas.ts` −62, 35 módulos borrados, `getLiquidaciones` cambió de casa |
+| **Pruebas** | `contador/page.test.tsx` y `contador/periodo.test.tsx` borradas, `despacho/vista.test.tsx` renombrada, 4 tests más modificados; la suite bajó de 3,194 a 3,105 |
+| **Rendimiento** | `analytics.ts` cambió; el grueso de las 214 consultas por carga vivía en páginas borradas |
+
+Los otros cinco —**agéntico, tool calling, legal, operabilidad, modelo de datos**—
+conservan su nota del pase 3 marcados *no auditado este pase*: cero archivos
+suyos cambiaron (`src/lib/agents/`, `src/lib/llm/`, `src/lib/likida/tools.ts`,
+`privacidad.ts`, `supabase/migrations/`, `src/lib/observability/` → sin un solo
+diff en los 9 commits).
+
+### Compuerta del pase 4 (línea base, árbol post-merge, corrida hoy)
+
+```
+npx tsc --noEmit -p .   → 0 errores
+npx vitest run          → 258 archivos, 3,105 verdes, 1 saltada  (p3: 260 / 3,194)
+npm run lint            → 0 errores, 17 warnings  (p3: 18)
+```
+
+La suite baja 89 pruebas porque se fueron con sus páginas; no es una regresión.
+
+---
 
 ## PASE 3 — ronda de CONTINUACIÓN (10-ago-2026)
+
+El PR #9 (`claude/auditoria-17`) sigue **abierto** → continuación sobre esa rama,
 
 El PR #9 (`claude/auditoria-17`) sigue **abierto** → continuación sobre esa rama,
 sin PR nuevo. Árbol limpio al arrancar (HEAD detached en `53c9d49`) → autofix
@@ -129,7 +194,7 @@ Hoy es `src/lib/likida/`. Si un path del brief no existe, búscalo bajo `likida/
 | Agentes | `src/lib/agents/` (`run.ts`, `registry.ts`, `prompts.ts`) |
 | LLM / proveedor | `src/lib/llm/` |
 | Auth y permisos | `src/lib/auth/`, `src/proxy.ts` |
-| Panel cliente | `src/app/dashboard/` (~31 páginas, filtradas al tenant) |
+| Panel cliente | `src/app/dashboard/` — **ojo: tras `2be4b1c` y `003c88a` quedan ~9 páginas, no 31.** Cuéntalas antes de citar un número. |
 | Consola superadmin | `src/app/admin/` (cruza tenants a propósito: `src/lib/admin/negocio.ts`) |
 | API | `src/app/api/` |
 | Formato de cifras | `src/lib/formato.ts` (**única** fuente; hay prueba que lo exige) |

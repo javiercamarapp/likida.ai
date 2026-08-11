@@ -2,6 +2,21 @@
 
 Una línea por acción, con su sha. Se escribe MIENTRAS avanza, no al cerrar.
 
+## PASE 4 — 11-ago-2026
+
+| # | Acción | Resultado | sha |
+|---|---|---|---|
+| 1 | `git status` al arrancar | **limpio** (HEAD detached en `003c88a`) → autofix HABILITADO | — |
+| 2 | Decisión de tamaño de ronda | **CONTINUACIÓN** — PR #9 abierto sobre `claude/auditoria-17` | — |
+| 3 | `git merge origin/master` a la rama | limpio, sin conflicto. 9 commits, 54 archivos, +385/−6,158 | `0f6ebce` |
+| 4 | `npm ci` | 623 paquetes; `npm audit`: 13 vulns (2 críticas, 8 altas, 3 moderadas) | — |
+| 5 | Compuerta base `npx tsc --noEmit -p .` | **0 errores** | — |
+| 6 | Compuerta base `npx vitest run` | **258 archivos, 3,105 verdes, 1 saltada** (p3: 260 / 3,194) | — |
+| 7 | Compuerta base `npm run lint` | **0 errores, 17 warnings** (p3: 18) | — |
+| 8 | `MAPA.md` — sección PASE 4 | ok | — |
+| 9 | **7 auditores** lanzados en paralelo (frontend, backend, seguridad, fiscal, arquitectura, pruebas, rendimiento) | — | — |
+
+
 | # | Acción | Resultado | sha |
 |---|---|---|---|
 | 1 | `git status` al arrancar | **limpio** (HEAD detached en `94c0733`) → autofix HABILITADO | — |
