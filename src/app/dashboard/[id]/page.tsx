@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { LEYENDA_CORTA } from '@/lib/likida/cuadre/leyendas';
 import { notFound, redirect } from 'next/navigation';
 import { getLiquidacionDetalle } from '@/lib/likida/analytics';
+import { esIdDeLiquidacion } from './id';
 import { etiquetaConcepto } from '@/lib/likida/cuadre/engine';
 import { filasDeducibilidad } from '@/lib/likida/liquidacion/deducibilidad';
 import { mxn } from '@/lib/utils';
@@ -53,6 +54,12 @@ export default async function Detalle({
   if (!puedeVerArea(rol, 'dinero')) redirect(inicioDe(rol));
 
   const { id } = await params;
+  // Las 18 rutas borradas el 10 y 11 de agosto (`/dashboard/viajes`,
+  // `/dashboard/cuadre`, `/dashboard/contador`…) empatan ahora con este
+  // segmento dinámico. Sin esto, el segmento llega crudo a una columna `uuid`,
+  // Postgres lanza `22P02` y el marcador viejo enseña la pantalla de error en
+  // vez de un 404. Ver `./id.ts`.
+  if (!esIdDeLiquidacion(id)) notFound();
   const sp = await searchParams;
 
   // Mismo criterio de dashboard/page.tsx: un superadmin viendo la flota X
