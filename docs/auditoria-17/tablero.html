@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Likida — Auditoría 17 · pase 3 · 10-ago-2026</title>
+<title>Likida — Auditoría 17 · pase 4 · 11-ago-2026</title>
 <style>
   :root{
     --bg:#f7f8fa; --panel:#ffffff; --line:#e2e6ec; --ink:#141a21; --muted:#5d6b7a;
@@ -81,65 +81,73 @@
 <div class="wrap">
 
 <header>
-  <h1>Likida — Auditoría 17 · pase 3</h1>
-  <div class="sub">10-ago-2026 · ronda de <strong>CONTINUACIÓN</strong> sobre el PR #9 · rama <code>claude/auditoria-17</code></div>
+  <h1>Likida — Auditoría 17 · pase 4</h1>
+  <div class="sub">11-ago-2026 · ronda de <strong>CONTINUACIÓN</strong> sobre el PR #9 · rama <code>claude/auditoria-17</code></div>
 </header>
 
 <div class="banner">
-  <strong>La global no se movió, y eso es el hallazgo.</strong> Frontend subió 1 y backend
-  bajó 1: se cancelan. El código que se arregló mejoró de verdad, y al mirarlo de cerca
-  apareció un CRÍTICO que llevaba rondas invisible. Un promedio quieto puede esconder
-  dos movimientos grandes en direcciones opuestas — por eso la tabla manda sobre el número.
+  <strong><code>master</code> borró 6,000 líneas del panel del cliente, y el panel se quedó sin puertas.</strong>
+  35 páginas menos, para rehacerse desde cero. El borrado cerró <em>pantallas</em>, no bugs
+  —arquitectura cerró CERO de sus 5 hallazgos por supresión— y estrenó dos modos de falla
+  propios que no existían anteayer: el sidebar sin items y 18 URLs viejas contestando con la
+  pantalla de error. Los dos, arreglados hoy.
 </div>
 
 <h2>Estado de la compuerta — árbol final</h2>
 <div class="gate">
   <span class="ok">tsc &nbsp;0 errores</span>
-  <span class="ok">vitest &nbsp;260 archivos · 3,194 verdes · 1 saltada</span>
-  <span class="ok">eslint &nbsp;0 errores · 18 warnings</span>
-  <span class="ok">61 s</span>
+  <span class="ok">vitest &nbsp;261 archivos · 3,134 verdes · 1 saltada</span>
+  <span class="ok">eslint &nbsp;0 errores · 17 warnings</span>
+  <span class="ok">58 s</span>
 </div>
 <p class="sub" style="margin-top:8px">
   Sin <code>npm run build</code> y sin <code>pruebas-manuales/*</code>: en la nube no hay
   Supabase/OpenRouter/Facturapi/Upstash, y esas pruebas hacen llamadas de pago.
-  Línea base al arrancar el pase: <strong>3,182</strong> verdes → los tres arreglos sumaron 12 pruebas.
+  Línea base al arrancar el pase: <strong>258 archivos · 3,105 verdes</strong> — bajó 89 desde
+  el pase 3 porque esas pruebas se fueron con sus páginas, no por una regresión.
+  Los tres arreglos sumaron <strong>29</strong>.
 </p>
 
 <h2>Los 12 rubros</h2>
 <div class="grid">
-  <div class="card"><div class="k">Global</div><div class="v">4.9</div><div class="n">= 0.0 contra el pase 2</div></div>
-  <div class="card"><div class="k">Rubros auditados</div><div class="v">3 <span style="font-size:15px;color:var(--muted)">/ 12</span></div><div class="n">continuación: solo los que cambiaron</div></div>
-  <div class="card"><div class="k">Críticos</div><div class="v">1 <span style="font-size:15px;color:var(--muted)">nuevo</span></div><div class="n">cerrado con prueba · 5 pendientes</div></div>
-  <div class="card"><div class="k">Arreglos</div><div class="v">3</div><div class="n">3 vueltas · 0 revertidos</div></div>
+  <div class="card"><div class="k">Global</div><div class="v">4.8</div><div class="n">▼ 0.1 contra el pase 3</div></div>
+  <div class="card"><div class="k">Rubros auditados</div><div class="v">7 <span style="font-size:15px;color:var(--muted)">/ 12</span></div><div class="n">continuación: solo los que cambiaron</div></div>
+  <div class="card"><div class="k">Críticos</div><div class="v">1 <span style="font-size:15px;color:var(--muted)">nuevo</span></div><div class="n">cerrado con prueba · 4 pendientes</div></div>
+  <div class="card"><div class="k">Arreglos</div><div class="v">3</div><div class="n">3 vueltas · 0 revertidos · 1 intento rechazado por la suite</div></div>
 </div>
 
 <div class="scroll">
 <table>
   <thead><tr>
-    <th>Rubro</th><th class="num">p2</th><th class="num">p3</th><th>Δ</th><th>Razón del movimiento</th>
+    <th>Rubro</th><th class="num">p3</th><th class="num">p4</th><th>Δ</th><th>Razón del movimiento</th>
   </tr></thead>
   <tbody>
-    <tr><td><strong>Frontend</strong></td><td class="num">4</td><td class="num nota n-med">5</td><td class="up">▲</td>
-        <td><strong>se atacó y subió</strong> — <code>d7b71a8</code> y <code>e47b124</code> cierran de verdad, verificados por quien no los escribió. Primer pase en 4 rondas sin un solo CRÍTICO.</td></tr>
-    <tr><td><strong>Backend y API</strong></td><td class="num">5</td><td class="num nota n-mal">4</td><td class="dn">▼</td>
-        <td><strong>mirada más profunda</strong> — el lease del mutex (60 s) era más corto que el turno que protege (72 s documentados) y nadie lo había mirado nunca.</td></tr>
-    <tr><td><strong>Sistema agéntico</strong></td><td class="num">4</td><td class="num nota n-mal">4</td><td class="fl">=</td><td class="na">no auditado este pase</td></tr>
-    <tr><td><strong>Tool calling</strong></td><td class="num">7</td><td class="num nota n-bien">7</td><td class="fl">=</td><td class="na">no auditado — cero archivos del rubro cambiaron desde <code>94c0733</code> (2 pases por rotación)</td></tr>
-    <tr><td><strong>Seguridad</strong></td><td class="num">6</td><td class="num nota n-med">6</td><td class="fl">=</td><td class="na">no auditado este pase</td></tr>
-    <tr><td><strong>Cumplimiento fiscal</strong></td><td class="num">5</td><td class="num nota n-med">5</td><td class="fl">=</td><td class="na">no auditado este pase</td></tr>
+    <tr><td><strong>Frontend</strong></td><td class="num">5</td><td class="num nota n-mal">3</td><td class="dn">▼▼</td>
+        <td><strong>deuda que cobró factura</strong> — el borrado dejó el panel sin navegación (1 CRÍTICO nuevo). De sus hallazgos abiertos solo <strong>3</strong> murieron con su página; 13 siguen vivos, uno en su <strong>6ª</strong> ronda.</td></tr>
+    <tr><td><strong>Backend y API</strong></td><td class="num">4</td><td class="num nota n-med">5</td><td class="up">▲</td>
+        <td><strong>se atacó y subió</strong> — <code>3404616</code> y <code>ea23059</code> cierran de verdad, verificados por quien no los escribió. <strong>Cero CRÍTICOS abiertos.</strong></td></tr>
+    <tr><td><strong>Sistema agéntico</strong></td><td class="num">4</td><td class="num nota n-mal">4</td><td class="fl">=</td><td class="na">no auditado este pase — cero archivos de <code>src/lib/agents/</code> cambiaron</td></tr>
+    <tr><td><strong>Tool calling</strong></td><td class="num">7</td><td class="num nota n-bien">7</td><td class="fl">=</td><td class="na">no auditado — cero cambios en <code>tools.ts</code>/<code>llm/</code>/<code>agents/</code> desde <code>94c0733</code> (3 pases por rotación)</td></tr>
+    <tr><td><strong>Seguridad</strong></td><td class="num">6</td><td class="num nota n-med">6</td><td class="fl">=</td>
+        <td><strong>se atacó y subió</strong> (la reescritura de <code>visibilidad.ts</code> es estrictamente restrictiva, verificada línea por línea) compensado por <strong>deuda que cobró factura</strong>: los 3 ALTO de RLS siguen los tres.</td></tr>
+    <tr><td><strong>Cumplimiento fiscal</strong></td><td class="num">5</td><td class="num nota n-med">5</td><td class="fl">=</td>
+        <td><strong>se atacó y subió</strong> (4 hallazgos cerrados por supresión) compensado por <strong>deuda que cobró factura</strong>: 4 nuevos, dos en <code>src/lib/saas/</code> — territorio que dos pases declararon <em>no revisado</em>.</td></tr>
     <tr><td><strong>Cumplimiento legal</strong></td><td class="num">3</td><td class="num nota n-mal">3</td><td class="fl">=</td><td class="na">no auditado este pase</td></tr>
-    <tr><td><strong>Arquitectura</strong></td><td class="num">5</td><td class="num nota n-med">5</td><td class="fl">=</td><td class="na">no auditado este pase</td></tr>
+    <tr><td><strong>Arquitectura</strong></td><td class="num">5</td><td class="num nota n-mal">4</td><td class="dn">▼</td>
+        <td><strong>deuda que cobró factura</strong> — 4 de sus 5 hallazgos siguen palabra por palabra. El borrado dejó <strong>29 símbolos sin llamador</strong>, 2 módulos sin importador y un <strong>tercer</strong> mapa concepto→etiqueta ya divergido: el ejemplo canónico del rubro, reproducido.</td></tr>
     <tr><td><strong>Pruebas</strong></td><td class="num">5</td><td class="num nota n-med">5</td><td class="fl">=</td>
-        <td><strong>se atacó y subió</strong> (los 3 arreglos del PR mueren al revertirlos) compensado por <strong>deuda que cobró factura</strong> (C6 va en su tercer pase idéntico).</td></tr>
+        <td><strong>se atacó y subió</strong> (ninguna de las 89 pruebas perdidas anclaba dinero; la única intermitente del repo quedó arreglada, verificada en 4 zonas) compensado por <strong>deuda que cobró factura</strong>: C6 llega a su <strong>cuarto</strong> pase idéntico.</td></tr>
     <tr><td><strong>Operabilidad y DX</strong></td><td class="num">5</td><td class="num nota n-med">5</td><td class="fl">=</td><td class="na">no auditado este pase</td></tr>
-    <tr><td><strong>Rendimiento y costo</strong></td><td class="num">4</td><td class="num nota n-mal">4</td><td class="fl">=</td><td class="na">no auditado este pase</td></tr>
+    <tr><td><strong>Rendimiento y costo</strong></td><td class="num">4</td><td class="num nota n-mal">4</td><td class="fl">=</td>
+        <td><strong>deuda que cobró factura</strong> — ninguno de los 11 abiertos se cerró, y el reconteo tumbó la premisa de que el borrado los aliviaba.</td></tr>
     <tr><td><strong>Modelo de datos</strong></td><td class="num">6</td><td class="num nota n-med">6</td><td class="fl">=</td><td class="na">no auditado este pase</td></tr>
   </tbody>
 </table>
 </div>
+<p class="sub">Suma <strong>57</strong> / 12 = 4.75 → <strong>4.8</strong>. El color codifica la NOTA, nunca el delta: backend sube a 5 y sigue ámbar.</p>
 
 <h2>Serie histórica de la global</h2>
-<svg viewBox="0 0 900 240" role="img" aria-label="Global por ronda: 7.2 en la 13, 5.8 en la 17 pase 1, 4.9 en el pase 2, 4.9 en el pase 3">
+<svg viewBox="0 0 900 240" role="img" aria-label="Global por ronda: 7.2 en la 13, 5.8 en la 17 pase 1, 4.9 en el pase 2, 4.9 en el pase 3, 4.8 en el pase 4">
   <line x1="60" y1="30"  x2="860" y2="30"  stroke="var(--grid)" stroke-width="1"/>
   <line x1="60" y1="80"  x2="860" y2="80"  stroke="var(--grid)" stroke-width="1"/>
   <line x1="60" y1="130" x2="860" y2="130" stroke="var(--grid)" stroke-width="1"/>
@@ -148,146 +156,155 @@
   <text x="34" y="84"  fill="var(--muted)" font-size="11">7</text>
   <text x="34" y="134" fill="var(--muted)" font-size="11">6</text>
   <text x="34" y="184" fill="var(--muted)" font-size="11">5</text>
-  <polyline points="150,70 400,140 650,185 860,185"
+  <polyline points="130,70 320,140 510,185 700,185 860,190"
             fill="none" stroke="var(--down)" stroke-width="2.5"/>
-  <circle cx="150" cy="70"  r="5" fill="var(--down)"/>
-  <circle cx="400" cy="140" r="5" fill="var(--down)"/>
-  <circle cx="650" cy="185" r="5" fill="var(--down)"/>
-  <circle cx="860" cy="185" r="5" fill="var(--flat)"/>
-  <text x="150" y="56"  fill="var(--ink)" font-size="13" font-weight="700" text-anchor="middle">7.2</text>
-  <text x="400" y="126" fill="var(--ink)" font-size="13" font-weight="700" text-anchor="middle">5.8</text>
-  <text x="650" y="171" fill="var(--ink)" font-size="13" font-weight="700" text-anchor="middle">4.9</text>
-  <text x="845" y="171" fill="var(--ink)" font-size="13" font-weight="700" text-anchor="middle">4.9</text>
-  <text x="150" y="215" fill="var(--muted)" font-size="11" text-anchor="middle">ronda 13</text>
-  <text x="400" y="215" fill="var(--muted)" font-size="11" text-anchor="middle">17 · pase 1 (8-ago)</text>
-  <text x="650" y="215" fill="var(--muted)" font-size="11" text-anchor="middle">17 · pase 2 (9-ago)</text>
-  <text x="845" y="215" fill="var(--muted)" font-size="11" text-anchor="middle">17 · pase 3 (10-ago)</text>
+  <circle cx="130" cy="70"  r="5" fill="var(--down)"/>
+  <circle cx="320" cy="140" r="5" fill="var(--down)"/>
+  <circle cx="510" cy="185" r="5" fill="var(--down)"/>
+  <circle cx="700" cy="185" r="5" fill="var(--flat)"/>
+  <circle cx="860" cy="190" r="5" fill="var(--down)"/>
+  <text x="130" y="56"  fill="var(--ink)" font-size="13" font-weight="700" text-anchor="middle">7.2</text>
+  <text x="320" y="126" fill="var(--ink)" font-size="13" font-weight="700" text-anchor="middle">5.8</text>
+  <text x="510" y="171" fill="var(--ink)" font-size="13" font-weight="700" text-anchor="middle">4.9</text>
+  <text x="700" y="171" fill="var(--ink)" font-size="13" font-weight="700" text-anchor="middle">4.9</text>
+  <text x="845" y="176" fill="var(--ink)" font-size="13" font-weight="700" text-anchor="middle">4.8</text>
+  <text x="130" y="215" fill="var(--muted)" font-size="11" text-anchor="middle">ronda 13</text>
+  <text x="320" y="215" fill="var(--muted)" font-size="11" text-anchor="middle">17 · p1 (8-ago)</text>
+  <text x="510" y="215" fill="var(--muted)" font-size="11" text-anchor="middle">17 · p2 (9-ago)</text>
+  <text x="700" y="215" fill="var(--muted)" font-size="11" text-anchor="middle">17 · p3 (10-ago)</text>
+  <text x="845" y="215" fill="var(--muted)" font-size="11" text-anchor="middle">17 · p4 (11-ago)</text>
 </svg>
 
 <h2>Arreglados en este pase — con prueba que los reproduce</h2>
 <div class="scroll">
 <table>
-  <thead><tr><th>ID</th><th>Sev.</th><th>Hallazgo</th><th>Prueba</th><th>Estado</th></tr></thead>
+  <thead><tr><th>Sev.</th><th>Hallazgo</th><th>Prueba</th><th>Estado</th></tr></thead>
   <tbody>
     <tr>
-      <td><strong>C11</strong></td><td><span class="pill p-c">C</span></td>
-      <td><strong>El lease del mutex del viaje era más corto que el turno que protege.</strong>
-          <code>conv.ts:419</code> pedía 60 s; <code>presupuesto.ts:188-190</code> documenta 72 s de peor caso
-          (lock 12 s + intake 20 s + cuadre 40 s) y <code>processor.ts:1751</code> nunca pasaba <code>ttlMs</code>.
-          El lease vence solo, un segundo mensaje toma el viaje y los dos cierran sin que ninguno lance:
-          el chofer se queda con un PDF de $5,600 y la base con $7,000.</td>
-      <td><code>conv_lock_expira.test.ts</code> · 5 casos · sin el arreglo fallan 2
-          (<em>expected 60000 to be greater than or equal to 72000</em>)</td>
-      <td><span class="est e-ok">arreglado · 3404616</span></td>
+      <td><span class="pill p-c">C</span></td>
+      <td><strong>El panel del cliente se quedó sin puertas.</strong>
+          <code>sidebar-nav.tsx:6</code> importaba <em>solo</em> las dos listas que
+          <code>2be4b1c</code> vació. <code>NEGOCIO</code> y <code>GESTION</code> —vivas, y que
+          <code>rutas.ts:26-28</code> declara "no se tocó, pedido de Javier"— nunca llegaban al render.
+          Medido: con <code>?rol=contador</code> el <code>&lt;nav&gt;</code> sale <strong>vacío</strong>;
+          con <code>?rol=flota_admin</code>, <strong>un</strong> item. Siete páginas vivas alcanzables
+          solo tecleando la URL, entre ellas <code>/dashboard/arco</code> (art. 32 LFPDPPP, 4 rondas sin link).
+          Encontrado por separado por <strong>dos</strong> auditores.</td>
+      <td><code>sidebar_puerta.test.tsx</code> · 5 casos · renderiza el componente REAL y afirma
+          sobre los <code>href</code> del HTML · sin el arreglo fallan 4</td>
+      <td><span class="est e-ok">arreglado · 8d6ac51</span></td>
     </tr>
     <tr>
-      <td><strong>A-fe</strong></td><td><span class="pill p-a">A</span></td>
-      <td><strong>«Ahorro generado» inventaba un cero.</strong> <code>page.tsx:274</code> aplanaba con
-          <code>?? 0</code> un valor que es null cuando <code>safe()</code> se comió la consulta fiscal.
-          Con el motor caído, el KPI que ES el diferenciador pintaba <strong>$0.00</strong> sin banda de aviso.
-          AGRAVADO: el pase 2 arregló la celda de al lado y dejó esta.</td>
-      <td><code>ahorro_sin_dato.test.ts</code> · 3 casos · sin el arreglo fallan 2 · verificado en las dos direcciones</td>
-      <td><span class="est e-ok">arreglado · b9a191c</span></td>
+      <td><span class="pill p-a">A</span></td>
+      <td><strong>El catálogo de la flota no tenía <code>624</code>, y guardar reescribía el régimen.</strong>
+          <code>saas/fiscal.ts</code> no lo traía; <code>admin/flotas/page.tsx:223</code> sí. Los dos escriben
+          <code>tenant.regimen_fiscal</code>. El <code>&lt;select&gt;</code> usa <code>defaultValue</code> sin
+          opción vacía: un <code>624</code> guardado no empataba ninguna <code>&lt;option&gt;</code> y el
+          navegador elegía la primera. El dueño entraba a corregir su CP y salía en <code>601</code>, que viaja
+          al <code>tax_system</code> del CFDI que Likida le emite.</td>
+      <td><code>regimen_no_se_pierde.test.ts</code> · 3 casos · lee <code>REGIMENES_ELEGIBLES</code>
+          de la fuente en vez de copiarla · sin el arreglo fallan 2</td>
+      <td><span class="est e-ok">arreglado · 12cc8c6</span></td>
     </tr>
     <tr>
-      <td><strong>A-be</strong></td><td><span class="pill p-a">A</span></td>
-      <td><strong>El arreglo del pase 2 se reabría solo en una flota grande.</strong> La consulta de
-          comprobación no llevaba <code>limit</code>, <code>range</code> ni <code>count</code> —su comentario
-          decía que sí—, así que PostgREST recortaba a 1,000 filas en silencio. Con 100 viajes × 12 gastos,
-          <strong>16 choferes</strong> recibían la acusación falsa que el pase 2 cerró.</td>
-      <td><code>recordatorio_lote_truncado.test.ts</code> · 4 casos · sin el arreglo fallan 3
-          (<em>expected 1000 to be 1200</em>)</td>
-      <td><span class="est e-ok">arreglado · ea23059</span></td>
+      <td><span class="pill p-a">A</span></td>
+      <td><strong>Un marcador viejo enseñaba la pantalla de error, no un 404.</strong>
+          Las 18 carpetas borradas empatan ahora con <code>[id]</code>; el segmento llegaba crudo a una
+          columna <code>uuid</code>, Postgres contesta <code>22P02</code> y <code>exigir()</code> —que falla
+          cerrado a propósito— lo volvía excepción. Modo de falla que el borrado <strong>estrenó</strong>.</td>
+      <td><code>id_no_uuid.test.ts</code> · 21 casos · cubre la regla <strong>y</strong> el cableado:
+          lee el fuente de la página y exige la guarda ANTES de la consulta</td>
+      <td><span class="est e-ok">arreglado · 58c44f9</span></td>
     </tr>
   </tbody>
 </table>
 </div>
 
-<h2>Críticos pendientes (5) — con la razón, sin cuarta opción</h2>
+<h2>Críticos pendientes (4) — con la razón, sin cuarta opción</h2>
 <div class="scroll">
 <table>
   <thead><tr><th>ID</th><th>Rubro</th><th>Hallazgo y razón</th><th>Estado</th></tr></thead>
   <tbody>
     <tr><td><strong>C6</strong></td><td>Pruebas</td>
-        <td><strong>El callback de QStash emite CFDI y no tiene una sola prueba.</strong>
-            <code>api/cron/facturar/cola/route.ts:40,66</code>. Re-verificado en vivo hoy con mutante doble
-            (firma desactivada + sin re-validar <code>cfdi_uuid</code>): <strong>3,182 pruebas siguen verdes</strong>.
-            <em>Razón:</em> el arreglo es escribir el arnés de un endpoint que factura de verdad — sesión propia,
-            no una vuelta de auditoría.</td>
-        <td><span class="est e-rein">reincidente · 3er pase</span></td></tr>
+        <td><strong>El callback de QStash emite CFDI sin una sola prueba.</strong>
+            <code>api/cron/facturar/cola/route.ts:40,66</code> — 0.0% de 47 statements, byte-idéntico
+            desde antes de la ronda 17. <em>Razón:</em> el arreglo es escribir el arnés de un endpoint que
+            factura de verdad; sesión propia. El auditor no volvió a correr el mutante <em>y lo dijo</em>:
+            ya salió verde en los pases 2 y 3 sobre el mismo archivo sin cambios.</td>
+        <td><span class="est e-rein">reincidente · 4º pase</span></td></tr>
     <tr><td><strong>C4</strong></td><td>Fiscal</td>
         <td><strong>El 15% se mide contra «el combustible que Likida vio».</strong>
-            <code>engine.ts:337,354</code>. <em>Razón:</em> el denominador correcto exige un dato que el producto
-            no tiene. Decisión de producto, no de código: o se declara el supuesto en el PDF, o se captura el
-            total del ejercicio. Se propone, no se inventa.</td>
-        <td><span class="est e-pend">pendiente</span></td></tr>
-    <tr><td><strong>C5</strong></td><td>Legal</td>
-        <td><strong>La foto viaja al modelo externo antes del aviso.</strong>
-            <code>processor.ts:522-525</code> contra el bloqueo de <code>:636</code>. <em>Razón:</em> mover el
-            bloqueo antes del intake cambia el flujo de huérfanos (mig. 0040) y puede dejar fotos sin recoger.
-            Cambio de diseño del ciclo, no de una línea.</td>
+            <code>engine.ts:337,354</code>, ficha <code>rfa-2026-2.9.yaml</code> verificada.
+            <code>git diff</code> de esos archivos contra el merge: vacío. <em>Razón:</em> el denominador
+            correcto exige un dato que el producto no tiene. Decisión de producto.</td>
         <td><span class="est e-rein">reincidente</span></td></tr>
     <tr><td><strong>C7</strong></td><td>Rendimiento</td>
         <td><strong>El cierre no cabe en la reserva que él mismo aparta.</strong>
-            <code>presupuesto.ts</code>: <code>COSTO_CIERRE_MS</code> = 9,400 ms y
-            <code>avisarCierreAlJefe</code> sigue sin presupuestar, contra <code>MARGEN_CIERRE_MS</code> = 12,000.
-            <em>Razón:</em> subir el margen le quita techo al agente y eso tiene efecto en el demo. Decisión de producto.</td>
+            13,700 ms nominales contra <code>MARGEN_CIERRE_MS</code> = 12,000, y ningún paso del cierre
+            consulta el reloj. <em>Razón:</em> subir el margen le quita techo al agente, y eso tiene
+            efecto en el demo.</td>
         <td><span class="est e-rein">reincidente · agravado</span></td></tr>
     <tr><td><strong>C10</strong></td><td>Legal</td>
         <td><strong>Likida hace el PRIMER contacto por WhatsApp sin aviso.</strong>
-            <code>operacion.ts:585</code> → <code>notificar.ts:170</code>, contra
-            <code>normas/lfpdppp-15-16.yaml:59-61</code>. <em>Razón:</em> el arreglo es texto de aviso y un canal
-            de baja — producto y abogado, no código. Mismo expediente que el ToS.</td>
-        <td><span class="est e-rein">reincidente · 5 pases</span></td></tr>
+            Rubro <em>no auditado este pase</em>; conserva su estado del pase 3. <em>Razón:</em> texto de
+            aviso y canal de baja — producto y abogado, no código.</td>
+        <td><span class="est e-rein">reincidente · 6 pases</span></td></tr>
   </tbody>
 </table>
 </div>
+<p class="sub"><strong>C5</strong> (legal — la foto viaja al modelo externo antes del aviso) sigue abierto y
+tampoco se auditó este pase: su estado se conserva sin tocar.</p>
 
-<h2>Lo que el auditor de pruebas encontró sobre los arreglos anteriores</h2>
+<h2>Reincidentes que este pase volvió a medir</h2>
 <div class="scroll">
 <table>
-  <thead><tr><th>Sev.</th><th>Hallazgo</th><th>Estado</th></tr></thead>
+  <thead><tr><th>Rubro</th><th>Hallazgo</th><th>Cuántos pases</th></tr></thead>
   <tbody>
-    <tr><td><span class="pill p-a">A</span></td>
-        <td><strong>El CRÍTICO del panel en blanco se puede devolver entero y la suite sigue verde.</strong>
-            <code>rail.tsx:53-59</code>. La prueba de <code>d7b71a8</code> cubre la <em>regla</em>
-            (<code>rail-marca.ts</code>, 6 statements, 100%) pero no el <em>cableado</em>
-            (<code>rail.tsx</code>, 93 statements, 0%), que es donde vivía el bug. El patrón
-            «arnés que aparenta» reproducido dentro de un arreglo de este mismo PR.</td>
-        <td><span class="est e-pend">propuesto</span></td></tr>
-    <tr><td><span class="pill p-a">A</span></td>
-        <td><code>agente.ts:325</code> — <code>ok: true</code> clavado: 17 archivos y 303 pruebas verdes con el mutante puesto.</td>
-        <td><span class="est e-pend">propuesto</span></td></tr>
-    <tr><td><span class="pill p-a">A</span></td>
-        <td><code>api/dashboard/asistente/route.ts:43,56</code> — IDOR documentado, las dos puertas removibles sin que nada se ponga rojo.</td>
-        <td><span class="est e-pend">propuesto</span></td></tr>
-    <tr><td><span class="pill p-a">A</span></td>
-        <td><code>api/cron/purgar/route.ts:51,55,62</code> — <code>DIAS_WA = 0</code> y las compuertas fuera, suite verde.</td>
-        <td><span class="est e-pend">propuesto</span></td></tr>
-    <tr><td><span class="pill p-m">M</span></td>
-        <td><strong>Primera prueba intermitente del repo, confirmada.</strong> <code>actividad.test.ts</code>,
-            15 corridas en 5 zonas: verde en UTC / Mexico_City / Kiritimati,
-            <code>4 failed | 2 passed</code> en Asia/Tokyo y Etc/GMT+12.</td>
-        <td><span class="est e-rein">reincidente</span></td></tr>
+    <tr><td>Frontend</td><td>El asistente expandido bajo 1280 px secuestra la siguiente página</td><td><span class="est e-rein">6ª ronda</span></td></tr>
+    <tr><td>Rendimiento</td><td><strong>214</strong> consultas por carga en el SSR de <code>/dashboard</code> — y <strong>244</strong> por carga de navegador con el rail del layout</td><td><span class="est e-rein">3ª ronda</span></td></tr>
+    <tr><td>Rendimiento</td><td>La migración <code>0084</code> sigue sin que nadie la llame</td><td><span class="est e-rein">5ª ronda</span></td></tr>
+    <tr><td>Seguridad</td><td>Las tablas del dinero no tienen capa de rol en la base: un <code>encargado</code> las lee enteras por PostgREST</td><td><span class="est e-rein">3ª ronda</span></td></tr>
+    <tr><td>Arquitectura</td><td>Tercer mapa concepto→etiqueta, divergido en 3 de 9 claves (<code>gasto-semanal-chart.tsx:9-13</code>: <code>Casetas</code>/<code>Facturas</code>/<code>Otros</code> contra <code>Caseta</code>/<code>Factura</code>/<code>Otro</code> del motor), en el único archivo que el guardarraíl no enumera</td><td><span class="est e-rein">ejemplo canónico</span></td></tr>
   </tbody>
 </table>
 </div>
 
-<h2>Refutados por los propios auditores</h2>
+<h2>Verificados a la baja por el orquestador</h2>
 <p class="sub" style="margin-top:0">
-  Se muestran porque son la prueba de que la verificación ocurrió.
-  <strong>Ningún hallazgo de este pase resultó falso</strong> — los tres que se arreglaron se abrieron
-  uno por uno contra el código antes de anotarlos. Lo que sí hubo fue una hipótesis que el propio
-  auditor de pruebas cerró a su favor: <code>repo_escritura.test.ts:124</code> <strong>sí caza</strong>
-  el cambiazo comprobado↔anticipo y <code>p_ieps</code>←IVA en <code>saveLiquidacion</code>
-  (<code>1 failed | 3181 passed</code>). La escritura del dinero está anclada de verdad.
-  De 11 mutaciones, 7 sobrevivieron; las 11 se revirtieron una por una.
+  Se muestran porque son la prueba de que la verificación ocurrió. <strong>Ninguno resultó falso
+  del todo, y uno resultó falso a medias</strong>, que es peor y por eso encabeza:
 </p>
+<div class="scroll">
+<table>
+  <thead><tr><th>Qué se dijo</th><th>Qué encontré al abrir el código</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><em>[fiscal]</em> El régimen reescrito <strong>"le apaga a un coordinado la facilidad del 15%"</strong>, y con eso "reabre el CRÍTICO C3 por otra puerta".</td>
+      <td><strong>Falso.</strong> La elegibilidad vive en <code>tenant.config.facilidadCombustibleEfectivo</code>
+          (<code>desde_db.ts:56</code>, <code>fiscal.ts:220</code>, <code>tools.ts:116</code>), que solo escriben
+          <code>crearFlota</code> y <code>actualizarFacilidad15</code>: <code>guardarDatosFiscales</code> nunca
+          toca <code>config</code>. No reabre C3. El <strong>defecto sí es real</strong> y se arregló con la
+          consecuencia corregida: <code>regimen_fiscal</code> viaja al <code>tax_system</code> del CFDI
+          (<code>facturapi.ts:183</code>). Un hallazgo con el daño exagerado y el defecto real es más
+          peligroso que uno falso: el falso se descarta, este se arregla creyendo que cerró otra cosa.</td>
+    </tr>
+    <tr>
+      <td><em>[del orquestador, no de un auditor]</em> Al despachar rendimiento le escribí que sus 214 consultas
+          había que recontarlas porque <em>"el 60% de ese trabajo era para vistas que ya no existen"</em>.</td>
+      <td><strong>Mi premisa era falsa.</strong> Siguen siendo 214 en el SSR: viven en
+          <code>dashboard/page.tsx:90-122</code>, que sobrevivió intacto (su diff completo son 41 líneas y
+          ninguna toca ese <code>Promise.all</code>). Un orquestador que le pasa su hipótesis a un auditor
+          le pasa también su sesgo.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
 <div class="foot">
-  Ronda de continuación sobre el PR #9 · 3 de 12 rubros reauditados (los que cambiaron desde que se
-  escribió su archivo) · 3 vueltas de arreglo, tope agotado, 0 revertidos ·
-  <code>master</code> avanzó 1 commit desde el pase 2 y toca solo <code>normas/.latido-vigilancia</code>: cero código.
+  Ronda de continuación sobre el PR #9 · <strong>7 de 12</strong> rubros reauditados (los únicos cuyo código
+  cambió) · 3 vueltas de arreglo, tope agotado, <strong>0 revertidos</strong> y 1 intento rechazado por la
+  suite antes de commitear · <code>master</code> avanzó 9 commits desde el pase 3: 54 archivos,
+  <strong>+385 / −6,158</strong>.
 </div>
 
 </div>

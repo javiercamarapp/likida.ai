@@ -1,4 +1,48 @@
-COMPLETA (pase 3, ronda de CONTINUACIÓN sobre el PR #9)
+COMPLETA (pase 4, ronda de CONTINUACIÓN sobre el PR #9)
+
+Ronda 17, pase 4, 11-ago-2026. 7 rubros reauditados de 12 — frontend, backend,
+seguridad, fiscal, arquitectura, pruebas y rendimiento, los únicos cuyo código
+cambió desde que se escribió su archivo. Los otros cinco (agéntico, tool
+calling, legal, operabilidad, modelo de datos) conservan su nota del pase 3,
+marcados "no auditado este pase": cero archivos suyos cambiaron en los 9 commits
+que master avanzó.
+
+Global 4.8/10 (antes 4.9) — baja 0.1, y el décimo miente por lo bajo: debajo hay
+frontend cayendo DOS puntos y backend subiendo uno.
+
+El cambio que mandó la ronda es un BORRADO: master quitó 35 páginas del panel
+del cliente (+385 / −6,158) para rehacerlas desde cero. Cerró pantallas, no
+bugs — arquitectura cerró CERO de sus 5 hallazgos por supresión, fiscal 4 de 16
+y los 12 restantes viven en el motor — y estrenó dos modos de falla propios que
+no existían anteayer.
+
+108 fichas: 5 CRÍTICO · 44 ALTO · 39 MEDIO · 20 BAJO. El CRÍTICO nuevo lo
+encontraron DOS auditores por separado (frontend y arquitectura).
+
+1 CRÍTICO nuevo cerrado con prueba que lo reproduce (el panel se quedó sin
+navegación: el contador con el menú literalmente vacío) y 2 ALTO cerrados, los
+dos estrenados por el borrado. 4 CRÍTICOS quedan pendientes con razón escrita;
+3 esperan decisión de producto y 1 es una sesión de trabajo propia.
+Tope de 3 vueltas agotado. Ningún arreglo revertido — y uno RECHAZADO por la
+suite antes de commitear, con 15 fallos, por poner la guarda en la capa
+equivocada.
+
+Un hallazgo verificado A LA BAJA: el auditor fiscal declaró que el régimen
+reescrito apaga la facilidad del 15%, y es falso — la elegibilidad vive en
+`tenant.config`, no en `regimen_fiscal`. El defecto sí es real y se arregló con
+la consecuencia corregida. Cero falsos del todo.
+
+También se corrigió una premisa MÍA: al despachar rendimiento le escribí que sus
+214 consultas por carga había que recontarlas porque el borrado se llevaba el
+60%. Volvió con 214 en el SSR y 244 por navegador: nunca vivieron ahí.
+
+Compuerta final: tsc 0 · vitest 261 archivos / 3,134 verdes / 1 saltada · eslint
+0 errores, 17 warnings. Línea base al arrancar: 258 / 3,105 (bajó 89 desde el
+pase 3 porque esas pruebas se fueron con sus páginas, no por regresión).
+Tablero renderizado y MIRADO (tablero.png, 1400×3900): 12 rubros contados, notas
+cuadran con la síntesis (suma 57 → 4.8).
+
+--- COMPLETA (pase 3, ronda de CONTINUACIÓN sobre el PR #9)
 
 Ronda 17, pase 3, 10-ago-2026. 3 rubros reauditados de 12 — frontend, backend y
 pruebas, los únicos cuyo código cambió desde que se escribió su archivo. Los
