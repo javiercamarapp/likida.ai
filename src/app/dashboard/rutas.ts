@@ -1,68 +1,45 @@
 import {
-  LayoutGrid, TrendingUp, LineChart, Sparkles, DollarSign, Users2, Fuel,
-  Truck, Wrench, UserCog, Map, Calculator, ScanText, ReceiptText, FileText, Landmark, Send,
-  LifeBuoy, Users, ScrollText, Settings, TriangleAlert, PackageCheck, CreditCard, Percent, ShieldCheck,
+  LayoutGrid, Fuel,
+  LifeBuoy, Users, ScrollText, Settings, CreditCard, ShieldCheck,
 } from 'lucide-react';
 
 /**
  * El mapa de navegación de /dashboard — mismo patrón que admin/rutas.ts
  * (plano, sin 'use client': lo consume el sidebar client y, si algún día
- * hace falta, un ⌘K de este panel también). Grupos e íconos siguen el PASO 4
- * del documento que Javier pegó; el orden importa (Cuadre/Documentos antes
- * que las Fase X, es el núcleo real del producto).
+ * hace falta, un ⌘K de este panel también).
+ *
+ * INICIO/OPERACION/FISCAL/DOCUMENTOS_DINERO/SIDEBAR_PRINCIPAL quedaron
+ * VACÍOS el 10-ago-2026: las 17 páginas de "dueño de flota" (despacho,
+ * viajes, incidencias, operadores, cuadre, facturación, cobranza, valor y
+ * ahorro, unidades, POD, analítica, chat, rentabilidad, clientes, mapa,
+ * cotizador, documentos) y las 6 del panel del CONTADOR (Panel fiscal,
+ * Deducciones perdidas, CFDI recibidos, Combustible & casetas,
+ * Retenciones, Liquidaciones) se borraron el mismo día para rehacerse
+ * desde cero, pensando en cómo las usa cada tipo de cliente — no es un
+ * hueco, es la salida de pista. El catálogo de qué función de datos
+ * respaldaba a cada una de las 17 de dueño de flota vive en
+ * `docs/conocimiento/41-inventario-dueno-flota-pre-rediseno.md`, y esa
+ * lógica SIGUE en `lib/likida/*` sin tocar — lo que se fue es la página.
+ * `inicioDe` (visibilidad.ts) ya no manda al contador a `/dashboard/
+ * contador` — aterriza en Suscripción mientras no exista panel propio.
+ * NEGOCIO conserva `combustible-casetas` (la operativa, no la del
+ * contador — no era parte de esas 23). GESTION (cuenta/cumplimiento —
+ * ARCO, Soporte, Usuarios, Políticas, Suscripción, Configuración) no se
+ * tocó: no es "el software", pedido explícito de Javier.
  */
 export type Item = { href: string; nombre: string; Icono: typeof LayoutGrid };
 
-export const INICIO: Item[] = [
-  { href: '/dashboard/valor-ahorro', nombre: 'Valor & Ahorro (ROI)', Icono: TrendingUp },
-  { href: '/dashboard/analitica', nombre: 'Analítica & Reportes', Icono: LineChart },
-  { href: '/dashboard/chat', nombre: 'Chatea con tus Datos', Icono: Sparkles },
-];
+export const INICIO: Item[] = [];
 
 export const NEGOCIO: Item[] = [
-  { href: '/dashboard/rentabilidad', nombre: 'Rentabilidad / Finanzas', Icono: DollarSign },
-  { href: '/dashboard/clientes', nombre: 'Clientes', Icono: Users2 },
   { href: '/dashboard/combustible-casetas', nombre: 'Combustible & Casetas', Icono: Fuel },
 ];
 
-export const OPERACION: Item[] = [
-  // Despacho va PRIMERO del grupo a propósito: es la pantalla de aterrizaje
-  // del encargado, la única del panel donde se escribe en la base en vez de
-  // solo leerla, y la que se abre en la mañana antes que ninguna otra.
-  { href: '/dashboard/despacho', nombre: 'Despacho', Icono: Send },
-  { href: '/dashboard/viajes', nombre: 'Viajes', Icono: Truck },
-  { href: '/dashboard/pod', nombre: 'POD & Evidencias', Icono: PackageCheck },
-  { href: '/dashboard/incidencias', nombre: 'Incidencias', Icono: TriangleAlert },
-  { href: '/dashboard/unidades', nombre: 'Unidades', Icono: Wrench },
-  { href: '/dashboard/operadores', nombre: 'Operadores', Icono: UserCog },
-  { href: '/dashboard/mapa', nombre: 'Mapa en vivo', Icono: Map },
-  { href: '/dashboard/cotizador', nombre: 'Cotizador', Icono: Calculator },
-];
+export const OPERACION: Item[] = [];
 
-/**
- * El panel del CONTADOR de la flota — su grupo propio, arriba de todo.
- *
- * Va en su propia sección y no dentro de "Documentos & Dinero" porque para el
- * rol `contador` esa sección entera es su panel: mezclarlo le dejaría el menú
- * como una lista plana de nueve links sin jerarquía. Para el dueño
- * (`flota_admin`), que ve las dos, la separación dice qué es la vista fiscal y
- * qué es la operativa del dinero.
- */
-export const FISCAL: Item[] = [
-  { href: '/dashboard/contador', nombre: 'Panel fiscal', Icono: Landmark },
-  { href: '/dashboard/contador/deducciones', nombre: 'Deducciones perdidas', Icono: TriangleAlert },
-  { href: '/dashboard/contador/cfdi', nombre: 'CFDI recibidos', Icono: FileText },
-  { href: '/dashboard/contador/combustible', nombre: 'Combustible & casetas', Icono: Fuel },
-  { href: '/dashboard/contador/retenciones', nombre: 'Retenciones', Icono: Percent },
-  { href: '/dashboard/contador/liquidaciones', nombre: 'Liquidaciones (lectura)', Icono: ReceiptText },
-];
+export const FISCAL: Item[] = [];
 
-export const DOCUMENTOS_DINERO: Item[] = [
-  { href: '/dashboard/documentos', nombre: 'Documentos (OCR)', Icono: ScanText },
-  { href: '/dashboard/cuadre', nombre: 'Cuadre / Liquidación', Icono: ReceiptText },
-  { href: '/dashboard/facturacion', nombre: 'Facturación', Icono: FileText },
-  { href: '/dashboard/cobranza', nombre: 'Cobranza', Icono: Landmark },
-];
+export const DOCUMENTOS_DINERO: Item[] = [];
 
 export const GESTION: Item[] = [
   { href: '/dashboard/arco', nombre: 'Privacidad (ARCO)', Icono: ShieldCheck },
@@ -82,20 +59,9 @@ export const TODAS_LAS_RUTAS: Item[] = [
 
 /**
  * El sidebar que se PINTA (dirección visual del 7-ago-2026) — plano, sin
- * secciones, los 9 que importan todos los días. Las demás páginas de arriba
- * (INICIO/NEGOCIO/FISCAL/DOCUMENTOS_DINERO/GESTION) SIGUEN existiendo y
- * accesibles por URL directa — esto no las borra, solo deja de listarlas
- * aquí. `puedeVerRuta` sigue filtrando por rol igual que antes: un encargado
- * no ve Cuadre/Facturación/Cobranza (área `dinero`) aunque estén en esta
- * lista.
+ * secciones. Vacío el 10-ago-2026 junto con OPERACION: las 8 páginas que
+ * traía (Despacho, Viajes, Incidencias, Operadores, Cuadre, Facturación,
+ * Cobranza, Valor y ahorro) se borraron para el rediseño desde cero. Se
+ * vuelve a llenar página por página conforme se reconstruyan.
  */
-export const SIDEBAR_PRINCIPAL: Item[] = [
-  { href: '/dashboard/despacho', nombre: 'Despacho', Icono: Send },
-  { href: '/dashboard/viajes', nombre: 'Viajes', Icono: Truck },
-  { href: '/dashboard/incidencias', nombre: 'Incidencias', Icono: TriangleAlert },
-  { href: '/dashboard/operadores', nombre: 'Operadores', Icono: UserCog },
-  { href: '/dashboard/cuadre', nombre: 'Cuadre', Icono: ReceiptText },
-  { href: '/dashboard/facturacion', nombre: 'Facturación', Icono: FileText },
-  { href: '/dashboard/cobranza', nombre: 'Cobranza', Icono: Landmark },
-  { href: '/dashboard/valor-ahorro', nombre: 'Valor y ahorro', Icono: TrendingUp },
-];
+export const SIDEBAR_PRINCIPAL: Item[] = [];
