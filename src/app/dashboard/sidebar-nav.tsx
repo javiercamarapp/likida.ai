@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { LayoutGrid } from 'lucide-react';
-import { type Item, SIDEBAR_PRINCIPAL, FISCAL } from './rutas';
+import { type Item, SIDEBAR_PRINCIPAL, FISCAL, NEGOCIO, GESTION } from './rutas';
 import { puedeVerRuta } from '@/lib/auth/visibilidad';
 import { DEGRADADO_MARCA } from './resumen-visual';
 
@@ -130,6 +130,16 @@ export default function SidebarNav({ rol }: { rol: string }) {
           dueño). Para un rol sin área `dinero` esto sale vacío y no se
           pinta (ver `Seccion`). */}
       <Seccion titulo="Fiscal" items={visibles(FISCAL)} sufijo={sufijo} pathname={pathname} />
+      {/* AUDITORÍA 17 (pase 4), CRÍTICO — estas dos listas llevaban desde
+          `2be4b1c` vivas en `rutas.ts` y sin llegar nunca al render. Mientras
+          SIDEBAR_PRINCIPAL tenía sus 9 items el hueco no se veía; al vaciarse
+          para el rediseño, el dueño se quedó con UN link y el contador con
+          NINGUNO —`puedeVerRuta('contador','/dashboard')` es false—, con siete
+          páginas vivas alcanzables solo tecleando la URL. Se pintan por
+          `Seccion`, que ya se esconde sola cuando el rol no ve ni un item, y
+          se filtran con el mismo `puedeVerRuta` que gatea la página. */}
+      <Seccion titulo="Negocio" items={visibles(NEGOCIO)} sufijo={sufijo} pathname={pathname} />
+      <Seccion titulo="Cuenta" items={visibles(GESTION)} sufijo={sufijo} pathname={pathname} />
     </>
   );
 }
