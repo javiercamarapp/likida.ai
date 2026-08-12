@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { esIdDeLiquidacion } from './[id]/id';
 
@@ -61,5 +61,72 @@ describe('el segmento de /dashboard/[id] se descarta antes de tocar la base', ()
     expect(consulta, 'la página no llama getLiquidacionDetalle').toBeGreaterThan(-1);
     expect(guarda, 'la guarda quedó DESPUÉS de la consulta: el 22P02 vuelve').toBeLessThan(consulta);
     expect(src.slice(guarda, consulta)).toContain('notFound()');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUDITORÍA 17 (pase 5), ALTO — lo de arriba fija DÓNDE se llama la guarda, no
+// EN QUÉ SENTIDO decide.
+//
+// El auditor de backend lo midió: cambiando `page.tsx:62` de
+// `if (!esIdDeLiquidacion(id)) notFound()` a `if (esIdDeLiquidacion(id))
+// notFound()`, los 21 casos de arriba SIGUEN VERDES —la guarda se sigue
+// llamando antes de la consulta y `notFound()` sigue estando entre las dos—
+// mientras TODA liquidación real contesta 404. Es la pantalla que el demo
+// abre para enseñar el renglón por renglón y el botón de PDF.
+//
+// Una prueba que sobrevive a la inversión total de la condición que protege es
+// decoración. Estos dos casos no leen el código: EJECUTAN la página y miran si
+// la consulta ocurrió. Con la guarda invertida, el segundo se pone rojo.
+// ═══════════════════════════════════════════════════════════════════════════
+
+import { vi } from 'vitest';
+
+const NOT_FOUND = new Error('NEXT_NOT_FOUND');
+
+const getLiquidacionDetalle = vi.fn(async () => null);
+
+vi.mock('next/navigation', () => ({
+  notFound: () => { throw NOT_FOUND; },
+  redirect: (a: string) => { throw new Error(`NEXT_REDIRECT:${a}`); },
+}));
+vi.mock('@/lib/auth/guard', () => ({
+  requireSessionTenant: async () => ({ tenantId: 'tenant-demo', rol: 'flota_admin' }),
+}));
+vi.mock('@/lib/auth/visibilidad', () => ({
+  rolEfectivo: (real: string) => real,
+  puedeVerArea: () => true,
+  inicioDe: () => '/dashboard',
+}));
+vi.mock('@/lib/likida/analytics', () => ({ getLiquidacionDetalle }));
+
+const { default: Detalle } = await import('./[id]/page');
+
+const abrir = (id: string) => Detalle({
+  params: Promise.resolve({ id }),
+  searchParams: Promise.resolve({}),
+});
+
+describe('la guarda decide en el sentido correcto — se ejecuta la página', () => {
+  beforeEach(() => getLiquidacionDetalle.mockClear());
+
+  it('un segmento borrado da 404 SIN haber tocado la base', async () => {
+    await expect(abrir('viajes')).rejects.toThrow('NEXT_NOT_FOUND');
+    expect(
+      getLiquidacionDetalle,
+      'la página consultó la base con un segmento que no es uuid: vuelve el 22P02',
+    ).not.toHaveBeenCalled();
+  });
+
+  it('un uuid real SÍ llega a la consulta — la guarda no está invertida', async () => {
+    // Este es el caso que la versión anterior de esta prueba no cubría.
+    // `getLiquidacionDetalle` devuelve null, así que la página termina en 404
+    // igual; lo que se afirma NO es el resultado, es que la consulta OCURRIÓ.
+    await expect(abrir(UUID_REAL)).rejects.toThrow('NEXT_NOT_FOUND');
+    expect(
+      getLiquidacionDetalle,
+      'la guarda mandó a 404 un uuid válido: con la condición invertida, TODA '
+      + 'liquidación real da 404 y el demo no puede abrir ni una',
+    ).toHaveBeenCalledWith(UUID_REAL, 'tenant-demo');
   });
 });
