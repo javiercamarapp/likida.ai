@@ -211,3 +211,15 @@ Dos consecuencias prácticas, ya aplicadas:
 | 59 | Tope de 3 vueltas AGOTADO | 5 CRÍTICOS pendientes con razón; 4 ALTO nuevos propuestos | — |
 | 60 | Tablero reescrito para el pase 3 + captura + **mirada** | 12 rubros contados, notas suman 59 → 4.9, color por nota y no por delta | — |
 | 61 | `00-SINTESIS.md` y `RESULTADO.md` del pase 3 | ok | — |
+
+---
+
+# PASE 5 — 12-ago-2026 (ronda de CONTINUACIÓN sobre el PR #9, en la nube)
+
+- `git status` limpio al arrancar (HEAD en `927e78f`, punta de `claude/auditoria-17`) → **autofix habilitado**.
+- PR #9 abierto y verificado con `list_pull_requests` → continuación, **no** se abre PR nuevo.
+- `origin/master` = `003c88a`, **ancestro** de esta rama → master no avanzó desde el pase 4. Nada que mergear.
+- `npm install` (el contenedor de la nube clona sin `node_modules`) → exit 0.
+- Compuerta línea base: `tsc --noEmit` 0 · `lint` 0 errores / 17 warnings · `vitest` **261 archivos, 3,134 verdes, 1 saltada**. Idéntica al cierre del pase 4.
+- `npm run build` NO se corre (sin credenciales en la nube; su fallo no diría nada del código).
+- MAPA.md actualizado con la sección del pase 5: 6 rubros a relanzar de 12.

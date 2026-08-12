@@ -1,4 +1,66 @@
-# MAPA — auditoría 17 (8-ago · p2 9-ago · p3 10-ago · p4 11-ago-2026)
+# MAPA — auditoría 17 (8-ago · p2 9-ago · p3 10-ago · p4 11-ago · p5 12-ago-2026)
+
+## PASE 5 — ronda de CONTINUACIÓN (12-ago-2026)
+
+El PR **#9** (`claude/auditoria-17`) sigue **abierto** → continuación sobre esa
+rama, sin PR nuevo. Árbol limpio al arrancar → autofix habilitado.
+Corrida **en la nube**: la compuerta es `npm test` + `npx tsc --noEmit` +
+`npm run lint`, **sin `npm run build`** (pide Supabase/OpenRouter/Facturapi, que
+aquí no existen, y su fallo no diría nada del código).
+
+**`master` NO avanzó desde el pase 4.** `origin/master` sigue en `003c88a` y es
+ancestro de esta rama (`git merge-base --is-ancestor origin/master HEAD` → 0).
+Lo único que cambió de código son **los tres arreglos del propio pase 4**, que
+entraron *después* de que sus auditores escribieran el archivo:
+
+```
+$ git diff --stat 8f70906..927e78f -- src/
+ src/app/dashboard/[id]/id.ts              | 28 +++++
+ src/app/dashboard/[id]/page.tsx           |  7 +++
+ src/app/dashboard/id_no_uuid.test.ts      | 65 +++++++++
+ src/app/dashboard/sidebar-nav.tsx         | 12 ++-
+ src/app/dashboard/sidebar_puerta.test.tsx | 80 ++++++++++
+ src/lib/saas/fiscal.test.ts               | 57 +++++--
+ src/lib/saas/fiscal.ts                    | 18 +-
+ src/lib/saas/regimen_no_se_pierde.test.ts | 80 ++++++++++
+ 8 files changed, 341 insertions(+), 6 deletions(-)
+```
+
+Eso hace de este pase, sobre todo, **la verificación independiente de los tres
+arreglos del pase 4** — la que la síntesis del pase 4 dejó explícitamente
+pendiente cuando escribió: *"Frontend se queda en 3 aunque su CRÍTICO ya esté
+arreglado en este PR. El arreglo entró después de que su auditor escribiera el
+archivo, y quien lo arregló fui yo. Subirle la nota por mi propio commit es
+exactamente la nota inflada que esta serie existe para desinflar: lo verifica el
+pase 5, con ojos que no lo escribieron."*
+
+### Qué se relanzó y por qué (6 de 12)
+
+| Rubro | Archivos suyos que cambiaron desde que escribió su archivo |
+|---|---|
+| **Frontend** | `sidebar-nav.tsx` (+12/−1) — el arreglo de su CRÍTICO |
+| **Backend y API** | `dashboard/[id]/id.ts` (nuevo), `[id]/page.tsx` (+7) — el arreglo de su ALTO |
+| **Seguridad** | `dashboard/[id]/id.ts`, `[id]/page.tsx` — coautor del mismo ALTO |
+| **Fiscal** | `src/lib/saas/fiscal.ts` (+18/−5) — el arreglo de su ALTO del `624` |
+| **Arquitectura** | `sidebar-nav.tsx` — coautor del CRÍTICO de navegación |
+| **Pruebas** | 3 archivos de prueba nuevos (`sidebar_puerta`, `id_no_uuid`, `regimen_no_se_pierde`) + `saas/fiscal.test.ts` reescrito |
+
+Los otros seis —**agéntico, tool calling, legal, operabilidad, rendimiento,
+modelo de datos**— conservan su nota del pase 4, marcados *no auditado este
+pase*: cero archivos suyos cambiaron. Rendimiento se queda fuera a propósito
+aunque `[id]/page.tsx` ganó una guarda: sus 11 hallazgos abiertos viven en
+`dashboard/page.tsx:90-122` y `analytics.ts`, y el `git diff` de ambos contra el
+pase 4 está **vacío**.
+
+### Compuerta del pase 5 (línea base, corrida hoy en la nube)
+
+```
+npx tsc --noEmit -p .   → 0 errores
+npm run lint            → 0 errores, 17 warnings   (p4: 17)
+npx vitest run          → ver 00-SINTESIS (p4: 261 archivos / 3,134 verdes / 1 saltada)
+```
+
+---
 
 ## PASE 4 — ronda de CONTINUACIÓN (11-ago-2026)
 
