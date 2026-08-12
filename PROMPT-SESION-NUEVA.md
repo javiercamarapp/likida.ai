@@ -3,6 +3,15 @@
 Repo: `~/javiercamarapp/likida`, rama `master`, GitHub `javiercamarapp/likida.ai`.
 **Lee `CLAUDE.md` antes de tocar nada.** Está escrito para esto y es corto.
 
+> **⚠️ ANTES DEL PRÓXIMO DEPLOY (desde el 12-ago-2026):** el código lee las env
+> vars como `LIKIDA_*`, pero en Vercel las 6 siguen llamándose `CUADRA_*`
+> (MODEL_OCR, WHATSAPP_MSG_USD, INTAKE_ESPERA_MS, INTAKE_GRACE_MS, DEDUP_FOTOS,
+> RECUPERAR_CIERRE_PARCIAL). Hay que crear las gemelas `LIKIDA_*` con los mismos
+> valores (`vercel env pull` para leerlos, `vercel env add` en production Y
+> preview) antes de publicar, o producción pierde esa config EN SILENCIO.
+> Verifica con `vercel env ls production | grep LIKIDA_`. Ya con un deploy
+> verificado, borra las `CUADRA_*` viejas y quita este aviso.
+
 Likida liquida viajes de flotas de carga en México por WhatsApp: el operador
 manda fotos de tickets, un motor determinístico las cuadra contra el anticipo y
 entrega un PDF con fundamento fiscal. **Demo el 6 de agosto de 2026.** El guion de presentación está en `docs/presentacion/` (PDF + HTML).
