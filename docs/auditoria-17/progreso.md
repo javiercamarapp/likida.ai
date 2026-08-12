@@ -223,3 +223,11 @@ Dos consecuencias prácticas, ya aplicadas:
 - Compuerta línea base: `tsc --noEmit` 0 · `lint` 0 errores / 17 warnings · `vitest` **261 archivos, 3,134 verdes, 1 saltada**. Idéntica al cierre del pase 4.
 - `npm run build` NO se corre (sin credenciales en la nube; su fallo no diría nada del código).
 - MAPA.md actualizado con la sección del pase 5: 6 rubros a relanzar de 12.
+- Auditores: 6 lanzados en paralelo, 6 entregaron. Notas: frontend 3→5 · backend 5→4 · seguridad 6→5 · fiscal 5→4 · arquitectura 4→4 · pruebas 5→6.
+- **Vuelta 1** — CRÍTICO [backend] `aplicarFactura` no podía escribir nunca. Verificado por mí contra un Postgres 16.13 efímero: `on conflict (stripe_invoice_id)` contra el índice PARCIAL de la 0052 da `42P10`, también con la tabla vacía. Prueba `onconflict_indice_total.test.ts` (falla 2/6 sin el arreglo) → migración `0089` → bloque 64 de `verificaciones.sql` (probado en los dos sentidos) → suite verde. Commit `0b4cadd`.
+  - Tropiezo intermedio, anotado porque el guardarraíl funcionó: la 0089 puso roja `migraciones_verificadas.test.ts` (toda migración necesita bloque o exención escrita). Se escribió el bloque 64, y no cuadró a la primera: el test lee SOLO la línea del título y `(mig. 0089)` había quedado en la segunda.
+- **Vuelta 2** — ALTO [fiscal] el `<select>` de `/admin/flotas:218` ofrecía 8 claves que el CHECK de la 0088 rechaza y escondía 3 que acepta (entre ellas 626 RESICO). Prueba `regimen_catalogo.test.ts` (falla 1/3 sin el arreglo, listando las once claves) → la página deriva de `REGIMENES` → suite verde. Commit `93af2fd`.
+- **Vuelta 3** — ALTO [backend] `id_no_uuid.test.ts` sobrevivía a invertir la guarda. Dos casos nuevos que EJECUTAN la página con la consulta mockeada. Medido: con la guarda invertida el archivo pasa de 23 verdes a 2 fallos. Árbol restaurado tras la mutación (`git diff` vacío sobre `page.tsx`). Commit `9ea0824`.
+- Tope de 3 vueltas agotado. Ningún arreglo revertido.
+- Tablero reescrito para el pase 5, capturado (1400×3420) y MIRADO: 12 rubros contados, suma 57 → 4.8, cuadra con la síntesis.
+- Compuerta final: tsc 0 · vitest 263 archivos / 3,145 verdes / 1 saltada · eslint 0 errores / 17 warnings.

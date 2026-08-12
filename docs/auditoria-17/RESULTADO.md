@@ -1,3 +1,53 @@
+COMPLETA (pase 5, ronda de CONTINUACIÓN sobre el PR #9)
+
+Ronda 17, pase 5, 12-ago-2026, corrida en la nube. 6 rubros reauditados de 12 —
+frontend, backend, seguridad, fiscal, arquitectura y pruebas, los únicos cuyo
+código cambió desde que se escribió su archivo. Los otros seis (agéntico, tool
+calling, legal, operabilidad, rendimiento, modelo de datos) conservan su nota
+del pase 4, marcados "no auditado este pase".
+
+`master` NO avanzó ni un commit desde el pase 4 (`origin/master` = `003c88a`, y
+es ancestro de esta rama). Lo único que cambió de código fueron los TRES
+ARREGLOS DEL PROPIO PASE 4, que entraron después de que sus auditores
+entregaran. Por eso este pase fue, sobre todo, su verificación independiente —
+la que el pase 4 dejó explícitamente pendiente por escrito.
+
+Global 4.8/10 (igual que el pase 4) — delta 0.0, y el empate es una mentira
+estadística: CINCO de los seis rubros auditados se movieron. frontend +2 y
+pruebas +1 contra backend −1, seguridad −1 y fiscal −1. Seis puntos-rubro de
+movimiento que se cancelan en un promedio quieto.
+
+Los tres arreglos del pase 4 CIERRAN, y los tres auditores lo midieron en vez de
+leerlo (revirtiendo el commit en el árbol y contando fallos). Dos de ellos con
+matiz: `12cc8c6` cerró un valor y no el modo de falla, y la prueba de `58c44f9`
+sobrevivía a invertir la guarda que protege. Los dos matices se volvieron
+arreglos hoy.
+
+El hallazgo de la ronda: `aplicarFactura()` NO PODÍA ESCRIBIR NUNCA. `onConflict`
+contra un índice único PARCIAL es 42P10, no un upsert — verificado dos veces
+contra un Postgres 16.13 con el esquema real, y falla también con la tabla vacía.
+Cada `invoice.paid` daba 500 y la flota quedaba pagada sin fila en `factura_saas`
+ni CFDI que timbrarle. Cero pruebas lo tapaban: las dos suites de Stripe mockean
+la función entera.
+
+1 CRÍTICO cerrado con prueba que lo reproduce y 2 ALTO cerrados. 4 CRÍTICOS
+quedan pendientes con razón escrita; 3 esperan decisión de producto y 1 es una
+sesión de trabajo propia. Tope de 3 vueltas agotado. Ningún arreglo revertido.
+Cero falsos: los tres hallazgos que arreglé los reproduje yo antes de tocar nada.
+
+Tres correcciones entre auditores, anotadas en vez de silenciadas: fiscal
+encontró que el commit del pase 4 encadenó mal `registro.ts → facturapi.ts` (son
+dos ramas distintas); arquitectura recontó lo heredado y salió PEOR (43 símbolos
+sin llamador, no 29); pruebas confirmó los conteos del pase 4 salvo uno.
+
+Compuerta final: tsc 0 · vitest 263 archivos / 3,145 verdes / 1 saltada · eslint
+0 errores, 17 warnings. Línea base al arrancar: 261 / 3,134 (idéntica al cierre
+del pase 4). Sin `npm run build`: en la nube no hay credenciales.
+Tablero renderizado y MIRADO (tablero.png, 1400×3420): 12 rubros contados, notas
+cuadran con la síntesis (suma 57 → 4.8).
+
+---
+
 COMPLETA (pase 4, ronda de CONTINUACIÓN sobre el PR #9)
 
 Ronda 17, pase 4, 11-ago-2026. 7 rubros reauditados de 12 — frontend, backend,

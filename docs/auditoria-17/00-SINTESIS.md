@@ -1,3 +1,213 @@
+# Auditoría 17 — síntesis · pase 5 · 12-ago-2026
+
+**Ronda de CONTINUACIÓN.** El PR **#9** seguía abierto sobre `claude/auditoria-17`,
+así que esta corrida continuó sobre él en vez de abrir uno nuevo. Árbol limpio al
+arrancar (`927e78f`, punta de la rama) → autofix habilitado. Corrida **en la nube**:
+compuerta sin `npm run build`.
+
+> Las síntesis de los pases 1, 2, 3 y 4 siguen íntegras más abajo.
+
+## Nota global: 4.8/10 (igual que el pase 4) — **= 0.0**
+
+Y el empate es una mentira estadística, no una meseta. **Cinco de los seis rubros
+auditados se movieron**, tres para abajo y dos para arriba, y se cancelaron:
+
+```
+frontend +2 · pruebas +1        =  +3
+backend −1 · seguridad −1 · fiscal −1  =  −3
+```
+
+Suma 57 / 12 = 4.75 → **4.8**, el mismo número que ayer sobre un repo que por
+dentro se movió seis puntos-rubro. Es la tercera vez en esta ronda que la global
+esconde el movimiento (p3 también cerró en 0.0 con ±1). **La tabla manda sobre
+el número, y a estas alturas la global es el peor resumen de la ronda.**
+
+## Lo que este pase existía para contestar
+
+`master` no avanzó ni un commit desde el pase 4 (`origin/master` = `003c88a`, y
+es ancestro de esta rama). Lo único que cambió de código fueron **los tres
+arreglos del propio pase 4**, que entraron *después* de que sus auditores
+escribieran el archivo. El pase 4 dejó esa deuda escrita, literal:
+
+> *"Frontend se queda en 3 aunque su CRÍTICO ya esté arreglado en este PR. El
+> arreglo entró después de que su auditor escribiera el archivo, y quien lo
+> arregló fui yo. Subirle la nota por mi propio commit es exactamente la nota
+> inflada que esta serie existe para desinflar: lo verifica el pase 5, con ojos
+> que no lo escribieron."*
+
+Se verificó. **Los tres arreglos cierran de verdad**, y los tres auditores lo
+midieron en vez de leerlo —revirtiendo el commit en el árbol y contando fallos—:
+
+| Arreglo del pase 4 | Veredicto independiente | Medido |
+|---|---|---|
+| `8d6ac51` · sidebar sin puertas | **cierra** | 8 `href` para `flota_admin`, 2 para `contador`, 3 para `encargado`; ninguno cuelga de página borrada. Revertido: 4 de 5 casos rojos |
+| `12cc8c6` · régimen `624` | **cierra el valor, no el modo de falla** | Revertido: 2 de 3 rojos. Pero quedó un segundo catálogo divergido (ver abajo) |
+| `58c44f9` · uuid → 404 | **cierra, y su prueba no** | Revertido: rojo. Pero **invirtiendo la guarda** los 21 casos siguen verdes |
+
+Frontend sube dos puntos por eso, y es la subida mejor ganada de la serie: la
+verificó quien no escribió el arreglo, contando `href` en el HTML renderizado.
+
+## La tabla
+
+| Rubro | p4 | p5 | | Razón del movimiento |
+|---|:--:|:--:|---|---|
+| Frontend | 3 | **5** | ▲▲ | **se atacó y subió**: el CRÍTICO de navegación cerrado y verificado por ojos que no lo escribieron —8/2/3 `href` contados en el HTML, y 4 de 5 casos rojos al revertir—. Sin CRÍTICOS abiertos por primera vez desde el borrado |
+| Backend y API | 5 | **4** | ▼ | **mirada más profunda**: no es regresión —`58c44f9` está bien hecho—. Baja porque apareció, y se verificó contra un **Postgres 16 real**, un camino donde el dinero **no se escribe nunca** y nadie se entera |
+| Agéntico | 4 | **4** | = | *no auditado este pase* — cero archivos de `src/lib/agents/` cambiaron |
+| Tool calling | 7 | **7** | = | *no auditado* — cuarto pase por rotación, cero cambios en `tools.ts`/`llm/`/`agents/` |
+| Seguridad | 6 | **5** | ▼ | **mirada más profunda** + **deuda que cobró factura**: los 3 ALTO de RLS llegan a su **quinto** pase, y el arreglo que le tocaba firmar resultó ser higiene de ruteo y no una capa — el filtro de tenant sigue siendo la única capa real, y la misma forma quedó sin tapar en `api/export/pdf/[id]/route.ts:81` |
+| Fiscal | 5 | **4** | ▼ | **deuda que cobró factura**: `12cc8c6` cerró **un valor y no el modo de falla** — el segundo catálogo de regímenes ofrecía 8 claves que el CHECK rechaza y escondía 3 que acepta |
+| Legal | 3 | **3** | = | *no auditado este pase* |
+| Arquitectura | 4 | **4** | = | **mirada más profunda**: el arreglo cerró la instancia y **no la clase** (su oráculo es otro spread a mano en el mismo archivo), y el recuento medido salió peor que el heredado: **43** símbolos sin llamador, no 29 |
+| Pruebas | 5 | **6** | ▲ | **se atacó y subió**: los tres arneses del pase 4 anclan de verdad, medido revirtiendo cada arreglo; `sidebar-nav.tsx` pasó de **0.0% a 90.5%** |
+| Operabilidad y DX | 5 | **5** | = | *no auditado este pase* |
+| Rendimiento y costo | 4 | **4** | = | *no auditado este pase* — sus 11 abiertos viven en `dashboard/page.tsx:90-122` y `analytics.ts`, con `git diff` vacío |
+| Modelo de datos | 6 | **6** | = | *no auditado este pase* |
+
+**Suma 57 / 12 = 4.75 → 4.8.**
+
+Ninguna nota subió por un commit de esta corrida: los tres arreglos de hoy
+entraron *después* de que los auditores entregaran, igual que ayer. Los verifica
+el pase 6.
+
+## El hallazgo de la ronda: el upsert de Stripe no podía escribir NUNCA
+
+Lo encontró backend, y es el tipo de defecto que esta rutina existe para cazar:
+**cero síntomas en el código, cero pruebas rojas, y el dinero no se escribe.**
+
+`aplicarFactura()` (`src/lib/saas/suscripcion.ts:413-429`) hace
+`.upsert(..., { onConflict: 'stripe_invoice_id' })`. PostgREST traduce eso a
+`ON CONFLICT (stripe_invoice_id) DO UPDATE`, **sin predicado** — no tiene forma
+de emitir uno. Y el único índice sobre esa columna era **parcial**
+(`0052:105-106`, `where stripe_invoice_id is not null`). Postgres solo infiere un
+índice parcial si la sentencia repite su `WHERE`.
+
+Verificado dos veces, por el auditor y otra vez por mí, contra un Postgres 16.13
+efímero con el esquema real:
+
+```
+ERROR:  there is no unique or exclusion constraint matching the
+        ON CONFLICT specification                          (SQLSTATE 42P10)
+```
+
+**Falla siempre, también con la tabla vacía.** No era una carrera: la escritura
+nunca ocurría. Cada `invoice.paid` daba 500, Stripe agotaba sus reintentos, y la
+flota quedaba **pagada, sin fila en `factura_saas` y sin CFDI que timbrarle**.
+Las dos suites de Stripe no lo veían porque mockean `aplicarFactura` entera.
+
+Arreglado (`0b4cadd`): la `0089` cambia el índice a total —el predicado no
+compraba nada, `NULLS DISTINCT` es el default de Postgres— y el **bloque 64** de
+`verificaciones.sql` corre la sentencia exacta de PostgREST. Probado en los dos
+sentidos: con el índice parcial revienta con 42P10; con la 0089 reporta
+`primer-insert=1 tras-reintento=1 monto=2320 sin-stripe-id=2`.
+
+## Los otros dos arreglos — tope de 3 vueltas agotado
+
+**ALTO · [fiscal] El alta de flota ofrecía 8 regímenes que la base rechaza** — `93af2fd`
+El `<select>` de `/admin/flotas:218` tenía su catálogo escrito a mano: once
+claves. El CHECK vigente (`0088`) acepta seis, y no son las mismas seis.
+Ofrecidas y rechazadas: `605, 606, 607, 608, 610, 611, 615, 616`. Aceptadas y no
+ofrecidas: `603, 621, 626`. Elegir «605 — Sueldos y Salarios» tira el alta con
+`23514` en la cara de quien la hace; y una flota **RESICO (626)** —media flota
+chica en México— no se podía capturar, se quedaba en "Sin declarar" y ese hueco
+viaja al `tax_system` del CFDI. El pase 4 arregló este mismo modo de falla en el
+*otro* catálogo añadiéndole el `624`: arregló un valor y dejó dos listas a mano
+para la misma columna. Ahora la página deriva de `REGIMENES`, que la prueba
+amarra contra el CHECK **en las dos direcciones**.
+
+**ALTO · [backend] La prueba de la guarda de uuid sobrevivía a invertirla** — `9ea0824`
+`id_no_uuid.test.ts` fija *dónde* se llama la guarda, no *en qué sentido decide*.
+Cambiando `page.tsx:62` de `if (!esIdDeLiquidacion(id))` a
+`if (esIdDeLiquidacion(id))`, los 21 casos **siguen verdes** y toda liquidación
+real contesta 404 — la pantalla que el demo abre para el renglón por renglón y
+el botón de PDF, con la suite entera en verde. Los dos casos nuevos no leen el
+código: **ejecutan la página** y afirman si la consulta ocurrió. Medido: con la
+guarda invertida el archivo pasa de 23 verdes a 2 fallos. No se tocó `page.tsx`
+— el arreglo del pase 4 estaba bien; lo que faltaba era la red que lo sostiene.
+
+## Un auditor corrigió a otro, y también a su predecesor
+
+Vale tanto como un hallazgo, porque es lo que impide que la serie se contamine:
+
+- **Fiscal abrió eslabón por eslabón la cadena que el pase 4 escribió, y encontró
+  que el propio commit del pase 4 la encadenó mal.** La corrección del pase 4 era
+  correcta (`guardarDatosFiscales` nunca toca `config`), pero su mensaje afirma
+  `registro.ts:133 → facturapi.ts:183`, y son **dos ramas distintas**: la de
+  `registro.ts` termina en el portal de CAPUFE, o sea en el CFDI de peaje **del
+  cliente**, no en la suscripción de Likida. Se anota en vez de corregirlo en
+  silencio.
+- **Arquitectura recontó lo que había heredado y salió peor:** **43** símbolos
+  exportados sin llamador (no 29), **4** módulos sin importador (no 2), y un
+  **cuarto** mapa duplicado (`FASE_LABEL` ×4, ya divergido). La cifra heredada
+  estaba baja, no alta.
+- **Pruebas midió en vez de creer**, y confirmó los tres conteos del pase 4
+  (4/5, 2/3) salvo uno: `id_no_uuid` es **ancla parcial**, no total. Ese matiz
+  se volvió el arreglo `9ea0824`.
+
+## Los CRÍTICOS pendientes — con la razón, sin cuarta opción
+
+- **C12 · [arquitectura] La pantalla de detalle de liquidación no tiene un solo
+  link entrante** — `/dashboard/[id]`, 409 líneas: el renglón por renglón y el
+  botón de PDF. *Verificado:* el único `Link` con id dinámico del panel son
+  autorreferencias de la propia página; `dashboard/page.tsx:142` documenta que la
+  lista "se fue a `/dashboard/cuadre`", y `/dashboard/cuadre` es una de las 35
+  páginas que `2be4b1c` borró. El arreglo del sidebar le puso puertas a las seis
+  pantallas de administración y no a ésta. *Razón por la que no se arregló:*
+  ponerle puerta exige **rehacer la lista de liquidaciones**, que es exactamente
+  el trabajo que el dueño difirió a propósito al borrar esas páginas "para
+  rehacerlas desde cero". Decisión de producto, no de código — y un arreglo mío
+  aquí sería inventar la pantalla que él quiere rediseñar.
+- **C6 · [pruebas] El callback de QStash emite CFDI sin una sola prueba** —
+  REINCIDENTE, **quinto pase**. `api/cron/facturar/cola/route.ts:40,66`, 0.0% de
+  47 statements, último commit `ec012da` del 5-ago. *Razón:* el arreglo es el
+  arnés de un endpoint que factura de verdad; sesión propia. El auditor volvió a
+  no gastar la ronda ahí, y es la decisión correcta.
+- **C4 · [fiscal] El 15% se mide contra "el combustible que Likida vio"** —
+  `engine.ts:337,354`, ficha `rfa-2026-2.9.yaml`. Confirmado idéntico con `git
+  diff` vacío. *Razón:* el denominador correcto exige un dato que el producto no
+  tiene. Decisión de producto.
+- **C7 · [rendimiento] El cierre no cabe en su propia reserva** — rubro *no
+  auditado este pase*; conserva su estado del pase 4.
+- **C10 y C5 · [legal]** — rubro *no auditado este pase*; conservan su estado.
+
+## Lo que queda arriba de la pila para el pase 6
+
+Ninguno se arregló: el tope de 3 vueltas se agotó con los de arriba.
+
+- **[fiscal] Un CFDI de diésel PPD sale impreso "Deducible para ISR".** El motor
+  lee `formaPago !== '01'` como "medio de pago que la ley acepta", y `MetodoPago`
+  no se parsea en ningún punto del repo. `FormaPago 99` es obligatorio para toda
+  flota con línea de crédito. Va en dirección **sobre-afirmante**, que es la peor.
+- **[seguridad] `api/export/pdf/[id]/route.ts:81`** tiene la misma forma que
+  `58c44f9` arregló en la página: segmento crudo a columna `uuid` → 500, no 404.
+- **[frontend] Las tres tarjetas de KPI del Resumen** pintan blanco sobre el
+  degradado naranja a **2.1–2.6:1**; la prueba de contraste solo mide tokens
+  contra `--surface`, nunca tinta sobre color de componente.
+- **[arquitectura] `engine.ts:14` importa `intake/cfdi.ts`**, que arrastra
+  `sharp`, `node:fs/promises` y `zxing-wasm`: el motor de dinero **no es puro**
+  pese a que `engine.ts:19` lo afirma.
+
+## Compuerta
+
+```
+npx tsc --noEmit -p .   → 0 errores
+npx vitest run          → 263 archivos · 3,145 verdes · 1 saltada
+npm run lint            → 0 errores · 17 warnings
+```
+
+Línea base al arrancar: **261 archivos · 3,134 verdes · 1 saltada** (idéntica al
+cierre del pase 4). Los tres arreglos sumaron 11 pruebas y 2 archivos.
+Sin `npm run build` y sin `pruebas-manuales/*`: en la nube no hay
+Supabase/OpenRouter/Facturapi/Upstash, y esas pruebas hacen llamadas de pago.
+
+**Ningún arreglo revertido.** Un tropiezo intermedio, anotado porque el guardarraíl
+funcionó: la `0089` puso roja `migraciones_verificadas.test.ts`, que exige que
+toda migración nueva tenga bloque en `verificaciones.sql` o exención escrita. Se
+escribió el bloque 64. Y el bloque no cuadró a la primera: el test lee **solo la
+línea del título**, y `(mig. 0089)` había quedado en la segunda.
+
+---
+
 # Auditoría 17 — síntesis · pase 4 · 11-ago-2026
 
 **Ronda de CONTINUACIÓN.** El PR **#9** seguía abierto sobre `claude/auditoria-17`,

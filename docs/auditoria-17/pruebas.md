@@ -1,694 +1,579 @@
-# Pruebas — auditoría 17 · pase 4 (11-ago-2026)
+# Pruebas — auditoría 17 · pase 5 (12-ago-2026)
 
-**Nota: 5/10** (antes 5). Razón del movimiento: **se atacó y subió** por un lado
-—el borrado de 35 páginas se manejó bien desde las pruebas: medí que **ninguna**
-de las 89 pruebas perdidas era ancla de cálculo de dinero, el control de
-`visibilidad.ts` muere con 6 fallos, el barrido estructural de etiquetas sigue
-cazando su bug exacto, y **la única prueba intermitente del repo quedó
-arreglada** (verificada en 4 zonas horarias)— y **deuda que cobró factura** por
-el otro: **C6 llega a su CUARTO pase** sin moverse, entró **una derivación fiscal
-nueva a la capa de dinero sin una sola prueba** (`opcionesDe`), y el trinquete de
-cobertura **subió 2.46 puntos mientras la cobertura real BAJÓ 160 statements**.
-Se compensan exactamente; la nota no se mueve.
+**Nota: 6/10** (antes 5). Razón del movimiento: **se atacó y subió**. Los tres
+arneses nuevos del pase 4 **anclan de verdad** —lo medí revirtiendo cada arreglo,
+no leyéndolos—, `sidebar-nav.tsx` pasó de **0.0% a 90.5%**, y `saas/fiscal.test.ts`
+**sí lee el CHECK vigente** de la migración (lo probé en las dos direcciones).
+Ninguno de los tres arreglos entró sin red, que era el hallazgo caro que este pase
+venía a buscar. No sube más porque **el síntoma del CRÍTICO todavía se reproduce
+con la suite entera en verde** (hallazgo 1), porque la aserción de cableado del
+tercero **se derrota en un intento** (hallazgo 3), y porque **C6 llega a su quinto
+pase** con los otros once hallazgos abiertos byte-idénticos.
 
-> **El riesgo mayor del rubro, hoy:** el borrado le regaló al trinquete de
-> cobertura **873 statements de holgura**. Statements cubiertos: 12,909 → **12,749
-> (−160)**. Statements totales: 18,763 → **17,890 (−873)**. El porcentaje pasó de
-> 68.8% a **71.26%** y los tres umbrales (67/84/79) quedaron con más aire del que
-> tenían. O sea: se probó **menos** código que ayer y la puerta que vigila eso
-> dice que mejoramos. El repo puede meter 873 statements nuevos sin una sola
-> prueba antes de que el CI vuelva a quejarse, y el primero ya entró en el mismo
-> commit del borrado (`opcionesDe`, hallazgo 1).
+> **El riesgo mayor del rubro, hoy:** las tres pruebas nuevas anclan el **archivo
+> que se arregló** y no el **camino que falla**. Puedo dejar el `<nav>` del panel
+> vacío otra vez —el CRÍTICO del pase 4, mismo síntoma, misma pantalla— tocando
+> `chrome.tsx` en vez de `sidebar-nav.tsx`, y las 3,134 pruebas siguen verdes.
+> Puedo apagar la guarda de `[id]` dejándola escrita en su línea, y sus 21 casos
+> siguen verdes. El arnés se pegó al parche, no al modo de falla.
 
 ---
 
 ## Compuerta, verificada por mí hoy
 
 ```
-npx tsc --noEmit -p .   → 0 errores
-npx vitest run          → 258 archivos · 3,105 verdes · 1 saltada  (64.6 s)
+npx vitest run          → 261 archivos · 3,134 verdes · 1 saltada   (54.8 s)
 npx vitest run --coverage
-   Statements 71.26% (12749/17890) · Branches 84.66% (4914/5804)
-   Functions  83.05% (701/844)     · Lines      71.26%
-   umbrales: 67 / 84 / 79 → PASA (el margen más chico sigue siendo RAMAS: 0.66 pt)
-   bajo --coverage: 3,103 verdes | 3 saltadas — las 2 de tiempo que el paso
-   extra de `ci.yml` recupera. Coincide con lo documentado.
+   Statements 71.58% (12811/17897) · Branches 84.64% (4933/5828)
+   Functions  83.29% (708/850)     · Lines     71.58%
+   umbrales 67/84/79 → PASA
 ```
 
-Delta contra el pase 3 (3,187 verdes · 68.8% · 12,909/18,763):
+Coincide con la línea base del orquestador. Delta contra el pase 4:
 
-| | pase 3 | pase 4 | delta |
+| | pase 4 | pase 5 | delta |
 |---|---|---|---|
-| pruebas verdes | 3,187 | 3,105 | **−82** |
-| statements **cubiertos** | 12,909 | 12,749 | **−160** |
-| statements **totales** | 18,763 | 17,890 | −873 |
-| % statements | 68.8 | **71.26** | +2.46 |
-| % ramas | 84.57 | 84.66 | +0.09 |
-| % funciones | 81.28 | 83.05 | +1.77 |
+| pruebas verdes | 3,105 | **3,134** | +29 |
+| statements **cubiertos** | 12,749 | **12,811** | **+62** |
+| statements totales | 17,890 | 17,897 | +7 |
+| % statements | 71.26 | **71.58** | +0.32 |
+| % ramas | 84.66 | **84.64** | **−0.02** |
+| margen de RAMAS contra el umbral 84 | 0.66 pt | **0.64 pt** | −0.02 |
 
-Cobertura por archivo de lo que audito (v8, statements, corrida de hoy):
+Esta vez el porcentaje sube porque de verdad se cubrió más (+62 statements con
++7 de denominador), que es lo contrario del pase 4. Lo apunto porque el hallazgo
+del trinquete sigue abierto y este pase es el contraejemplo honesto. **Ramas es la
+excepción:** las tres pruebas nuevas metieron 24 ramas y cubrieron 19, así que el
+umbral con menos aire se apretó un poco más.
+
+Los tres archivos que cambiaron, medidos:
 
 ```
-   0.0%   33  src/app/api/cron/purgar/route.ts
-   0.0%   37  src/app/api/cron/escalar/route.ts
-   0.0%   39  src/app/api/dashboard/asistente/route.ts
-   0.0%   41  src/app/dashboard/top-rutas.tsx
-   0.0%   42  src/app/api/export/liquidaciones/route.ts
-   0.0%   43  src/app/dashboard/motor-fiscal-periodo.tsx
-   0.0%   47  src/app/api/cron/facturar/cola/route.ts   ← C6, CUARTO pase sin mover
-   0.0%   63  src/app/dashboard/gasto-semanal-chart.tsx
-   0.0%   84  src/app/dashboard/panel-periodo.tsx
-   0.0%   93  src/app/dashboard/rail.tsx
-   0.0%  106  src/app/api/export/pdf/[id]/route.ts
-   0.0%  106  src/app/dashboard/inicio-operacion.tsx    ← la pantalla del encargado, superficie NUEVA
-   0.0%  200  src/lib/likida/comercial.ts
-  22.3%  175  src/lib/saas/stripe.ts
-  28.8%  146  src/lib/likida/facturacion/agente.ts
-  39.4%   71  src/app/dashboard/tablero-operacion.tsx
-  48.5%   66  src/app/dashboard/resumen-visual.tsx      ← subió de 40.9
-  56.7%  557  src/lib/likida/repo.ts
-  62.1%  116  src/app/api/stripe/webhook/route.ts
-  75.4%  471  src/lib/likida/fiscal.ts                  ← 460→471 stmts; los 11 nuevos son `opcionesDe`
-  88.2%  817  src/lib/likida/analytics.ts               ← bajó de 90.1 (entró `getLiquidaciones`, 0 pruebas)
-  97.6%   42  src/app/dashboard/kpi-periodo.tsx
-  99.0%   98  src/lib/likida/recordatorio_comprobacion.ts
- 100.0%    6  src/app/dashboard/rail-marca.ts
- 100.0%   43  src/lib/auth/visibilidad.ts
- 100.0%  461  src/lib/likida/cuadre/engine.ts
+  90.5%   63  src/app/dashboard/sidebar-nav.tsx     ← 0.0% en el pase 4
+ 100.0%    4  src/app/dashboard/[id]/id.ts          ← nuevo
+  73.9%   69  src/lib/saas/fiscal.ts
+   0.0%   57  src/app/dashboard/chrome.tsx          ← el que MONTA el sidebar (hallazgo 1)
+   0.0%   47  src/app/api/cron/facturar/cola/route.ts   ← C6, QUINTO pase
 ```
 
-Las dos líneas que cuentan la historia del pase: **`fiscal.ts` ganó 11 statements
-y perdió 1.6 puntos**, **`analytics.ts` ganó 17 y perdió 1.9**. Las dos ganaron
-lógica de dinero rescatada de páginas borradas, y ninguna de las dos piezas
-rescatadas trae prueba.
+`src/app/**/page.tsx` está **excluido** de la cobertura por configuración
+(`vitest.config.ts`), así que `[id]/page.tsx` —donde vive la guarda del arreglo
+3— no aparece en ningún número: la única evidencia sobre él es la aserción de
+texto que el hallazgo 3 desarma.
 
 ---
 
-## Las 89 pruebas que se fueron con el borrado: cuáles y si dolieron
+## Mutación medida de las 3 pruebas nuevas del pase 4
 
-**Respuesta corta: no, ninguna era ancla de dinero.** Lo medí, no lo deduje.
+Reverti cada arreglo a su versión previa con `git show <commit>^:<archivo>`, corrí
+**solo** su prueba, conté, y restauré con `git checkout --` verificando
+`git status` entre una y otra.
 
-Solo **DOS archivos de prueba** se borraron, con **5 pruebas entre los dos**. Las
-otras ~84 son **filas de `it.each` sobre listas de rutas** — el mismo aserto
-parametrizado, una vez por pantalla, en dos archivos de permisos.
+| Prueba | Casos | Fallos al revertir el arreglo | ¿Ancla de verdad? |
+|---|---|---|---|
+| `src/app/dashboard/sidebar_puerta.test.tsx` | 5 | **4** (`flota_admin`, `contador`, `encargado` sin puertas + `hrefsPintados('contador').length === 0`) | **SÍ** — y coincide exacto con lo que afirmó `8d6ac51`. Pero ancla el componente, no el montaje: ver hallazgo 1 |
+| `src/lib/saas/regimen_no_se_pierde.test.ts` | 3 | **2** (`faltantes = ['624']` en el barrido + `624 no está en el catálogo`) | **SÍ** — coincide exacto con lo que afirmó `12cc8c6`. Pero su mensaje de fallo nombra un archivo que la prueba nunca abre: hallazgo 2 |
+| `src/app/dashboard/id_no_uuid.test.ts` | 21 | **1** de 21 revirtiendo solo el cableado (`page.tsx`); revirtiendo también `id.ts` el archivo entero **no carga** (0 pruebas corridas) | **PARCIAL** — el caso de cableado es el único con valor y se derrota en un intento: hallazgo 3 |
+| `src/lib/saas/fiscal.test.ts` (reescrito) | 8 | 0 con el arreglo revertido, **y eso es correcto**: afirma SUBCONJUNTO a propósito | **SÍ lee el CHECK vigente** — verificado abajo. Con un hueco de silencio: hallazgo 4 |
 
-**Medición dura.** Saqué del árbol viejo los cuatro archivos que hacen falta
-(`visibilidad.test.ts`, `visibilidad.ts`, `rutas.ts`, `tenant-efectivo.test.ts`),
-corrí solo esos dos test files y revertí:
+### ¿`fiscal.test.ts` de verdad lee el CHECK, o lee otra cosa que hoy coincide?
+
+Lo probé en las **dos** direcciones, porque leer el archivo no distingue una
+lectura real de una coincidencia:
 
 ```
-$ git checkout 20ecbb1 -- src/lib/auth/visibilidad.test.ts src/lib/auth/visibilidad.ts \
-                          src/app/dashboard/rutas.ts src/lib/auth/tenant-efectivo.test.ts
-$ npx vitest run src/lib/auth/visibilidad.test.ts src/lib/auth/tenant-efectivo.test.ts
- ✓ src/lib/auth/tenant-efectivo.test.ts (45 tests)
- ✓ src/lib/auth/visibilidad.test.ts     (90 tests)
-      Tests  135 passed (135)
-$ git checkout HEAD -- <los cuatro>     # árbol limpio, verificado
+# 1) ¿lee la 0088 (la vigente) y no la 0056 (la vieja)?
+   quité '626' del CHECK de 0088_regimen_624_coordinados.sql
+ × los catálogos que ofrece la pantalla son los que la base acepta
+   → la pantalla ofrece regímenes que el CHECK de la base rechaza: expected [ '626' ]
+   Tests  1 failed | 7 passed (8)          ← LEE LA 0088. Confirmado.
 ```
 
-Hoy los mismos dos archivos dan **22** y **35**. Es decir:
-
-| archivo | antes | hoy | delta | qué eran |
-|---|---|---|---|---|
-| `src/lib/auth/visibilidad.test.ts` | **90** | **35** | **−55** | `it.each` sobre listas de rutas: `PROHIBIDAS` 14→4, `SUYAS` 9→1, `FISCAL.map` 6→0, `OPERACION_PROHIBIDA` 7→1, y `TODAS_LAS_RUTAS` (que sale de `rutas.ts`, cuyos `href:` bajaron de **40 a 9**) |
-| `src/lib/auth/tenant-efectivo.test.ts` | **45** | **22** | **−23** | `it.each` sobre `RUTAS`, que bajó de 27 entradas a 8 |
-| `src/app/dashboard/contador/page.test.tsx` | 2 | **borrada** | −2 | auditoría 10 **BAJO** de frontend: el grid `items-start` |
-| `src/app/dashboard/contador/periodo.test.tsx` | 3 | **borrada** | −3 | auditoría 10 **BAJO**: el rango de fechas con `fechaMx()` y no ISO crudo |
-| `src/app/dashboard/dinero_por_area.test.ts` | ~6 | **2** | ~−4 | el barrido de dinero-en-pantalla-de-operación (ver hallazgo 3) |
-| `src/app/admin/ui/filtro_rango.test.ts` | 18–19 | 17 | −1/−2 | `PAGINAS` 3→2 |
-| `despacho/vista.test.tsx` → `tablero-operacion.test.tsx` | 3 | 3 | 0 | renombre puro |
-| `etiquetas_sincronizadas.test.ts`, `actividad.test.ts` | 6, 6 | 6, 6 | 0 | mismo número |
-
-**−55 −23 −5 −4 −2 ≈ −89.** Cuadra con la caída de 3,194 a 3,105 que reporta el
-MAPA (mi línea base de hoy da 3,105 exacto).
-
-### ¿Alguna de las cinco pruebas de archivo borrado anclaba una regla que sigue viva?
-
-Fui a mirar las dos, una por una, buscando una **violación viva** en el código
-que queda. Una sí, la otra no:
-
-- **`contador/periodo.test.tsx` — cerrada de verdad.** Anclaba *«el rango de
-  fechas usa `fechaMx()`, no el ISO crudo»* sobre `EncabezadoFiscal`. Barrí lo
-  que queda: `resolverPeriodo` tiene un solo consumidor
-  (`dashboard/page.tsx:85`) y **ninguna pantalla superviviente imprime
-  `periodo.desde`/`periodo.hasta` en pantalla** — `page.tsx:86` solo los resta
-  para contar días. Sin instancia viva, no hay hallazgo. La regla hermana —el
-  formato de cifras concentrado en `lib/formato.ts`— sigue con su prueba propia.
-- **`contador/page.test.tsx` — dejó una violación viva.** Ver hallazgo 5.
-
-### Lo que sí me preocupa del borrado, y no es una prueba perdida
-
-Son **dos piezas de lógica de dinero que el borrado RESCATÓ de las páginas
-—decisión correcta— y metió a la capa de datos sin traerles arnés**:
-
-1. `fiscal.ts:212` `opcionesDe()` — venía de `dashboard/contador/comun.tsx` y
-   carga un **ALTO de la auditoría 14**. Cero pruebas. Hallazgo 1.
-2. `analytics.ts:1550` `getLiquidaciones()` — venía de `dashboard/cuadre/page.tsx`
-   y carga el **CRÍTICO de la auditoría 5** (`if (error) throw`). Cero pruebas y
-   cero llamadores. Hallazgo 4.
-
-El commit `a47d1d7` dice, textual, que mueve la función *«para que borrar la
-página no la pierda»*. Se salvó el código; no se salvó la garantía.
+Es la única de las cuatro que hace lo que dice hacer sobre la fuente de verdad,
+y `git diff` confirma que el bloque de la lista a mano desapareció. Ese pedazo
+está bien hecho.
 
 ---
 
-## Las pruebas que se modificaron: ¿se aflojaron?
+## C6 — estado
 
-### `visibilidad.test.ts` (61 líneas, mismo commit que `visibilidad.ts`) — **NO bendice el cambio**
-
-Era la sospecha principal del pase, y la refuté con un mutante. El cambio de
-producción es que `inicioDe('contador')` deja de mandar al panel borrado y
-aterriza en Suscripción (`visibilidad.ts:169`). Le devolví el destino viejo:
-
-```ts
--  if (puedeVerArea(rol, 'dinero')) return '/dashboard/suscripcion';
-+  if (puedeVerArea(rol, 'dinero')) return '/dashboard/contador';
-```
+`src/app/api/cron/facturar/cola/route.ts:40,66` — **0.0%, 47 statements. QUINTO
+pase sin moverse.** Confirmado como se me pidió, sin gastar la ronda ahí:
 
 ```
- AssertionError: expected "/dashboard/contador" to be "/dashboard/suscripcion"
-  ❯ src/lib/auth/visibilidad.test.ts:172:34
- Test Files  2 failed | 5 passed (7)
-      Tests  6 failed | 91 passed (97)
+$ git log -1 --format="%h %ad %s" --date=short -- src/app/api/cron/facturar/cola/route.ts
+ec012da 2026-08-05 fix(qstash): imports estáticos del Client/Receiver …
+
+$ ls src/app/api/cron/facturar/cola/
+route.ts          ← un solo archivo, cero *.test.ts
+
+cobertura de hoy:  0.0%  47 stmts
 ```
 
-**Murió, y con 6 fallos en dos archivos** (`visibilidad` y `tenant-efectivo`, que
-comparte la garantía). Y no muere solo por el valor literal: la propiedad
-anti-bucle —`expect(puedeVerRuta('contador', inicioDe('contador'))).toBe(true)`,
-`:74` y `:173`— **también** revienta, que es la que de verdad importa (mandar al
-contador a una ruta sin área declarada lo rebota otra vez, para siempre). El
-comentario del archivo lo dice y esta vez el `expect` lo respalda. Esto está
-bien hecho.
+El último commit que lo tocó es del **5-ago-2026**, *cuatro días antes* de que
+empezara la auditoría 17. Es el callback que QStash invoca para emitir CFDI: el
+mutante doble (firma a `false &&` + quitar `.is('cfdi_uuid', null)`) se corrió ya
+en los pases 2 y 3 con la suite verde las dos veces. Correrlo una cuarta vez
+sobre un archivo que no cambió no produce señal; el escenario y la consecuencia
+—un CFDI duplicado que le queda al cliente en su contabilidad y que no se
+deshace— siguen tal cual en el pase 3, sección *«C6 primero»*. **Sigue CRÍTICO.**
 
-**Lo que sí se aflojó, y es real:** las listas concretas se vaciaron. `PROHIBIDAS`
-del encargado pasó de 14 rutas a 4, `SUYAS` de 9 a 1, y el bloque del contador de
-7 pruebas a 2. Es consecuencia inevitable de que las rutas ya no existen —no es
-poda para maquillar—, pero deja al rubro con una superficie de permisos mucho
-más chica que vigilar: hoy hay **8 rutas** en `AREA_POR_RUTA` (`/dashboard`,
-`arco`, `soporte`, `combustible-casetas`, `suscripcion`, `usuarios`, `politicas`,
-`configuracion`) contra las 40 de `rutas.ts` de ayer.
-
-Y dejó **tres aserciones tautológicas** — hallazgo 6.
-
-### `etiquetas_sincronizadas.test.ts` — **NO se debilitó**
-
-Su cambio es de **4 líneas**: el bucle de "el mapa de estatus no está duplicado
-en las páginas" pasó de 2 rutas a 1, porque `/dashboard/cuadre/page.tsx` ya no
-existe. La copia superviviente (`[id]/page.tsx`) se sigue mirando con los dos
-mismos `expect`.
-
-Lo que hace fuerte a este archivo **no se tocó**: el barrido de CONCEPTO sigue
-comparando `cuadre/engine.ts` contra `[id]/page.tsx` **clave por clave y etiqueta
-por etiqueta**, y sigue exigiendo que el tipo `ConceptoGasto` esté cubierto
-entero. Lo verifiqué con el mutante de su propio bug histórico:
-
-```
-$ sed -i "s/otro: 'Otro'/otro: 'Gasto'/" "src/app/dashboard/[id]/page.tsx"
- × etiquetas de concepto — las tres fuentes dicen lo mismo > y les ponen la MISMA etiqueta
-   "otro" difiere entre el motor y el panel   (etiquetas_sincronizadas.test.ts:53)
- Test Files  1 failed (1)
-      Tests  1 failed | 5 passed (6)
-```
-
-Sigue cazando exactamente lo que existe para cazar. Revertido.
-
-### `actividad.test.ts` — **ARREGLADA, y bien** (cierra mi MEDIO de dos pases)
-
-`master` metió `d.setHours(0, 0, 0, 0)` en los dos helpers, que es la causa raíz
-que reporté: las dos mitades ya miden "hoy" con el mismo reloj. Re-corrí el
-experimento del pase 2/3, hoy a las 11:20 UTC:
-
-```
-== TZ=UTC ==                 Tests  6 passed (6)
-== TZ=America/Mexico_City == Tests  6 passed (6)
-== TZ=Asia/Tokyo ==          Tests  6 passed (6)   ← fallaba 4 de 6
-== TZ=Etc/GMT+12 ==          Tests  6 passed (6)   ← fallaba 4 de 6
-```
-
-Es el único hallazgo mío cerrado **por arreglo** en cuatro pases. (Nota menor,
-sin severidad: en zonas al este de Greenwich el string sigue siendo el día
-anterior, pero prueba y código lo calculan igual, así que es estable a toda hora;
-para México, UTC−6, además es el día correcto.)
-
-### `tenant-efectivo.test.ts` — encogió, no se aflojó
-
-Cambió `RUTAS` (27→8) y sustituyó los destinos borrados por `/dashboard/suscripcion`
-en 6 casos puntuales. Las garantías siguen enteras y **más específicas**: el
-rebote con sufijo (`?vista=demo&rol=contador`), que `?rol=` no escala, y que al
-chofer se le niega toda pantalla. Murió junto con `visibilidad` en mi mutante de
-control (dos de sus 22 pruebas están entre los 6 fallos).
-
-### `dinero_por_area.test.ts` — **sí se aflojó, y de forma peligrosa.** Hallazgo 3.
-
-### `filtro_rango.test.ts` y `tablero-operacion.test.tsx` — sin pérdida
-
-`filtro_rango` sacó `analitica/page.tsx` de una lista de 3; los otros dos siguen
-barridos. `tablero-operacion.test.tsx` es un renombre con **cero** cambios de
-aserción; solo se corrigió el título (*«los seis rótulos»* → *«los rótulos
-accionables e informativos»*), que **ya mentía antes**: siempre afirmó sobre
-dos, no seis. El renombre honró el título; la cobertura del rótulo sigue en 2 de 6.
-
----
-
-## Hallazgos abiertos de pases anteriores: qué pasó con cada uno
-
-| Hallazgo | Estado hoy | Evidencia |
-|---|---|---|
-| **[CRÍTICO] C6 — la cola de CFDI sin una sola prueba** | **REINCIDENTE, 4.º pase** | Ver abajo |
-| **[ALTO] la prueba "DOS CORRIDAS SOLAPADAS" no prueba el claim** | **REINCIDENTE, re-mutado hoy** | `recordatorio_comprobacion.ts:208`. Borré `.is('recordatorio_comprobacion_en', null)` del UPDATE del claim → `Test Files 6 passed · Tests 64 passed`. El archivo de prueba **creció +98 líneas** en esta rama y entró `recordatorio_lote_truncado.test.ts` (+137): `grep "\.is("` sobre los dos → **cero**. Más pruebas, mismo hueco |
-| **[ALTO] el cron `escalar` a 0%** | **REINCIDENTE** | 0.0% / 37 stmts; `ls src/app/api/cron/escalar` → solo `route.ts` |
-| **[ALTO] las TRES descargas de dinero a 0%** | **UNA CERRADA POR SUPRESIÓN, DOS VIVAS** | `src/app/dashboard/contador/cfdi/export/route.ts` **se borró** con el panel (64 stmts que salen del denominador). Siguen `export/liquidaciones` (0.0%/42) y `export/pdf/[id]` (0.0%/106), los dos con un solo `route.ts` en su directorio |
-| **[ALTO] `analytics.ts` pierde el filtro de tenant sin que nada falle** | **REINCIDENTE Y AGRAVADO** | `analytics.ts:108` intacto; no gasté corrida en re-mutar lo idéntico. Agravado: el archivo ganó `getLiquidaciones` con **otro** `.eq('tenant_id')` sin ancla (hallazgo 4) y su cobertura bajó de 90.1% a 88.2% |
-| **[ALTO] `rail.tsx` a 0%: el CRÍTICO del panel en blanco vuelve sin que nada falle** | **REINCIDENTE** | `rail.tsx` sigue en **0.0% / 93 stmts** y `rail-marca.ts` en 100% / 6. No re-corrí el mutante B: el arreglo del pase 3 es lo único que cambió el archivo y `rail_marca.test.ts` sigue sin mirar el componente |
-| **[ALTO] `/api/dashboard/asistente` — IDOR documentado, 0%** | **REINCIDENTE** | 0.0% / 39 stmts; `git diff 20ecbb1..HEAD` del archivo **vacío**; sin `*.test.ts` en el directorio |
-| **[ALTO] el cron `purgar` BORRA filas a 0%** | **REINCIDENTE** | 0.0% / 33 stmts; `git diff` vacío; sin `*.test.ts` |
-| **[ALTO] `agente.ts:325` — el `ok` se clava en `true` y 303 pruebas siguen verdes** | **REINCIDENTE** | 28.8% / 146 stmts, byte-idéntico; `agente.test.ts` sigue en 2 pruebas |
-| **[ALTO] el rollback del candado de Stripe sin aseverar** | **REINCIDENTE, byte-idéntico** | `route.test.ts:95-96` sigue con `expect(r.status).toBe(500);` y el comentario *«desmarcar se verifica indirectamente»* como único respaldo. `route.ts` al 62.1% |
-| **[MEDIO] `actividad.test.ts` intermitente por reloj y zona** | ✅ **CERRADO POR ARREGLO** | 4 zonas verdes, arriba |
-| **[MEDIO] las 5 pantallas del Resumen a 0%** | **PARCIAL, sin cambio desde el pase 3** | Siguen a 0%: `panel-periodo` (84), `gasto-semanal-chart` (63), `motor-fiscal-periodo` (43), `top-rutas` (41). `resumen-visual` subió 40.9→48.5. **Superficie nueva a 0%:** `inicio-operacion.tsx` (106 stmts), que es la pantalla entera del encargado |
-| **[MEDIO] `comercial.ts` 0%** | **REINCIDENTE** | 0.0% / 200, sin `comercial.test.ts`. Atenuante vivo: `cliente`/`factura_emitida`/`pago_recibido` siguen vacías |
-| **[MEDIO] el ancla del PGRST201 se fue con `mis-viajes`** | **REINCIDENTE** | `grep -rln "PGRST201\|liquidacion_viaje_id_fkey" src/` sigue vacío. Sin violación viva, sin despertador |
-| **[MEDIO] `verificaciones.sql` sin corredor** | **REINCIDENTE** | `git diff 94c0733..HEAD -- .github/workflows/ci.yml` **vacío**: sus 6 pasos intactos y ninguno ejecuta SQL. El archivo creció +29 líneas en esta rama (bloque 63) y nadie lo corre |
-| **[BAJO] `fiscal_series.test.ts` afirma por índice de llamada** | **REINCIDENTE** | Sin cambios |
-| **[BAJO] la prueba saltada / los warnings** | **SIN CAMBIO, sigue correcto** | 1 saltada de 3,106 (falta `TICKET_PATH`), 3 bajo `--coverage` (las 2 de tiempo, recuperadas por el paso extra del CI) |
-
-### C6 — CUARTO pase. No re-corrí el mutante, y digo por qué
-
-`src/app/api/cron/facturar/cola/route.ts:40` y `:66` — 0.0%, 47 statements.
-
-```
-$ ls -la src/app/api/cron/facturar/cola/
--rw-r--r-- 1 root root 3820 Aug 11 11:02 route.ts     ← un solo archivo, cero *.test.ts
-$ git diff --stat 94c0733..HEAD -- src/app/api/cron/facturar/cola
-(vacío)
-```
-
-**Byte-idéntico desde antes de que empezara la auditoría 17.** Ya corrí el
-mutante doble (firma a `false &&` + quitar `.is('cfdi_uuid', null)`) en el pase 2
-y en el pase 3, con la suite entera verde las dos veces. Correrlo una tercera vez
-sobre un archivo que no cambió no produce señal nueva; gasté esa corrida en
-`opcionesDe`, que sí es código nuevo. El escenario, la consecuencia (un CFDI no
-se deshace; el duplicado le queda al cliente en su contabilidad) y la causa raíz
-siguen tal cual en el pase 3, sección *«C6 primero»*.
-
-Lo que sí es nuevo y vale registrar: **este pase el equipo tocó `fiscal.ts`,
-`analytics.ts`, `visibilidad.ts` y 35 páginas, y no tocó este archivo.** Cuatro
-pases es el patrón, no el accidente.
+Lo nuevo que vale registrar: este pase el equipo tocó cuatro archivos de `src/` y
+escribió tres arneses. Ninguno fue este.
 
 ---
 
 ## Hallazgos
 
-### [ALTO] La derivación fiscal que decide si una flota califica al 15% entró a la capa de dinero con el borrado, sin una sola prueba: la clavé en `true` y las 3,105 siguen verdes
+### [ALTO] El síntoma exacto del CRÍTICO del pase 4 —el `<nav>` del panel vacío— se vuelve a producir con las 3,134 pruebas en verde: la prueba nueva ancla el sidebar, no que alguien lo monte
 
-`src/lib/likida/fiscal.ts:212-224` (`opcionesDe`), la línea del bug en `:220-222`
+`src/app/dashboard/chrome.tsx:66` (0.0% de cobertura, 57 statements) ·
+`src/app/dashboard/sidebar_puerta.test.tsx:43` (renderiza `SidebarNav` directo)
 
-El commit `003c88a` la rescató de `dashboard/contador/comun.tsx` con esta razón,
-textual en el encabezado (`:206-211`): *«ese panel se borró (rediseño desde cero),
-pero `dashboard/page.tsx` (Resumen) también la necesita para su Motor fiscal —
-vivía en un archivo de página en vez de en la capa de datos, así que borrar el
-panel se la hubiera llevado entre pies.»* La decisión es correcta. Lo que no vino
-con ella es el arnés — y la función lleva un ALTO histórico escrito encima:
-
-```ts
-    // AUDITORÍA 14, ALTO: el panel ofrecía el 15% a flotas no elegibles. La
-    // declaración de la flota (al registrarse) llega hasta aquí.
-    elegible15: (f15 && f15.dedicacionExclusivaCarga !== undefined && f15.regimenElegible !== undefined)
-      ? (f15.dedicacionExclusivaCarga === true && f15.regimenElegible === true)
-      : undefined,
-```
-
-**Mutante exacto** (le devuelvo el bug de la auditoría 14, entero):
-
-```ts
--    elegible15: (f15 && f15.dedicacionExclusivaCarga !== undefined && f15.regimenElegible !== undefined)
--      ? (f15.dedicacionExclusivaCarga === true && f15.regimenElegible === true)
--      : undefined,
-+    elegible15: true,
-```
-
-**Salida real, suite completa:**
+El arreglo `8d6ac51` cerró el bug *«`sidebar-nav.tsx` no importa NEGOCIO ni
+GESTION»* y su prueba lo ancla bien (4 fallos, medidos arriba). Pero el CRÍTICO
+que el auditor de frontend reportó no era ese: era **«el `<nav>` de `chrome.tsx:65`
+se renderiza vacío»**. Y `chrome.tsx` es el único archivo que monta el sidebar:
 
 ```
- Test Files  258 passed (258)
-      Tests  3105 passed | 1 skipped (3106)
-
-npx tsc --noEmit -p .  → 0 errores
+$ grep -n "SidebarNav" src/app/dashboard/chrome.tsx
+5:import SidebarNav from './sidebar-nav';
+66:          <SidebarNav rol={rol} />
+$ grep -rln "sidebar-nav\|SidebarNav" src/ --include=*.test.ts --include=*.test.tsx
+src/app/dashboard/sidebar_puerta.test.tsx        ← el único, y monta el componente él mismo
 ```
 
-**Refutación que intenté y falló.** ¿Lo cubre otro archivo?
-`grep -rln "opcionesDe" --include=*.test.ts --include=*.test.tsx src/` devuelve
-**dos falsos positivos** y nada más: `razonamiento_ocr.test.ts` (que mira
-`opcionesDeRazonamiento`, del cliente de OpenRouter) y `capufe.test.ts` (que tiene
-un método privado homónimo en su doble de navegador). Cero pruebas reales.
-`regimen_facilidad_15.test.ts` (+95 en esta rama) sí ancla la **escritura** —que
-`crearFlota` guarde `regimenElegible` correcto según el régimen 624/612— pero no
-la **lectura**: nadie comprueba que `opcionesDe` la propague. Y `fiscal.test.ts:31`
-pasa `elegible15: true` como **fixture**, o sea que `resumirPerdidas` está probada
-*río abajo* de la derivación que nadie prueba.
-
-**Escenario con valores.** `elegible15` decide una sola rama, `fiscal.ts:359`:
-
-```ts
-if (o.elegible15 === false) push('efectivo_no_elegible');   // deducción PERDIDA
-else                        push('combustible_efectivo');   // en riesgo / por confirmar
-```
-
-Con el mutante puesto, una flota que al darse de alta declaró **que NO** tiene
-dedicación exclusiva a la carga federal —o que tributa en un régimen que la RFA
-2026 regla 2.9 no nombra— ve su diésel pagado en efectivo contado como
-**recuperable**. Eso sube dos cifras que el contralor lee en el Resumen: *«Ahorro
-generado»* (`page.tsx:265`, `resumenPerdidas.montoRecuperable`) y el bloque
-*«Recuperable pidiendo factura»* del Motor fiscal. Y en el sentido contrario, un
-`elegible15: false` clavado le borra a un coordinado de verdad una deducción a la
-que sí tiene derecho.
-
-**Consecuencia:** es el modo de falla que CLAUDE.md llama por su nombre — el
-contralor cruza esa cifra contra su contador. Ofrecerle una deducción del 15% que
-su régimen no admite no es un número feo en pantalla: es una postura fiscal que
-alguien puede tomar. Es exactamente el ALTO que la auditoría 14 cerró, hoy sin
-nada que impida que vuelva.
-
-**Causa raíz probable:** el borrado movió la función de un archivo de página (que
-nunca tuvo prueba, porque era una página) a la capa de datos (donde el estándar
-del repo sí es tener prueba), y nadie aplicó el estándar del destino.
-
----
-
-### [ALTO] El trinquete de cobertura subió 2.46 puntos mientras la cobertura real bajaba 160 statements: el borrado le regaló 873 statements de holgura al único umbral automático del repo
-
-`vitest.config.ts` (umbrales 67/84/79) · `.github/workflows/ci.yml` (paso *Tests
-(con umbral de cobertura)*, `npm run test:coverage`)
-
-**Escenario — no hace falta romper nada, basta leer las dos corridas.** La del
-pase 3 (10-ago) y la de hoy, ambas con `npx vitest run --coverage`, ambas pegadas
-arriba:
-
-```
-pase 3:  Statements 68.80% (12909/18763)   Functions 81.28%
-pase 4:  Statements 71.26% (12749/17890)   Functions 83.05% (701/844)
-```
-
-**Cubiertos: −160. Totales: −873. Porcentaje: +2.46 puntos.** Los tres umbrales
-pasan con más aire que ayer y ninguna prueba nueva lo explica: la suite tiene
-**82 pruebas menos**. Lo que subió el número fue sacar del denominador 35 páginas,
-la mayoría de las cuales estaban a 0%.
-
-**Consecuencia para alguien real.** El umbral de `vitest.config.ts` es el único
-mecanismo del repo que convierte "cobertura" en una **puerta** en vez de en un
-número que nadie mira — el propio `ci.yml` lo dice así en el paso *Tests (con
-umbral de cobertura)*. Esa puerta acaba de aflojarse sin que nadie la aflojara: a
-partir de hoy caben **873 statements de código nuevo sin una sola prueba** antes
-de que el CI vuelva a ponerse rojo. Con el panel del cliente por reescribirse
-entero, 873 statements es más o menos *el panel entero otra vez*. Y el primero ya
-entró: los 11 statements de `opcionesDe`, en el mismo commit del borrado.
-
-**Refutación que intenté:** ¿alguien está subiendo el trinquete a mano cuando
-conviene? Miré `vitest.config.ts`: 67/84/79 llevan sin moverse desde antes de la
-ronda 17, y el margen de RAMAS —el más apretado— apenas pasó de 0.57 a 0.66 pt.
-No hay evidencia de que nadie ajuste el número al resultado. El problema no es
-mala fe: es que un umbral de **porcentaje** no distingue "probé más" de "borré lo
-no probado", y este pase hizo lo segundo.
-
-**Causa raíz probable:** la puerta mide un cociente y no un piso de statements
-cubiertos, así que una poda grande la premia. Por dónde va el arreglo: el
-trinquete tendría que mirar también el numerador.
-
----
-
-### [MEDIO] El despertador de "una pantalla de operación no enseña pesos sin gatearlos" bajó a UNA sola aserción, y esa se apaga sola y en silencio al mover el dinero a un archivo hermano
-
-`src/app/dashboard/dinero_por_area.test.ts:70` (la superficie del `/dashboard`),
-`:82` (el guardarraíl, bajado de `>5` a `>1`) y `:85-95` (el bucle)
-
-Hoy el barrido encuentra **3 rutas de operación** (`arco`, `soporte` y la raíz) y
-solo la raíz enseña dinero, así que el archivo entero produce **2 pruebas**: el
-guardarraíl y **una** aserción real.
-
-```
-$ npx vitest run src/app/dashboard/dinero_por_area.test.ts
- ✓ src/app/dashboard/dinero_por_area.test.ts (2 tests)
-```
-
-**Escenario (mutante corrido hoy).** El archivo declara, en su propio encabezado
-(`:34-40`), que el 4-ago-2026 tapó exactamente este hueco: miraba solo `page.tsx`,
-y como media docena de pantallas parten su render en un `vista.tsx` hermano,
-*«mover una columna de pesos de un archivo al otro apagaba el despertador sin
-cambiar una sola cifra en pantalla»*. La superficie del `/dashboard` de hoy es
-`page.tsx` **+ `inicio-operacion.tsx`** (`:70`) — pero el Resumen ya reparte su
-dinero en **cinco hermanos más** que el barrido nunca abre: `panel-periodo.tsx:105`
-(`mxn(totalLiquidado)`), `motor-fiscal-periodo.tsx:61,68`, `top-rutas.tsx:45`,
-`gasto-semanal-chart.tsx:47,76` y `rail.tsx:147`. Simulé ese movimiento
-—expresé el formateador de los tres KPI a través de una constante, como quedaría
-si el marcado se fuera a `panel-periodo.tsx`— y de paso desarmé la puerta:
+**Mutante exacto** (corrido hoy, suite completa):
 
 ```tsx
-+const FMT = 'mxn' as const;
--  ... formato="mxn" ...            (×3)
-+  ... formato={FMT} ...
--  if (!puedeVerArea(rol, 'dinero')) {
-+  void puedeVerArea; void InicioOperacion;
-+  if (false) {
-       return <InicioOperacion … />;
-     }
+-          <SidebarNav rol={rol} />
++          {false && <SidebarNav rol={rol} />}
 ```
 
 ```
- Test Files  258 passed (258)
-      Tests  3104 passed | 1 skipped (3105)
+ Test Files  261 passed (261)
+      Tests  3134 passed | 1 skipped (3135)
  npx tsc --noEmit -p .  → 0 errores
 ```
 
-Cero fallos — y fíjese en el número: **3104, no 3105**. La única aserción real del
-archivo no falló: **desapareció**, porque las pruebas se generan en un bucle sobre
-lo que el barrido encuentra. El guardarraíl de `:82` sigue verde porque cuenta
-**rutas** (3 > 1), no aserciones. Con `grep -c 'puedeVerArea(' page.tsx` en **0**,
-el Resumen del dueño —con su gasto total, su costo por viaje y su ahorro— se le
-pinta completo al encargado, y las tres puertas del CI lo dejan pasar.
+**Escenario con valores.** Javier abre el demo en `/dashboard?vista=demo` desde
+`admin/selector-vista.tsx:54`. `chrome.tsx` pinta la barra lateral, el logo, el
+avatar — y el `<nav>` vacío. Cero links, para los cinco roles. Es el mismo píxel,
+la misma pantalla y la misma consecuencia que el CRÍTICO que este PR dice haber
+cerrado: siete páginas vivas (`arco`, `soporte`, `combustible-casetas`,
+`usuarios`, `politicas`, `suscripcion`, `configuracion`) alcanzables solo
+tecleando la URL, `/dashboard/arco` entre ellas.
 
-**Consecuencia:** el jefe de tráfico ve las finanzas de la flota. Es el escenario
-que este archivo existe para evitar, y que ya se dio cuatro veces según su propio
-encabezado.
+**Refutación que intenté y falló.** ¿Lo caza otra prueba por otro lado?
+`chrome.tsx` está en **0.0%** de 57 statements y ningún `*.test.ts*` lo nombra
+(`grep -rln "chrome" src/ --include=*.test.ts*` → vacío). ¿Lo caza el linter, por
+JSX inalcanzable? No: `npx tsc --noEmit` da 0 y el mutante es JSX legal.
 
-**Por qué lo pongo MEDIO y no ALTO:** el archivo declara honestamente que es *«un
-despertador, no una demostración»*, y la puerta real vive en `visibilidad.ts`, que
-sí está al 100% y sí mata a su mutante. Lo que reporto es que el despertador
-quedó con una sola pila y **no avisa cuando se le acaba**: una prueba que se
-autoelimina en silencio es peor que no tenerla, porque el conteo de la suite baja
-1 y nadie lo mira.
+**Consecuencia:** el contralor abre el panel en la sala y no hay a dónde hacer
+clic. Y lo específico de mi rubro: la prueba nueva se escribió con el encabezado
+*«el guardarraíl que debía cazarlo cubre la regla y no el cableado»* — y cerró un
+nivel de cableado dejando el siguiente abierto. Es el mismo patrón que critica,
+movido un archivo arriba.
 
-**Causa raíz probable:** la premisa "página + su `vista.tsx` hermano" (`:50-53`)
-la rompió el propio rediseño: `/dashboard` ya no tiene un hermano, tiene nueve.
-
----
-
-### [MEDIO] `getLiquidaciones` se rescató del borrado "para no perderla", con cero llamadores y cero pruebas — y es la que carga el `throw` del CRÍTICO de la auditoría 5
-
-`src/lib/likida/analytics.ts:1550-1568`, la línea en cuestión `:1560`
-
-`a47d1d7` la sacó de `dashboard/cuadre/page.tsx`, donde vivía como función local
-no exportada, *«para que borrar la página no la pierda… es la única de las 17
-páginas del inventario cuya lógica no vivía ya en `lib/likida`»*. Hoy:
-
-```
-$ grep -rn "getLiquidaciones(" src/ | grep -v PorDia
-src/lib/likida/analytics.ts:1550:export async function getLiquidaciones(…)
-```
-
-**Un solo resultado: su propia definición.** Cero llamadores, cero pruebas — las
-12 coincidencias de `getLiquidaciones` en archivos `*.test.ts` son todas
-`getLiquidacionesPorDia`, que es otra función y esa sí está anclada
-(`analytics_por_dia.test.ts`).
-
-**Mutante exacto** (le quito las dos garantías a la vez):
-
-```ts
--    .eq('tenant_id', tenantId)
-     .order('created_at', { ascending: false })
--  if (error) throw new Error(`getLiquidaciones: ${error.message}`);
-+  void error;
-```
-
-```
- Test Files  258 passed (258)
-      Tests  3105 passed | 1 skipped (3106)
- npx tsc --noEmit -p .  → 0 errores
-```
-
-**Consecuencia.** Hoy no rompe nada porque nadie la llama; el daño es futuro y
-está agendado. El comentario que quité es literalmente el ancla en prosa del
-CRÍTICO de frontend de la auditoría 5: *«sin este throw, una lectura caída
-devolvía `[]` y la tabla salía con encabezados y cero filas bajo unos KPIs que
-decían "12 viajes liquidados"»* — la regla *«fallar cerrado y decirlo»* de
-CLAUDE.md, en la consulta que llena la tabla de liquidaciones. Esa función se
-guardó **precisamente** para que el panel nuevo la reconecte, y va a llegar al
-panel nuevo con su `.eq('tenant_id')` y su `throw` sin un solo `expect` detrás.
-Un rescate sin arnés es una regresión con fecha diferida.
-
-**Causa raíz probable:** el commit trató el problema como "no perder el código" y
-no como "no perder la garantía". La misma forma que `opcionesDe`, en el mismo
-borrado, en el otro archivo.
+**Causa raíz probable:** el arnés se pegó al archivo del parche
+(`sidebar-nav.tsx`) en vez de a la pantalla que falla (`chrome.tsx`, que es la que
+tiene el `<nav>` del que hablaba el hallazgo).
 
 ---
 
-### [MEDIO] La regresión de layout que `contador/page.test.tsx` anclaba tiene una instancia VIVA en una de las páginas que sobrevivieron, y ya no queda nada que la cace
+### [ALTO] `regimen_no_se_pierde.test.ts` dice en su mensaje de fallo *«el alta (/admin/flotas) reconoce estos regímenes»* y nunca abre `/admin/flotas`: ese `<select>` ofrece 8 claves que el CHECK de la base rechaza, y nada lo caza
 
-`src/app/dashboard/combustible-casetas/page.tsx:200` · la prueba borrada era
-`src/app/dashboard/contador/page.test.tsx:35-38`
+`src/lib/saas/regimen_no_se_pierde.test.ts:45-50` (lee `administracion.ts`) y
+`:58-61` (el mensaje que nombra `/admin/flotas`) ·
+`src/app/admin/flotas/page.tsx:218-234` (el `<select>` real) ·
+`supabase/migrations/0088_regimen_624_coordinados.sql:32-39` (el CHECK)
 
-La prueba borrada anclaba un BAJO de frontend de la auditoría 10: dos `ChartCard`
-en un `grid grid-cols-1 lg:grid-cols-2` sin `items-start` se estiran a la altura
-de la más alta —`align-items: stretch` es el default de CSS grid— y la de
-contenido corto queda con cientos de píxeles de blanco bajo su mensaje. Su único
-`expect` era literal:
+La prueba deriva su lista con esto:
 
 ```ts
-expect(html).toContain('grid grid-cols-1 lg:grid-cols-2 items-start gap-3');
+const src = readFileSync('src/lib/likida/administracion.ts', 'utf8');
+const m = src.match(/REGIMENES_ELEGIBLES\s*=\s*\[([^\]]*)\]/);
 ```
 
-Barrí las páginas que quedan buscando la misma forma:
+`REGIMENES_ELEGIBLES` es **`['624','612']`** (`administracion.ts:128`) — la lista
+de quién califica a la facilidad del 15%, **no** el catálogo del alta. El
+`<select>` de `/admin/flotas` ofrece **once** claves:
 
 ```
-$ grep -rn "lg:grid-cols-2\|items-start" src/app/dashboard/*.tsx src/app/dashboard/*/page.tsx
-src/app/dashboard/combustible-casetas/page.tsx:200:  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+624  601  612  605  606  607  608  610  611  615  616
 ```
 
-Es el único `lg:grid-cols-2` del panel y **no lleva `items-start`**. Adentro
-(`:201-207`) hay dos `ChartCard tamano="M"` hermanas: *«Gasto por concepto»* con
-`HBars` (una barra por concepto — pueden ser dos) y *«Reparto del gasto»* con
-`Dona` (altura fija). Es el patrón exacto de la regresión.
+y el CHECK vigente (`tenant_regimen_fiscal_dominio`, mig. 0088) acepta **seis**:
 
-**Escenario:** una flota con dos conceptos de gasto registrados —la condición del
-`porConcepto.length > 1` que abre ese `div`— entra a Combustible y casetas y ve la
-tarjeta izquierda estirada a la altura de la dona, con el hueco blanco debajo.
-Es la clase de pantalla que se lee como rota justo en el demo.
+```
+601  603  612  621  624  626
+```
 
-**Consecuencia:** BAJO de producto (nadie pierde dinero), pero relevante para mi
-rubro por otra razón: es el **único caso del pase** en que borrar una prueba junto
-con su página dejó una regla sin ancla teniendo la regla una instancia viva. Las
-otras cuatro pruebas borradas no dejaron nada. Lo pongo MEDIO porque lo que falta
-no es un pixel: es que **ninguna** de las 3,105 pruebas mira hoy esta clase de
-defecto, y el repo acaba de demostrar (`kpi-periodo.test.tsx`,
-`tablero-operacion.test.tsx`) que sabe probarla con `renderToStaticMarkup` sin
-dependencias nuevas.
+**Ocho de las once opciones que Javier puede elegir violan el CHECK**: 605, 606,
+607, 608, 610, 611, 615, 616. Y `crearFlota` las inserta crudas, sin validar:
 
-**Causa raíz probable:** el ancla se escribió pegada a **una** página
-(`toContain` de su string de clases) en vez de como barrido de la clase de
-defecto — así que se murió con su página aunque el defecto no sea de esa página.
+```ts
+// administracion.ts:140
+.insert({ nombre, rfc: rfc ?? null, ciudad: …, regimen_fiscal: f.regimenFiscal ?? null, … })
+```
+
+**Escenario con valores.** Javier da de alta una flota y elige *«615 —
+Incorporación Fiscal»* (una etiqueta razonable, y la única que suena a régimen
+chico en la lista). Postgres contesta `23514 new row for relation "tenant"
+violates check constraint "tenant_regimen_fiscal_dominio"`, `crearFlota` lo
+reenvía como `Error`, y el alta de la flota **truena**. Nótese además que el CHECK
+sí admite `621` —la clave real de Incorporación Fiscal— y el `<select>` no la
+ofrece: la etiqueta y la clave no empatan.
+
+**Refutación que intenté y falló.** ¿Alguna prueba mira ese `<select>`?
+`grep -rln "admin/flotas/page.tsx" src/ --include=*.test.ts*` devuelve **un solo
+archivo: `regimen_no_se_pierde.test.ts`, y solo en su comentario de la línea 13**.
+`grep -rn "'605'\|'616'" src/ --include=*.test.ts*` → **cero**.
+¿Lo cubre `fiscal.test.ts`? No: ese compara `saas/fiscal.ts` REGIMENES contra el
+CHECK, y `saas/fiscal.ts` sí es subconjunto exacto. ¿`regimen_facilidad_15.test.ts`?
+Mockea supabase, así que el CHECK nunca se evalúa.
+
+**Consecuencia:** el alta de una flota puede fallar con un 500 en el paso uno de
+un demo. Y para mi rubro, lo caro es otra cosa: una prueba cuyo **mensaje de
+fallo afirma haber comparado contra `/admin/flotas`** cuando comparó contra
+`administracion.ts`. El próximo que la lea creerá que esa divergencia está
+cubierta. Está cubierta para 2 claves de 11.
+
+**Por qué ALTO y no CRÍTICO:** las tres opciones plausibles para una flota de
+carga (624, 601, 612) son las tres que sí pasan el CHECK, así que el demo se cae
+solo si Javier elige mal. Pero el hueco es de 8 claves y no lo mira nadie.
+
+**Causa raíz probable:** la prueba tomó la lista más fácil de parsear
+(`REGIMENES_ELEGIBLES`, una sola línea) en vez de la que su propio texto declara
+comparar (las `<option>` de la página del alta).
 
 ---
 
-### [BAJO] Tres aserciones de permisos quedaron tautológicas: la ruta que usan de ejemplo ya no está clasificada, así que hoy dan `false` para cualquier rol
+### [MEDIO] La aserción de cableado de `id_no_uuid.test.ts` falla en las dos direcciones: se derrota dejando la guarda escrita, y se pone roja con un renombre inocente
 
-`src/lib/auth/visibilidad.test.ts:29` · `src/lib/auth/visibilidad.test.ts:133` ·
-`src/lib/auth/session.test.ts:67`
+`src/app/dashboard/id_no_uuid.test.ts:54-64` · `src/app/dashboard/[id]/page.tsx:62`
 
-`puedeVerRuta` niega por default cuando `areaDeRuta` devuelve `undefined`. Tras el
-borrado, `AREA_POR_RUTA` solo tiene **ocho** entradas:
+Es el caso que el commit `58c44f9` presenta como la diferencia entre este arnés y
+el *«arnés que aparenta»*: lee el código fuente y exige que la guarda esté antes
+de la consulta. Se me pidió juzgar si es sólida. **No lo es**, y lo medí en los
+dos sentidos.
+
+**Falso negativo — la guarda se apaga y los 21 casos siguen verdes:**
+
+```tsx
+-  if (!esIdDeLiquidacion(id)) notFound();
++  if (false && !esIdDeLiquidacion(id)) notFound();
+```
 
 ```
-'/dashboard'  '/dashboard/arco'  '/dashboard/soporte'  '/dashboard/combustible-casetas'
-'/dashboard/suscripcion'  '/dashboard/usuarios'  '/dashboard/politicas'  '/dashboard/configuracion'
+ ✓ src/app/dashboard/id_no_uuid.test.ts (21 tests) 6ms
+      Tests  21 passed (21)
 ```
 
-Las tres aserciones usan rutas que ya **no** están en esa lista:
+El texto `esIdDeLiquidacion(id)` sigue apareciendo antes de
+`getLiquidacionDetalle(id`, y `notFound()` sigue apareciendo entre los dos: las
+tres aserciones de `:60-63` se cumplen al pie de la letra mientras el `22P02`
+vuelve entero. La prueba mide **orden de aparición en el texto**, no flujo de
+control, y un `indexOf` no distingue una guarda de una guarda muerta.
+
+**Falso positivo — el código está bien y la prueba se pone roja mintiendo:**
+
+```tsx
+-  const { id } = await params;
+-  if (!esIdDeLiquidacion(id)) notFound();
++  const { id: segmento } = await params;
++  const id = segmento;
++  if (!esIdDeLiquidacion(segmento)) notFound();
+```
+
+```
+ × la página llama la guarda ANTES de consultar la liquidación
+   → la página no llama esIdDeLiquidacion: expected -1 to be greater than -1
+```
+
+La guarda **sí** se llama, exactamente igual de bien. El mensaje afirma lo
+contrario y manda al siguiente a buscar un bug que no existe.
+
+**Escenario con valores.** Alguien reconstruye el panel del contador (está
+agendado: `rutas.ts:12-24` dice que las 35 páginas se rehacen), toca
+`[id]/page.tsx` para meter el nuevo layout y envuelve la guarda en una condición
+—`if (!esVistaEmbebida && !esIdDeLiquidacion(id)) notFound();`— sin darse cuenta
+de que `esVistaEmbebida` es siempre `true` en su caso. Un contralor abre el
+marcador `/dashboard/cuadre` que le pegaron por WhatsApp en el demo, Postgres
+lanza `22P02 invalid input syntax for type uuid: "cuadre"`, `exigir()` falla
+cerrado como debe, y la pantalla que sale es el error boundary. Los 21 casos
+verdes en el CI.
+
+**Refutación que intenté y falló.** ¿Hay otra prueba que ejerza la página?
+`[id]/page.tsx` está **excluido de la cobertura** por `vitest.config.ts`
+(`src/app/**/page.tsx`), así que ni siquiera aparece un 0% que lo delate. Los
+otros 20 casos prueban `esIdDeLiquidacion` en aislamiento y ninguno toca la
+página.
+
+**Por qué MEDIO y no ALTO:** hoy el cableado está bien puesto y la regla
+(`id.ts`, 100%) está sólidamente probada; lo que reporto es que el despertador
+del cableado se apaga solo. Los 20 casos de la regla sí valen.
+
+**Causa raíz probable:** se eligió `indexOf` sobre el fuente en lugar de invocar
+la página (que es un Server Component con sesión, y por eso se evitó) — pero un
+`indexOf` no puede distinguir código de código muerto, y el comentario de `:55`
+promete que sí.
+
+---
+
+### [MEDIO] `dominioVigente()` se queda leyendo una migración vieja **en silencio** si una futura escribe el mismo CHECK con otra sintaxis — el arreglo desconjeló la lista solo para una forma exacta de SQL
+
+`src/lib/saas/fiscal.test.ts:24-41`, la línea del silencio es `:36-38`
+
+El bucle recorre `supabase/migrations` en orden y guarda `ultimo` **solo cuando
+la regex empata**. Si una migración posterior redefine el mismo constraint en
+cualquier otra forma válida, no empata, `ultimo` conserva el valor anterior, y la
+prueba compara contra un dominio que ya no existe — sin avisar. Solo lanza si
+**ninguna** migración empató.
+
+**Mutante exacto** (creé una migración de sondeo y la borré):
+
+```sql
+-- supabase/migrations/0089_zz_probe.sql
+alter table public.tenant drop constraint if exists tenant_regimen_fiscal_dominio;
+alter table public.tenant
+  add constraint tenant_regimen_fiscal_dominio
+  check (regimen_fiscal is null or regimen_fiscal = any (array['601','624']));
+```
+
+```
+ ✓ src/lib/saas/fiscal.test.ts (8 tests) 22ms
+      Tests  8 passed (8)
+```
+
+La base ahora rechaza `603`, `612`, `621` y `626`; la pantalla los sigue
+ofreciendo los cuatro; la prueba que existe para cazar exactamente eso está
+verde. Un `drop constraint` sin `add` produce el mismo silencio.
+
+**Escenario con valores.** La 0089 quita `626` (RESICO) del dominio porque el SAT
+lo reclasificó. Un dueño en RESICO entra a Plan & Facturación, ve `626` en el
+`<select>`, guarda, y `guardarDatosFiscales` recibe `23514 check constraint
+violation`: la pantalla revienta al guardar. La prueba de sincronía sigue verde
+todo el trimestre.
+
+**Consecuencia:** es el mismo modo de falla que el arreglo cerró —el catálogo y
+el CHECK divergidos con la prueba en verde—, con el disparador cambiado de «la
+lista está escrita a mano» a «la próxima migración se escribe distinto». Y es
+peor de detectar, porque ahora el archivo *dice* que lee la fuente viva.
+
+**Refutación que intenté y falló.** ¿La regex es lo bastante ancha? Exige
+literalmente `check ( <col> is null or <col> in ( … ) ) ;`. No tolera
+`= any (array[…])`, ni el orden invertido (`… in (…) or … is null`), ni un
+`not valid`, ni que el constraint se mueva a un `create table`. Las tres
+migraciones del repo que tocan dominios de `tenant` usan la forma que sí empata,
+así que hoy funciona: mide bien y avisa mal.
+
+**Causa raíz probable:** el bucle trata «no empaté» como «esta migración no habla
+del constraint», y esos dos casos no son el mismo — el nombre del constraint
+aparece en las dos y podría distinguirlos.
+
+---
+
+### [MEDIO] La regla de «Ver como» duplicada del lado cliente en el sidebar no la mira nadie: la borré y las 3,134 siguen verdes
+
+`src/app/dashboard/sidebar-nav.tsx:99` · `src/app/dashboard/sidebar_puerta.test.tsx:26-29`
+
+La prueba nueva mockea `useSearchParams: () => new URLSearchParams('')` y
+descarta el query string de cada href (`:44`, `.split('?')[0]`). Eso deja fuera
+del arnés **todo** lo que el componente hace con los parámetros —líneas 69 a 99—,
+que es donde viven cuatro arreglos documentados en el propio archivo.
+
+**Mutante exacto** sobre el que más pesa:
 
 ```ts
-// visibilidad.test.ts:29 — dentro de «un rol desconocido no ve nada — fail closed»
-expect(puedeVerRuta('gerente_regional', '/dashboard/despacho')).toBe(false);
-
-// visibilidad.test.ts:133 — dentro de «un superadmin puede mirarse el panel como encargado»
-expect(puedeVerRuta(rolEfectivo('superadmin', 'encargado'), '/dashboard/cobranza')).toBe(false);
-
-// session.test.ts:67 — dentro de «ese no-rol NO abre nada: las cuatro matrices lo niegan»
-expect(puedeVerRuta(SIN_ROL, '/dashboard/cuadre')).toBe(false);
+-  const rolMenu = rol === 'superadmin' && rolVista ? rolVista : rol;
++  const rolMenu = rol; void rolVista;
 ```
 
-Las tres pasarían igual con `'flota_admin'` o `'superadmin'` en el primer
-argumento: ya no discriminan por rol, discriminan por "esa ruta no existe". La de
-`:133` es la que más pierde, porque era la que demostraba que *«Ver como» quita
-visibilidad de dinero* — y hoy no lo demuestra.
+```
+ Test Files  261 passed (261)
+      Tests  3134 passed | 1 skipped (3135)
+```
 
-**Por qué es BAJO y no más:** en los tres casos es la segunda aserción de un `it`
-cuya **primera** sí discrimina (`areasDe(SIN_ROL) === []`,
-`rolEfectivo('superadmin','encargado') === 'encargado'`), y la garantía de fondo
-sigue anclada en otro sitio: `/dashboard/suscripcion` y
-`/dashboard/combustible-casetas` sí son rutas de `dinero` vivas y sí se afirman
-por rol (`visibilidad.test.ts:114-121`). No hay hueco de seguridad; hay tres
-líneas que se leen como prueba y ya no lo son. Lo reporto porque es la forma en
-que las suites envejecen sin que nadie lo note: la aserción no falla, solo deja
-de significar.
+**Escenario con valores.** Javier abre `/dashboard?vista=demo&rol=encargado` desde
+`admin/selector-vista.tsx` para enseñarle al contralor *«así ve el panel su jefe de
+tráfico»*. Con el mutante, `rolMenu` es `superadmin`, `visibles()` deja pasar
+`/dashboard/suscripcion` y `/dashboard/combustible-casetas` (las dos son área
+`dinero`), y el sidebar del "encargado" enseña Plan & Facturación y Combustible &
+Casetas. La demostración de que el encargado no ve finanzas la desmiente la
+propia pantalla.
 
-**Causa raíz probable:** las tres nombran una pantalla concreta en vez de derivar
-el ejemplo del mapa (`Object.entries(AREA_POR_RUTA).find(([, a]) => a === 'dinero')`).
+**Refutación que intenté y falló.** ¿No lo cubre `tenant-efectivo.test.ts`? Cubre
+`rolEfectivo` **del servidor**. El comentario de `sidebar-nav.tsx:95-99` dice,
+textual, que esta es una **duplicación deliberada** de esa regla porque el
+componente es cliente y no puede llamar a la del servidor. Una regla duplicada a
+propósito necesita su propia prueba, y `grep -rln "sidebar-nav\|SidebarNav"` sobre
+los tests devuelve un solo archivo, el que la mockea a vacío.
+
+**Causa raíz probable:** el mock de `useSearchParams` se puso en cero para
+simplificar el render, y el `.split('?')[0]` de `hrefsPintados` remató: la prueba
+mide qué páginas se listan y a propósito no mide con qué parámetros — que es la
+mitad del componente.
+
+---
+
+### [MEDIO] `regimen_fiscal` y `config.regimenElegible` son dos verdades sobre la misma flota, las escriben rutas distintas, y ninguna prueba exige que coincidan — el arreglo del pase 4 amplió el camino para separarlas
+
+`src/lib/saas/fiscal.ts` (`guardarDatosFiscales`, escribe la columna) ·
+`src/lib/likida/administracion.ts:129-140` y `src/lib/likida/repo.ts:921-935`
+(escriben el `config`) · lectores del motor: `cuadre/desde_db.ts:56`,
+`likida/fiscal.ts:220`, `tools.ts:116`
+
+El propio `regimen_no_se_pierde.test.ts:30-36` reconoce la divergencia en prosa
+—*«`regimen_fiscal` y `config.regimenElegible` quedan diciendo cosas distintas
+sobre la misma flota sin que nada lo señale»*— y **no la afirma en ningún
+`expect`**. Barrí los tres archivos de prueba del tema (`fiscal.test.ts`,
+`regimen_facilidad_15.test.ts`, `regimen_no_se_pierde.test.ts`): ninguno compara
+las dos fuentes.
+
+**Escenario con valores.** Una flota se da de alta como `601` (Javier no sabía
+todavía que es coordinado): `crearFlota` escribe `regimen_fiscal='601'` y
+`config.facilidadCombustibleEfectivo.regimenElegible=false`. El contador lo
+corrige y el dueño entra a Plan & Facturación y elige `624` —que **ahora sí está
+en el catálogo**, gracias al arreglo `12cc8c6`—. `guardarDatosFiscales` escribe
+`regimen_fiscal='624'` y **no toca `config`**. Resultado: la columna dice 624 y el
+motor sigue leyendo `regimenElegible=false`, así que `engine.ts:358` emite
+`efectivo_no_elegible` con `monto: g.monto` — el diésel pagado en efectivo se
+declara **NO deducible** para un coordinado que sí tiene derecho a la facilidad
+del 15% (RFA 2026 regla 2.9). En el otro sentido, `actualizarFacilidad15`
+(`admin/flotas/page.tsx:141`) deja poner `regimenElegible = sí` a mano sobre una
+flota cuyo `regimen_fiscal` es `601`, y entonces se deduce lo que no se deduce.
+
+**Consecuencia:** una deducción real perdida (o una inventada) en el PDF que el
+contralor cruza con su contador. Para mi rubro: el arreglo del pase 4 **abrió**
+esta puerta —antes el dueño no podía elegir 624 desde esa forma— y el arnés que
+llegó con él documenta el riesgo sin anclarlo.
+
+**Por qué MEDIO y no ALTO:** el arreglo mejoró el balance neto (la dirección
+peligrosa que cerró —601 en la columna con `elegible=true` en el config, o sea
+deducir de más— es la más cara). Lo que queda abierto es la dirección
+conservadora y el camino manual del admin.
+
+**Causa raíz probable:** la elegibilidad se **deriva** del régimen en un solo
+punto (`crearFlota`) y se **almacena**; nada re-deriva al cambiar la fuente, y
+ninguna prueba cierra el círculo.
+
+---
+
+### [BAJO] El detector de `pruebas_en_ci.test.ts` solo mira `*.test.ts`: un `*.test.tsx` con `skipIf(CUADRA_COBERTURA)` se le escapa
+
+`src/lib/likida/pruebas_en_ci.test.ts:43`
+
+```ts
+else if (e.name.endsWith('.test.ts') && /skipIf\([^)]*CUADRA_COBERTURA/.test(…))
+```
+
+`.endsWith('.test.ts')` es **false** para `.test.tsx`. Hay 6 archivos `.test.tsx`
+en el repo y hoy ninguno usa `skipIf` (`grep -rln "skipIf" --include=*.test.tsx`
+→ vacío), así que no hay hueco vivo. Pero la red existe justo para el caso en que
+alguien añada uno: si mañana una prueba de componente con `renderToStaticMarkup`
+se salta bajo cobertura —la instrumentación de v8 encarece un render igual que un
+regex—, CI no la correría nunca y la red que se escribió para avisarlo no lo
+diría. El propio encabezado del archivo llama a eso *«documentación con sintaxis
+de prueba»*.
+
+**Causa raíz probable:** el detector se escribió en la ronda 7, cuando no había
+`.test.tsx` en el repo; los seis llegaron después.
+
+---
+
+## Hallazgos abiertos de pases anteriores: qué pasó con cada uno
+
+Todos verificados contra la cobertura de hoy y el `git diff 8f70906..HEAD -- src/`
+(8 archivos, ninguno de estos).
+
+| Hallazgo | Estado | Evidencia de hoy |
+|---|---|---|
+| **[CRÍTICO] C6 — la cola de CFDI sin una sola prueba** | **REINCIDENTE, 5.º pase** | 0.0% / 47; último commit `ec012da`, 5-ago |
+| **[ALTO] `opcionesDe` — el 15% derivado sin arnés** | **REINCIDENTE** | `likida/fiscal.ts` sigue en **75.4% / 471**, byte-idéntico; `grep opcionesDe` en tests → los mismos 2 falsos positivos. No re-muté: mismo criterio que C6 |
+| **[ALTO] el trinquete de cobertura premia borrar** | **ABIERTO, pero este pase NO lo ejerció** | +62 cubiertos con +7 de denominador: la puerta se movió por la razón correcta esta vez. La holgura de 873 statements que dejó el borrado sigue ahí |
+| **[ALTO] "DOS CORRIDAS SOLAPADAS" no prueba el claim** | **REINCIDENTE** | `recordatorio_comprobacion.ts` byte-idéntico; `grep "\.is("` en sus dos test files → cero |
+| **[ALTO] cron `escalar` a 0%** | **REINCIDENTE** | 0.0% / 37 |
+| **[ALTO] las descargas de dinero a 0%** | **REINCIDENTE (2 vivas)** | `export/liquidaciones` 0.0% / 42 · `export/pdf/[id]` 0.0% / 106 |
+| **[ALTO] `analytics.ts` pierde el filtro de tenant sin que nada falle** | **REINCIDENTE** | 88.2% / 817, idéntico al pase 4 |
+| **[ALTO] `rail.tsx` a 0%** | **REINCIDENTE** | 0.0% / 93 |
+| **[ALTO] `/api/dashboard/asistente` — IDOR, 0%** | **REINCIDENTE** | 0.0% / 39 |
+| **[ALTO] cron `purgar` BORRA filas a 0%** | **REINCIDENTE** | 0.0% / 33 |
+| **[ALTO] `agente.ts:325` — el `ok` clavado en `true`** | **REINCIDENTE** | 28.8% / 146 |
+| **[ALTO] el rollback del candado de Stripe sin aseverar** | **REINCIDENTE** | `webhook/route.ts` 62.1% / 116 |
+| **[MEDIO] `dinero_por_area.test.ts` con una sola pila** | **REINCIDENTE** | archivo byte-idéntico; sigue en 2 pruebas, con la premisa "página + un hermano" que `/dashboard` ya rompió |
+| **[MEDIO] `getLiquidaciones` rescatada sin arnés** | **REINCIDENTE** | `grep -rn "getLiquidaciones(" src/ \| grep -v PorDia` → solo su definición |
+| **[MEDIO] las pantallas del Resumen a 0%** | **REINCIDENTE** | `panel-periodo` 84 · `gasto-semanal-chart` 63 · `motor-fiscal-periodo` 43 · `top-rutas` 41 · `inicio-operacion` 106, todas 0.0% |
+| **[MEDIO] `comercial.ts` 0%** | **REINCIDENTE** | 0.0% / 200 |
+| **[MEDIO] el ancla del PGRST201** | **REINCIDENTE** | sin violación viva |
+| **[MEDIO] `verificaciones.sql` sin corredor** | **REINCIDENTE** | `ci.yml` sin un solo paso que ejecute SQL; el archivo ya trae su **bloque 63** para la 0088 (`:3052`) y nadie lo corre nunca |
+| **[MEDIO] la regresión de layout de `contador/page.test.tsx`** | **REINCIDENTE** | `combustible-casetas/page.tsx:200` sin `items-start` |
+| **[BAJO] 3 aserciones de permisos tautológicas** | **REINCIDENTE** | `visibilidad.test.ts:29,133`, `session.test.ts:67` sin cambios |
+| **[BAJO] `fiscal_series.test.ts` afirma por índice de llamada** | **REINCIDENTE** | sin cambios |
+| **[MEDIO] `actividad.test.ts` intermitente** | ✅ **SIGUE CERRADO** | verde en UTC, Asia/Tokyo y Etc/GMT+12 (spot-check de hoy) |
 
 ---
 
 ## Lo que revisé y está bien
 
-- **El borrado no se llevó ni una prueba de dinero.** Es la pregunta que traía y
-  la respuesta es limpia: **78 de las 89** son filas de `it.each` sobre listas de
-  rutas en dos archivos de permisos (medido: 90→35 y 45→22, corriendo los
-  archivos viejos), **5** son las dos pruebas de UI del panel del contador (dos
-  BAJOs de la auditoría 10), y el resto son listas menores. Cero pruebas de
-  motor, de `repo.ts`, de `fiscal.ts` o de `analytics.ts` se borraron.
-- **`visibilidad.test.ts` no bendice su cambio.** El control murió con
-  **6 fallos en 2 archivos**, incluida la propiedad anti-bucle. Un test editado
-  en el mismo commit que su código, y aun así con dientes.
-- **`etiquetas_sincronizadas.test.ts` sigue siendo el ancla estructural que era.**
-  Su barrido de CONCEPTO no se tocó y caza `otro: 'Gasto'` en la primera corrida.
-  El único cambio es sacar de una lista un archivo que ya no existe.
-- **La prueba intermitente quedó ARREGLADA**, con la causa raíz correcta y
-  verificada en 4 zonas horarias. Es mi primer hallazgo cerrado por arreglo en
-  cuatro pases.
-- **El CI no se tocó** (`git diff 94c0733..HEAD -- .github/workflows/ci.yml`
-  vacío): 6 puertas, `branches: ['**']` + `pull_request`, `concurrency` con
-  `cancel-in-progress`, y el paso extra `npx vitest run fundamento duplicados`
-  que recupera las dos pruebas de tiempo que `--coverage` salta. Lo confirmé
-  contra la corrida: 3,105 verdes / 1 saltada sin cobertura, 3,103 / 3 con ella.
-- **`tenant-efectivo.test.ts` cambió 6 destinos y no perdió ninguna garantía.**
-  El rebote con sufijo, la no-escalada por `?rol=` y el cierre al chofer siguen
-  afirmándose sobre rutas vivas.
-- **El motor de cuadre sigue al 100%** (`engine.ts`, 461 stmts) y `visibilidad.ts`
-  entró al **100%** (43 stmts). Las dos capas que deciden dinero y permisos son
-  las mejor cubiertas del repo, y eso es lo correcto.
-- **La escritura del dinero sigue con arnés.** No repetí el mutante de
-  `saveLiquidacion` del pase 3 (`repo.ts:608-614`, murió con el intercambio
-  comprobado↔anticipo): `repo.ts` es byte-idéntico y `repo_escritura.test.ts`
-  también.
-- **Ninguna prueba toca la red ni depende del reloj.** Con `actividad.test.ts`
-  arreglada, la suite corrió 5 veces completa hoy en un entorno sin salida a
-  internet, en cuatro zonas horarias, sin un solo fallo no atribuible a un
-  mutante mío.
-- **`pruebas-manuales/` no quedó desalineada por el borrado.** Barrí los 16
-  arneses buscando referencias a las 35 páginas muertas: **cero**. (No se corren,
-  por instrucción.)
+- **Los tres arneses nuevos anclan de verdad.** Es la pregunta que traía y la
+  respuesta es limpia: 4 de 5, 2 de 3 y 1 de 21 (el único que cubre el cableado),
+  medidos revirtiendo cada arreglo a su commit padre. **Ninguno de los tres
+  arreglos del pase 4 entró sin red.** Los conteos que afirmaron `8d6ac51` y
+  `12cc8c6` en sus mensajes de commit son **exactos**.
+- **`fiscal.test.ts` de verdad lee el CHECK vigente.** Verificado con mutante
+  sobre la propia migración: quitarle `626` a la 0088 pone la prueba roja con la
+  clave exacta. La lista escrita a mano desapareció y la sustituyó una lectura
+  real de `supabase/migrations`. Es el mejor pedazo de trabajo de prueba del pase.
+- **La dirección "subconjunto, no igualdad" está bien razonada y bien documentada**
+  (`fiscal.test.ts:130-136`): `S01` en el CHECK y fuera de la pantalla es
+  deliberado, y exigir igualdad obligaría a ofrecerlo. La prueba no se aflojó para
+  pasar; se acotó a la dirección que rompe.
+- **`sidebar-nav.tsx` pasó de 0.0% a 90.5%** de 63 statements, y la prueba tiene
+  dientes en las dos direcciones que declara: quitarle el filtro
+  (`visibles = (items) => items`) pone roja la aserción de "no ofrece de más".
+  No es tautológica.
+- **El motor de cuadre sigue anclado en el número que importa.** Mutante fresco:
+  `const tope = 0.15 * total` → `0.20 * total` en `engine.ts:337` mata **2**
+  pruebas de la matriz de la RFA 2.9, con el nombre del caso exacto. El 100% de
+  `engine.ts` no es solo ejecución: al menos ahí se afirma sobre el valor.
+- **Ninguna de las pruebas nuevas depende del reloj ni de la red.** Corrí los
+  cuatro archivos en `UTC`, `Asia/Tokyo` y `Etc/GMT+12`: 37 verdes en las tres.
+  La suite completa corrió 4 veces hoy en un entorno sin salida a internet.
+- **`pruebas_en_ci.test.ts` sigue haciendo su trabajo** (salvo el `.tsx` del
+  hallazgo BAJO): el paso `npx vitest run fundamento duplicados` sigue en
+  `ci.yml:76` y el `npm run test:coverage` sigue en `:68`, con las aserciones que
+  fallarían si alguien los quitara.
+- **El CI no se tocó.** `git diff 927e78f..HEAD -- .github/` vacío: 6 pasos,
+  `branches: ['**']` + `pull_request`, `concurrency` con `cancel-in-progress`.
+  Corre en cada push, sin secretos, y en CI **sí** se corre `npm run build`
+  (aquí no, por falta de credenciales — no es un hueco del CI).
+- **`pruebas-manuales/` no cambió** y sigue fuera del include de vitest. No se
+  corrió nada de ahí, por instrucción.
 
 ---
 
 ## Lo que NO alcancé a revisar
 
-- **`engine.test.ts` (86 KB, ~600 casos).** Cuarto pase sin barrerlo buscando
-  aserciones flojas. El 100% de `engine.ts` dice que se ejecuta entero, no que se
-  afirme sobre el valor. Sigue siendo la mitad que le falta al rubro, y ahora que
-  el panel se va a reconstruir sobre ese motor, es la que más urge.
-- **`inicio-operacion.tsx` (0.0%, 106 stmts).** Superficie **nueva** en mi radar:
-  es la pantalla entera del encargado y no la miré más allá de constatar que está
-  a cero y que no imprime pesos (`grep` de `mxn(`/`formato="mxn"` → vacío).
-- **`al_vuelo.test.ts` (46 KB)** y **`fiscal.test.ts`**: no audité caso por caso
-  si sus aserciones son sobre valor o sobre "se llamó".
-- **`repo.ts` al 56.7% de 557.** Siguen ~26 funciones exportadas sin revisar
-  (`getAcumuladoCombustible`, `reclamarEnvioAviso`, `resolverSolicitudArco`).
-- **`src/lib/saas/stripe.ts` al 22.3%** y **`processor.ts`**: sin cambios desde el
-  pase 3 y sin auditar.
-- **Cobertura de RAMAS por archivo.** Cuarto pase sin saber qué archivo sostiene
-  el 84.66% global, que sigue siendo el umbral con menos margen (0.66 pt).
-- **El 24.6% sin ejecutar de `fiscal.ts`.** Sé que `opcionesDe` está adentro
-  (el mutante sobrevive) pero no mapeé el resto. Repito el aviso del pase 3: el
-  reporte de v8 lista índices de statement, **no** números de línea; derivar
-  líneas de ahí da un mapeo falso.
-- **`supabase/verificaciones.sql` (63 bloques).** Confirmé que nadie lo corre; no
-  lo leí bloque por bloque buscando aserciones flojas.
+- **`engine.test.ts` (86 KB, ~600 casos).** Quinto pase sin barrerlo caso por caso.
+  Este pase le hice **una** mutación dirigida (el tope del 15%) y la cazó, pero
+  una mutación de 600 casos no es una auditoría del archivo. Sigue siendo la
+  mitad que le falta al rubro.
+- **`chrome.tsx`, `selector-vista.tsx`, `aviso-rol.tsx`** — 0.0% / 57, 63 y 44.
+  Solo constaté el hallazgo 1 sobre el primero; no miré los otros dos, y
+  `selector-vista.tsx` es literalmente la puerta del demo.
+- **`repo.ts` al 56.7% de 557.** Siguen ~26 funciones exportadas sin revisar.
+  `actualizarFacilidad15` (`:921`) es de dinero y entró a mi radar este pase por
+  el hallazgo 6, pero no la audité.
+- **`src/lib/saas/suscripcion.ts` (35.5% / 231)** y **`stripe.ts` (22.3% / 175)**
+  — la cobranza de Likida a sus propias flotas, sin auditar en cinco pases.
+- **`intake/consolidado.ts` (58.2% / 208)** y **`meta/client.ts` (65.6% / 273)**:
+  nunca los he mirado.
+- **Cobertura de RAMAS por archivo.** Quinto pase sin saber qué sostiene el
+  84.64%, que sigue siendo el umbral con menos aire y este pase perdió 0.02 pt.
+- **`supabase/verificaciones.sql`.** Confirmé que nadie lo corre y que su bloque
+  63 (mig. 0088) existe; no leí los 63 bloques buscando aserciones flojas.
+- **`al_vuelo.test.ts` (46 KB)** y el 24.6% sin ejecutar de `likida/fiscal.ts`.
 
 ---
 
@@ -699,33 +584,50 @@ archivo:
 
 ```
  M docs/auditoria-17/arquitectura.md
+ M docs/auditoria-17/backend.md
+ M docs/auditoria-17/fiscal.md
+ M docs/auditoria-17/frontend.md
+ M docs/auditoria-17/pruebas.md          ← el mío
+ M docs/auditoria-17/seguridad.md
+?? src/lib/saas/onconflict_indice_total.test.ts
+?? supabase/migrations/0089_factura_saas_stripe_unica_total.sql
 ```
 
-**Ese archivo no es mío** — es trabajo sin commitear de otro auditor del pase 4
-corriendo en paralelo (durante mi corrida también vi y dejé en paz
-`docs/auditoria-17/MAPA.md`, `frontend.md` y `seguridad.md`, que después se
-commitearon en `ee8a822` y anteriores). No toqué ninguno. De `src/` y de todo lo
-demás: **cero modificaciones**, verificado con `git diff --stat -- src/` → vacío.
+```
+$ git diff --stat -- src/ supabase/ .github/
+(vacío)
+```
 
-Las **seis** mutaciones de este pase se revirtieron con `git checkout -- <archivo>`
-inmediatamente después de cada corrida, una a la vez, con `git status` verificado
-entre una y otra:
+**Solo `pruebas.md` es mío.** Los otros cinco `.md` y los dos archivos sin
+trackear son trabajo sin commitear de los demás auditores del pase 5 corriendo en
+paralelo (aparecieron entre mi penúltima y mi última verificación); no los toqué.
+De todo lo trackeado en `src/`, `supabase/` y `.github/`: **cero modificaciones**.
+
+Mi único archivo temporal fue la migración de sondeo del hallazgo 4,
+`supabase/migrations/0089_zz_probe.sql`, borrada en el mismo comando que la creó
+—`ls` lo confirma: *No such file or directory*—. **No la confundan con
+`0089_factura_saas_stripe_unica_total.sql`, que no es mía.** No hice ningún
+commit.
+
+Las **once** mutaciones de este pase se revirtieron con `git checkout -- <archivo>`
+(o `rm`, en el caso del archivo de sondeo) inmediatamente después de cada corrida,
+una a la vez, con `git status` verificado entre una y otra:
 
 | # | Archivo | Mutante | ¿Murió? |
 |---|---|---|---|
-| 1 | `lib/likida/fiscal.ts:220` | `elegible15: true` (revierte el ALTO de la auditoría 14) | ❌ **SOBREVIVIÓ** — 3,105 verdes |
-| 2 | `lib/likida/analytics.ts:1554,1560` | quitar `.eq('tenant_id')` **y** el `if (error) throw` de `getLiquidaciones` | ❌ **SOBREVIVIÓ** — 3,105 verdes |
-| 3 | `app/dashboard/page.tsx:255-265,355` | mover el formateador a una constante + puerta a `if (false)` | ❌ **SOBREVIVIÓ** — 3,104 verdes (una prueba MENOS, cero fallos) |
-| 4 | `lib/auth/visibilidad.ts:169` | `inicioDe` de vuelta a `/dashboard/contador` | ✅ **CAZADA** *(control)* — 6 fallos en 2 archivos |
-| 5 | `app/dashboard/[id]/page.tsx:31` | `otro: 'Otro'` → `otro: 'Gasto'` | ✅ **CAZADA** *(control)* — 1 fallo, mensaje exacto |
-| 6 | `lib/likida/recordatorio_comprobacion.ts:208` | borrar `.is('recordatorio_comprobacion_en', null)` | ❌ **SOBREVIVIÓ** *(reincidente)* — 64 verdes |
+| 1 | `dashboard/sidebar-nav.tsx` | revertido entero a `8d6ac51^` | ✅ **4 de 5** *(confirma la afirmación del commit)* |
+| 2 | `lib/saas/fiscal.ts` | revertido entero a `12cc8c6^` | ✅ **2 de 3** *(confirma la afirmación del commit)* |
+| 3 | `dashboard/[id]/page.tsx` + borrar `id.ts` | revertido entero a `58c44f9^` | ✅ el archivo de prueba no carga (21 casos no corren) |
+| 4 | `dashboard/[id]/page.tsx` | revertido solo el cableado, `id.ts` en su sitio | ✅ **1 de 21** — el caso de cableado |
+| 5 | `dashboard/[id]/page.tsx:62` | `if (false && !esIdDeLiquidacion(id))` | ❌ **SOBREVIVIÓ** — 21/21 verdes (hallazgo 3) |
+| 6 | `dashboard/[id]/page.tsx:56,62` | renombrar `id` → `segmento` (equivalente) | ⚠️ **FALSO POSITIVO** — 1 fallo con mensaje falso (hallazgo 3) |
+| 7 | `dashboard/sidebar-nav.tsx:105` | `visibles = (items) => items` | ✅ **1 fallo**, el de "ofrece de más" |
+| 8 | `dashboard/sidebar-nav.tsx:99` | `rolMenu = rol` (mata "Ver como") | ❌ **SOBREVIVIÓ** — 3,134 verdes (hallazgo 5) |
+| 9 | `dashboard/chrome.tsx:66` | `{false && <SidebarNav …/>}` | ❌ **SOBREVIVIÓ** — 3,134 verdes (hallazgo 1) |
+| 10 | `supabase/migrations/0089_zz_probe.sql` *(creado y borrado)* | CHECK redefinido con `= any (array[…])` | ❌ **SOBREVIVIÓ** — 8/8 verdes (hallazgo 4) |
+| 11 | `supabase/migrations/0088_…sql` | quitar `'626'` del CHECK | ✅ **1 fallo** con la clave exacta *(control: sí lee el CHECK vigente)* |
+| 12 | `lib/likida/cuadre/engine.ts:337` | `0.15 * total` → `0.20 * total` | ✅ **2 fallos** en la matriz de la RFA 2.9 |
 
-Además saqué temporalmente cuatro archivos de `20ecbb1` para **medir** el conteo
-viejo de pruebas (`visibilidad.test.ts`, `visibilidad.ts`, `rutas.ts`,
-`tenant-efectivo.test.ts`) y los devolví con `git checkout HEAD --`. No hice
-ningún commit. El experimento de zonas horarias no tocó ningún archivo (solo la
-variable `TZ` del proceso).
-
-**4 de 6 sobrevivieron.** Los dos controles murieron en la primera corrida y con
-el mensaje exacto, así que el método distingue. Lo que no distingue es la suite,
-en la lógica de dinero que el borrado acaba de mudar de casa.
+**5 controles murieron a la primera y con el mensaje exacto**, así que el método
+distingue. **Tres sobrevivieron**, y los tres son el mismo patrón: el arnés está
+pegado al archivo que se arregló, no al camino por el que la pantalla falla.
