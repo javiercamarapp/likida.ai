@@ -3077,3 +3077,47 @@ begin
   raise exception E'REGIMEN_624  admite-624=%  rechaza-699=%   (esperado true / true)',
     v_ok, v_rechaza;
 end $$;
+
+-- ── 64. El único de factura_saas.stripe_invoice_id es TOTAL (mig. 0089) ───
+-- y por eso el upsert de Stripe SÍ puede escribir.
+-- AUDITORÍA 17 pase 5, CRÍTICO backend: la 0052 lo creó `where
+-- stripe_invoice_id is not null`, y `aplicarFactura()` hace
+-- `.upsert(..., { onConflict: 'stripe_invoice_id' })`. PostgREST emite
+-- `ON CONFLICT (col) DO UPDATE` SIN predicado —no tiene forma de emitir uno—,
+-- y Postgres solo infiere un índice parcial si la sentencia repite su WHERE:
+-- contestaba 42P10 "there is no unique or exclusion constraint matching the
+-- ON CONFLICT specification". Fallaba SIEMPRE, también con la tabla vacía, así
+-- que cada `invoice.paid` daba 500, Stripe agotaba reintentos, y la flota
+-- quedaba pagada sin fila en factura_saas y sin CFDI que timbrarle.
+-- Este bloque corre la sentencia EXACTA que emite PostgREST: si el índice
+-- volviera a ser parcial, revienta con 42P10 en vez de llegar al raise.
+do $$
+declare
+  v_t uuid; v_ins int; v_tras_upsert int; v_monto numeric; v_nulos int;
+begin
+  insert into tenant (nombre) values ('ZZZ VERIF 0089') returning id into v_t;
+
+  -- 1) La sentencia de PostgREST, tal cual. Sin la 0089 esto lanza 42P10.
+  insert into factura_saas (tenant_id, periodo_inicio, periodo_fin, monto, estado, stripe_invoice_id)
+  values (v_t, '2026-08-01', '2026-08-31', 1160, 'pendiente', 'in_ZZZVERIF0089')
+  on conflict (stripe_invoice_id) do update set monto = excluded.monto;
+  select count(*) into v_ins from factura_saas where tenant_id = v_t;
+
+  -- 2) El MISMO invoice otra vez: tiene que ACTUALIZAR, no duplicar. Es la
+  --    idempotencia de la que depende el reintento de Stripe.
+  insert into factura_saas (tenant_id, periodo_inicio, periodo_fin, monto, estado, stripe_invoice_id)
+  values (v_t, '2026-08-01', '2026-08-31', 2320, 'pendiente', 'in_ZZZVERIF0089')
+  on conflict (stripe_invoice_id) do update set monto = excluded.monto;
+  select count(*), max(monto) into v_tras_upsert, v_monto from factura_saas where tenant_id = v_t;
+
+  -- 3) Y la regla que el predicado supuestamente protegía sigue en pie: varias
+  --    facturas SIN id de Stripe conviven (NULLS DISTINCT es el default).
+  insert into factura_saas (tenant_id, periodo_inicio, periodo_fin, monto, estado) values
+    (v_t, '2026-08-01', '2026-08-31', 10, 'pendiente'),
+    (v_t, '2026-08-01', '2026-08-31', 20, 'pendiente');
+  select count(*) into v_nulos from factura_saas where tenant_id = v_t and stripe_invoice_id is null;
+
+  delete from tenant where id = v_t;   -- cascade limpia factura_saas
+  raise exception E'UPSERT_STRIPE_0089  primer-insert=%  tras-reintento=%  monto=%  sin-stripe-id=%   (esperado 1 / 1 / 2320 / 2)',
+    v_ins, v_tras_upsert, v_monto, v_nulos;
+end $$;
