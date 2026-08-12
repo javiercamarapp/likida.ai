@@ -5,6 +5,7 @@ import { resolverTenantApi } from '@/lib/auth/tenant-api';
 import { puedeExportar } from '@/lib/auth/permisos';
 import { puedeVerArea } from '@/lib/auth/visibilidad';
 import { logger } from '@/lib/logger';
+import { esIdDeLiquidacion } from '@/app/dashboard/[id]/id';
 
 export const runtime = 'nodejs';
 
@@ -71,6 +72,21 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   }
 
   const { id } = await params;
+  // AUDITORÍA 17 pase 5, ALTO. La misma forma que `58c44f9` arregló en
+  // `/dashboard/[id]` seguía abierta aquí: el segmento llegaba crudo a
+  // `.eq('id', id)` sobre una columna `uuid`, Postgres contestaba
+  // `22P02 invalid input syntax for type uuid`, y la rama de `error` de abajo
+  // lo convertía en un **500** con "Intenta de nuevo en un momento" — un
+  // mensaje que miente, porque no es transitorio: la URL no existe. De paso
+  // registraba `export.pdf.lectura` como incidente de base de datos, que es el
+  // log que alguien mira a las 3 de la mañana cuando algo SÍ se rompió.
+  //
+  // Se reusa la guarda de la página en vez de copiar el regex: dos
+  // definiciones de "qué es un id" divergen, y eso ya tiene nombre en el rubro
+  // de arquitectura.
+  if (!esIdDeLiquidacion(id)) {
+    return new NextResponse('No hay PDF para esta liquidación', { status: 404 });
+  }
   const admin = supabaseAdmin();
   // El filtro por tenant es EXPLÍCITO: el service-role salta RLS, así que un
   // id de otra flota no puede resolver aquí — tenantId sale de la sesión, no
