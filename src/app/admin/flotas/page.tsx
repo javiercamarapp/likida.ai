@@ -6,6 +6,7 @@ import { Truck, ExternalLink, Plus } from 'lucide-react';
 import { requireSuperadmin } from '@/lib/auth/guard';
 import { crearFlota, mensajeParaPantalla } from '@/lib/likida/administracion';
 import { actualizarFacilidad15 } from '@/lib/likida/repo';
+import { REGIMENES } from '@/lib/saas/fiscal';
 import ContadorRetro from '../contador-retro';
 import { HBars } from '../ui/graficas';
 import { ChartCard, EstadoVacio } from '../ui/kit';
@@ -219,18 +220,18 @@ export default async function FlotasPage() {
                 <option value="">Sin declarar</option>
                 {/* AUDITORÍA 17, CRÍTICO (fiscal): `601` venía rotulado
                     "(coordinados)" y `624` no existía. Son dos claves distintas
-                    del c_RegimenFiscal, y la que la RFA 2.9 nombra es la 624. */}
-                <option value="624">624 — Coordinados (Título II Cap. VII)</option>
-                <option value="601">601 — General de Ley PM</option>
-                <option value="612">612 — PF con actividades empresariales</option>
-                <option value="605">605 — Sueldos y Salarios</option>
-                <option value="606">606 — Arrendamiento</option>
-                <option value="607">607 — Régimen de Enajenación</option>
-                <option value="608">608 — Demás ingresos</option>
-                <option value="610">610 — Residentes en el Extranjero</option>
-                <option value="611">611 — Ingresos por Dividendos</option>
-                <option value="615">615 — Incorporación Fiscal</option>
-                <option value="616">616 — Otros regímenes</option>
+                    del c_RegimenFiscal, y la que la RFA 2.9 nombra es la 624.
+                    AUDITORÍA 17 pase 5, ALTO: esta lista estaba escrita a mano
+                    y ofrecía OCHO claves que `tenant_regimen_fiscal_dominio`
+                    rechaza (605, 606, 607, 608, 610, 611, 615, 616 → 23514 en
+                    la cara de quien da el alta) mientras escondía TRES que la
+                    base sí acepta —603, 621 y 626 RESICO, con lo que una flota
+                    RESICO no se podía capturar—. Ahora sale del MISMO catálogo
+                    que usa el dueño en Plan & Facturación, que es el que la
+                    prueba amarra contra el CHECK vigente. */}
+                {REGIMENES.map((r) => (
+                  <option key={r.clave} value={r.clave}>{r.clave} — {r.nombre}</option>
+                ))}
               </select>
               <span>
                 — la facilidad del 15% (RFA 2.9) exige 624 (Coordinados, Título II
