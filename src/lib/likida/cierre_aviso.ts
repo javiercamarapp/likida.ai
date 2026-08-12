@@ -136,6 +136,12 @@ export const RUTA_DE_DIFERENCIA: Record<TipoDiferencia, RutaDeAviso> = {
   cfdi_pendiente: 'panel',
   cfdi_efos_indeterminado: 'panel',
   permiso_cre_no_verificable: 'panel',
+  // Razón 3: TODAVÍA NO ES UN HECHO. Un CFDI en parcialidades trae FormaPago 99
+  // ("Por definir") por regla del SAT, no por descuido de nadie; el medio de
+  // pago se documenta después en el REP. No hay nada que el jefe decida hoy
+  // sobre un dato que la ley todavía no exige. Se ve en el panel y sube a
+  // decisión el día que el REP llegue con efectivo.
+  medio_pago_no_acreditado: 'panel',
   ocr_baja_confianza: 'panel',         // bandeja de revisión, no decisión de negocio
   viatico_rfc_operador: 'panel',       // hay que confirmar que el nombre es el del operador: se ve, no se decide
   combustible_efectivo: 'panel',       // cuenta contra el 15% del ejercicio (RFA 2026 2.9); no se pierde por viaje

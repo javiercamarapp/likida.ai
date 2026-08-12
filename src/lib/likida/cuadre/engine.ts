@@ -98,7 +98,15 @@ const ES_VIATICO = ['alimentacion', 'hospedaje', 'transporte', 'viaticos'];
 export type Cubeta = 'deducible' | 'no_deducible' | 'por_confirmar';
 
 const NO_DEDUCIBLE_ISR: TipoDiferencia[] = ['rfc_receptor', 'cfdi_cancelado', 'cfdi_efos', 'cfdi_no_encontrado', 'complemento_hidrocarburos', 'efectivo_sobre_tope', 'efectivo_no_elegible'];
-const POR_CONFIRMAR: TipoDiferencia[] = ['combustible_efectivo', 'rfc_receptor_no_verificable', 'cfdi_pendiente'];
+/**
+ * `99` del catálogo `c_FormaPago` del SAT: "Por definir". El SAT lo OBLIGA en un
+ * CFDI **PPD**, y significa literalmente que el medio de pago aún no se conoce
+ * — se documenta después, en el complemento de pago (REP). Tratarlo como un
+ * medio válido es afirmar un requisito de LISR 27-III que nadie verificó.
+ */
+const MEDIO_PAGO_POR_DEFINIR = '99';
+
+const POR_CONFIRMAR: TipoDiferencia[] = ['combustible_efectivo', 'rfc_receptor_no_verificable', 'cfdi_pendiente', 'medio_pago_no_acreditado'];
 
 /**
  * LA ÚNICA definición de en qué cubeta cae un gasto. Vive aquí, exportada, para
@@ -368,6 +376,26 @@ export function cuadrarViaje(input: CuadreInput): Omit<Liquidacion, 'id' | 'crea
           gastoId: g.id,
         });
       }
+    } else if (g.formaPago === MEDIO_PAGO_POR_DEFINIR) {
+      // AUDITORÍA 17 pase 5, ALTO. `99` = "Por definir" en el `c_FormaPago` del
+      // SAT, y es OBLIGATORIO en un CFDI **PPD** (pago en parcialidades o
+      // diferido) — el arreglo normal de cualquier flota con línea de crédito
+      // en su estación. No es un medio de pago: es la declaración de que
+      // TODAVÍA NO SE SABE cuál fue. Se documenta después, en el REP.
+      //
+      // La regla de LISR 27-III se había escrito al revés: detectaba UN medio
+      // prohibido (`'01'`) y dejaba pasar todo lo demás como permitido. Con `99`
+      // eso imprimía "Deducible para ISR", el IVA acreditado y los litros del
+      // estímulo contados, sobre un comprobante cuyo pago pudo haber sido en
+      // efectivo — y entonces ninguna de las tres cifras es cierta.
+      //
+      // Fail-closed, como todo lo demás aquí: no se afirma que NO sea deducible
+      // (bien pudo pagarse por transferencia), se afirma que no se sabe.
+      diferencias.push({
+        tipo: 'medio_pago_no_acreditado', concepto: g.concepto, monto: 0,
+        nota: `${etiquetaConcepto(g.concepto, g.ocrExtra as Record<string, unknown> | undefined)} con FormaPago 99 ("Por definir", CFDI en parcialidades o diferido) — el medio de pago no está acreditado, así que no se afirma la deducción ni el acreditamiento. Se confirma con el complemento de pago (REP).`,
+        gastoId: g.id,
+      });
     } else if (g.formaPago === '01' && !esCombustible && g.monto > topeEfectivo) {
       // Regla 6: gasto no-combustible en efectivo > tope → no deducible.
       diferencias.push({ tipo: 'efectivo_sobre_tope', concepto: g.concepto, monto: 0, nota: `${etiquetaConcepto(g.concepto, g.ocrExtra as Record<string, unknown> | undefined)} de ${mxn(g.monto)} en efectivo excede el tope de ${mxn(topeEfectivo)} (LISR 27-III) — no deducible.`, gastoId: g.id });
@@ -982,7 +1010,7 @@ export function cuadrarViaje(input: CuadreInput): Omit<Liquidacion, 'id' | 'crea
   // SÍ es deducible hasta el 15% (RFA 2026 regla 2.9), pero NO acredita IEPS —
   // la facilidad salva un beneficio, no los dos. Sacarlo de aquí acreditaría un
   // IEPS que la facilidad no concede.
-  const SIN_ACREDITAMIENTO: TipoDiferencia[] = ['rfc_receptor', 'rfc_receptor_no_verificable', 'cfdi_cancelado', 'cfdi_efos', 'cfdi_no_encontrado', 'complemento_hidrocarburos', 'combustible_efectivo', 'combustible_efectivo_dentro15', 'efectivo_sobre_15', 'efectivo_no_elegible', 'efectivo_sobre_tope', 'monto_invalido', 'cfdi_pendiente'];
+  const SIN_ACREDITAMIENTO: TipoDiferencia[] = ['medio_pago_no_acreditado', 'rfc_receptor', 'rfc_receptor_no_verificable', 'cfdi_cancelado', 'cfdi_efos', 'cfdi_no_encontrado', 'complemento_hidrocarburos', 'combustible_efectivo', 'combustible_efectivo_dentro15', 'efectivo_sobre_15', 'efectivo_no_elegible', 'efectivo_sobre_tope', 'monto_invalido', 'cfdi_pendiente'];
   // AUDITORÍA 12, ALTO (fiscal, reincidente de la 11): `cfdi_pendiente` entra
   // aquí y en POR_CONFIRMAR — con el SAT caído o en timeout, "no se pudo
   // verificar" es el MISMO tercer estado que el motor ya aplica a EFOS, al RFC
@@ -1052,7 +1080,13 @@ export function cuadrarViaje(input: CuadreInput): Omit<Liquidacion, 'id' | 'crea
       // Los litros los lee el OCR del ticket y viven en `ocrExtra` (el XML del
       // CFDI no siempre trae la cantidad desglosada por concepto).
       const litros = Number((g.ocrExtra as Record<string, unknown> | undefined)?.litros ?? 0);
-      const pagoElectronico = !!g.formaPago && g.formaPago !== '01';
+      // AUDITORÍA 17 pase 5: esto decía `formaPago !== '01'`, o sea "cualquier
+      // cosa que no sea efectivo". El `99` ("Por definir", obligatorio en PPD)
+      // pasaba por medio electrónico y acreditaba litros sobre un pago que
+      // nadie había visto. El comentario de arriba ya nombraba los medios que
+      // la LIF 20-A-IV exige; faltaba implementarlo.
+      const pagoElectronico = !!g.formaPago && g.formaPago !== '01'
+        && g.formaPago !== MEDIO_PAGO_POR_DEFINIR;
       if (pagoElectronico && Number.isFinite(litros) && litros > 0) {
         // AUDITORÍA 8, CRÍTICO: los litros salen del OCR y nada los cotejaba —
         // ni contra el XML (no siempre trae la cantidad desglosada), ni contra
@@ -1152,7 +1186,7 @@ export function cuadrarViaje(input: CuadreInput): Omit<Liquidacion, 'id' | 'crea
   // central del demo. El requisito sigue avisado —ahora con tono `condicionado`
   // en el renglón de deducibilidad, ver `liquidacion/deducibilidad.ts`— pero ya
   // no puede bajar un estatus que nunca podría volver a subir.
-  const REVISAR: TipoDiferencia[] = ['ocr_baja_confianza', 'sin_cfdi', 'rfc_receptor', 'cfdi_cancelado', 'cfdi_efos', 'cfdi_efos_indeterminado', 'cfdi_no_encontrado', 'cfdi_pendiente', 'monto_invalido', 'complemento_hidrocarburos', 'complemento_no_verificable', 'combustible_efectivo', 'efectivo_sobre_tope', 'efectivo_sobre_15', 'efectivo_no_elegible', 'viatico_excede_fiscal', 'factura_por_vencer', 'alimentacion_sin_soporte', 'alimentacion_transporte_sin_tarjeta_credito', 'viatico_rfc_operador', 'monto_discrepante', 'texto_sospechoso', 'fecha_sospechosa', 'folio_verificar', 'comprobante_no_fiscal', 'diesel_desviacion'];
+  const REVISAR: TipoDiferencia[] = ['medio_pago_no_acreditado', 'ocr_baja_confianza', 'sin_cfdi', 'rfc_receptor', 'cfdi_cancelado', 'cfdi_efos', 'cfdi_efos_indeterminado', 'cfdi_no_encontrado', 'cfdi_pendiente', 'monto_invalido', 'complemento_hidrocarburos', 'complemento_no_verificable', 'combustible_efectivo', 'efectivo_sobre_tope', 'efectivo_sobre_15', 'efectivo_no_elegible', 'viatico_excede_fiscal', 'factura_por_vencer', 'alimentacion_sin_soporte', 'alimentacion_transporte_sin_tarjeta_credito', 'viatico_rfc_operador', 'monto_discrepante', 'texto_sospechoso', 'fecha_sospechosa', 'folio_verificar', 'comprobante_no_fiscal', 'diesel_desviacion'];
   const hayRevisar = diferencias.some((d) => REVISAR.includes(d.tipo));
   const hayDif = diferencias.some((d) => d.tipo === 'sobre_politica' || d.tipo === 'duplicado' || d.tipo === 'diesel_desviacion') || Math.abs(diferencia) >= 0.5;
   const estatus: EstatusLiquidacion = hayRevisar ? 'revisar' : hayDif ? 'con_diferencias' : 'cuadrada';

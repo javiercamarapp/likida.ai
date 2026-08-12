@@ -76,6 +76,7 @@ export type TipoDiferencia =
   | 'monto_invalido'       // monto ≤ 0 (OCR erróneo / nota de crédito) → revisar a mano
   | 'complemento_hidrocarburos'  // CFDI de combustible SIN el complemento requerido → NO deducible (NIVEL 2, del XML)
   | 'complemento_no_verificable' // factura de combustible sin XML → no se puede verificar el complemento (NIVEL 1, a bandeja)
+  | 'medio_pago_no_acreditado' // FormaPago 99 "Por definir" (PPD): el medio de pago NO se conoce todavía → no se afirma nada (LISR 27-III)
   | 'combustible_efectivo' // combustible pagado en efectivo → NO deducible (LISR 27-III, sin importar monto)
   | 'efectivo_sobre_tope'  // gasto no-combustible en efectivo > $2,000 → NO deducible (LISR 27-III)
   | 'ieps_no_desglosado'   // CFDI de diésel sin IEPS desglosado → no acreditable (se pierde el estímulo)

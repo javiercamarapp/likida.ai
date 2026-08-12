@@ -30,6 +30,10 @@ export const NORMA_POR_DIFERENCIA: Partial<Record<TipoDiferencia, string[]>> = {
   // un comprobante tiene que traer para amparar una deducción; una nota de
   // consumo no lo trae, y lo declara ella misma.
   comprobante_no_fiscal: ['cff-29-A'],
+  // El `99` "Por definir" del PPD no viola la norma: impide comprobarla. Se
+  // cita 27-III porque es el requisito que queda sin verificar, y 20-A porque
+  // el mismo hueco tumba el acreditamiento del estímulo.
+  medio_pago_no_acreditado: ['lisr-27-fr-III', 'lif-2026-art-20-A'],
   combustible_efectivo: ['lisr-27-fr-III', 'rfa-2026-2.9'],
   // RFA 2026 regla 2.9 (deber ser, docs/fiscal/rfa-2.9-deber-ser.md):
   // dentro del 15% y elegible → informativo con la misma ficha; el excedente y
