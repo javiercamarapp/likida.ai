@@ -1,6 +1,6 @@
 ---
 name: auditoria-diaria
-description: Corre la auditoría diaria del repo con un agente experto por rubro — frontend, backend, agéntico, tool calling, seguridad, fiscal, legal, arquitectura, pruebas, operabilidad, rendimiento y modelo de datos —, verifica cada hallazgo contra el código antes de anotarlo, lo pinta en un tablero que se mira, arregla críticos y altos con prueba que los reproduzca y commit atómico, y recalifica los 12 rubros contra la auditoría anterior. Úsala en la revisión de la mañana, al pedir "audita el repo", "qué se rompió", "califica el código", "encuentra errores y arréglalos", al cerrar una fase, antes de un demo o un deploy, y cuando corra desatendida por cron o /loop.
+description: Corre la auditoría diaria del repo con un agente experto por rubro — frontend, backend, agéntico, tool calling, seguridad, fiscal, legal, arquitectura, pruebas, operabilidad, rendimiento y modelo de datos —, verifica cada hallazgo contra el código antes de anotarlo, lo pinta en un tablero que se mira, arregla TODO lo reproducible —crítico, alto, medio y bajo, sin tope de vueltas— con prueba que lo reproduzca, commit atómico y push, y recalifica los 12 rubros contra la auditoría anterior. Úsala en la revisión de la mañana, al pedir "audita el repo", "qué se rompió", "califica el código", "encuentra errores y arréglalos", al cerrar una fase, antes de un demo o un deploy, y cuando corra desatendida por cron o /loop.
 ---
 
 # Auditoría diaria
@@ -26,7 +26,17 @@ Una nota que solo sube es una nota que nadie está midiendo. La auditoría 2 de 
 
 **3 · Tablero.** `docs/auditoria-N/tablero.html`, autocontenido, con los 12 rubros, la flecha contra la ronda anterior, la serie histórica y los hallazgos por severidad. Se abre y **se mira** — un tablero que nunca se renderizó no es evidencia de nada. Detalle en `references/tablero.md`.
 
-**4 · Arreglo de críticos y altos.** Uno a la vez, en serie, cada uno: prueba que reproduce → arreglo → prueba verde → suite completa → commit atómico citando el ID del hallazgo. Medios y bajos quedan propuestos en el tablero. Si un arreglo rompe algo, se revierte ese commit y el hallazgo vuelve a *pendiente* con la razón: el bucle retiene lo que mejora y devuelve lo que no.
+**4 · Arreglo de TODO lo reproducible — sin tope de vueltas.** Uno a la vez, en serie, cada uno: prueba que reproduce → arreglo → prueba verde → suite completa → commit atómico citando el ID del hallazgo → **push**. Se sigue hasta que no quede un solo hallazgo reproducible sin arreglar, en orden CRÍTICO → ALTO → MEDIO → BAJO. Si un arreglo rompe algo, se revierte ese commit y el hallazgo vuelve a *pendiente* con la razón: el bucle retiene lo que mejora y devuelve lo que no.
+
+**No hay cuota que cumplir ni "ya fueron suficientes".** Un medio y un bajo también se arreglan; lo único que los pone al final es el orden, no una excusa para dejarlos. Cerrar la ronda con hallazgos reproducibles sin tocar es incumplir la fase, y la síntesis tiene que decirlo con esas palabras en vez de llamarlos "propuestos".
+
+Las **únicas tres salidas** que no son "arreglado", y las tres exigen razón escrita con `archivo:línea`:
+
+1. **No se pudo reproducir.** Se dice qué se intentó. Arreglar a ciegas es cómo se introducen los bugs de la ronda de mañana.
+2. **Depende de una decisión del dueño**, no de código — un dato que el producto no captura, una pantalla que él decidió rehacer, un texto legal. Aquí no se inventa comportamiento: **se escala por nombre**, en la notificación y arriba del PR, con la pregunta concreta que hay que contestar para desbloquearlo.
+3. **El arreglo se intentó y la suite lo rechazó**, tres veces sobre el mismo hallazgo. Se anota qué se intentó en cada intento.
+
+Cualquier otro hallazgo que llegue vivo al cierre es trabajo pendiente de la corrida, no del código.
 
 **5 · Recalificación y cierre.** Correr la suite completa otra vez, escribir `00-SINTESIS.md` con las 12 notas, el delta y **el porqué de cada movimiento**, y commitear. Antes de declarar cualquier cosa terminada, `evidencia`: comando y salida real, o se dice que no se verificó.
 
@@ -59,6 +69,6 @@ Condición de terminación, tope de presupuesto, qué hacer si truena a media ro
 
 ## Defaults
 
-Repo: `~/javiercamarapp/cuadra` (`javiercamarapp/cuadra` en GitHub, rama `master`). Rondas en `docs/auditoria-N/`, N consecutivo. Escala 0–10 por rubro, global con un decimal. Autofix: críticos y altos. `pruebas-manuales/*.prueba.ts` hacen llamadas reales de pago — **no se corren**.
+Repo: `~/javiercamarapp/cuadra` (`javiercamarapp/cuadra` en GitHub, rama `master`). Rondas en `docs/auditoria-N/`, N consecutivo. Escala 0–10 por rubro, global con un decimal. **Autofix: TODO lo reproducible —crítico, alto, medio y bajo—, sin tope de vueltas, y cada arreglo pusheado.** `pruebas-manuales/*.prueba.ts` hacen llamadas reales de pago — **no se corren**.
 
 Corriendo como routine en la nube cambian tres cosas —la compuerta sin `build`, los arreglos por PR y no a `master`, y que esta skill viaja en el repo—: está en `references/desatendido.md`, sección *En la nube*.
