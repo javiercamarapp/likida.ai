@@ -92,12 +92,13 @@
   así que este pase existía para una cosa: <strong>verificar los tres arreglos del pase 4 con ojos
   que no los escribieron</strong>. Los tres cierran — y al mirar de cerca apareció un camino donde
   el dinero <strong>no se escribe nunca</strong>.
+  <br><br><strong>A media ronda cambió la política:</strong> se arregla TODO lo reproducible, sin tope de vueltas. Se arreglaron 2 más bajo la regla nueva, y la ronda cierra <strong>PARCIAL</strong> a propósito — quedan hallazgos vivos, y bajo esa regla eso es trabajo pendiente de la corrida, no del código.
 </div>
 
 <h2>Estado de la compuerta — árbol final</h2>
 <div class="gate">
   <span class="ok">tsc &nbsp;0 errores</span>
-  <span class="ok">vitest &nbsp;263 archivos · 3,145 verdes · 1 saltada</span>
+  <span class="ok">vitest &nbsp;265 archivos · 3,155 verdes · 1 saltada</span>
   <span class="ok">eslint &nbsp;0 errores · 17 warnings</span>
   <span class="ok">51 s</span>
 </div>
@@ -105,15 +106,15 @@
   Sin <code>npm run build</code> y sin <code>pruebas-manuales/*</code>: en la nube no hay
   Supabase/OpenRouter/Facturapi/Upstash, y esas pruebas hacen llamadas de pago.
   Línea base al arrancar el pase: <strong>261 archivos · 3,134 verdes</strong> — idéntica al cierre
-  del pase 4. Los tres arreglos sumaron <strong>11</strong> pruebas y 2 archivos.
+  del pase 4. Los <strong>cinco</strong> arreglos sumaron <strong>21</strong> pruebas y 4 archivos.
 </p>
 
 <h2>Los 12 rubros</h2>
 <div class="grid">
   <div class="card"><div class="k">Global</div><div class="v">4.8</div><div class="n">= 0.0 contra el pase 4 — y cinco rubros se movieron</div></div>
   <div class="card"><div class="k">Rubros auditados</div><div class="v">6 <span style="font-size:15px;color:var(--muted)">/ 12</span></div><div class="n">continuación: solo los que cambiaron</div></div>
-  <div class="card"><div class="k">Críticos</div><div class="v">2 <span style="font-size:15px;color:var(--muted)">nuevos</span></div><div class="n">1 cerrado con prueba · 4 pendientes con razón</div></div>
-  <div class="card"><div class="k">Arreglos</div><div class="v">3</div><div class="n">3 vueltas · tope agotado · 0 revertidos</div></div>
+  <div class="card"><div class="k">Críticos</div><div class="v">2 <span style="font-size:15px;color:var(--muted)">nuevos</span></div><div class="n">1 cerrado con prueba · 3 pendientes, ninguno de código</div></div>
+  <div class="card"><div class="k">Arreglos</div><div class="v">5</div><div class="n">sin tope de vueltas (política nueva) · 0 revertidos</div></div>
 </div>
 
 <div class="scroll">
@@ -242,6 +243,32 @@
           con la guarda invertida el archivo pasa de 23 verdes a <strong>2 fallos</strong></td>
       <td><span class="est e-ok">arreglado · 9ea0824</span></td>
     </tr>
+    <tr>
+      <td><span class="pill p-a">A</span></td>
+      <td><strong>Un CFDI PPD salía impreso "Deducible para ISR".</strong>
+          LISR 27-III enumera <em>cuatro</em> medios permitidos; el motor detectaba <em>un</em> medio
+          prohibido (<code>'01'</code>) y dejaba pasar todo lo demás. Una flota con línea de crédito recibe
+          CFDI <strong>PPD</strong>, donde el SAT obliga <code>FormaPago = 99</code> ("Por definir"): no es
+          un medio de pago, es la declaración de que <strong>aún no se sabe cuál fue</strong>. Sobre un diésel
+          de $18,560 / 660 L / IVA $2,560 el PDF imprimía las <strong>tres</strong> afirmaciones con su
+          artículo al lado. Dirección <strong>sobre-afirmante</strong>, la peor: el contralor deduce contra un
+          papel que le dio Likida.</td>
+      <td><code>ppd_medio_pago.test.ts</code> · 6 casos · sin el arreglo fallan 4 con los tres números
+          exactos · incluye las dos regresiones: transferencia sigue acreditando entero y el efectivo
+          conserva su facilidad del 15%</td>
+      <td><span class="est e-ok">arreglado · bcf42f3</span></td>
+    </tr>
+    <tr>
+      <td><span class="pill p-a">A</span></td>
+      <td><strong>La ruta del PDF daba 500 con un id sin forma, no 404.</strong>
+          La misma forma que <code>58c44f9</code> arregló en la página seguía abierta en
+          <code>api/export/pdf/[id]/route.ts:81</code>. El mensaje <em>miente</em> —invita a reintentar algo
+          que nunca va a funcionar— y <code>logger.error</code> marca como incidente de base lo que es un 404:
+          justo el log que alguien mira a las 3 de la mañana cuando algo SÍ se rompió.</td>
+      <td><code>api/export/pdf/id_no_uuid.test.ts</code> · 4 casos · sin el arreglo fallan 3 · afirma el
+          cableado <strong>y el sentido</strong>, y prohíbe copiar el regex</td>
+      <td><span class="est e-ok">arreglado · 06db660</span></td>
+    </tr>
   </tbody>
 </table>
 </div>
@@ -267,15 +294,12 @@
 </table>
 </div>
 
-<h2>Arriba de la pila para el pase 6 — el tope de 3 vueltas se agotó</h2>
+<h2>Arriba de la pila — la ronda cierra PARCIAL</h2>
+<p class="sub">Con la política nueva ya no hay tope de vueltas: estos quedan vivos porque se acabó la corrida, no porque estuviera permitido dejarlos. La siguiente los retoma desde aquí, empezando por el contraste.</p>
 <div class="scroll">
 <table>
   <thead><tr><th>Sev.</th><th>Rubro</th><th>Hallazgo</th></tr></thead>
   <tbody>
-    <tr><td><span class="pill p-a">A</span></td><td>fiscal</td>
-        <td>Un CFDI de diésel <strong>PPD</strong> sale impreso "Deducible para ISR". El motor lee <code>formaPago !== '01'</code> como "medio de pago que la ley acepta", y <code>MetodoPago</code> <strong>no se parsea en ningún punto del repo</strong>. <code>FormaPago 99</code> es obligatorio para toda flota con línea de crédito. Va en dirección <strong>sobre-afirmante</strong>.</td></tr>
-    <tr><td><span class="pill p-a">A</span></td><td>seguridad</td>
-        <td><code>api/export/pdf/[id]/route.ts:81</code> tiene la misma forma que <code>58c44f9</code> arregló en la página: segmento crudo a columna <code>uuid</code> → <strong>500, no 404</strong>.</td></tr>
     <tr><td><span class="pill p-a">A</span></td><td>frontend</td>
         <td>Las tres tarjetas de KPI del Resumen pintan blanco sobre el degradado naranja a <strong>2.1–2.6:1</strong>. La prueba de contraste solo mide tokens contra <code>--surface</code>, nunca tinta sobre color de componente.</td></tr>
     <tr><td><span class="pill p-a">A</span></td><td>arquitectura</td>
@@ -296,7 +320,7 @@
 
 <div class="foot">
   Ronda de continuación sobre el PR #9 · <strong>6 de 12</strong> rubros reauditados (los únicos cuyo código
-  cambió) · 3 vueltas de arreglo, tope agotado, <strong>0 revertidos</strong> · <code>master</code> no avanzó
+  cambió) · <strong>5 arreglos</strong> pusheados, sin tope de vueltas, <strong>0 revertidos</strong> · <code>master</code> no avanzó
   ni un commit desde el pase 4: lo único que cambió fueron los tres arreglos del propio pase 4, y por eso
   este pase fue sobre todo su verificación independiente.
 </div>

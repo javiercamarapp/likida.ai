@@ -7,6 +7,18 @@ compuerta sin `npm run build`.
 
 > Las síntesis de los pases 1, 2, 3 y 4 siguen íntegras más abajo.
 
+> **ADENDA (12-ago, a media ronda).** Javier cambió la política: *"por más que
+> sean muchos se corrija todo"*, y que cada arreglo se pushee. Se retiró el tope
+> de 3 vueltas de la skill (`a3e3b5a`) y se siguieron arreglando hallazgos bajo
+> la regla nueva: **5 en total** (1 CRÍTICO + 4 ALTO), todos pusheados. Los dos
+> que entraron después del cambio son el CFDI **PPD** saliendo "Deducible para
+> ISR" (`bcf42f3`) y el **500 en vez de 404** de la ruta del PDF (`06db660`).
+> La ronda cierra **PARCIAL**: quedan hallazgos reproducibles vivos, y bajo la
+> política nueva eso es trabajo pendiente de la CORRIDA, no del código.
+> Las notas de los rubros **no se movieron** por estos dos arreglos — entraron
+> después de que los auditores entregaran, así que los verifica el pase 6.
+
+
 ## Nota global: 4.8/10 (igual que el pase 4) — **= 0.0**
 
 Y el empate es una mentira estadística, no una meseta. **Cinco de los seis rubros

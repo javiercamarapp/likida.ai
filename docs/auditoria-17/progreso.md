@@ -231,3 +231,32 @@ Dos consecuencias prácticas, ya aplicadas:
 - Tope de 3 vueltas agotado. Ningún arreglo revertido.
 - Tablero reescrito para el pase 5, capturado (1400×3420) y MIRADO: 12 rubros contados, suma 57 → 4.8, cuadra con la síntesis.
 - Compuerta final: tsc 0 · vitest 263 archivos / 3,145 verdes / 1 saltada · eslint 0 errores / 17 warnings.
+
+## Cambio de política a media ronda (12-ago-2026)
+
+Javier, en la sesión: **"por más que sean muchos se corrija todo"** y que se
+pushee. Se retiró el tope de 3 vueltas de la skill (`a3e3b5a`) y se siguió
+arreglando con la política nueva. Lo que quedó acotado: tres intentos POR
+HALLAZGO (no por ronda), un arreglo un commit, cambios quirúrgicos, y las tres
+salidas que no son "arreglado" —no reproducible · decisión del dueño (escalada
+POR NOMBRE con la pregunta concreta) · la suite rechazó los tres intentos—.
+
+- **Vuelta 4** — ALTO [fiscal] un CFDI **PPD** salía impreso "Deducible para ISR". `FormaPago 99` ("Por definir", obligatorio en PPD) pasaba por medio de pago válido: cubeta `deducible`, 660 L al estímulo y $2,560 de IVA acreditados sobre un pago que el motor nunca vio. Tipo nuevo `medio_pago_no_acreditado` (POR_CONFIRMAR + SIN_ACREDITAMIENTO + REVISAR, ruta `panel`) y `pagoElectronico` deja de contar el 99. Prueba `ppd_medio_pago.test.ts` (falla 4/6 sin el arreglo, con los tres números exactos). Commit `bcf42f3`. **Cero regresiones en el motor de dinero.**
+- **Vuelta 5** — ALTO [seguridad] `api/export/pdf/[id]/route.ts:81` tenía la misma forma que `58c44f9` arregló en la página: 22P02 → **500** con un mensaje que invita a reintentar algo que nunca va a funcionar, y `logger.error` marcando un 404 como incidente de base. Reusa `esIdDeLiquidacion` en vez de copiar el regex. Prueba `api/export/pdf/id_no_uuid.test.ts` (falla 3/4 sin el arreglo) que afirma el cableado **y el sentido**. Commit `06db660`.
+
+### Dónde se quedó
+
+**5 arreglados** (1 CRÍTICO + 4 ALTO), todos pusheados. Según el conteo de los
+seis auditores quedan **~24 ALTO, ~39 MEDIO y ~16 BAJO** sin arreglar, más 3
+CRÍTICOS que no son de código:
+
+- **C12** (arquitectura) · **C4** (fiscal) · **C6** (pruebas) → decisión del
+  dueño o sesión propia. Escalados por nombre con su pregunta.
+- El siguiente de la pila, para que la corrida que retome no tenga que
+  redecidir: **[frontend] las tres tarjetas de KPI del Resumen a 2.1–2.6:1 de
+  contraste**, y después **[arquitectura] `engine.ts:14` importa `intake/cfdi.ts`
+  y arrastra `sharp`/`zxing-wasm` al motor de dinero**.
+
+La ronda cierra **PARCIAL** a propósito: bajo la política nueva, dejar
+hallazgos reproducibles vivos es trabajo pendiente de la corrida, no del
+código, y así se dice.

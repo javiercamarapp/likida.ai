@@ -1,4 +1,6 @@
-COMPLETA (pase 5, ronda de CONTINUACIÓN sobre el PR #9)
+PARCIAL (pase 5, ronda de CONTINUACIÓN sobre el PR #9): 5 hallazgos arreglados y pusheados; quedan ~24 ALTO, ~39 MEDIO y ~16 BAJO sin arreglar, y 3 CRÍTICOS que no son de código (C12, C4, C6). El siguiente de la pila es el contraste de los KPI del Resumen.
+
+A media ronda Javier cambió la política: se arregla TODO lo reproducible, sin tope de vueltas (skill actualizada en `a3e3b5a`). Se arreglaron 2 más bajo la política nueva y la ronda cierra PARCIAL a propósito — bajo esa regla, dejar hallazgos reproducibles vivos es trabajo pendiente de la CORRIDA, no del código.
 
 Ronda 17, pase 5, 12-ago-2026, corrida en la nube. 6 rubros reauditados de 12 —
 frontend, backend, seguridad, fiscal, arquitectura y pruebas, los únicos cuyo
