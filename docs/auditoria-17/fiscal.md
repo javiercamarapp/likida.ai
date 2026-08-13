@@ -35,7 +35,7 @@ páginas → `PAG1..PAG5 = false`, `PAG6..PAG30 = true`, `r.pages` empieza en 6.
 
 | Pase 5 | Estado hoy | Cómo lo comprobé |
 |---|---|---|
-| **A4** — el efectivo dentro del 15% no acreditaba IVA | **CERRADO, y bien** | `engine.ts:1084` `SIN_IEPS_CON_IVA = ['combustible_efectivo_dentro15','efectivo_sobre_15']`, separada de `SIN_ACREDITAMIENTO` (`:1059`); `engine.ts:1131` acredita el IVA y `:1133` `if (soloIva) continue;` **antes** del bloque del estímulo. La distinción de la ficha —«Conserva la DEDUCCIÓN para ISR. NO habilita el acreditamiento **del IEPS**», `rfa-2026-2.9.yaml:37-39`— quedó implementada literal, y la proporción de `liva-5.yaml:50-55` viaja en `proporcionDeducible` |
+| **A4** — el efectivo dentro del 15% no acreditaba IVA | **CERRADO, y bien** | `engine.ts:1084` `SIN_IEPS_CON_IVA = ['combustible_efectivo_dentro15','efectivo_sobre_15']`, separada de `SIN_ACREDITAMIENTO` (`:1059`); `engine.ts:1127` acredita el IVA y `:1131` `if (soloIva) continue;` **antes** del bloque del estímulo. La distinción de la ficha —«Conserva la DEDUCCIÓN para ISR. NO habilita el acreditamiento **del IEPS**», `rfa-2026-2.9.yaml:37-39`— quedó implementada literal, y la proporción de `liva-5.yaml:50-55` viaja en `proporcionDeducible` |
 | **M9** — el `'04'` del OCR se tomaba por tarjeta de crédito | **CERRADO** | `engine.ts:910` `const conTarjetaDeCredito = (g) => g.formaPago === '04' && g.xmlVerificado === true;` y `:920-923` distingue "el ticket dice tarjeta" de "no hay dato". Ahora el `'04'` solo cuenta cuando viene del `c_FormaPago` del XML, que sí separa `04` de `28` |
 | **M3** — combustible en efectivo sin fecha contra un denominador que lo excluye | **CERRADO** | `engine.ts:329-330` `const mismoEjercicio = anioComprobante !== null && anioComprobante === input.anioEjercicio;` con el comentario citando `repo.ts` `.gte('fecha')`/`.lte('fecha')` |
 | **B3** — el `continue` del fail-closed apagaba el resto de la revisión | **CERRADO** | `engine.ts:341-348`: el `continue` desapareció y el comentario enumera lo que se llevaba (monto discrepante, CFDI cancelado, EFOS, complemento) |
@@ -68,7 +68,7 @@ verificables en esta ronda**.
 | Ficha | Estado | Línea transcrita | Código que la implementa | Veredicto |
 |---|---|---|---|---|
 | `rfa-2026-2.9.yaml:16-17` | **verificado_fuente_primaria** (DOF/SIDOF 5780249) | «…siempre que estos no excedan el 15 por ciento **del total de los pagos efectuados por consumo de combustible para realizar su actividad**.» | `engine.ts:360` `const tope = 0.15 * total;` · `repo.ts:831-833` | **MAL** → C4 |
-| `rfa-2026-2.9.yaml:37-39` | ídem, `limite_importante` | «Conserva la DEDUCCIÓN para ISR. NO habilita el acreditamiento **del IEPS**: son dos beneficios distintos y el efectivo solo salva uno.» | `engine.ts:1084` `SIN_IEPS_CON_IVA` + `:1133` | **BIEN** (A4 cerrado) |
+| `rfa-2026-2.9.yaml:37-39` | ídem, `limite_importante` | «Conserva la DEDUCCIÓN para ISR. NO habilita el acreditamiento **del IEPS**: son dos beneficios distintos y el efectivo solo salva uno.» | `engine.ts:1084` `SIN_IEPS_CON_IVA` + `:1131` | **BIEN** (A4 cerrado) |
 | `lisr-27-III.yaml:9-14` | evidencia_corroborante — *no verificable en esta ronda* | «…transferencia electrónica de fondos…; cheque nominativo de la cuenta del contribuyente, tarjeta de crédito, de débito, de servicios, o los denominados **monederos electrónicos autorizados** por el Servicio de Administración Tributaria.» | `engine.ts:310,395,415` — lista NEGRA de dos claves (`'01'`, `'99'`) | **MAL** → A6 |
 | `lisr-27-III.yaml:16-19` | ídem | «Tratándose de la adquisición de combustibles…, el pago deberá efectuarse **en la forma señalada en el párrafo anterior**, aun cuando… no excedan de $2,000.00» | ídem | **MAL** → A6 |
 | `lisr-27-III.yaml:37-40` | ídem, `advertencia` | «**NUNCA citar esta fracción sola** para declarar no deducible un combustible pagado en efectivo de una flota de carga federal.» | `fiscal.ts:267` `norma: 'LISR 27-III'` para un plazo de portal, ahora **servido a un LLM** por `chat-tools.ts:97` | **MAL** → A3 |
@@ -76,7 +76,7 @@ verificables en esta ronda**.
 | `lif-2026-20-A.yaml:52-56` | **verificado_fuente_primaria**, `condiciones` (las cuatro) | «Dedicarse EXCLUSIVAMENTE al transporte terrestre de carga, pasaje o turístico · Usar la **RED NACIONAL DE AUTOPISTAS DE CUOTA** (no cualquier caseta) · Ingresos totales anuales del ejercicio **MENORES a $300,000,000** · No ser parte relacionada (LISR art. 179)» | `acreditable.ts:191-195` las lleva **completas** en el PDF; `chat-tools.ts:74` `peajeAcreditable50pct` las lleva **cero** | PDF **BIEN** · tool **MAL** → A8 |
 | `lif-2026-20-A.yaml:26-30` | ídem | «…la cuota… **vigente en el momento en que se haya realizado la… adquisición del diésel**…, por el número de litros» | `engine.ts:1097` `const iepsAcreditable = 0;` · `acreditable.ts:169-176` (litros + desglose por fecha) | **BIEN** — la confusión "IEPS trasladado = estímulo" sigue cerrada y B4 se cerró |
 | `lif-2026-20-A.yaml:41-44` | ídem | «que obtengan **en el ejercicio fiscal en el que hagan uso** de la infraestructura… ingresos totales anuales… menores a 300 millones» | `chat/page.tsx:33` `getAcreditables(tenantId)` **sin ventana** → `chat.tsx:130,132` «este periodo» | **MAL** → A5 |
-| `liva-5.yaml:43-55` (fr. I) | **verificado_fuente_primaria** | «se consideran estrictamente indispensables las erogaciones… **que sean deducibles para los fines del impuesto sobre la renta**» / «…**en la proporción** en la que dichas erogaciones sean deducibles» | `engine.ts:1126,1131` `proporcionDeducible` | **BIEN** |
+| `liva-5.yaml:43-55` (fr. I) | **verificado_fuente_primaria** | «se consideran estrictamente indispensables las erogaciones… **que sean deducibles para los fines del impuesto sobre la renta**» / «…**en la proporción** en la que dichas erogaciones sean deducibles» | `engine.ts:1125,1127` `proporcionDeducible` | **BIEN** |
 | `liva-5.yaml:78-82` (`riesgo_actual`) | ídem — la transcripción **termina en la fr. II** | «Si el artículo exige alguna condición adicional que hoy no se valida, **la cifra impresa está de más**. Es una cifra que el contralor usa.» | `acreditable.ts:183` (pie, **BIEN**) vs `[id]/page.tsx:273` y `chat.tsx:130` (**sin pie**) | **MAL** → M8b |
 | `criterio-1-LIF-PI.yaml:15-18` | evidencia_corroborante, `texto_vigente: null` | «Calcularlo con la entera es práctica indebida — de quien lo hace **Y de quien le presta el servicio**.» | Sostiene que el producto no imprima el estímulo de diésel en pesos; sigue sin imprimirlo en las 5 superficies | **BIEN mientras siga así** |
 | `lisr-28-V.yaml:21-29` | **verificado_fuente_primaria** | «gastos de viaje destinados a la **alimentación**… no exceda de $750.00 diarios» / «sólo procederá cuando el pago se efectúe mediante **tarjeta de crédito**» | `engine.ts:953,1028-1032` (B1) · `engine.ts:910` (M9) | **BIEN** — los dos cerrados |
@@ -87,7 +87,7 @@ verificables en esta ronda**.
 **Trazabilidad ficha→código, peor que en el pase 5.** `lif-2026-20-A.yaml:91-94`
 (`usado_en_codigo`) lista tres sitios; hoy el artículo se cita además en
 `chat-tools.ts:63`, `chat.tsx:110`, `politicas/page.tsx:276` y
-`combustible-casetas/page.tsx:200`. `liva-5.yaml:83-85` lista dos; falta
+`combustible-casetas/page.tsx:195`. `liva-5.yaml:83-85` lista dos; falta
 `acreditable.ts`, `chat.tsx:130` y `[id]/page.tsx:273`. Cada superficie nueva
 que cita un artículo y no entra a la ficha es un sitio donde el próximo cambio
 de norma no se va a buscar.
@@ -318,7 +318,7 @@ chat-tools.ts:74  return { periodo: …, moneda: 'MXN', ivaAcreditable: a.iva,
 ```
 
 Ningún campo `sujetoAElegibilidad`, ninguna condición, ningún pie. Y el motor
-que produjo esa cifra **no verifica ninguna de las cuatro**: `engine.ts:1135`
+que produjo esa cifra **no verifica ninguna de las cuatro**: `engine.ts:1133`
 `if (g.concepto === 'caseta' && (g.subTotal ?? 0) > 0) peajeAcreditable += …` —
 los hallazgos H5 y H6 de la propia ficha (`lif-2026-20-A.yaml:69-80`,
 severidad media, «El estímulo se aplica sin verificar si el cliente califica»).
@@ -514,7 +514,7 @@ con `FormaPago="17"` (Compensación). CFDI de diésel del 6-ago-2026: total
 - Motor: `'17'` no es `'01'` ni `'99'` → **ninguna** de las tres ramas dispara →
   `cubetaDe` (`engine.ts:118-128`) ve `cfdiUuid` y ninguna diferencia bloqueante
   → **`deducible`**. `engine.ts:1165` `pagoElectronico = true` → **660 L** a
-  `litrosDieselAcreditables`. `engine.ts:1131` → **$2,560** a `ivaAcreditable`.
+  `litrosDieselAcreditables`. `engine.ts:1127` → **$2,560** a `ivaAcreditable`.
 - PDF: **"Deducible para ISR $18,560.00"**, **"Diésel elegible para el estímulo
   de IEPS (LIF 2026 art. 20, ap. A): 660 L"** y **"IVA acreditable (LIVA art. 5):
   $2,560.00"**.
@@ -535,7 +535,7 @@ comprobante cuyo medio de pago la ley no admite, con los artículos impresos al
 lado — y en una revisión responde él.
 **Causa raíz probable:** el arreglo del pase 5 cerró el **valor** que el
 hallazgo traía de ejemplo en vez de invertir la regla; la lista blanca de seis
-claves ya está transcrita en la ficha y en el comentario de `engine.ts:1155-1157`
+claves ya está transcrita en la ficha y en el comentario de `engine.ts:1152-1155`
 y sigue sin implementarse. (**REINCIDENTE**, clase abierta.)
 
 ---
@@ -900,9 +900,9 @@ consecuencia: los del pase 5, sin cambio.
 | # | Sev | Hallazgo | `archivo:línea` de HOY | Comprobación |
 |---|---|---|---|---|
 | M1 | MEDIO | `no_encontrado` / `pendiente` del SAT no llegan a `causasDe` | `fiscal.ts:335-364` | `causasDe` solo mira `estadoSat === 'cancelado'` (`:342`). Un CFDI que el SAT no encuentra no aparece en ninguna causa del panel |
-| M5 | MEDIO | Las ventanas de 7/30 días excluyen en silencio los comprobantes sin fecha | `fiscal.ts:756-758` (`.gte('fecha')`/`.lte('fecha')`) · `motor-fiscal-periodo.tsx:15` (`ResumenSimple`, tres escalares) | El campo que lo diría se calcula (`contarGastosDelTenant:882-885`, `sinFecha`) y no llega al componente |
-| M6 | MEDIO | "Litros elegibles para el estímulo · LIF 2026 Art. 20-A" sobre todo el histórico, junto a un Resumen que usa el ejercicio | `combustible-casetas/page.tsx:121,200` vs `inicio-contenido.tsx:87` | `getAcreditables(tenantId)` sin ventana. Dos cifras para lo mismo |
-| M7 | MEDIO | "N de M sin factura — es deducible que se pierde" sobre lo que el motor llama **recuperable** | `combustible-casetas/page.tsx:198` · contraste `fiscal.ts:309-310` | `sinCfdi` (`:151`) sin ningún filtro por plazo: cuenta como perdido lo que todavía se puede timbrar |
+| M5 | MEDIO | Las ventanas de 7/30 días excluyen en silencio los comprobantes sin fecha | `fiscal.ts:754-755` (`.gte('fecha')`/`.lte('fecha')`) · `motor-fiscal-periodo.tsx:15` (`ResumenSimple`, tres escalares) | El campo que lo diría se calcula (`contarGastosDelTenant`, `fiscal.ts:882-889`, `sinFecha`) y no llega al componente |
+| M6 | MEDIO | "Litros elegibles para el estímulo · LIF 2026 Art. 20-A" sobre todo el histórico, junto a un Resumen que usa el ejercicio | `combustible-casetas/page.tsx:121,195` vs `inicio-contenido.tsx:87` | `getAcreditables(tenantId)` sin ventana. Dos cifras para lo mismo |
+| M7 | MEDIO | "N de M sin factura — es deducible que se pierde" sobre lo que el motor llama **recuperable** | `combustible-casetas/page.tsx:199` · contraste `fiscal.ts:309-310` | `sinCfdi` (`:150`) sin ningún filtro por plazo: cuenta como perdido lo que todavía se puede timbrar |
 | B2 | BAJO | `avisoTope15` afirma "hay pagos de combustible en efectivo" sin mirar `r` | `periodo/aviso.ts:32-33` | La rama `elegible === undefined` no lee `r.razon` ni `r.estado`: con cero efectivo, el aviso lo afirma igual. `tools.ts:119` lo mete al turno del agente |
 
 ---
@@ -929,7 +929,7 @@ consecuencia: los del pase 5, sin cambio.
 - **El estímulo de IEPS sigue sin imprimirse en pesos, en las cinco superficies
   que podrían, y ahora también en la tool.** `engine.ts:1097`
   (`const iepsAcreditable = 0;`), `acreditable.ts:169-176` (litros),
-  `chat.tsx:110`, `combustible-casetas/page.tsx:200`, `[id]/page.tsx:271`. Y
+  `chat.tsx:110`, `combustible-casetas/page.tsx:195`, `[id]/page.tsx:271`. Y
   `chat-tools.ts:74` **no devuelve `ieps`** aunque `getAcreditables` lo calcula
   (`analytics.ts:548`): el campo se dejó fuera a propósito. La confusión "IEPS
   trasladado = estímulo del 20-A" sigue cerrada.
@@ -956,7 +956,7 @@ consecuencia: los del pase 5, sin cambio.
   `acreditable.ts:132-152`: sin fecha en algún comprobante devuelve `null`
   (`:141`), y si la suma no reconstruye el total acreditado con tolerancia de
   0.001 L, también (`:147`). Misma disciplina que `filasDeducibilidad`.
-- **El control de litros contra el monto sigue en pie.** `engine.ts:1176-1188`:
+- **El control de litros contra el monto sigue en pie.** `engine.ts:1174-1188`:
   tolerancia 0.5×–2× contra `precioDieselPorDefecto`, con `diesel_desviacion` y
   **sin acreditar** cuando no cuadra. Un decimal corrido (200 L leídos como
   20,000) no se convierte en cien veces el estímulo.
@@ -964,8 +964,7 @@ consecuencia: los del pase 5, sin cambio.
   filas de las que `count` reporta, **lanza** en vez de devolver medio ejercicio.
   El denominador del 15% no se puede recortar en silencio. Y `engine.ts:325-341`
   se niega a evaluar la facilidad si `total <= 0`.
-- **El permiso CRE nunca se declara cumplido ni incumplido** (`engine.ts:628` y
-  siguientes), y el complemento de hidrocarburos sigue detrás del interruptor
+- **El permiso CRE nunca se declara cumplido ni incumplido** (`engine.ts:628-642`), y el complemento de hidrocarburos sigue detrás del interruptor
   `exigibleDesde: null` (`engine.ts:614-623`): con `null` el motor **avisa** y
   nunca declara no deducible.
 - **`chat-tools.ts` no acepta texto libre que llegue a una consulta.** Los únicos
@@ -978,7 +977,7 @@ consecuencia: los del pase 5, sin cambio.
 - **`/api/dashboard/archivo` autoriza antes de leer.** `route.ts:25-30`: sesión +
   `puedeVerArea(rol,'dinero')` antes de tocar el buffer, y rechaza imágenes
   mandándolas al OCR real (`:38-40`). La lectura de imagen del chat se rotula
-  "lectura de prueba, no se registró ningún gasto" (`chat.tsx:292`).
+  "lectura de prueba, no se registró ningún gasto" (`chat.tsx:297`).
 - **`/dashboard/politicas` sigue de solo lectura y lo dice**, con los topes
   empatando sus fichas: $750 (`lisr-28-V.yaml:22`), $2,000
   (`lisr-27-III.yaml:9`), 0.5 y "sujeto a elegibilidad" (`politicas/page.tsx:276`).
