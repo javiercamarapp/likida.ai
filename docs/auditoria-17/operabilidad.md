@@ -1,424 +1,569 @@
-# Operabilidad y DX — auditoría 17 (pase 2)
+# Operabilidad y DX — auditoría 17 (pase 6)
 
-**Nota: 5/10** (antes 6). Razón del movimiento: **el terreno cambió**. Se cerró
-el CRÍTICO del pase 1 —el sondeo de arranque ya no suelta el mutex ajeno, y
-tiene prueba que lo reproduce— pero en su lugar entró un camino que corre solo
-de madrugada y manda WhatsApp a personas reales (`recordatorio_comprobacion.ts`,
-mig. `0087`, cron `escalar`) con exactamente la clase de ceguera que este rubro
-existe para cazar: sella el viaje ANTES de saber si el mensaje salió, responde
-200 cuando falla, y el único identificador de qué viaje falló vive en un `info`
-que Sentry nunca ve. Encima, la limpieza de `/chofer` (mig. `0086`) dejó
-`verificaciones.sql` sin poder correr de punta a punta y nada lo dijo. Los otros
-once hallazgos del pase 1 siguen abiertos, uno de ellos peor que ayer.
+**Nota: 4/10** (antes 5). Razón del movimiento: **deuda que cobró factura**, dos
+veces y de forma medible. (1) La compuerta de CI se puso ROJA en `master` el
+12-ago a las 00:12 y lleva **seis corridas seguidas** fallando en `Lint`, con los
+pasos `Tests` y `Build` **saltados** — o sea que los dos subsistemas nuevos
+(agente analista y lector universal de archivos) y el panel v3 **nunca han
+pasado por `next build` ni por la suite en CI**, y nadie se enteró en 11 horas.
+(2) El A3 del pase 1 pasó de 5 commits sin desplegar (pase 1) a 17 (pase 2) a
+**48 hoy**, siete días: producción no tiene ni el chat, ni el lector, ni el panel
+que se va a enseñar. Encima, los subsistemas nuevos llegaron sin una sola línea
+de instrumentación operativa propia: el tope diario de IA se agota **sin emitir
+nada**, y `intake/archivo.ts` es un archivo que **git no puede diferenciar y
+ripgrep no puede leer**.
 
-**El riesgo mayor de hoy:** el recordatorio nocturno puede fallar para el 100 %
-de su población objetivo —Meta no entrega texto libre fuera de la ventana de
-24 h, y la población objetivo es, por definición, la del operador que lleva días
-callado— y el sistema queda marcando esos viajes como "ya recordado" para
-siempre, con el cron en verde en el panel de Vercel.
+**El riesgo mayor de hoy:** todo lo que se va a enseñar en el demo —chat,
+lector de archivos, resumen v3— existe únicamente como código que ninguna
+máquina ha compilado: CI se detiene antes del `Build` desde el 12-ago y Vercel
+no construye desde el 6-ago. El primer `next build` de esa superficie va a
+ocurrir el día que alguien la quiera publicar.
 
 ---
 
-## Estado de los hallazgos del pase 1
+## Estado de los hallazgos abiertos (pases 1–2)
 
 | # | Hallazgo | Estado |
 |---|---|---|
-| C2 | Sondeo de arranque suelta el mutex de un viaje ajeno | **CERRADO** (`61cf600`, verificado post-merge) |
-| A1 | `/admin/observabilidad` dice "Conectado" a mano | **REINCIDENTE** |
-| A2 | Un fallo de cliente no deja rastro en ninguna parte | **REINCIDENTE** |
-| A3 | La compuerta de despliegue colapsa todo fallo en "no desplegar" | **REINCIDENTE, PEOR** |
-| A4 | El respaldo es un script manual que nada agenda | **REINCIDENTE** |
-| M1 | La cola de QStash se sigue cortando a los 150 s | **REINCIDENTE** |
-| M2 | Encolar a QStash devuelve 200 y nadie observa el callback | **REINCIDENTE** |
-| M3 | Una base caída se reporta como "sin viajes en la base" | **REINCIDENTE** |
-| M4 | Los dos KPI de ARCO pintan 0 cuando la lectura falló | **REINCIDENTE** |
-| M5 | Fingerprint fijo: una causa nueva nunca dispara alerta | **REINCIDENTE** |
-| M6 | `npm run setup` no deja el proyecto corriendo en limpio | **REINCIDENTE** |
-| B1 | El runbook manda a `src/lib/cuadra/costos.ts`, que no existe | **REINCIDENTE** |
-| B2 | El catch exterior del `after()` pierde el `waMessageId` | **REINCIDENTE** |
+| C2 | Sondeo de arranque suelta el mutex ajeno | CERRADO (verificado de nuevo hoy: `startup.ts:83-85`) |
+| A1 | `/admin/observabilidad` dice "Conectado" a mano | **REINCIDENTE** (`observabilidad/page.tsx:55,62`) |
+| A2 | Un fallo de cliente no deja rastro | REINCIDENTE (no reauditado a fondo este pase) |
+| A3 | La compuerta de despliegue colapsa todo fallo en "no desplegar" | **REINCIDENTE, PEOR** (48 commits) |
+| A4 | El respaldo es un script manual que nada agenda | REINCIDENTE (`scripts/respaldo.sh`, sin cron) |
+| M3 | Una base caída se reporta como "sin viajes en la base" | **REINCIDENTE** (`startup.ts:63`) |
+| M5 | Fingerprint fijo: una causa nueva nunca dispara alerta | REINCIDENTE |
+| M6 | `npm run setup` no deja el proyecto corriendo en limpio | **REINCIDENTE** (`package.json:12-13`, `scripts/seed.sh:11-15`) |
+| B1 | El runbook manda a `src/lib/cuadra/costos.ts`, que no existe | REINCIDENTE, y ahora hay un segundo caso (ver MEDIO del runbook) |
+| pase 2 · recordatorio nocturno | los 3 ALTO + 2 MEDIO del cron `escalar` | **REINCIDENTES**: `git diff 65da222..HEAD -- src/lib/likida/recordatorio_comprobacion.ts src/app/api/cron/escalar/route.ts` → vacío. Nada se tocó; no los repito aquí. |
 
-**C2 — cerrado, con evidencia.** `src/lib/likida/startup.ts:65` ahora captura el
-`data` del RPC (`const { data: tomado, error } = await admin.rpc('try_lock_viaje'…)`)
-y :83-85 condiciona el `unlock` a `tomado === true`. El comentario de :68-82
-explica el modo de falla. El merge de master (`c7c9a0e`) no lo revirtió:
-verificado sobre el árbol de hoy, no sobre el commit. Además llegó
-`startup_mutex_ajeno.test.ts` (89 líneas) que reproduce el caso "otro proceso
-tiene el lease → `try_lock_viaje` devuelve `false` sin error → no se llama a
-`unlock_viaje`". Este es el único hallazgo de mi rubro que está mejor que ayer.
+**A1, verificado hoy.** `src/app/admin/observabilidad/page.tsx:55` y `:62`
+siguen siendo `<StatusPill estado="ok">Conectado</StatusPill>` literales.
+`envHealth()` (`src/lib/env.ts:99-105`) existe y no lo llama nadie de esa
+página. Escenario: `SENTRY_DSN` sin poner en Vercel —el caso exacto que
+`DEPLOY.md:105` marca como "no hay alerta de nada"— y la consola de
+observabilidad de Javier pinta "Conectado" en verde sobre Sentry.
 
-**A3 empeoró y es medible.** En el pase 1 producción iba 5 commits atrás. Hoy:
-
-```
-$ git rev-list --count 87426f8..origin/master
-17
-```
-
-17 commits en `master` desde el último `[deploy]` (`87426f8`). Entre ellos van
-el retiro del rol operador (`31babfd`, mig. `0086`), el recordatorio automático
-completo (`c5a7c19`, mig. `0087`) y los 8 commits del rework del dashboard. O
-sea: el camino nocturno que este pase audita **no está desplegado**, y ni el
-repo ni la app lo dicen. Sigue sin haber ningún `/api/health` con commit
-(`grep -rn "VERCEL_GIT_COMMIT_SHA" src/ next.config.ts` → 0 resultados) ni paso
-de CI que mire la bandera.
-
-**M3 sigue idéntico:** `startup.ts:63` conserva
+**M3, verificado hoy.** `src/lib/likida/startup.ts:63` sigue siendo
 `const { data: viajeReal } = await admin.from('viaje').select('id').limit(1);`
-— el `error` se descarta, así que una base caída sigue emitiendo
-`startup.migraciones_0005_skip {"msg":"sin viajes en la base…"}`. Es la única
-consulta del archivo que no pasa por `reportarProbe`. El arreglo del mutex tocó
-la línea de al lado y no esta.
+— el `error` se descarta. Es la única consulta del archivo que no pasa por
+`reportarProbe`. Con Supabase caído, `viajeReal` es `undefined` y el arranque
+emite `startup.migraciones_0005_skip {"msg":"sin viajes en la base…"}` en nivel
+`info` (que `logger.ts` no manda a Sentry). Sexto pase abierto.
 
-**M6 sigue idéntico:** `package.json:12` (`"setup": "npm install && npm run seed"`)
-y `scripts/seed.sh:11-15` no cambiaron un carácter desde `94c0733`
-(`git diff 94c0733..HEAD -- scripts/ .env.example` → vacío). En una máquina
-limpia sin `DATABASE_URL`, `npm run setup` sigue saliendo `1`.
+**M6, verificado hoy.** `git diff 94c0733..HEAD -- scripts/` → vacío.
+`package.json` sí cambió, pero solo `dev`/`build` a `--webpack` y dos
+dependencias nuevas (`pdf-parse`, `xlsx`). En una máquina limpia sin
+`DATABASE_URL`, `npm run setup` sigue saliendo `1` en `scripts/seed.sh:14`.
 
 ---
 
 ## Hallazgos
 
-### [ALTO] El recordatorio nocturno sale por el único canal que WhatsApp NO entrega a un operador callado, y el viaje queda sellado como "ya recordado"
+### [CRÍTICO] CI lleva seis corridas rojas en `master`: `Tests` y `Build` se SALTAN, y la superficie nueva nunca se ha compilado
 
-`src/lib/likida/recordatorio_comprobacion.ts:117-137` · `src/lib/meta/client.ts:89-104,155-162`
+`.github/workflows/ci.yml:52-53, 67-68, 81-82` · `src/app/dashboard/chat.tsx:362`
 
-El envío es `sendText` pelado (`:135`), sin caída a plantilla. El propio
-`meta/client.ts:155-162` documenta la regla: *"WhatsApp lo entrega únicamente
-dentro de las 24 h desde el último mensaje DEL USUARIO… Fuera de esa ventana Meta
-responde 131047 ('Re-engagement message')… Para eso está `sendTemplate`, que es
-lo único que abre la ventana."* Y `escalar_viaje.ts:222-228` —el módulo hermano,
-en el mismo cron— sí lo implementa: intenta `sendText` y si devuelve `null` cae a
-`avisarAlChofer` / `sendTemplate`. `recordatorio_comprobacion.ts` no tiene esa
-segunda rama.
+El job `verificar` corre en serie: `Typecheck` → `Lint` → `Tests` →
+`Pruebas de tiempo` → `Build`. Sin `continue-on-error`, un paso rojo salta los
+siguientes. Medido hoy sobre el árbol:
 
-Escenario con valores: 03:00, cron `escalar`. La consulta de `:54-61` devuelve 40
-viajes `abierto` con `fecha_inicio <= 2026-08-06`. Para cada uno:
+```
+$ npm run lint ; echo $?
+✖ 18 problems (1 error, 17 warnings)
+1
+```
 
-1. `reclamarRecordatorio` escribe `recordatorio_comprobacion_en = '2026-08-09T03:00:00Z'`
-   y devuelve `ganado: true` (`:117`).
-2. `sendText('529993700779', …)` → Meta 400 con
-   `(#131047) Re-engagement message` porque ese operador lleva 3 días sin
-   escribirle al número — que es literalmente el criterio con el que se le
-   seleccionó (`:6-13`: *"El operador que lleva días sin mandar nada"*).
-3. `res.ok` es `false` → `client.ts:96` emite
-   `logger.error('wa.sendText', { status: 400, body: '…131047…' })` y devuelve
-   `null`.
-4. `enviado` es `null` → `r.fallos.push('VJ-104: WhatsApp rechazó el envío')` (`:137`).
+El error es `src/app/dashboard/chat.tsx:362:20 — Cannot call impure function
+during render` (`Date.now()` en el cuerpo del componente). Ese error **ya está
+fichado como R6-9** en `docs/auditoria-17/progreso.md:64-70`; no lo reclamo. Lo
+que nadie escribió es su consecuencia en CI, que sí medí contra la API de
+GitHub Actions (run `31655899605`, `master`, commit `d661517`):
 
-Resultado: 40 viajes sellados, 0 mensajes entregados, y como no hay ningún sitio
-que ponga `recordatorio_comprobacion_en` de vuelta a `NULL`
-(`grep -rn "recordatorio_comprobacion_en" src/ supabase/` → 4 usos, ninguno lo
-limpia), esos 40 operadores **no volverán a recibir el recordatorio nunca**,
-tampoco cuando sí estén dentro de ventana.
+```
+5  Typecheck                       success
+6  Lint                            failure
+7  Tests (con umbral de cobertura) skipped
+8  Pruebas de tiempo               skipped
+9  Build                           skipped
+```
 
-Lo que tiene el de guardia a la mañana siguiente: en Sentry, **un** issue
-`wa.sendText` con 40 eventos, cuyo `extra` es `{status, body}` — sin viaje, sin
-tenant, sin teléfono, y agrupado por `fingerprint: [msg, nivel]`
-(`observability/sentry.ts:160`) con todos los demás fallos de envío del producto.
-Los folios (`VJ-104…`) solo existen en `cron.recordatorio_comprobacion.ok`, que
-es `logger.info` (`escalar/route.ts:77`) y por tanto **nunca llega a Sentry**
-(`logger.ts:148`: solo `warn`/`error`). Reconstruir a quién no se le mandó qué
-exige cruzar por hora dos canales, uno de ellos con la retención corta que
-`DEPLOY.md:151-153` deja anotada como desconocida.
+Ese patrón se repite en **seis corridas consecutivas de `master`**, todas del
+12-ago-2026 entre 00:12 y 00:52 (runs `31653637589`, `31653906905`,
+`31654264513`, `31654672840`, `31655045055`, `31655899605`). La última corrida
+verde de `master` es `31653148306` (00:04:07, `4e18233`). Los commits que
+quedaron del otro lado de esa línea son exactamente:
 
-Intenté refutarlo: (a) la ventana de 24 h es por teléfono, no por viaje, así que
-un operador con OTRO viaje activo sí recibiría el mensaje — cierto, pero eso solo
-reduce la población afectada a la que el módulo declara como su objetivo;
-(b) `sendText` podría lanzar y caer al `catch` de `:138` — no: `client.ts:96`
-devuelve `null`, no lanza; (c) podría haber un reintento en la corrida siguiente
-— no lo hay, el sello es definitivo por diseño declarado (`:100-108`).
+| Commit | Qué trae |
+|---|---|
+| `df2b42c`, `4b849e3` | el resumen v3 final |
+| `1073502` | `/dashboard/viajes/nuevo` |
+| `6fe2370` | el tope diario de $1 del chat |
+| `d661517` | **el lector universal de archivos** (`pdf-parse`, `xlsx`) |
 
-**Consecuencia:** la flota cree que Likida le insiste al chofer y no le insiste a
-nadie; el contralor descubre el hueco cuando la liquidación no llega. Y no hay
-forma de listar los viajes afectados sin volver a la base.
+Escenario concreto: `d661517` agrega dos dependencias nuevas a
+`package.json:32,37` (`pdf-parse`, `xlsx`) e importa ambas desde código de
+servidor. Ese es *literalmente* el tipo de fallo que el propio `ci.yml:78-80`
+dice que este paso ya cazó una vez (*"Turbopack no resolvía el .wasm del lector
+de códigos"*). Hoy nadie lo ha compilado: CI salta el `Build` desde el 12-ago y
+Vercel no construye desde el 6-ago (ver el ALTO siguiente). El primer
+`next build` de todo el chat + lector va a correr el día que alguien intente
+publicar, con el demo enfrente.
 
-**Causa raíz probable:** el módulo se copió de `escalar_viaje.ts` sin la mitad
-que resuelve la ventana de 24 h, y su fallo se clasificó como "un fallo más de la
-lista" en vez de como "este canal no puede funcionar para esta población".
+Agrava: no hay ninguna señal de que la compuerta esté roja fuera de mirar la
+pestaña de Actions. `master` no tiene protección de rama que exija el check, y
+las notificaciones de GitHub Actions no aparecen en ninguna parte del repo ni
+del runbook.
+
+**Consecuencia:** Javier cree que la superficie del demo está verificada porque
+"la suite pasa en local"; en realidad `npm run test:coverage` (el que impone el
+umbral de cobertura) y `npm run build` no se han ejecutado ni una vez sobre
+ella. Un fallo que solo aparece en build se descubre en el peor momento posible.
+
+**Causa raíz probable:** la compuerta es secuencial y su rojo no le llega a
+nadie; el pase 6 apuntó el síntoma (el error de lint) y no la consecuencia (que
+la compuerta lleva 11 h sin correr los tres pasos que importan).
 
 ---
 
-### [ALTO] El cron responde 200 con 40 fallos dentro, y la lista de cuáles se pierde si la invocación se corta
+### [ALTO] Producción lleva 48 commits y siete días congelada, y ni el repo ni la app lo dicen — REINCIDENTE, y ahora incluye todo el demo
 
-`src/app/api/cron/escalar/route.ts:75-89` · `src/lib/likida/recordatorio_comprobacion.ts:109-145`
+`vercel.json:3` · `docs/conocimiento/DEPLOY.md:157-183` · `CLAUDE.md:70-84`
+
+```
+$ git rev-list --count 87426f8..origin/master
+48
+$ git log -1 --format='%h %ad %s' --date=short 87426f8
+87426f8 2026-08-06 [deploy] refactor(marca): Likida en todo …
+```
+
+`87426f8` es el último commit cuyo asunto lleva la bandera. Producción, por
+tanto, es del **6-ago**: no tiene el agente analista, ni el chat, ni el lector
+de archivos, ni `/dashboard/viajes/nuevo`, ni el resumen v3, ni los 36 arreglos
+de la oleada 1 de reparadores. La progresión del hallazgo es la medida de que
+la deuda cobró: **5 commits (pase 1) → 17 (pase 2) → 48 (hoy)**.
+
+Sigue sin haber forma de verlo desde el producto:
+`grep -rn "VERCEL_GIT_COMMIT_SHA\|COMMIT_SHA" src/ next.config.ts .github/` →
+**cero resultados**, y no existe ninguna ruta `/api/health` en
+`src/app/api/` (12 `route.ts`, ninguno de salud). La única verificación que
+`DEPLOY.md:177-180` ofrece es comparar a mano `git log -1` contra
+`vercel inspect`, que solo funciona si a alguien se le ocurre hacerlo.
+
+Y hay dos modos de falla del `ignoreCommand` que ni `CLAUDE.md` ni `DEPLOY.md`
+contemplan, los dos verificados por mí:
+
+**(a) Un merge nunca despliega.** El comando es
+`git log -1 --pretty=%s | grep -qi '\[deploy\]' && exit 1 || exit 0`. En Vercel,
+`exit 0` = *saltar el build*. El asunto de un merge lo genera git o GitHub
+("Merge pull request #9 from …", o el título del PR con "(#9)" en el squash), y
+ninguno de esos generadores sabe de la bandera. PR #9 es el vehículo de entrega
+de toda esta auditoría: fusionarlo con cualquiera de los tres botones de GitHub
+produce un HEAD cuyo asunto no lleva `[deploy]` → `exit 0` → Vercel no
+construye, aunque cada commit de la rama la llevara. El repo ya tiene tres
+merges con asunto escrito a mano (`0fa27b0`, `6b1b125`, `c7c9a0e`), ninguno con
+bandera.
+
+**(b) Cualquier fallo del comando = no desplegar, en silencio.** Si `git log`
+falla (clon superficial sin historia, git ausente en la imagen del builder), la
+tubería entrega vacío, `grep` no encuentra, y `|| exit 0` salta el build. Un
+fallo de infraestructura y un "no me toca desplegar" producen exactamente la
+misma señal, que además es la señal invisible. Es el A3 tal cual, sexto pase.
+
+**Consecuencia:** el escenario que `CLAUDE.md:81-84` describe como "el modo de
+falla es silencioso" ya no es hipotético: llevamos una semana viviéndolo con el
+demo entero fuera de producción, y el día que se quiera arreglar por PR, el
+merge tampoco va a desplegar.
+
+**Causa raíz probable:** una compuerta que solo sabe decir "no" y ningún
+mecanismo que compare lo publicado contra lo commiteado; el `ignoreCommand`
+funciona para el caso `git commit` directo y para ningún otro.
+
+---
+
+### [ALTO] `src/lib/likida/intake/archivo.ts` es BINARIO para git y para ripgrep: no se puede diferenciar en un PR ni buscar dentro
+
+`src/lib/likida/intake/archivo.ts:42` · `src/lib/likida/normas/fundamento.ts:467,522`
+
+La línea 42 escribe el byte NUL **literal** dentro de un literal de expresión
+regular en vez de la fuga `\0`:
+
+```
+$ sed -n '42p' src/lib/likida/intake/archivo.ts | od -c
+  c o n s t   l i m p i o   =   s . r e p l a c e ( /  \0  / g ,   ' ' ) …
+```
+
+`tsc` y `eslint` lo aceptan (es un regex válido que casa NUL, que es lo que el
+autor quería). El problema es todo lo demás:
+
+1. **Git lo trata como binario.** El NUL cae en el byte ~1,500, dentro de la
+   ventana de olfateo de 8 KB:
+   ```
+   $ git show d661517 --stat -- src/lib/likida/intake/archivo.ts
+    src/lib/likida/intake/archivo.ts | Bin 0 -> 7515 bytes
+    1 file changed, 0 insertions(+), 0 deletions(-)
+   ```
+   En el PR #9 este archivo aparece como *"Binary file not shown"*. Es
+   **el lector de archivos subidos por el usuario** — la frontera de confianza
+   que el propio `MAPA.md:28-30` señala como la más ancha y nunca auditada del
+   producto —, y no se puede revisar en un diff. Ningún cambio futuro suyo se
+   verá tampoco.
+
+2. **Ripgrep lo salta en silencio.** Medido:
+   ```
+   $ rg -l "MAX_EXTRACTO" src/lib/likida/intake/
+   src/lib/likida/intake/archivo.test.ts          ← falta archivo.ts
+   $ rg -l --binary "MAX_EXTRACTO" src/lib/likida/intake/
+   src/lib/likida/intake/archivo.ts
+   src/lib/likida/intake/archivo.test.ts
+   ```
+   Ripgrep es el motor de la búsqueda de VS Code, de la búsqueda de código de
+   GitHub y de la herramienta `Grep` con la que trabajan los agentes de esta
+   misma auditoría. Escenario con valores: un auditor de este pase busca
+   `rg "pdf-parse" src/` para revisar cómo se invoca el parser → **cero
+   resultados** → concluye "no se usa" o "no existe". Lo comprobé conmigo mismo:
+   mi primer `grep -rn "extraerComprobante" src/` devolvió
+   `Binary file src/lib/likida/intake/archivo.ts matches`, sin la línea.
+
+3. **No es un caso aislado.** `src/lib/likida/normas/fundamento.ts` —el buscador
+   de fundamentos fiscales— tiene tres NUL literales (bytes 25140, 25163, 28464,
+   líneas 467 y 522). Ahí el NUL cae fuera de los 8 KB, así que git sí lo
+   diferencia, pero ripgrep tampoco lo lee:
+   `rg -l "guardado" src/lib/likida/normas/` → nada, mientras
+   `grep -rln "guardado" src/lib/likida/normas/` → lo encuentra.
+
+Intenté refutarlo: (a) ¿rompe los guardarraíles que hacen `grep` sobre `src/`?
+No — `formato.test.ts:190-193` y `:215-217` usan `grep -rl`, y GNU grep con `-l`
+sí reporta archivos binarios (verificado:
+`grep -rl "MAX_EXTRACTO" src/lib/likida/intake/` sí lista `archivo.ts`). Ese
+riesgo lo descarto por escrito. (b) ¿lo arregla un `.gitattributes`? No hay
+ninguno: `git check-attr -a` sobre el archivo devuelve vacío. (c) ¿rompe la
+compilación? No — `tsc --noEmit` sale limpio.
+
+**Consecuencia:** el subsistema nuevo de mayor riesgo del producto entró al repo
+sin poder ser revisado en diff y es invisible para la herramienta con la que
+todo el mundo —humano y agente— busca en este repo. Es DX puro, pero es el tipo
+de DX que hace que un hallazgo real no se encuentre nunca.
+
+**Causa raíz probable:** un NUL pegado tal cual dentro de un regex literal
+(seguramente al escribirlo desde una herramienta que interpretó el escape) en un
+archivo que nadie volvió a abrir con `git diff`.
+
+---
+
+### [ALTO] El tope diario de IA se agota sin emitir una sola línea: nadie se entera nunca
+
+`src/app/api/dashboard/chat/route.ts:91-96` · `src/app/admin/calcular-alertas.ts:14-25`
 
 ```ts
-    const r = await enviarRecordatoriosComprobacion();
-    logger.info('cron.recordatorio_comprobacion.ok', { ...r });
-    resultado.comprobacion = r;
-  } catch (e) { … }
-  return NextResponse.json(resultado);      // 200 siempre
+  if (gastadoHoy >= topeDiaUsd()) {
+    return NextResponse.json({
+      agotado: true,
+      bloques: [{ tipo: 'texto', texto: 'El análisis con IA de hoy llegó a su tope diario …' }],
+    });
+  }
 ```
 
-Tres cosas se juntan aquí:
+No hay `logger.warn`, ni `logger.error`, ni escritura en ninguna tabla. Nótese
+el contraste dentro del mismo archivo: la rama de al lado, `:86-89` (fallo de
+lectura del gasto), **sí** emite `logger.error('chat.tope_dia.error', …)`. El
+caso "el candado disparó" —el único que significa algo operativamente— es el
+mudo.
 
-1. **200 con fallos.** `resultado.comprobacion = { revisados: 40, recordados: 0, fallos: [40 cadenas] }`
-   sale con status 200. El panel de crons de Vercel queda verde. El comentario de
-   `:85-88` dice que los fallos van "en la RESPUESTA, no solo en el log" — pero el
-   lector de esa respuesta es Vercel Cron, que solo mira el código de estado. Es el
-   mismo modo de falla que el propio archivo condena en `:33-40` para el secreto
-   ausente, aplicado al caso parcial.
-2. **El resumen del módulo cuenta, no nombra.** `recordatorio_comprobacion.ts:143`
-   emite `{ revisados, recordados, fallos: r.fallos.length }` — un número. Los
-   folios solo aparecen porque la ruta hace `{ ...r }`, y en nivel `info`.
-3. **Nada se materializa hasta el final.** El array `fallos` vive en memoria hasta
-   `:143`. `maxDuration = 120` (`route.ts:11`) cubre DOS chequeos que leen hasta
-   100 viajes cada uno (`recordatorio_comprobacion.ts:61`, `escalar_viaje.ts:90`),
-   con `SEND_TIMEOUT_MS = 10_000` por envío (`meta/client.ts:17`) y sin un solo
-   chequeo de reloj dentro del `for` — a diferencia de `facturar/route.ts:158`,
-   que sí corta con `MARGEN_LOTE_MS`. Escenario: primera corrida tras desplegar
-   `0087`, donde **todos** los viajes históricos abiertos tienen la columna en
-   `NULL` a la vez; 100 viajes × 2 s de Meta = 200 s > 120 s. Vercel mata la
-   invocación: N viajes quedaron sellados y enviados, M fallaron, y **no se emite
-   ninguna de las dos líneas de resumen** — el único rastro son los
-   `wa.sendText.ok` sueltos de `client.ts:102`, que no dicen a qué viaje
-   pertenecen.
+Escenario con valores: el 6 de agosto por la mañana Javier prueba el chat contra
+el tenant de Transportes Innovativos para preparar el demo. A ~$0.005 por
+análisis medido (`route.ts:30-35`) más los reintentos correctivos de
+`analista.ts:348-376`, llega a $1.00 alrededor de la consulta 150-200. Por la
+tarde, con el contralor delante, la primera pregunta al chat contesta *"El
+análisis con IA de hoy llegó a su tope diario"* y todas las demás también. En el
+servidor no hay ninguna línea que lo explique, en Sentry no hay nada (no se
+emite nada, y aunque se emitiera, `logger.ts:148` solo manda `warn`/`error`), y
+en `/admin` el único aviso de costo que existe es
+`calcular-alertas.ts:17` — *"El costo de IA subió N% esta semana vs la
+anterior"*, semanal, de tendencia, y hay que ir a mirarlo.
 
-**Consecuencia:** el de guardia no puede contestar "¿a cuántos operadores les
-llegó el recordatorio anoche?" ni "¿cuáles fallaron?", y el panel de Vercel le
-dice que todo salió bien.
+Intenté refutarlo: (a) ¿lo ve en `/admin/model-ops`? El **gasto** sí —
+`fases_etiquetadas.test.ts` garantiza que la fase `chat` tiene rótulo en las
+cuatro pantallas—, pero eso muestra dólares, no "este tenant chocó contra el
+techo": $1.00 y $0.98 se ven igual en una dona. (b) ¿lo ve el cliente? Sí, y ese
+es el problema: el único que se entera de que el candado disparó es la persona a
+la que no le sirve saberlo. (c) ¿hay algún contador de "veces agotado"?
+`grep -rn "agotado" src/` → cuatro apariciones, todas del texto de respuesta o
+de topes de Playwright, ninguna de contabilidad.
 
-**Causa raíz probable:** el resultado se diseñó como valor de retorno de una
-función pura, no como registro de una corrida desatendida; la ruta lo traduce a
-un 200 porque "corrió" y "salió bien" se colapsaron en la misma señal.
+**Consecuencia:** el único límite de gasto del subsistema nuevo funciona como
+interruptor sin lámpara. Javier no puede contestar "¿algún cliente se está
+topando?" ni "¿esto se agotó durante el demo o antes?", y la degradación se
+lee, desde fuera, como que el producto se quedó tonto.
+
+**Causa raíz probable:** el tope se diseñó como control de costo (lo cumple) y
+no como evento operable; la respuesta al usuario se tomó como si fuera el
+registro del hecho.
 
 ---
 
-### [ALTO] El único guardia contra el WhatsApp duplicado es una cláusula que ninguna prueba puede ver
+### [MEDIO] Poner `LIKIDA_CHAT_TOPE_DIA_USD=0` para apagar el gasto de IA lo reactiva en $1.00, sin decirlo
 
-`src/lib/likida/recordatorio_comprobacion.test.ts:47,143` · `src/lib/likida/escalar_viaje.test.ts:90` · `src/lib/likida/migraciones_verificadas.test.ts:53`
-
-El claim de `:158-163` depende enteramente de `.is('recordatorio_comprobacion_en', null)`:
-sin esa línea, dos corridas solapadas del cron (Vercel entrega *at-least-once*,
-y el propio encabezado lo dice en `:15-21`) leen las dos la fila en `NULL`, las
-dos actualizan, las dos reciben una fila de vuelta, y las dos mandan el WhatsApp.
-
-El mock de la prueba **descarta esa llamada**:
+`src/app/api/dashboard/chat/route.ts:36-39` · `.env.example` (§ chat)
 
 ```ts
-nodo.eq = (col: string, val: unknown) => { por.push([col, val]); return nodo; };
-nodo.is = () => nodo;                    // ← :47, no registra ni argumentos
+function topeDiaUsd(): number {
+  const v = Number(process.env.LIKIDA_CHAT_TOPE_DIA_USD);
+  return Number.isFinite(v) && v > 0 ? v : 1.0;
+}
 ```
 
-y la única aserción exhaustiva sobre la cadena del UPDATE es
-`expect(updates[0].por).toEqual([['id','v-1'],['tenant_id','t-1']])` (`:143`),
-que solo mira los `eq`. La prueba "DOS CORRIDAS SOLAPADAS" (`:171-190`) programa
-`resultadosUpdate = [{ data: [], error: null }]` para simular la corrida
-perdedora: verifica cómo **reacciona** el código a perder la carrera, nunca que
-el UPDATE la perdería. Nótese el contraste dentro del mismo archivo: en la cadena
-de LECTURA el mock sí registra `is` (`:34`) y `:92` afirma
-`args('is')).toContainEqual(['recordatorio_comprobacion_en', null])`. La cláusula
-que importa es la que no se mira.
+`.env.example` documenta esta variable como la palanca por cliente:
+*"Bajarlo o subirlo por cliente es solo esta env."* Escenario con valores: un
+tenant se dispara y Javier pone `LIKIDA_CHAT_TOPE_DIA_USD=0` en Vercel para
+cortarle el análisis con IA. `Number('0')` es `0`, `0 > 0` es `false`, y la
+función devuelve **1.0**: el tope vuelve a ser el default y el gasto sigue.
+Mismo resultado con `LIKIDA_CHAT_TOPE_DIA_USD=1,00` (coma decimal, `NaN`) o con
+un espacio de más pegado en el panel de Vercel. En los tres casos **no se emite
+nada**.
 
-Lo comprobé empíricamente durante esta corrida: con esa línea borrada del árbol,
-`npx vitest run src/lib/likida/recordatorio_comprobacion.test.ts` → **15/15 en
-verde**. `escalar_viaje.test.ts:90` tiene el mismo `nodo.is = () => nodo`, así
-que `escalado_en IS NULL` está igual de desprotegido.
+Y el repo ya sabe hacerlo bien, en el archivo de al lado: `LIKIDA_WHATSAPP_MSG_USD`
+respeta un `0` explícito y grita `costo.precio_wa_invalido` cuando el valor no
+es número (`costos.ts`, documentado en `.env.example` y en `DEPLOY.md:69`). Dos
+criterios distintos para la misma clase de variable, en el mismo producto.
 
-Y hay un tercer sitio donde esto se cobra: `migraciones_verificadas.test.ts:53`
-exime a la `0087` de tener bloque en `verificaciones.sql` con este argumento
-textual — *"La carrera entre corridas solapadas SÍ se prueba, exhaustivamente, en
-TS (recordatorio_comprobacion.test.ts: 'DOS CORRIDAS SOLAPADAS'…) contra un mock
-que modela la fila ganada/perdida"*. Esa afirmación es la que sostiene que no
-haga falta verificar la migración contra Postgres, y no es cierta: el mock no
-modela la condición, la ignora.
+**Consecuencia:** la única palanca de emergencia del gasto de IA del panel hace
+lo contrario de lo que se le pide en su valor más útil, y confirmarlo exige leer
+el código: no hay línea de arranque, ni de petición, que diga qué tope está
+vigente.
 
-**Consecuencia:** borrar seis palabras del claim —en un refactor, en un merge
-mal resuelto— produce dos WhatsApp idénticos al mismo chofer por cada corrida
-solapada, con typecheck, lint y 3,168 pruebas en verde y sin bloque SQL que lo
-atrape.
-
-**Causa raíz probable:** un mock que registra los filtros que el autor estaba
-mirando (`eq`) y absorbe en silencio los que no, más una exención de
-verificación SQL justificada con la cobertura que ese mock aparenta dar.
+**Causa raíz probable:** el `> 0` se escribió para rechazar negativos y se llevó
+por delante el cero, que aquí no es un valor inválido sino el más significativo.
 
 ---
 
-### [ALTO] `verificaciones.sql` ya no corre de punta a punta: tres bloques mueren en el INSERT desde la mig. `0086`
+### [MEDIO] `/api/dashboard/ingesta` gasta visión real y no escribe una sola fila en `llm_costo`
 
-`supabase/verificaciones.sql:1005-1006, 1103-1104, 1201-1202` · `supabase/migrations/0086_retirar_rol_operador.sql:96-98`
+`src/app/api/dashboard/ingesta/route.ts:50-54`
 
-La `0086` cierra el dominio de roles:
+Es el **único** llamador de `extraerComprobante` que no llama a `registrarCosto`.
+Los dos del camino de WhatsApp sí lo hacen (`processor.ts:526` y `:800`). Aquí
+el costo solo viaja en un `logger.info`:
 
-```sql
-alter table public.app_user
-  add constraint app_user_rol_dominio
-  check (rol in ('superadmin', 'flota_admin', 'contador', 'encargado'));
+```ts
+const r = await extraerComprobante(imagen, AbortSignal.timeout(45_000));
+logger.info('ingesta.sonda', { tenantId, rol, legible, motivo, costoUsd: r.costo.costoUsd });
 ```
 
-La limpieza de `verificaciones.sql` borró los bloques 54, 55 y 56 (los de las
-migs. 0078/0079/0081) y añadió el 62. Pero dejó **tres bloques anteriores** que
-siembran una sesión de chofer para poder impersonarla:
+El encabezado del archivo (`:5-8`) dice *"NO ESCRIBE NADA: ni gasto, ni foto, ni
+costo por liquidación"*. Para el **costo por liquidación** la decisión es
+correcta —esa sonda no pertenece a ninguna liquidación—. El problema es que
+`llm_costo` no es solo la fuente del costo por liquidación: es la **única**
+bitácora del gasto de IA del producto, la que alimenta `/admin/model-ops`,
+`/admin/page.tsx`, `/admin/analitica` y `/admin/costos-facturacion`, y la que
+`negocio.ts` agrega para la tendencia semanal.
 
-- `:1005` — bloque **26**, "El chofer solo ve sus propios viajes (mig. 0045)":
-  `insert into app_user (…, rol, operador_id) values (…, 'operador', v_o1);`
-- `:1103` — bloque **28**, "Las tablas de operación no se le abren al chofer (mig. 0047)"
-- `:1201` — bloque **30**, "El rastreo: ni el chofer ve posiciones, ni el contador ve tokens (mig. 0050)"
+Escenario con valores: el contralor prueba la pata "Ingest" del panel con 40
+fotos de tickets de una carpeta, una tras otra. Cada una es una llamada de
+visión a `gemini-3.6-flash` que `.env.example` mide en **$0.0176 con
+razonamiento** → $0.70 gastados de verdad. En `/admin`, el gasto de ese día
+sigue diciendo exactamente lo mismo que antes de las 40 fotos. Además este
+endpoint no tiene tope de ningún tipo (el diario es del chat y consulta
+`fase='chat'`), así que un bucle desde una sesión válida gasta sin techo y sin
+dejar rastro en la bitácora.
 
-Ninguno está envuelto en `begin … exception when check_violation`, a diferencia
-del INSERT equivalente del bloque 62 (`:3024-3026`), que sí lo espera. Escenario
-con valores: `psql "$DB" -f supabase/verificaciones.sql` contra una base con la
-`0086` aplicada. Donde antes salía
+Intenté refutarlo: (a) ¿lo cuenta OpenRouter? Sí, en el panel de OpenRouter —
+pero ahí no está partido por tenant ni por fase, que es lo que las cuatro
+pantallas de `/admin` prometen. (b) ¿la línea `ingesta.sonda` sirve? Es
+`logger.info`, así que no llega a Sentry (`logger.ts:148`) y vive en el runtime
+log de Vercel, cuya retención `DEPLOY.md:152-153` deja anotada como desconocida
+desde hace rondas. (c) ¿el `costoUsd` es cero por ser sonda? No: `ocr.ts:470`
+devuelve `res.cost` real.
 
-```
-ERROR:  RLS_CHOFER  viaje=1  gasto=1  liquidacion=1  viaje-ajeno=0   (esperado 1/1/1/0)
-```
+**Consecuencia:** la cifra de gasto de IA que Javier usa para fijar el precio
+del producto está sistemáticamente por debajo del gasto real, y la diferencia
+crece con el uso del panel — justo el uso que el producto está empujando.
 
-ahora sale
-
-```
-ERROR:  new row for relation "app_user" violates check constraint "app_user_rol_dominio"
-```
-
-El bloque aborta **antes** de `set local role authenticated`, así que las
-aserciones que sí seguían siendo válidas —que un usuario de sesión no ve `unidad`,
-`mantenimiento`, `incidencia` y `pod` de otro, y que el **contador** (rol vivo) no
-ve `rastreo_credencial.token`— dejan de comprobarse. Como el archivo se lee por la
-salida y cada bloque termina en `raise exception` a propósito, un error de más se
-mimetiza con los 60 errores esperados.
-
-Nada lo detecta: `migraciones_verificadas.test.ts` solo compara **títulos** de
-bloque contra nombres de migración (`:38-41`), no ejecuta SQL; y
-`.github/workflows/ci.yml` no levanta Postgres ni corre este archivo.
-Colateral menor del mismo cambio: el bloque 49 (`:2686-2713`) documenta como
-"corrida REAL, salida copiada tal cual" siete funciones con `pg_temp`, dos de las
-cuales (`is_operador`, `get_user_operador_id`) la `0086` dropeó — el bloque no
-revienta, pero su salida ya no coincide con lo que dice esperar.
-
-**Consecuencia:** el único artefacto del repo que demuestra garantías que un test
-con Supabase mockeado no puede tocar quedó parcialmente inservible, y quedó así
-en silencio.
-
-**Causa raíz probable:** la limpieza buscó los bloques por el nombre de las
-migraciones retiradas (0078/0079/0081) en vez de buscar quién crea una sesión con
-`rol='operador'`, que es lo que la `0086` prohíbe.
+**Causa raíz probable:** "no contamina el costo por liquidación" se implementó
+como "no se registra en ningún lado", que son dos cosas distintas.
 
 ---
 
-### [MEDIO] El viaje se sella antes de comprobar que hay teléfono, y el aviso se pierde entre iguales
+### [MEDIO] El runbook no sabe que existen el agente, el chat, el lector ni los tres crons — y manda a buscar un mensaje de log que no existe
 
-`src/lib/likida/recordatorio_comprobacion.ts:117-131`
+`docs/conocimiento/DEPLOY.md:42-47, 97-114, 145-153`
 
-El orden es: reclamar (`:117`) → comprobar teléfono (`:127`). Un viaje cuyo
-operador no tiene `telefono` capturado queda con
-`recordatorio_comprobacion_en` puesto y sin mensaje, para siempre — incluso si al
-día siguiente el jefe de flota captura el número.
+```
+$ grep -ni "chat\|analista\|agente\|archivo\|tope\|cron\|escalar\|qstash" docs/conocimiento/DEPLOY.md
+(cero resultados)
+```
 
-Escenario con valores: la flota da de alta 6 choferes desde
-`/dashboard/operadores` y deja el teléfono en blanco en 2. Sus viajes cruzan los
-3 días. El cron sella los 6, manda 4, y emite dos veces
-`logger.error('recordatorio_comprobacion.sin_telefono', { tenantId, viaje })`.
-Eso sí llega a Sentry (es `error`), pero con `fingerprint: ['recordatorio_comprobacion.sin_telefono','error']`
-—un solo issue para todos los tenants y todos los viajes, para siempre— y con el
-`tenantId`/`viaje` huellados (`id:9f2c…`) dentro del `extra`, no en el título. Con
-el issue ya visto y silenciado una vez, el tercer tenant al que le pase no
-dispara ninguna alerta (es el M5 del pase 1, aquí en su forma nueva).
+187 líneas, y el documento al que se acude a las 3 a.m. no menciona ninguno de
+los subsistemas de los últimos dos meses. Dos cosas concretas dentro de eso:
 
-El módulo hermano tiene el mismo orden pero el precio es menor: en
-`escalar_viaje.ts:222-228` la falta de teléfono en la fila cae a
-`avisarAlChofer`, que lo resuelve por su cuenta.
+**(a) El paso 3 nombra un mensaje que ningún archivo emite.** `DEPLOY.md:47`
+manda a buscar `startup.entorno` — *"falta configuración crítica"*. Los mensajes
+reales son `startup.config_silenciosa` (`arranque.ts:59,61`) y
+`startup.entorno_grupos` (`arranque.ts:87,90`); `startup.entorno` a secas no
+existe en todo `src/` (verificado con `grep -o "startup\.\w*" -r src/`). Un
+`grep startup.entorno` en los logs de Vercel encuentra el de grupos por
+subcadena y **pierde el de `DEMO_TENANT_ID`**, que es precisamente la variable
+que el propio `DEPLOY.md:106` pone en su tabla como "el panel pinta cero
+liquidaciones, sin log". A las 3 a.m. eso es un rastro que no aparece.
 
-**Causa raíz probable:** el claim se puso al principio del bucle por la carrera
-del cron, y las precondiciones que no dependen de la carrera se quedaron después.
+**(b) Nada dice qué hacer con los subsistemas nuevos.** `CRON_SECRET` sigue
+descrito en `.env.example` solo por su mitad vieja ("le insiste al chofer a las
+5 h"), no por el recordatorio de comprobación que `c5a7c19` montó sobre la
+misma URL. `LIKIDA_CHAT_TOPE_DIA_USD` no aparece en `DEPLOY.md`, así que el
+día que un cliente diga "el chat me dice que se acabó", no hay página que
+explique qué es ni dónde se sube. Y `runbook.test.ts` no puede atrapar nada de
+esto: sus seis pruebas (verdes hoy, corridas por mí) comparan **nombres** de
+variable leídos contra declarados y exigen dos literales en `DEPLOY.md`
+(`SENTRY_DSN`, `DEMO_TENANT_ID`); ninguna mira si lo que el documento *dice* de
+un subsistema sigue siendo verdad, ni si el subsistema aparece.
 
----
+**Consecuencia:** el runbook cubre bien el producto de julio. El de agosto
+—dos subsistemas, tres crons, una cola en Upstash— no está en ninguna página, y
+el único paso de diagnóstico que sí menciona la configuración manda a un
+identificador que no existe.
 
-### [MEDIO] Ni el runbook ni `.env.example` saben que este cron manda mensajes
-
-`docs/conocimiento/DEPLOY.md:145-153` · `.env.example` (§ CRON_SECRET)
-
-`grep -n "cron\|escalar\|recordatorio" docs/conocimiento/DEPLOY.md` → **cero
-resultados**. El documento al que se acude a las 3 a.m. no menciona que existan
-tres crons, ni qué significa `cron.recordatorio_comprobacion.falló`, ni qué hacer
-con 40 viajes sellados sin mensaje. Su sección "Lo que este runbook NO cubre"
-sigue diciendo, literal: *"**Quién recibe qué cuando algo falla.** Hoy no hay
-nadie asignado ni ningún canal"*.
-
-`.env.example` describe `CRON_SECRET` como lo que *"protege /api/cron/escalar, que
-a las 5 h sin aceptar le insiste al chofer y le avisa al jefe de flota"* — la
-mitad vieja del cron. Desde `c5a7c19` la misma URL dispara un segundo camino con
-otro criterio (3 días), otro destinatario y otro sello.
-`observability/runbook.test.ts` compara nombres de variable leídos contra
-declarados; no mira si la descripción sigue siendo verdad, así que la deriva pasa
-verde.
-
-Escenario: alguien rota `CRON_SECRET` para probar el cron, se equivoca de valor y
-la ruta devuelve 401 sin cuerpo (`route.ts:58-61`, correcto). Con el runbook en
-la mano no hay forma de saber qué dejó de correr ni durante cuánto.
-
-**Causa raíz probable:** el runbook documenta el webhook y el despliegue; el cron
-nunca se le agregó, y el segundo chequeo se montó sobre la ruta existente
-—decisión razonable— sin tocar la única página que lo describe.
+**Causa raíz probable:** el inventario de `.env.example` tiene prueba y por eso
+no se desincroniza; la **prosa** del runbook no tiene ninguna, y ahí es donde
+vive todo lo que se necesita a las 3 a.m.
 
 ---
 
-### [BAJO] `CLAUDE.md` y `README.md` afirman cosas que la base ya rechaza
+### [BAJO] `git log -1 --pretty=%s` NO lee "solo la primera línea": `%s` pliega el primer párrafo entero
 
-`CLAUDE.md:47` · `README.md:43`
+`vercel.json:3` · `CLAUDE.md:70-75` · `docs/conocimiento/DEPLOY.md:185-187`
 
-`CLAUDE.md:47` sigue diciendo `app_user.rol`: *"superadmin, flota_admin,
-contador, **operador**, encargado"*. Desde la `0086` un
-`insert into app_user (…, rol) values (…, 'operador')` rebota con
-`app_user_rol_dominio`. Es la sección "Trampas ya pisadas", es decir, el sitio
-del repo cuyo trabajo es evitar que el siguiente agente pierda una hora — y hoy
-es la trampa. Lo mismo `README.md:43`, que anuncia como parte del producto un
-*"**portal del chofer** (`/chofer`)"* que `31babfd` borró entero (12 archivos), y
-`README.md:72`, que cita "RLS del chofer" entre lo que `verificaciones.sql`
-comprueba, que es justo lo que dejó de comprobar (ver el ALTO de arriba).
+Las tres fuentes afirman lo mismo: *"lee solo el asunto (la primera línea) a
+propósito: leyendo el mensaje completo, cualquier commit que mencione desplegar
+disparaba un build"*. `%s` de git no es "la primera línea": es el **asunto**, y
+git lo construye uniendo con espacios todas las líneas hasta el primer renglón
+en blanco. Comprobado con un repo desechable:
 
-**Consecuencia:** menor en producción, directa en DX — es exactamente el mismo
-patrón que el B1 del pase 1 (`DEPLOY.md` apuntando a `src/lib/cuadra/costos.ts`),
-que también sigue abierto.
+```
+mensaje:  "asunto de prueba\nsegunda linea sin blanco [deploy]\n\ncuerpo\n"
+$ git log -1 --pretty=%s
+asunto de prueba segunda linea sin blanco [deploy]
+$ git log -1 --pretty=%s | grep -qi '\[deploy\]' && echo CONSTRUYE
+CONSTRUYE
+```
+
+O sea: un commit cuyo cuerpo arranque en la línea 2 sin renglón en blanco de
+separación —lo que produce un `git commit -F` mal formado o un heredoc sin la
+línea vacía— dispara el build aunque su primera línea no lleve nada. Es el
+mismo bug del 5-ago que la regla existe para cerrar, reducido de "el mensaje
+completo" a "el primer párrafo completo".
+
+Verifiqué que hoy no ha ocurrido: de los últimos 60 commits, ninguno tiene texto
+en la línea 2 sin blanco previo. Por eso es BAJO y no ALTO — es una afirmación
+falsa en la documentación que gobierna el despliegue, latente, no un incidente.
+
+**Consecuencia:** directa en DX. `CLAUDE.md` es el documento cuyo trabajo es
+que el siguiente agente no pierda una hora, y aquí describe una garantía que el
+comando no da.
+
+---
+
+### [BAJO] El tope diario suma con un `select` sin paginar: si se sube el tope, el candado deja de disparar en silencio
+
+`src/app/api/dashboard/chat/route.ts:80-84`
+
+```ts
+supabaseAdmin().from('llm_costo').select('costo_usd')
+  .eq('tenant_id', tenantId).eq('fase', 'chat')
+  .gte('created_at', inicioDiaMxIso(ahoraMs()))
+```
+
+Sin `range`, sin `limit`, sin agregación en SQL. `CLAUDE.md:36` documenta esta
+trampa como propia del proyecto (*"PostgREST recorta a 1,000 filas en
+silencio"*) y `analytics.ts` tiene `traerTodo()` construido para exactamente
+esto; esta consulta no lo usa. Con el tope en $1.00 no se alcanza (≈200
+análisis/día × 1-2 filas), y por eso es BAJO. Pero `.env.example` documenta subir
+el tope por cliente como la operación normal: con `LIKIDA_CHAT_TOPE_DIA_USD=10`,
+la suma se congela alrededor de las 1,000 primeras filas (~$2.50-$5) y **nunca
+llega a 10**, así que el candado se apaga solo. No se emite ninguna línea: no
+hay error, la consulta devuelve datos, y `gastadoHoy` simplemente deja de
+crecer.
+
+**Consecuencia:** un control de gasto que se desactiva por su propio éxito, en el
+momento exacto en que más falta hace, y cuya avería no tiene ninguna señal.
+
+**Causa raíz probable:** se aplicó `acotada()` (que es el tope de *tiempo*) y se
+dio por resuelto el acceso a la tabla; el tope de *filas* es otro problema y
+tiene otra herramienta en este mismo repo.
 
 ---
 
 ## Lo que revisé y está bien
 
-- **El arreglo del mutex (C2) está en pie después del merge**, con prueba de
-  regresión propia (`startup_mutex_ajeno.test.ts`) y el porqué escrito en
-  `startup.ts:68-82`. Verificado sobre el árbol, no sobre el commit.
-- **La `0086` no puede aflojar RLS en silencio.** `drop function … is_operador()`
-  va **sin CASCADE** (`0086:80-81`): si quedara una policy dependiente, la
-  migración revienta en vez de tirarla. Y las 21 tablas se reescriben explícitas
-  con la lista sacada de `pg_policies` en vivo, con el fallo del primer intento
-  documentado en el encabezado. Es el patrón correcto.
-- **La exención de la `0087` en `migraciones_verificadas.test.ts` existe y está
-  razonada** — el mecanismo que obliga a decidir "bloque o exención" funcionó.
-  Lo que falla es el contenido del argumento, no el mecanismo (ver el ALTO).
-- **Los dos chequeos del cron corren en `try/catch` independientes**
-  (`escalar/route.ts:65-83`): que el recordatorio truene no deja ciega la
-  escalación, y viceversa. La razón está escrita en `:29-31`.
-- **`viajesSinComprobar` falla cerrado** (`:63`: `if (error) throw`), a
-  diferencia de la consulta de `startup.ts:63`. Un error de lectura no se lee
-  como "no hay viajes vencidos".
-- **El sello se pone ANTES del envío, no después** — la decisión correcta para un
-  cron *at-least-once*, con el razonamiento completo en `:15-21` y `:100-108`.
-  Mi objeción es a lo que pasa cuando el envío falla, no al orden.
-- **`huellaId` / redacción** (`logger.ts:82-110`) siguen intactos y cubren los
-  `fallos` del cron: un folio viaja legible, un UUID sale como `id:…` estable.
-- **Los tres crons siguen fallando cerrado sin `CRON_SECRET`** (500, no 200) y
-  `facturar` sigue devolviendo 503 sin marcar tickets cuando Chromium no arranca.
-- **Compuerta reproducida hoy sobre el árbol post-merge**, coincide con el MAPA:
-  `npx tsc --noEmit -p .` → 0 errores; `npx vitest run` → **255 archivos, 3,168
-  pruebas verdes, 1 saltada** (104.8 s).
+- **El inventario de `.env.example` no se quedó atrás del código nuevo.**
+  `npx vitest run src/lib/observability/runbook.test.ts` → **6/6 verdes** hoy.
+  `LIKIDA_CHAT_TOPE_DIA_USD` está declarada, y el único `process.env.*` de todo
+  el código nuevo (agente, chat, archivo, ingesta) es esa misma variable
+  (`grep -rn "process\.env\." src/lib/agents/ src/app/api/dashboard/ src/lib/likida/intake/archivo.ts`
+  → una sola línea, `chat/route.ts:37`). Los subsistemas nuevos **no traen
+  configuración obligatoria propia**: heredan `OPENROUTER_API_KEY`, que ya está
+  en `GROUPS.llm` (`env.ts:30`) y por tanto se grita en el arranque.
+- **El arranque sí dice qué falta, y con nombre.** `instrumentation.ts:23-24`
+  llama de verdad a `avisarConfiguracionSilenciosa()`, que emite dos mensajes
+  SEPARADOS a propósito (`arranque.ts:70-82` explica por qué: Sentry agrupa por
+  mensaje) y en nivel `error`, que sí llega a Sentry. La decisión de reportar en
+  vez de lanzar está razonada en `env.ts:5-27` y sigue siendo la correcta para
+  serverless.
+- **La media configuración de QStash sí se caza.** `env.ts:61-66` (`CONDICIONALES`)
+  exige las dos signing keys en cuanto existe `UPSTASH_QSTASH_TOKEN`, y explica
+  por qué no van en `GROUPS`. Es el arreglo de un MEDIO reincidente y está bien
+  hecho: `QSTASH_URL` queda fuera con justificación (tiene default correcto).
+- **La fase `chat` sí tiene rótulo en las cuatro pantallas de `/admin`.**
+  `model-ops/fases_etiquetadas.test.ts` lee el union `FaseCosto` del fuente y
+  falla si una fase nueva aparece sin etiqueta en cualquiera de las cuatro
+  copias. El gasto del chat **se puede ver** (lo que no se ve es el tope, ver el
+  ALTO).
+- **`registrarCosto` nunca es mudo.** `costos.ts:115-159`: descarta NaN/negativos
+  con `costo.monto_invalido`, comprueba el `{ error }` de supabase-js por valor y
+  emite `costo.no_registrado` con tenant, viaje, fase, modelo y monto. Un modelo
+  sin precio tampoco cuesta $0: `openrouter.ts:198-207` estima con la tarifa más
+  cara y emite `llm.modelo_sin_precio`.
+- **El tope diario falla CERRADO ante un error de lectura.** `chat/route.ts:85-89`
+  responde `agotado:true` y emite `chat.tope_dia.error`. Y `acotada()`
+  (`presupuesto.ts:155-176`) nunca lanza: devuelve `{data:null,error}`, así que
+  ese camino está cubierto y no hay un 500 escondido antes del `try`.
+- **El fallback del chat no rompe la contabilidad del tope.** Sospeché que
+  `faseDeModelo(modelo,'chat')` (`costos.ts:102-105`) podía registrar como
+  `escalacion` y escapar del `.eq('fase','chat')`. No: el fallback de
+  `google/gemini-3.5-flash-lite` es `openai/gpt-5.6-luna` (`openrouter.ts:65`),
+  que no contiene `opus`. Descartado.
+- **Los guardarraíles de `formato.ts` sobreviven a los archivos binarios.**
+  `formato.test.ts:190-193` y `:215-217` usan `grep -rl`, y GNU grep con `-l` sí
+  lista binarios que casan (verificado). El hallazgo del NUL no los toca.
+- **CI corre en todas las ramas y no necesita secretos** (`ci.yml:on.push.branches: ['**']`),
+  con `concurrency` que cancela lo que quedó atrás, y el paso extra de pruebas de
+  tiempo que recupera las dos que `--coverage` salta. El diseño es bueno; lo que
+  falla es que su rojo no le llega a nadie (ver el CRÍTICO).
+- **`tsc --noEmit -p .` → 0 errores** sobre el árbol de hoy (`0e245d2`),
+  coincide con la línea base del `MAPA.md`.
 
 ---
 
 ## Lo que NO alcancé a revisar
 
-- **Si `verificaciones.sql` corre de verdad.** No hay Postgres en este entorno:
-  el hallazgo de los bloques 26/28/30 es por lectura del constraint de la `0086`
-  contra los tres `insert … rol='operador'`, no por ejecución. Alguien con
-  `DATABASE_URL` debería correrlo y pegar la salida.
-- **Si las variables de QStash y el passcode siguen en Vercel.** Sin
-  `vercel env ls` no se puede cerrar. Abierto desde la ronda 13.
-- **Si Vercel evalúa el `ignoreCommand` en un "Redeploy" del panel** — la salida
-  de emergencia que documentan `CLAUDE.md` y `DEPLOY.md:182` depende de que no lo
-  evalúe, y sigue sin comprobarse.
-- **Cuánto tarda de verdad una corrida del cron `escalar` con 100 viajes.** El
-  cálculo del ALTO usa los topes declarados (`SEND_TIMEOUT_MS`, `maxDuration`);
-  la latencia real contra Meta desde Vercel no está medida en ningún sitio del
-  repo, y no hay presupuesto anotado para este camino como sí lo hay para el
-  cierre (`presupuesto.ts`, `PASOS_CIERRE`).
-- **Retención real de los runtime logs de Vercel**, que es de lo que depende que
-  la lista de `fallos` en nivel `info` sirva de algo a la mañana siguiente. Lo
-  mismo que `DEPLOY.md:152-153` deja pendiente desde hace rondas.
+- **La suite completa.** Corrí `tsc`, `npm run lint` y las pruebas puntuales
+  (`runbook.test.ts`). No repetí `npx vitest run` entero: la línea base del
+  pase 6 (3,298 verdes / 15 rojos) la doy por buena del `MAPA.md`, no medida
+  por mí.
+- **Si Vercel evalúa el `ignoreCommand` en un "Redeploy" del panel.** La salida
+  de emergencia que documentan `CLAUDE.md:77-78` y `DEPLOY.md:182` depende de
+  que NO lo evalúe. Sigue sin comprobarse, cuarto pase.
+- **Si las variables de QStash, Stripe y Facturapi están de verdad en Vercel.**
+  Sin `vercel env ls` no se puede cerrar. Abierto desde la ronda 13.
+- **A2 (un fallo de cliente no deja rastro) y M5 (fingerprint fijo)** los dejo
+  como reincidentes por herencia: los verifiqué de lectura pero no construí
+  escenario nuevo este pase, porque el presupuesto se fue en la superficie nueva
+  y en la compuerta.
+- **Cuánto gasta de verdad una sesión de chat.** Uso los $0.005/análisis
+  declarados en `chat/route.ts:30-35`; no hay medición en el repo que los
+  respalde y el arnés que lo mediría (`pruebas-manuales/chat-analista.prueba.ts`)
+  no se corre. Cuánto cuesta es del auditor de rendimiento; a mí me faltó saber
+  cuántas consultas caben antes del tope, que es lo que decide si el ALTO del
+  tope mudo es un riesgo de demo o de mes.
+- **Retención real de los runtime logs de Vercel**, de la que depende que las
+  líneas `info` (`ingesta.sonda`, `cron.recordatorio_comprobacion.ok`) sirvan de
+  algo a la mañana siguiente. Lo mismo que `DEPLOY.md:152-153` deja pendiente
+  desde hace rondas.
