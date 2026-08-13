@@ -1,10 +1,6 @@
 <!doctype html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Auditoría 17 · pase 5</title>
-<style>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auditoría 17 · pase 6</title><style>
   :root{
     --bg:#f7f8fa; --panel:#ffffff; --line:#e2e6ec; --ink:#141a21; --muted:#5d6b7a;
     --crit:#c92a2f; --alto:#b46a12; --medio:#2b6cb0; --bajo:#6b7784;
@@ -75,256 +71,121 @@
   .e-rein{background:rgba(201,42,47,.12);color:var(--crit);border:1px solid var(--crit)}
   .banner{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--medio);
           border-radius:8px;padding:12px 15px;margin-bottom:20px;font-size:13px;color:var(--ink)}
-</style>
-</head>
-<body>
-<div class="wrap">
+</style></head><body><div class="wrap">
+<header><h1>Auditoría 17 · pase 6 — 13-ago-2026</h1>
+<div class="sub">Ronda de CONTINUACIÓN sobre el PR #9 · corrida en la nube, desatendida · los 12 rubros reauditados</div></header>
 
-<header>
-  <h1>Likida — Auditoría 17 · pase 5</h1>
-  <div class="sub">12-ago-2026 · ronda de <strong>CONTINUACIÓN</strong> sobre el PR #9 · rama <code>claude/auditoria-17</code> · corrida en la nube</div>
-</header>
+<div class="banner"><b>Lo que mandó el pase:</b> <code>master</code> avanzó 22 commits (177 archivos, +3,492/−7,984) y estrenó
+<b>dos subsistemas enteros que nunca habían pasado por una ronda</b> — el agente LLM con tool calling y el lector universal
+de archivos subidos —, más el panel reescrito. Es la primera vez desde el pase 1 que se relanzan los doce.</div>
 
-<div class="banner">
-  <strong>La global no se movió, y eso es una mentira estadística: cinco de los seis rubros auditados sí.</strong>
-  frontend +2 y pruebas +1 contra backend −1, seguridad −1 y fiscal −1. Seis puntos-rubro de
-  movimiento que se cancelan en un promedio quieto. <code>master</code> no avanzó ni un commit,
-  así que este pase existía para una cosa: <strong>verificar los tres arreglos del pase 4 con ojos
-  que no los escribieron</strong>. Los tres cierran — y al mirar de cerca apareció un camino donde
-  el dinero <strong>no se escribe nunca</strong>.
-  <br><br><strong>A media ronda cambió la política:</strong> se arregla TODO lo reproducible, sin tope de vueltas. Se arreglaron 2 más bajo la regla nueva, y la ronda cierra <strong>PARCIAL</strong> a propósito — quedan hallazgos vivos, y bajo esa regla eso es trabajo pendiente de la corrida, no del código.
-</div>
-
-<h2>Estado de la compuerta — árbol final</h2>
-<div class="gate">
-  <span class="ok">tsc &nbsp;0 errores</span>
-  <span class="ok">vitest &nbsp;265 archivos · 3,155 verdes · 1 saltada</span>
-  <span class="ok">eslint &nbsp;0 errores · 17 warnings</span>
-  <span class="ok">51 s</span>
-</div>
-<p class="sub" style="margin-top:8px">
-  Sin <code>npm run build</code> y sin <code>pruebas-manuales/*</code>: en la nube no hay
-  Supabase/OpenRouter/Facturapi/Upstash, y esas pruebas hacen llamadas de pago.
-  Línea base al arrancar el pase: <strong>261 archivos · 3,134 verdes</strong> — idéntica al cierre
-  del pase 4. Los <strong>cinco</strong> arreglos sumaron <strong>21</strong> pruebas y 4 archivos.
-</p>
-
-<h2>Los 12 rubros</h2>
+<h2>Global</h2>
 <div class="grid">
-  <div class="card"><div class="k">Global</div><div class="v">4.8</div><div class="n">= 0.0 contra el pase 4 — y cinco rubros se movieron</div></div>
-  <div class="card"><div class="k">Rubros auditados</div><div class="v">6 <span style="font-size:15px;color:var(--muted)">/ 12</span></div><div class="n">continuación: solo los que cambiaron</div></div>
-  <div class="card"><div class="k">Críticos</div><div class="v">2 <span style="font-size:15px;color:var(--muted)">nuevos</span></div><div class="n">1 cerrado con prueba · 3 pendientes, ninguno de código</div></div>
-  <div class="card"><div class="k">Arreglos</div><div class="v">5</div><div class="n">sin tope de vueltas (política nueva) · 0 revertidos</div></div>
+  <div class="card"><div class="k">Nota global</div><div class="v n-med">4.2<span style="font-size:14px;color:var(--muted)">/10</span></div><div class="n">antes 4.8 · <span class="dn">−0.6</span></div></div>
+  <div class="card"><div class="k">Rubros auditados</div><div class="v">12<span style="font-size:14px;color:var(--muted)">/12</span></div><div class="n">suma 50 → 4.2</div></div>
+  <div class="card"><div class="k">Hallazgos con ficha</div><div class="v">164</div><div class="n">17 crítico · 64 alto · 60 medio · 23 bajo</div></div>
+  <div class="card"><div class="k">Cerrados con prueba</div><div class="v">4</div><div class="n">4 CRÍTICOS · commit atómico c/u</div></div>
 </div>
 
-<div class="scroll">
-<table>
-  <thead><tr>
-    <th>Rubro</th><th class="num">p4</th><th class="num">p5</th><th>Δ</th><th>Razón del movimiento</th>
-  </tr></thead>
-  <tbody>
-    <tr><td><strong>Frontend</strong></td><td class="num">3</td><td class="num nota n-med">5</td><td class="up">▲▲</td>
-        <td><strong>se atacó y subió</strong> — el CRÍTICO de navegación está cerrado <em>de verdad</em>, verificado por quien no escribió el arreglo: <strong>8</strong> <code>href</code> para <code>flota_admin</code>, <strong>2</strong> para <code>contador</code>, <strong>3</strong> para <code>encargado</code>, ninguno colgando de página borrada. Revertido el commit, 4 de 5 casos rojos. Sin CRÍTICOS abiertos por primera vez desde el borrado.</td></tr>
-    <tr><td><strong>Backend y API</strong></td><td class="num">5</td><td class="num nota n-mal">4</td><td class="dn">▼</td>
-        <td><strong>mirada más profunda</strong> — no es regresión: <code>58c44f9</code> está bien hecho. Baja porque apareció, y se verificó contra un <strong>Postgres 16 real</strong>, un camino donde el dinero <strong>no se escribe nunca</strong> y nadie se entera.</td></tr>
-    <tr><td><strong>Sistema agéntico</strong></td><td class="num">4</td><td class="num nota n-mal">4</td><td class="fl">=</td><td class="na">no auditado este pase — cero archivos de <code>src/lib/agents/</code> cambiaron</td></tr>
-    <tr><td><strong>Tool calling</strong></td><td class="num">7</td><td class="num nota n-bien">7</td><td class="fl">=</td><td class="na">no auditado — cuarto pase por rotación, cero cambios en <code>tools.ts</code>/<code>llm/</code>/<code>agents/</code></td></tr>
-    <tr><td><strong>Seguridad</strong></td><td class="num">6</td><td class="num nota n-med">5</td><td class="dn">▼</td>
-        <td><strong>mirada más profunda</strong> + <strong>deuda que cobró factura</strong> — los 3 ALTO de RLS llegan a su <strong>quinto</strong> pase, y el arreglo que le tocaba firmar resultó ser higiene de ruteo y no una capa: el filtro de tenant sigue siendo la única capa real, y la misma forma quedó sin tapar en <code>api/export/pdf/[id]/route.ts:81</code>.</td></tr>
-    <tr><td><strong>Cumplimiento fiscal</strong></td><td class="num">5</td><td class="num nota n-mal">4</td><td class="dn">▼</td>
-        <td><strong>deuda que cobró factura</strong> — <code>12cc8c6</code> cerró <strong>un valor y no el modo de falla</strong>: el segundo catálogo de regímenes ofrecía <strong>8</strong> claves que el CHECK rechaza y escondía <strong>3</strong> que acepta.</td></tr>
-    <tr><td><strong>Cumplimiento legal</strong></td><td class="num">3</td><td class="num nota n-mal">3</td><td class="fl">=</td><td class="na">no auditado este pase</td></tr>
-    <tr><td><strong>Arquitectura</strong></td><td class="num">4</td><td class="num nota n-mal">4</td><td class="fl">=</td>
-        <td><strong>mirada más profunda</strong> — el arreglo cerró la instancia y <strong>no la clase</strong> (su oráculo es otro spread a mano en el mismo archivo), y el recuento medido salió <em>peor</em> que el heredado: <strong>43</strong> símbolos sin llamador, no 29; <strong>4</strong> módulos sin importador, no 2; un <strong>cuarto</strong> mapa duplicado.</td></tr>
-    <tr><td><strong>Pruebas</strong></td><td class="num">5</td><td class="num nota n-med">6</td><td class="up">▲</td>
-        <td><strong>se atacó y subió</strong> — los tres arneses del pase 4 anclan de verdad, <em>medido</em> revirtiendo cada arreglo en el árbol, no leyéndolos; <code>sidebar-nav.tsx</code> pasó de <strong>0.0% a 90.5%</strong>. Lo frena C6, en su <strong>quinto</strong> pase idéntico.</td></tr>
-    <tr><td><strong>Operabilidad y DX</strong></td><td class="num">5</td><td class="num nota n-med">5</td><td class="fl">=</td><td class="na">no auditado este pase</td></tr>
-    <tr><td><strong>Rendimiento y costo</strong></td><td class="num">4</td><td class="num nota n-mal">4</td><td class="fl">=</td><td class="na">no auditado este pase — sus 11 abiertos viven en <code>dashboard/page.tsx:90-122</code> y <code>analytics.ts</code>, con <code>git diff</code> vacío</td></tr>
-    <tr><td><strong>Modelo de datos</strong></td><td class="num">6</td><td class="num nota n-med">6</td><td class="fl">=</td><td class="na">no auditado este pase</td></tr>
-  </tbody>
-</table>
+<h2>Serie histórica de la nota global</h2>
+<svg viewBox="0 0 760 190" width="760" height="190" role="img" aria-label="Serie histórica: 7.2, 5.8, 4.9, 4.9, 4.8, 4.8, 4.2">
+<line x1="42" y1="160.0" x2="736" y2="160.0" stroke="var(--grid)"/><text x="34" y="164.0" text-anchor="end" font-size="10" fill="var(--muted)">3</text><line x1="42" y1="132.4" x2="736" y2="132.4" stroke="var(--grid)"/><text x="34" y="136.4" text-anchor="end" font-size="10" fill="var(--muted)">4</text><line x1="42" y1="104.8" x2="736" y2="104.8" stroke="var(--grid)"/><text x="34" y="108.8" text-anchor="end" font-size="10" fill="var(--muted)">5</text><line x1="42" y1="77.2" x2="736" y2="77.2" stroke="var(--grid)"/><text x="34" y="81.2" text-anchor="end" font-size="10" fill="var(--muted)">6</text><line x1="42" y1="49.6" x2="736" y2="49.6" stroke="var(--grid)"/><text x="34" y="53.6" text-anchor="end" font-size="10" fill="var(--muted)">7</text><line x1="42" y1="22.0" x2="736" y2="22.0" stroke="var(--grid)"/><text x="34" y="26.0" text-anchor="end" font-size="10" fill="var(--muted)">8</text><polyline points="42.0,44.1 157.7,82.7 273.3,107.6 389.0,107.6 504.7,110.3 620.3,110.3 736.0,126.9" fill="none" stroke="var(--medio)" stroke-width="2"/><circle cx="42.0" cy="44.1" r="4" fill="var(--medio)"/><text x="42.0" y="33.1" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink)">7.2</text><text x="42.0" y="181" text-anchor="middle" font-size="10.5" fill="var(--muted)">r13</text><circle cx="157.7" cy="82.7" r="4" fill="var(--medio)"/><text x="157.7" y="71.7" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink)">5.8</text><text x="157.7" y="181" text-anchor="middle" font-size="10.5" fill="var(--muted)">17·p1</text><circle cx="273.3" cy="107.6" r="4" fill="var(--medio)"/><text x="273.3" y="96.6" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink)">4.9</text><text x="273.3" y="181" text-anchor="middle" font-size="10.5" fill="var(--muted)">p2</text><circle cx="389.0" cy="107.6" r="4" fill="var(--medio)"/><text x="389.0" y="96.6" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink)">4.9</text><text x="389.0" y="181" text-anchor="middle" font-size="10.5" fill="var(--muted)">p3</text><circle cx="504.7" cy="110.3" r="4" fill="var(--medio)"/><text x="504.7" y="99.3" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink)">4.8</text><text x="504.7" y="181" text-anchor="middle" font-size="10.5" fill="var(--muted)">p4</text><circle cx="620.3" cy="110.3" r="4" fill="var(--medio)"/><text x="620.3" y="99.3" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink)">4.8</text><text x="620.3" y="181" text-anchor="middle" font-size="10.5" fill="var(--muted)">p5</text><circle cx="736.0" cy="126.9" r="4" fill="var(--crit)"/><text x="736.0" y="115.9" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink)">4.2</text><text x="736.0" y="181" text-anchor="middle" font-size="10.5" fill="var(--muted)">p6</text></svg>
+<div class="n" style="color:var(--muted);font-size:11.5px;margin-top:6px">La serie solo ha bajado desde la ronda 13. Cada bajada tiene su razón escrita en la síntesis; esta es la más grande desde el pase 1.</div>
+
+<h2>Los doce rubros</h2>
+<div class="scroll"><table>
+<thead><tr><th>Rubro</th><th class="num">p5</th><th class="num">p6</th><th></th><th class="num">C</th><th class="num">A</th><th class="num">M</th><th class="num">B</th><th>Razón del movimiento</th></tr></thead>
+<tbody><tr><td><b>Frontend</b></td><td class="num"><span class="fl">5</span></td>
+<td class="num"><span class="nota n-mal">4</span></td><td><span class="dn">▼</span></td>
+<td class="num"><span class="na">·</span></td>
+<td class="num"><span class="pill p-a">4</span></td>
+<td class="num"><span class="pill p-m">4</span></td>
+<td class="num"><span class="pill p-b">1</span></td>
+<td style="font-size:12px;color:var(--muted)"><b>deuda que cobró factura</b> — la v3 cerró 8 abiertos de verdad, pero entregó las dos pantallas del demo (chat y alta de viaje) sin una sola prueba de frontend propia, y con una cifra de dinero sin formato de moneda</td></tr><tr><td><b>Backend y API</b></td><td class="num"><span class="fl">4</span></td>
+<td class="num"><span class="nota n-mal">4</span></td><td><span class="fl">=</span></td>
+<td class="num"><span class="pill p-c">1</span></td>
+<td class="num"><span class="pill p-a">6</span></td>
+<td class="num"><span class="pill p-m">6</span></td>
+<td class="num"><span class="pill p-b">3</span></td>
+<td style="font-size:12px;color:var(--muted)"><b>neto</b> — el CRÍTICO del pase 5 cierra por arreglo verificado, y llegan dos caminos nuevos donde el dinero se gasta y no se escribe, más un CRÍTICO propio del webhook</td></tr><tr><td><b>Sistema agéntico</b></td><td class="num"><span class="fl">4</span></td>
+<td class="num"><span class="nota n-mal">3</span></td><td><span class="dn">▼</span></td>
+<td class="num"><span class="pill p-c">1</span></td>
+<td class="num"><span class="pill p-a">9</span></td>
+<td class="num"><span class="pill p-m">8</span></td>
+<td class="num"><span class="pill p-b">2</span></td>
+<td style="font-size:12px;color:var(--muted)"><b>deuda que cobró factura</b> — el subsistema nuevo rompe tres lecciones que el repo ya pagó y dejó escritas (techo de tokens, fallar cerrado <i>y decirlo</i>, <code>PartialExecutionError.cost</code>)</td></tr><tr><td><b>Tool calling</b></td><td class="num"><span class="fl">7</span></td>
+<td class="num"><span class="nota n-med">5</span></td><td><span class="dn">▼▼</span></td>
+<td class="num"><span class="pill p-c">1</span></td>
+<td class="num"><span class="pill p-a">3</span></td>
+<td class="num"><span class="pill p-m">4</span></td>
+<td class="num"><span class="pill p-b">1</span></td>
+<td style="font-size:12px;color:var(--muted)"><b>deuda que cobró factura</b> — cuatro pases de rotación sobre un <code>tools.ts</code> congelado sostenían la nota más alta del tablero mientras nacían 11 tools sin auditar y sin una sola prueba</td></tr><tr><td><b>Seguridad</b></td><td class="num"><span class="fl">5</span></td>
+<td class="num"><span class="nota n-med">5</span></td><td><span class="fl">=</span></td>
+<td class="num"><span class="pill p-c">1</span></td>
+<td class="num"><span class="pill p-a">3</span></td>
+<td class="num"><span class="pill p-m">2</span></td>
+<td class="num"><span class="pill p-b">2</span></td>
+<td style="font-size:12px;color:var(--muted)"><b>neto, y las dos fuerzas están medidas</b> — el reparador cerró 9 de 12 abiertos con migraciones reales (incluidos los 2 ALTO de RLS de cinco pases) contra una superficie nueva sin una sola cota de recurso. Sin ella era un 7</td></tr><tr><td><b>Cumplimiento fiscal</b></td><td class="num"><span class="fl">4</span></td>
+<td class="num"><span class="nota n-mal">4</span></td><td><span class="fl">=</span></td>
+<td class="num"><span class="pill p-c">3</span></td>
+<td class="num"><span class="pill p-a">8</span></td>
+<td class="num"><span class="pill p-m">9</span></td>
+<td class="num"><span class="pill p-b">1</span></td>
+<td style="font-size:12px;color:var(--muted)"><b>neto</b> — 7 hallazgos cerrados con pruebas que muerden, contra dos superficies fiscales enteras sin un guardarraíl del rubro</td></tr><tr><td><b>Cumplimiento legal</b></td><td class="num"><span class="fl">3</span></td>
+<td class="num"><span class="nota n-mal">3</span></td><td><span class="fl">=</span></td>
+<td class="num"><span class="pill p-c">3</span></td>
+<td class="num"><span class="pill p-a">8</span></td>
+<td class="num"><span class="pill p-m">6</span></td>
+<td class="num"><span class="pill p-b">2</span></td>
+<td style="font-size:12px;color:var(--muted)"><b>sin movimiento</b> — 3 cerrados, pero la superficie nueva abrió dos vías de datos personales sin cobertura: el archivo íntegro viaja a un tercero y los dos avisos afirman lo contrario</td></tr><tr><td><b>Arquitectura</b></td><td class="num"><span class="fl">4</span></td>
+<td class="num"><span class="nota n-mal">4</span></td><td><span class="fl">=</span></td>
+<td class="num"><span class="pill p-c">2</span></td>
+<td class="num"><span class="pill p-a">5</span></td>
+<td class="num"><span class="pill p-m">6</span></td>
+<td class="num"><span class="pill p-b">2</span></td>
+<td style="font-size:12px;color:var(--muted)"><b>deuda que cobró factura</b> — <code>periodo.ts</code>, la fuente única que creó el arreglo del pase 5, quedó huérfana en 24 horas y sus copias sobrevivieron. Símbolos sin llamador: 84 (recontado; el 43 heredado no era reproducible)</td></tr><tr><td><b>Pruebas</b></td><td class="num"><span class="fl">6</span></td>
+<td class="num"><span class="nota n-med">6</span></td><td><span class="fl">=</span></td>
+<td class="num"><span class="pill p-c">1</span></td>
+<td class="num"><span class="pill p-a">5</span></td>
+<td class="num"><span class="pill p-m">3</span></td>
+<td class="num"><span class="pill p-b">1</span></td>
+<td style="font-size:12px;color:var(--muted)"><b>empate medido</b> — el arnés viejo se ganó un punto (11 de los 15 rojos son detección real, sin ayuda) y el frente nuevo lo perdió (2 subsistemas, 32 pruebas contra ~1,900 statements)</td></tr><tr><td><b>Operabilidad y DX</b></td><td class="num"><span class="fl">5</span></td>
+<td class="num"><span class="nota n-mal">4</span></td><td><span class="dn">▼</span></td>
+<td class="num"><span class="pill p-c">1</span></td>
+<td class="num"><span class="pill p-a">3</span></td>
+<td class="num"><span class="pill p-m">3</span></td>
+<td class="num"><span class="pill p-b">2</span></td>
+<td style="font-size:12px;color:var(--muted)"><b>deuda que cobró factura</b> — CI lleva 7 corridas rojas en <code>master</code> y, como <code>Lint</code> va primero, <code>Tests</code> y <code>Build</code> se SALTAN: la superficie nueva nunca se ha compilado</td></tr><tr><td><b>Rendimiento y costo</b></td><td class="num"><span class="fl">4</span></td>
+<td class="num"><span class="nota n-mal">3</span></td><td><span class="dn">▼</span></td>
+<td class="num"><span class="pill p-c">2</span></td>
+<td class="num"><span class="pill p-a">7</span></td>
+<td class="num"><span class="pill p-m">6</span></td>
+<td class="num"><span class="pill p-b">3</span></td>
+<td style="font-size:12px;color:var(--muted)"><b>deuda que cobró factura</b> — dos superficies que gastan por clic: una no registra un centavo y la otra trae un tope que no acota. Cerrados por arreglo: 0 de 12</td></tr><tr><td><b>Modelo de datos</b></td><td class="num"><span class="fl">6</span></td>
+<td class="num"><span class="nota n-med">5</span></td><td><span class="dn">▼</span></td>
+<td class="num"><span class="pill p-c">1</span></td>
+<td class="num"><span class="pill p-a">3</span></td>
+<td class="num"><span class="pill p-m">3</span></td>
+<td class="num"><span class="pill p-b">3</span></td>
+<td style="font-size:12px;color:var(--muted)"><b>deuda que cobró factura</b> — el DDL mejoró (6 migraciones buenas) pero el contrato código↔columna se deterioró más: el camino por defecto de la pantalla del demo violaba un <code>not null</code></td></tr></tbody></table></div>
+
+<h2>Arreglado en este pase</h2>
+<div class="scroll"><table><thead><tr><th>Hallazgo</th><th>Qué era</th><th>sha</th><th>Estado</th></tr></thead><tbody><tr><td><b>N1 fiscal</b></td><td>El lector de PDF leía las ÚLTIMAS 25 páginas creyendo leer las primeras</td><td><code>72ad828</code></td><td><span class='est e-ok'>cerrado con prueba</span></td></tr><tr><td><b>R6-9 operabilidad</b></td><td>El único error de lint, que tenía a CI sin compilar desde el 12-ago</td><td><code>4a69954</code></td><td><span class='est e-ok'>cerrado con prueba</span></td></tr><tr><td><b>CRÍT. tool calling + arquitectura</b></td><td>Las ventanas del chat mentían en los tres modos (35/91/364 días como 7/30/histórico)</td><td><code>65cebec</code></td><td><span class='est e-ok'>cerrado con prueba</span></td></tr><tr><td><b>CRÍT. modelo de datos</b></td><td>"Nuevo viaje" reventaba con 23502 por su propia opción por defecto</td><td><code>e04bf10</code></td><td><span class='est e-ok'>cerrado con prueba</span></td></tr></tbody></table></div>
+
+<h2>Compuerta</h2>
+<div class="gate">
+  <span class="ok">tsc · 0 errores</span>
+  <span class="ok">eslint · 0 errores, 17 warnings</span>
+  <span class="ok">vitest · 3,302 verdes</span>
+  <span class="est e-pend">vitest · 15 rojos heredados del merge de la v3</span>
+  <span class="est e-pend">sin <code>npm run build</code> — en la nube no hay credenciales</span>
 </div>
-<p class="sub">Suma <strong>57</strong> / 12 = 4.75 → <strong>4.8</strong>. El color codifica la NOTA, nunca el delta: frontend sube dos puntos y sigue ámbar; pruebas sube a 6 y sigue ámbar.</p>
+<div class="n" style="color:var(--muted);font-size:11.5px;margin-top:8px">
+Los 15 rojos son guardarraíles de los pases 2–5 que la reescritura v3 de <code>master</code> volvió a disparar.
+El auditor de pruebas los midió uno por uno: <b>11 son detección real</b>; 4 no reproducen nada
+(<code>ahorro_sin_dato</code> falla en las dos direcciones y <code>expediente_alcanzable</code> es falsa alarma).
+Quedan rojos a propósito: son la ficha de lo que la v3 reabrió.</div>
 
-<h2>Serie histórica de la global</h2>
-<svg viewBox="0 0 900 240" role="img" aria-label="Global por ronda: 7.2 en la ronda 13, 5.8 en la 17 pase 1, 4.9 en el pase 2, 4.9 en el pase 3, 4.8 en el pase 4, 4.8 en el pase 5">
-  <line x1="60" y1="30"  x2="860" y2="30"  stroke="var(--grid)" stroke-width="1"/>
-  <line x1="60" y1="80"  x2="860" y2="80"  stroke="var(--grid)" stroke-width="1"/>
-  <line x1="60" y1="130" x2="860" y2="130" stroke="var(--grid)" stroke-width="1"/>
-  <line x1="60" y1="180" x2="860" y2="180" stroke="var(--grid)" stroke-width="1"/>
-  <text x="34" y="34"  fill="var(--muted)" font-size="11">8</text>
-  <text x="34" y="84"  fill="var(--muted)" font-size="11">7</text>
-  <text x="34" y="134" fill="var(--muted)" font-size="11">6</text>
-  <text x="34" y="184" fill="var(--muted)" font-size="11">5</text>
-  <polyline points="120,70 270,140 420,185 570,185 715,190 860,190"
-            fill="none" stroke="var(--down)" stroke-width="2.5"/>
-  <circle cx="120" cy="70"  r="5" fill="var(--down)"/>
-  <circle cx="270" cy="140" r="5" fill="var(--down)"/>
-  <circle cx="420" cy="185" r="5" fill="var(--down)"/>
-  <circle cx="570" cy="185" r="5" fill="var(--flat)"/>
-  <circle cx="715" cy="190" r="5" fill="var(--down)"/>
-  <circle cx="860" cy="190" r="5" fill="var(--flat)"/>
-  <text x="120" y="56"  fill="var(--ink)" font-size="13" font-weight="700" text-anchor="middle">7.2</text>
-  <text x="270" y="126" fill="var(--ink)" font-size="13" font-weight="700" text-anchor="middle">5.8</text>
-  <text x="420" y="171" fill="var(--ink)" font-size="13" font-weight="700" text-anchor="middle">4.9</text>
-  <text x="570" y="171" fill="var(--ink)" font-size="13" font-weight="700" text-anchor="middle">4.9</text>
-  <text x="715" y="176" fill="var(--ink)" font-size="13" font-weight="700" text-anchor="middle">4.8</text>
-  <text x="848" y="176" fill="var(--ink)" font-size="13" font-weight="700" text-anchor="middle">4.8</text>
-  <text x="120" y="215" fill="var(--muted)" font-size="11" text-anchor="middle">ronda 13</text>
-  <text x="270" y="215" fill="var(--muted)" font-size="11" text-anchor="middle">17 · p1 (8-ago)</text>
-  <text x="420" y="215" fill="var(--muted)" font-size="11" text-anchor="middle">17 · p2 (9-ago)</text>
-  <text x="570" y="215" fill="var(--muted)" font-size="11" text-anchor="middle">17 · p3 (10-ago)</text>
-  <text x="715" y="215" fill="var(--muted)" font-size="11" text-anchor="middle">17 · p4 (11-ago)</text>
-  <text x="848" y="215" fill="var(--muted)" font-size="11" text-anchor="middle">17 · p5 (12-ago)</text>
-</svg>
-
-<h2>Verificación independiente de los tres arreglos del pase 4</h2>
-<p class="sub">El pase 4 dejó esta deuda escrita: <em>"lo verifica el pase 5, con ojos que no lo escribieron"</em>. Los tres auditores midieron en vez de leer — revirtiendo el commit en el árbol y contando fallos.</p>
-<div class="scroll">
-<table>
-  <thead><tr><th>Arreglo del pase 4</th><th>Veredicto</th><th>Medido</th></tr></thead>
-  <tbody>
-    <tr><td><code>8d6ac51</code> · el sidebar sin puertas</td>
-        <td><span class="est e-ok">cierra</span></td>
-        <td>8 / 2 / 3 <code>href</code> para flota_admin / contador / encargado; ninguno cuelga de página borrada. Revertido: <strong>4 de 5</strong> rojos.</td></tr>
-    <tr><td><code>12cc8c6</code> · el régimen <code>624</code></td>
-        <td><span class="est e-pend">cierra el valor, no el modo de falla</span></td>
-        <td>Revertido: <strong>2 de 3</strong> rojos. Pero quedó un <em>segundo</em> catálogo divergido — se arregló hoy.</td></tr>
-    <tr><td><code>58c44f9</code> · uuid → 404</td>
-        <td><span class="est e-pend">cierra, y su prueba no</span></td>
-        <td><strong>Invirtiendo la guarda</strong> los 21 casos siguen verdes y toda liquidación real da 404 — se arregló hoy.</td></tr>
-  </tbody>
-</table>
-</div>
-
-<h2>Arreglados en este pase — con prueba que los reproduce</h2>
-<div class="scroll">
-<table>
-  <thead><tr><th>Sev.</th><th>Hallazgo</th><th>Prueba</th><th>Estado</th></tr></thead>
-  <tbody>
-    <tr>
-      <td><span class="pill p-c">C</span></td>
-      <td><strong>El upsert de Stripe no podía escribir NUNCA.</strong>
-          <code>aplicarFactura()</code> (<code>saas/suscripcion.ts:413-429</code>) hace
-          <code>onConflict: 'stripe_invoice_id'</code>; PostgREST emite
-          <code>ON CONFLICT (col) DO UPDATE</code> <strong>sin predicado</strong>, y el único índice
-          sobre esa columna era <strong>parcial</strong> (<code>0052:105-106</code>). Postgres contesta
-          <code>42P10</code> — <strong>también con la tabla vacía</strong>: no era una carrera, la
-          escritura nunca ocurría. Cada <code>invoice.paid</code> daba 500, Stripe agotaba reintentos, y la
-          flota quedaba <strong>pagada, sin fila en <code>factura_saas</code> y sin CFDI que timbrarle</strong>.
-          Las dos suites de Stripe no lo veían: mockean <code>aplicarFactura</code> entera.</td>
-      <td><code>onconflict_indice_total.test.ts</code> · 6 casos · mira la <strong>clase</strong>: recorre los
-          4 <code>onConflict</code> de <code>src/</code> y exige único TOTAL en las migraciones · sin el arreglo
-          fallan 2. Más el <strong>bloque 64</strong> de <code>verificaciones.sql</code>, probado en los dos
-          sentidos contra Postgres 16.13.</td>
-      <td><span class="est e-ok">arreglado · 0b4cadd</span></td>
-    </tr>
-    <tr>
-      <td><span class="pill p-a">A</span></td>
-      <td><strong>El alta de flota ofrecía 8 regímenes que la base rechaza.</strong>
-          El <code>&lt;select&gt;</code> de <code>/admin/flotas:218</code> tenía su catálogo escrito a mano:
-          once claves. El CHECK vigente (<code>0088</code>) acepta seis, y no son las mismas.
-          Rechazadas y ofrecidas: <code>605, 606, 607, 608, 610, 611, 615, 616</code>. Aceptadas y no ofrecidas:
-          <code>603, 621, 626</code>. Elegir «605» tira el alta con <code>23514</code> en la cara de quien la hace,
-          y una flota <strong>RESICO (626)</strong> no se podía capturar.</td>
-      <td><code>regimen_catalogo.test.ts</code> · 3 casos · amarra el catálogo contra el CHECK
-          <strong>en las dos direcciones</strong> y prohíbe volver a teclear la lista · sin el arreglo falla 1,
-          listando las once claves</td>
-      <td><span class="est e-ok">arreglado · 93af2fd</span></td>
-    </tr>
-    <tr>
-      <td><span class="pill p-a">A</span></td>
-      <td><strong>La prueba de la guarda de uuid sobrevivía a invertirla.</strong>
-          <code>id_no_uuid.test.ts</code> fija <em>dónde</em> se llama la guarda, no <em>en qué sentido decide</em>.
-          Con <code>if (esIdDeLiquidacion(id)) notFound()</code> los 21 casos siguen verdes y
-          <strong>toda liquidación real da 404</strong> — la pantalla que el demo abre para el renglón por
-          renglón y el botón de PDF, con la suite entera en verde.</td>
-      <td>2 casos nuevos que <strong>ejecutan la página</strong> con la consulta mockeada y afirman si ocurrió ·
-          con la guarda invertida el archivo pasa de 23 verdes a <strong>2 fallos</strong></td>
-      <td><span class="est e-ok">arreglado · 9ea0824</span></td>
-    </tr>
-    <tr>
-      <td><span class="pill p-a">A</span></td>
-      <td><strong>Un CFDI PPD salía impreso "Deducible para ISR".</strong>
-          LISR 27-III enumera <em>cuatro</em> medios permitidos; el motor detectaba <em>un</em> medio
-          prohibido (<code>'01'</code>) y dejaba pasar todo lo demás. Una flota con línea de crédito recibe
-          CFDI <strong>PPD</strong>, donde el SAT obliga <code>FormaPago = 99</code> ("Por definir"): no es
-          un medio de pago, es la declaración de que <strong>aún no se sabe cuál fue</strong>. Sobre un diésel
-          de $18,560 / 660 L / IVA $2,560 el PDF imprimía las <strong>tres</strong> afirmaciones con su
-          artículo al lado. Dirección <strong>sobre-afirmante</strong>, la peor: el contralor deduce contra un
-          papel que le dio Likida.</td>
-      <td><code>ppd_medio_pago.test.ts</code> · 6 casos · sin el arreglo fallan 4 con los tres números
-          exactos · incluye las dos regresiones: transferencia sigue acreditando entero y el efectivo
-          conserva su facilidad del 15%</td>
-      <td><span class="est e-ok">arreglado · bcf42f3</span></td>
-    </tr>
-    <tr>
-      <td><span class="pill p-a">A</span></td>
-      <td><strong>La ruta del PDF daba 500 con un id sin forma, no 404.</strong>
-          La misma forma que <code>58c44f9</code> arregló en la página seguía abierta en
-          <code>api/export/pdf/[id]/route.ts:81</code>. El mensaje <em>miente</em> —invita a reintentar algo
-          que nunca va a funcionar— y <code>logger.error</code> marca como incidente de base lo que es un 404:
-          justo el log que alguien mira a las 3 de la mañana cuando algo SÍ se rompió.</td>
-      <td><code>api/export/pdf/id_no_uuid.test.ts</code> · 4 casos · sin el arreglo fallan 3 · afirma el
-          cableado <strong>y el sentido</strong>, y prohíbe copiar el regex</td>
-      <td><span class="est e-ok">arreglado · 06db660</span></td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-<h2>Pendientes con razón escrita — sin cuarta opción</h2>
-<div class="scroll">
-<table>
-  <thead><tr><th>Sev.</th><th>ID · rubro</th><th>Por qué no se arregló</th><th>Estado</th></tr></thead>
-  <tbody>
-    <tr><td><span class="pill p-c">C</span></td><td><strong>C12</strong> · arquitectura</td>
-        <td>La pantalla de detalle de liquidación (<code>/dashboard/[id]</code>, 409 líneas) no tiene un solo link entrante. <code>dashboard/page.tsx:142</code> documenta que la lista "se fue a <code>/dashboard/cuadre</code>", y esa página es una de las 35 que <code>2be4b1c</code> borró. Ponerle puerta exige <strong>rehacer la lista de liquidaciones</strong>: el trabajo que el dueño difirió a propósito. Decisión de producto.</td>
-        <td><span class="est e-pend">pendiente</span></td></tr>
-    <tr><td><span class="pill p-c">C</span></td><td><strong>C6</strong> · pruebas</td>
-        <td>El callback de QStash emite CFDI sin una sola prueba. 0.0% de 47 statements, sin moverse desde <code>ec012da</code> (5-ago). El arreglo es el arnés de un endpoint que factura de verdad: sesión propia.</td>
-        <td><span class="est e-rein">reincidente · 5º pase</span></td></tr>
-    <tr><td><span class="pill p-c">C</span></td><td><strong>C4</strong> · fiscal</td>
-        <td>El 15% se mide contra "el combustible que Likida vio". Confirmado idéntico con <code>git diff</code> vacío. El denominador correcto exige un dato que el producto no tiene. Decisión de producto.</td>
-        <td><span class="est e-rein">reincidente</span></td></tr>
-    <tr><td><span class="pill p-c">C</span></td><td><strong>C7</strong> · rendimiento · <strong>C10 / C5</strong> · legal</td>
-        <td>Rubros <em>no auditados este pase</em>; conservan su estado y su razón del pase 4.</td>
-        <td><span class="est e-pend">pendiente</span></td></tr>
-  </tbody>
-</table>
-</div>
-
-<h2>Arriba de la pila — la ronda cierra PARCIAL</h2>
-<p class="sub">Con la política nueva ya no hay tope de vueltas: estos quedan vivos porque se acabó la corrida, no porque estuviera permitido dejarlos. La siguiente los retoma desde aquí, empezando por el contraste.</p>
-<div class="scroll">
-<table>
-  <thead><tr><th>Sev.</th><th>Rubro</th><th>Hallazgo</th></tr></thead>
-  <tbody>
-    <tr><td><span class="pill p-a">A</span></td><td>frontend</td>
-        <td>Las tres tarjetas de KPI del Resumen pintan blanco sobre el degradado naranja a <strong>2.1–2.6:1</strong>. La prueba de contraste solo mide tokens contra <code>--surface</code>, nunca tinta sobre color de componente.</td></tr>
-    <tr><td><span class="pill p-a">A</span></td><td>arquitectura</td>
-        <td><code>engine.ts:14</code> importa <code>intake/cfdi.ts</code>, que arrastra <code>sharp</code>, <code>node:fs/promises</code> y <code>zxing-wasm</code>: el motor de dinero <strong>no es puro</strong> pese a que <code>engine.ts:19</code> lo afirma.</td></tr>
-  </tbody>
-</table>
-</div>
-
-<h2>Un auditor corrigió a otro — y a su predecesor</h2>
-<p class="sub">
-  <strong>Fiscal</strong> abrió eslabón por eslabón la cadena que el pase 4 escribió y encontró que el propio
-  commit la encadenó mal: <code>registro.ts:133 → facturapi.ts:183</code> son <strong>dos ramas distintas</strong>,
-  y la de <code>registro.ts</code> termina en el portal de CAPUFE —el CFDI de peaje del cliente—, no en la
-  suscripción de Likida. · <strong>Arquitectura</strong> recontó lo heredado y salió <em>peor</em>: 43 símbolos sin
-  llamador, no 29. · <strong>Pruebas</strong> confirmó los conteos del pase 4 (4/5, 2/3) salvo uno:
-  <code>id_no_uuid</code> es <strong>ancla parcial</strong>, y ese matiz se volvió el tercer arreglo de hoy.
-</p>
-
-<div class="foot">
-  Ronda de continuación sobre el PR #9 · <strong>6 de 12</strong> rubros reauditados (los únicos cuyo código
-  cambió) · <strong>5 arreglos</strong> pusheados, sin tope de vueltas, <strong>0 revertidos</strong> · <code>master</code> no avanzó
-  ni un commit desde el pase 4: lo único que cambió fueron los tres arreglos del propio pase 4, y por eso
-  este pase fue sobre todo su verificación independiente.
-</div>
-
-</div>
-</body>
-</html>
+<div class="foot">Ronda 17, pase 6 · rama <code>claude/auditoria-17</code> · PR #9 · 12 auditores de contexto fresco, un archivo por rubro ·
+cada hallazgo verificado abriendo el archivo antes de anotarlo.</div>
+</div></body></html>

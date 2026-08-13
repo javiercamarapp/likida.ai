@@ -1,3 +1,55 @@
+PARCIAL (pase 6, ronda de CONTINUACIÓN sobre el PR #9): los **12 rubros
+auditados** y **4 CRÍTICOS cerrados** con prueba que los reproduce y commit
+atómico. Quedan 13 CRÍTICOS pendientes con razón escrita — el tope de 3 vueltas
+del encargo se agotó. Cierra PARCIAL a propósito: bajo esa regla, dejar
+hallazgos reproducibles vivos es trabajo pendiente de la CORRIDA, no del código.
+
+Ronda 17, pase 6, 13-ago-2026, corrida en la nube, desatendida.
+
+**Global 4.2/10 (antes 4.8) — baja 0.6**, la caída más grande desde el pase 1, y
+esta vez el promedio no miente: siete rubros bajan, cinco empatan, ninguno sube.
+Primera vez desde el pase 1 que se relanzan los DOCE, y la razón es que `master`
+avanzó 22 commits (177 archivos, +3,492/−7,984) estrenando **dos subsistemas
+enteros que nunca habían pasado por una ronda**: el agente LLM con tool calling
+y el lector universal de archivos subidos. Cinco de los siete rubros que caen lo
+hacen por esa superficie nueva, no por regresión de la vieja.
+
+164 hallazgos con ficha: 17 CRÍTICO · 64 ALTO · 60 MEDIO · 23 BAJO.
+
+El merge de `master` a la rama trajo 9 conflictos, resueltos **a favor de
+`master`** (sus commits son posteriores y uno rechaza por escrito el CRÍTICO que
+el pase 4 cerró). Costo medido: 15 pruebas rojas, disparadas solas por
+guardarraíles de los pases 2–5 — el arnés funcionando. El auditor de pruebas las
+midió una por una: **11 son detección real, 4 no reproducen nada.**
+
+DOS CORRECCIONES MÍAS, escritas en la síntesis en vez de calladas: (1) fiché que
+`master` había recortado `verificaciones.sql` en 348 líneas y leí el diff al
+revés — son +342 de la rama, cero borrados; (2) fiché "7 defectos reabiertos" y
+son 6, porque `ahorro_sin_dato` falla en las dos direcciones y
+`expediente_alcanzable` es falsa alarma.
+
+Hallazgo encadenado: el `periodo.ts` del pase 5 —la "fuente única" de rótulos—
+unificó un rótulo FALSO ("últimos 7 días" sobre series de 5 semanas).
+Reaplicarlo tal cual reimprimiría la mentira sobre gráficas de dinero. Fichado,
+sin reaplicar. Acotación a favor del código, verificada: los KPI del panel SÍ
+son 7/30/3650 días reales.
+
+Dos hallazgos los encontraron DOS auditores por separado: las ventanas del chat
+(arreglado) y `PartialExecutionError.cost` (pendiente).
+
+Arreglado con prueba: el lector de PDF leía las ÚLTIMAS 25 páginas creyendo leer
+las primeras (`72ad828`); el único error de lint, que tenía a CI sin compilar
+desde el 12-ago (`4a69954`); las ventanas del chat mintiendo en los tres modos
+(`65cebec`); y "Nuevo viaje" reventando con 23502 por su propia opción por
+defecto (`e04bf10`). Ningún arreglo revertido, cero regresiones.
+
+Compuerta final: tsc 0 · eslint 0 errores/17 warnings (arrancó con 1 error) ·
+vitest 293 archivos / 3,302 verdes / 15 rojos / 1 saltada. Sin `npm run build`:
+en la nube no hay credenciales. Tablero renderizado y MIRADO (tablero.png,
+1300×2400): 12 rubros contados, notas cuadran con la síntesis (suma 50 → 4.2).
+
+---
+
 PARCIAL (pase 5, ronda de CONTINUACIÓN sobre el PR #9): **41 hallazgos arreglados** y pusheados — 5 por el orquestador y 36 por la primera oleada de la flota de reparadores. Compuerta final: tsc 0 · 292 archivos · 3,314 verdes · lint 0 errores. Cero regresiones, ningún arreglo revertido.
 
 Quedan vivos: 3 CRÍTICOS que no son de código (C12 parcialmente cerrado, C4, C6) y la cola de la oleada 2 que los propios reparadores reportaron —bloqueados por partición, más 6 hallazgos nuevos que destapó arreglar—. Está enumerada en `progreso.md`.

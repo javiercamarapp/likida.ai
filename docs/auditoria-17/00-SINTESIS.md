@@ -1,3 +1,152 @@
+# Síntesis — auditoría 17, PASE 6 (13-ago-2026, en la nube, desatendida)
+
+**Global 4.2/10** (antes 4.8) — **baja 0.6**, la caída más grande desde el
+pase 1, y esta vez el promedio NO miente: siete rubros bajan, cinco empatan,
+ninguno sube. Doce rubros reauditados de doce — la primera vez desde el pase 1.
+
+**164 hallazgos con ficha: 17 CRÍTICO · 64 ALTO · 60 MEDIO · 23 BAJO.**
+**4 CRÍTICOS cerrados** con prueba que los reproduce y commit atómico.
+
+## Lo que mandó el pase
+
+`master` avanzó **22 commits** (177 archivos, +3,492 / −7,984) y estrenó **dos
+subsistemas enteros que nunca habían pasado por una ronda**:
+
+- el **agente LLM con tool calling** (`src/lib/agents/analista.ts`,
+  `chat-tools.ts`, `api/dashboard/chat/`), y
+- el **lector universal de archivos subidos** (`intake/archivo.ts`,
+  `api/dashboard/archivo|ingesta/`),
+
+más el panel reescrito bajo la dirección v3. Son las dos fronteras de confianza
+más anchas del producto, y llegaron sin arnés propio. De ahí sale casi toda la
+bajada: **cinco de los siete rubros que caen lo hacen por la superficie nueva,
+no por regresión de la vieja.**
+
+## El merge, y la regla que se siguió
+
+La rama llevaba cinco pases de arreglos sobre los mismos archivos del panel, así
+que el merge trajo **9 conflictos**. Regla aplicada: **en el conflicto gana
+`master`** — sus commits son del 12–13-ago, posteriores a los arreglos del pase
+5 y tomados a sabiendas: el `sidebar-nav.tsx` de master lleva escrito que
+cablear NEGOCIO y GESTIÓN *"duró una captura: 'esas no estaban'"*, que es
+literalmente el CRÍTICO que el pase 4 había cerrado. Reimponerlo dentro de un
+merge sería pelearle a una decisión de producto escrita, y dejaría el PR
+imposible de mergear.
+
+Costo medido: **15 pruebas rojas**, disparadas solas por guardarraíles de los
+pases 2–5. Eso es el arnés funcionando, y el auditor de pruebas las midió una
+por una en vez de creerles: **11 son detección real**, 4 no reproducen nada.
+
+## DOS CORRECCIONES MÍAS, no de los auditores
+
+Las escribo porque callarlas es lo que infla una nota:
+
+1. **En el `MAPA.md` escribí que `master` había recortado `verificaciones.sql`
+   en 348 líneas. Es falso: leí el diff al revés.** `origin/master` es ancestro
+   estricto de HEAD; son **+342 líneas que agregó la rama**, cero borrados, y
+   las migraciones `0088`–`0093` no colisionan con nada (`master` va en `0087`).
+   Lo verificó el auditor de modelo de datos con comando.
+2. **Fiché "7 defectos reabiertos" en el commit del merge, y no son 7.**
+   `ahorro_sin_dato.test.ts` está roja **en las dos direcciones** —se arregló el
+   `?? 0` y siguió roja: no discrimina, así que no prueba nada— y el rojo de
+   `expediente_alcanzable.test.tsx` es **falsa alarma**: el expediente sí tiene
+   puerta viva por `resumen-visual.tsx:157`. Quedan **6 reaperturas reales**.
+
+## Hallazgo encadenado que salió al arreglar
+
+El `periodo.ts` del pase 5 —la "fuente única" que unificó tres copias del mapa
+de rótulos— rotula `semanal: 'últimos 7 días'`, y `panel-periodo.tsx` se lo
+aplicaba a series de **5 semanas**. Es decir: **el arreglo R6-4 del pase 5 no
+unificó un rótulo verdadero, unificó uno falso.** Reaplicarlo tal cual
+reimprimiría la mentira sobre gráficas de dinero. Queda fichado, sin reaplicar.
+
+Acotación verificada durante ese mismo arreglo, y va a favor del código: **los
+KPI del panel SÍ son honestos** — `analytics.ts:175-177` usa 7, 30 y 3650 días
+reales. La mentira era de las series, no de las tarjetas.
+
+## Convergencias entre auditores
+
+Dos hallazgos los encontraron **dos auditores por separado**, que es la
+corroboración más fuerte que da este proceso:
+
+- **Las ventanas del chat** — tool calling y arquitectura, los dos en
+  `chat-tools.ts:31` contra `analytics.ts:421`. **Arreglado** (`65cebec`).
+- **`PartialExecutionError.cost`** — agéntico llegó por el ciclo de vida del
+  agente y rendimiento por la contabilidad del tope diario. Pendiente.
+
+## Las doce notas
+
+| Rubro | p5 | p6 | | Razón del movimiento |
+|---|---|---|---|---|
+| Frontend | 5 | **4** | ▼ | **deuda que cobró factura**: la v3 cerró 8 abiertos de verdad, pero entregó las dos pantallas del demo sin una sola prueba de frontend propia, y con montos de dinero cuyo formato lo decide **el modelo**, no `lib/formato.ts` |
+| Backend y API | 4 | **4** | = | **neto**: el CRÍTICO del pase 5 cierra por arreglo verificado; llegan dos caminos nuevos donde el dinero se gasta y no se escribe, más un CRÍTICO propio — `invoice.payment_failed` escribe la factura en **$0.00** |
+| Sistema agéntico | 4 | **3** | ▼ | **deuda que cobró factura**: el subsistema nuevo rompe tres lecciones que el repo ya pagó y dejó escritas. Su CRÍTICO: ante cualquiera de cinco caminos al no-200, el chat contesta **otra pregunta** con una cifra real y una cita fiscal, sin decir que falló |
+| Tool calling | 7 | **5** | ▼▼ | **deuda que cobró factura**: cuatro pases de rotación sobre un `tools.ts` congelado sostenían la nota más alta del tablero mientras nacían **11 tools sin auditar y sin una sola prueba**. La regla estructural del rubro sigue intacta (el `tenant_id` lo fija el servidor en un closure, `analista.ts:277`) y por eso no baja más |
+| Seguridad | 5 | **5** | = | **neto, con las dos fuerzas medidas**: el reparador cerró **9 de 12** abiertos con migraciones reales —incluidos los 2 ALTO de RLS que llevaban **cinco pases**— contra una superficie nueva sin una sola cota de recurso (un `.xlsx` de 0.72 MB congela el proceso 44 s y se lleva 2.6 GB, **medido**). Sin la superficie nueva era un 7 |
+| Cumplimiento fiscal | 4 | **4** | = | **neto**: 7 hallazgos cerrados con pruebas que muerden, contra dos superficies fiscales enteras sin un guardarraíl del rubro. Su CRÍTICO N1 quedó **arreglado hoy** |
+| Cumplimiento legal | 3 | **3** | = | **sin movimiento**: 3 cerrados, pero la superficie nueva abrió dos vías de datos personales sin cobertura — el archivo íntegro viaja a un tercero y los dos avisos del producto afirman lo contrario |
+| Arquitectura | 4 | **4** | = | **deuda que cobró factura**: `periodo.ts`, la fuente única que creó el arreglo del pase 5, quedó **huérfana en 24 horas** y sus copias sobrevivieron. Recuento medido: **84** símbolos exportados sin llamador (el 43 heredado no era reproducible con el criterio que el propio pase 5 escribió), módulos huérfanos 4 → 8 |
+| Pruebas | 6 | **6** | = | **empate medido**: el arnés viejo se ganó un punto (11 de 15 rojos son detección real, sin ayuda) y el frente nuevo lo perdió (dos subsistemas, 32 pruebas contra ~1,900 statements). Su CRÍTICO es el peor de la ronda: **la guardia de cifras deja pasar `$12,500` inventados** con un respaldo del tamaño real, y su propia prueba dice lo contrario porque usa un respaldo de 3 números |
+| Operabilidad y DX | 5 | **4** | ▼ | **deuda que cobró factura**: CI lleva **7 corridas rojas** en `master` y, como `Lint` corre primero, `Tests` y `Build` se **SALTAN** — la superficie nueva nunca se ha compilado en ninguna parte. **Arreglado hoy** (`4a69954`) |
+| Rendimiento y costo | 4 | **3** | ▼ | **deuda que cobró factura**: dos superficies que gastan por clic del usuario — una no registra un centavo y la otra trae un tope que **no acota** (se lee antes de gastar; un turno que falla cuenta $0.00 para siempre). Cerrados por arreglo: **0 de 12** |
+| Modelo de datos | 6 | **5** | ▼ | **deuda que cobró factura**: el DDL mejoró (6 migraciones buenas, la `0090` resistió cuatro ataques) pero el contrato **código ↔ columna** se deterioró más. **Arreglado hoy** su CRÍTICO (`e04bf10`) |
+
+**Suma 50 → 4.2.**
+
+## Arreglado, con prueba que lo reproduce
+
+| # | Hallazgo | sha | Prueba |
+|---|---|---|---|
+| 1 | Fiscal N1 — el lector de PDF leía las **últimas** 25 páginas creyendo leer las primeras (`archivo.ts:59`, `last` vs `first`) | `72ad828` | 30 páginas → falta `PAGINA-1`; control: `PAGINA-30` no aparece |
+| 2 | Operabilidad — el único error de lint, que tenía a CI sin compilar desde el 12-ago (`chat.tsx:362`) | `4a69954` | lint 0 errores, línea base del pase 5 |
+| 3 | Tool calling + arquitectura — las ventanas del chat mentían en los tres modos | `65cebec` | arnés que ata `SEMANAS_POR_MODO` con la descripción del enum |
+| 4 | Modelo de datos — "Nuevo viaje" reventaba con `23502` por su propia opción por defecto | `e04bf10` | la ausencia de operador NO llega al insert |
+
+Ningún arreglo revertido. Cero regresiones: la suite terminó con los mismos 15
+rojos heredados con los que arrancó, ni uno más.
+
+## Pendientes, con razón escrita
+
+Los 13 CRÍTICOS restantes quedan **pendientes**, no descartados. Los cuatro que
+más pesan, por si se decide una sesión de trabajo:
+
+1. **La guardia de cifras es porosa** (pruebas) — `cifrasRespaldadas` devuelve
+   `true` para montos inventados cuando el respaldo tiene su tamaño real.
+   Es la última línea de defensa de *"nunca inventar una cifra"* y necesita
+   rediseño, no un parche de madrugada.
+2. **El paracaídas que contesta otra pregunta** (agéntico) — `chat.tsx:382-384`.
+   Cerrarlo es decisión de producto: o se quita el respondedor local, o se
+   rotula como tal en pantalla.
+3. **Sin cota de recurso en los tres endpoints nuevos** (seguridad) — pide
+   `rateLimit` + tope de cuerpo, tres rutas, y merece su propia prueba de carga.
+4. **`invoice.payment_failed` escribe $0.00** (backend) — `webhook/route.ts:172`.
+   Reproducible y acotado; primer candidato del pase 7.
+
+Tope de 3 vueltas de arreglo, del encargo de esta corrida, **agotado**.
+
+## Nota de política, anotada en vez de silenciada
+
+La skill de la rama (`baa5b59`, `a3e3b5a`) dice *"todo lo reproducible, sin tope
+de vueltas"*. El encargo de esta corrida dice *"Tope: 3 vueltas"* y que manda
+sobre los defaults de la skill. Se siguió el encargo. Si la política nueva es la
+buena, hay que quitar esa línea del encargo o las dos van a seguir peleando.
+
+## Compuerta final (medida, no citada)
+
+```
+npx tsc --noEmit -p .   -> 0 errores
+npm run lint            -> 0 errores, 17 warnings   (arranque: 1 error, 17 warnings)
+npx vitest run          -> 293 archivos - 3,302 verdes - 15 rojos - 1 saltada
+```
+
+Sin `npm run build`: en la nube no hay credenciales de Supabase/OpenRouter/
+Facturapi/Upstash y su fallo no diría nada del código.
+
+Tablero renderizado **y mirado** (`tablero.png`, 1300x2400): 12 rubros contados,
+las notas cuadran con esta tabla (suma 50 -> 4.2), serie histórica de 7 puntos.
+
+---
+
 # Auditoría 17 — síntesis · pase 5 · 12-ago-2026
 
 **Ronda de CONTINUACIÓN.** El PR **#9** seguía abierto sobre `claude/auditoria-17`,
