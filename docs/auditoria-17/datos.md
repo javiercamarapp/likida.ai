@@ -451,7 +451,7 @@ distinguir "faltan dos porque la 0086 las borró" de "faltan dos porque alguien
 les quitó el `search_path`" — que es la alarma que el bloque existe para dar.
 
 Lo que lo convierte en hallazgo y no en polvo: el bloque **67**, escrito este
-mismo pase (`:3329-3335`), enumera la familia entera y **excluye correctamente**
+mismo pase (`:3331-3335`), enumera la familia entera y **excluye correctamente**
 las dos borradas. Es decir, alguien tuvo la lista buena en la mano y no
 retropropagó la corrección quince bloques más arriba, en el archivo que estaba
 editando.
