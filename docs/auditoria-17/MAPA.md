@@ -1,4 +1,80 @@
-# MAPA — auditoría 17 (8-ago · p2 9-ago · p3 10-ago · p4 11-ago · p5 12-ago-2026)
+# MAPA — auditoría 17 (8-ago · p2 9-ago · p3 10-ago · p4 11-ago · p5 12-ago · p6 13-ago-2026)
+
+## PASE 6 — ronda de CONTINUACIÓN (13-ago-2026, en la nube)
+
+El PR **#9** (`claude/auditoria-17`) sigue **abierto** → continuación sobre esa
+rama, sin PR nuevo. Árbol limpio al arrancar → autofix habilitado.
+Compuerta: `npm test` + `npx tsc --noEmit` + `npm run lint`, **sin
+`npm run build`** (pide Supabase/OpenRouter/Facturapi; aquí no existen).
+
+### Lo que mandó este pase: `master` avanzó 22 commits y REESCRIBIÓ el panel
+
+A diferencia de los pases 3–5, esta vez `master` sí se movió, y fuerte:
+**177 archivos, +3,492 / −7,984** entre `65da222` (cierre del pase 5) y
+`d661517`. Se mergeó a la rama en `0fa27b0`.
+
+**Superficie NUEVA, nunca auditada** — y es la de mayor riesgo del repo hoy:
+
+| Archivo nuevo | Qué es |
+|---|---|
+| `src/lib/agents/analista.ts` | Agente LLM con tools, guardia de cifras, tope diario |
+| `src/lib/agents/chat-tools.ts` | Las herramientas que el agente puede llamar |
+| `src/app/api/dashboard/chat/route.ts` + `validacion.ts` | El endpoint del chat |
+| `src/lib/likida/intake/archivo.ts` | Lector universal: PDF, Excel, CSV, XML de CFDI, imágenes |
+| `src/app/api/dashboard/archivo/route.ts`, `ingesta/route.ts` | Subida de archivos |
+| `src/app/dashboard/viajes/nuevo/page.tsx`, `forma-viaje.tsx` | Alta de viaje |
+| `src/app/dashboard/inicio-contenido.tsx`, `barra-acciones.tsx`, `viajes-recientes.tsx` | Resumen v3 |
+
+Un agente LLM con tool calling y un parser de archivos subidos por el usuario
+(`xlsx`, `pdf-parse`) son las dos fronteras de confianza más nuevas y más
+anchas del producto. **Ninguna ha pasado por una ronda.**
+
+### El merge reabrió SIETE defectos que los pases 2–5 habían cerrado
+
+La regla de resolución fue: **en el conflicto gana `master`**. Sus commits son
+del 12–13-ago, posteriores a los arreglos del pase 5 y tomados a sabiendas —
+el `sidebar-nav.tsx` de master lleva escrito que cablear NEGOCIO y GESTIÓN
+*"duró una captura: 'esas no estaban'"*, que es literalmente el CRÍTICO que el
+pase 4 cerró. Reimponerlo dentro de un merge sería pelearle a una decisión de
+producto escrita.
+
+La consecuencia se mide sola: **las propias pruebas de los pases 2–5 los
+reproducen**. La suite arranca este pase en **15 rojos a propósito**:
+
+| Prueba que se puso roja | Línea | Regla de `CLAUDE.md` que rompe |
+|---|---|---|
+| `kpi-periodo.test.tsx` | `kpi-periodo.tsx:67` `valor={valorActual ?? 0}` | *Nunca inventar una cifra* |
+| `ahorro_sin_dato.test.ts` | mismo patrón `?? 0` | *Nunca inventar una cifra* |
+| `panel_periodo.test.tsx` (×1) | `panel-periodo.tsx` `null` vs `[]` colapsados | *Fallar cerrado y decirlo* |
+| `panel_periodo.test.tsx` (×2) | títulos sin su ventana de tiempo | *Un rótulo tiene que ser verdad* |
+| `sidebar_puerta.test.tsx` (×3) | rutas visibles por rol sin link | navegación |
+| `objetivo_de_toque.test.tsx` (×2) | flechas a 16px | WCAG 2.5.8 |
+| `aria_current.test.tsx` (×2) | sin `aria-current="page"` | a11y |
+| `expediente_alcanzable.test.tsx` | el expediente sin puerta desde el Resumen | *es la pantalla del demo* |
+
+Colateral del borrado, SIN hallazgo detrás (sus sujetos los borró la v3):
+`sidebar_colapsado.test.tsx`, `sin_asignar_accionable.test.tsx`,
+`contraste_tinta_componente.test.ts`, `rail_pantalla_completa.test.ts`.
+`rail-marca.ts` queda huérfano (solo lo lee su propia prueba).
+
+### Qué se relanzó y por qué: LOS DOCE
+
+Es la primera vez desde el pase 1 que se relanzan los doce, y la razón es la
+tabla de arriba: hay dos subsistemas nuevos enteros (agente + lector de
+archivos) y el panel entero reescrito. No hay rubro cuyo código no se haya
+movido.
+
+### Línea base de la compuerta (medida hoy, después del merge)
+
+```
+npx tsc --noEmit -p .   → 0 errores
+npx vitest run          → 293 archivos · 3,298 verdes · 15 ROJOS · 1 saltada
+```
+
+Los 15 rojos son la tabla de arriba, no ruido de merge.
+
+---
+
 
 ## PASE 5 — ronda de CONTINUACIÓN (12-ago-2026)
 
