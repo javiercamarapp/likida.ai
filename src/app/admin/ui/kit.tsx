@@ -27,7 +27,17 @@ export function KpiTile({
    *  `asistente-expandible.tsx` ya usa para `main`/`asideTop`). */
   icono: React.ReactNode;
   etiqueta: string;
-  valor: number;
+  /** `null` = no hay con qué medir, y se pinta '—'.
+   *
+   *  AUDITORÍA 17 (pase 5), ALTO. Era `number` a secas, así que un llamador
+   *  con una consulta caída no tenía forma de decirlo sin inventar un cero:
+   *  "Litros elegibles para el estímulo · 0.00 L · LIF 2026, Art. 20-A" sobre
+   *  una flota que sí comprobó diésel (`combustible-casetas/page.tsx`, con
+   *  `acred?.litrosDiesel ?? 0`). Es la misma firma que `KpiDegradado` ya
+   *  tiene desde el pase 2 por el mismo motivo (`resumen-visual.tsx`), y un
+   *  cero MEDIDO se sigue pintando como cero — lo que cambia es que ahora se
+   *  pueden distinguir. */
+  valor: number | null;
   formato?: FormatoPreset;
   tendencia?: number | null;
   sparkline?: number[];
@@ -46,7 +56,10 @@ export function KpiTile({
   nota?: string;
 }) {
   const reducido = usePrefersReducedMotion();
-  const mostrado = useCountUp(valor, !reducido);
+  // `?? 0` SOLO para el contador de animación (una hook no puede ser
+  // condicional); lo que se pinta abajo mira `valor`, no `mostrado`, cuando
+  // no hay dato.
+  const mostrado = useCountUp(valor ?? 0, !reducido);
   const fmt = resolverFormato(formato);
 
   return (
@@ -56,7 +69,7 @@ export function KpiTile({
           {icono}
         </div>
         <div className="min-w-0">
-          <div className="text-xl font-semibold tracking-tight tabular leading-tight">{fmt(mostrado)}</div>
+          <div className="text-xl font-semibold tracking-tight tabular leading-tight">{valor === null ? '—' : fmt(mostrado)}</div>
           {/* AUDITORÍA 10, MEDIO — `truncate` (una sola línea + "…") cortaba
               la palabra que carga el significado fiscal: "IVA acreditable
               document…" perdía justo "documentado". `line-clamp-2` deja

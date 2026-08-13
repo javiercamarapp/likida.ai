@@ -8,6 +8,7 @@ import { listarSolicitudesArco, resolverSolicitudArco } from '@/lib/likida/repo'
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { mensajeParaPantalla } from '@/lib/likida/administracion';
 import { fechaMx } from '@/lib/formato';
+import { porVencer, vencidas, DIAS_AVISO } from './vencimiento';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,8 +68,11 @@ export default async function ArcoPage({ searchParams }: { searchParams: Promise
     errorCarga = e instanceof Error ? e.message : String(e);
   }
   const pendientes = solicitudes.filter((s) => s.estado === 'recibida' || s.estado === 'en_proceso');
-  const venceEn = (iso: string) => iso.slice(0, 10);
-  const vencenPronto = solicitudes.filter((s) => (s.estado === 'recibida' || s.estado === 'en_proceso') && venceEn(s.venceEn) <= hoy);
+  // AUDITORÍA 17 (pase 5), MEDIO — el filtro era `venceEn(s.venceEn) <= hoy`,
+  // o sea "ya se pasó el plazo", bajo un rótulo que promete "≤ 5 días": la
+  // alarma solo sonaba cuando ya era tarde. Ver `./vencimiento.ts`.
+  const vencenPronto = porVencer(pendientes, hoy);
+  const yaVencidas = vencidas(pendientes, hoy);
 
   return (
     <div className="flex flex-col gap-4">
@@ -84,7 +88,12 @@ export default async function ArcoPage({ searchParams }: { searchParams: Promise
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <KpiTile icono={<CircleAlert width={15} height={15} strokeWidth={1.75} />} etiqueta="Por responder" valor={pendientes.length} />
-        <KpiTile icono={<CheckCircle2 width={15} height={15} strokeWidth={1.75} />} etiqueta="Vencen pronto (≤ 5 días)" valor={vencenPronto.length} />
+        {/* El rótulo se arma con la MISMA constante que filtra, para que no
+            puedan separarse; y las ya vencidas van dichas en la nota en vez de
+            sumadas en silencio. */}
+        <KpiTile icono={<CheckCircle2 width={15} height={15} strokeWidth={1.75} />}
+          etiqueta={`Vencen en ${DIAS_AVISO} días o menos`} valor={vencenPronto.length}
+          nota={yaVencidas.length > 0 ? `${yaVencidas.length} de ellas ya se pasaron del plazo` : undefined} />
       </div>
 
       <div className="glass-panel overflow-hidden">

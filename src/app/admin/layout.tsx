@@ -77,7 +77,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <BuscadorTrigger />
           </div>
 
-          <nav className="flex-1 overflow-y-auto px-2.5 space-y-3 pb-4">
+          <nav aria-label="Navegación de la consola" className="flex-1 overflow-y-auto px-2.5 space-y-3 pb-4">
             <div className="hidden lg:block"><SidebarNav /></div>
             <div className="lg:hidden"><SidebarNavIconos /></div>
           </nav>

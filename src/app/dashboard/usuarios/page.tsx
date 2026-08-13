@@ -2,18 +2,26 @@ import { Users, ShieldCheck } from 'lucide-react';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { resolverTenantEfectivo } from '@/lib/auth/tenant-efectivo';
 import { EstadoVacio, StatusPill } from '../../admin/ui/kit';
+import { etiquetaRol } from '../../admin/ui/roles';
 
 export const dynamic = 'force-dynamic';
 
 /** Los cinco roles que la base admite (`app_user.rol`, check constraint) y
  *  qué puede cada uno — el texto sale de `lib/auth/permisos.ts`, que es
  *  quien de verdad decide. `superadmin` no se lista: es de Likida, no de la
- *  flota, y ningún cliente puede darlo de alta. */
+ *  flota, y ningún cliente puede darlo de alta.
+ *
+ *  AUDITORÍA 17 (pase 5), MEDIO — el renglón de `operador` mandaba al chofer a
+ *  `/mis-viajes`, que devuelve 404: esa carpeta y `/chofer` se borraron el
+ *  7-ago-2026 con el retiro del login del operador (mig. 0086). Lo lee el dueño
+ *  de la flota justo mientras decide cómo dar de alta a su gente, así que le
+ *  estaba prometiendo una pantalla que no existe. Hoy el chofer no tiene panel:
+ *  su único canal es WhatsApp, y eso es lo que dice. */
 const ROLES: Record<string, string> = {
   flota_admin: 'Todo el panel, incluidas finanzas y exportaciones',
   encargado: 'Operación y asignación de viajes — sin finanzas',
   contador: 'Solo lectura de lo fiscal, con exportaciones',
-  operador: 'No entra a este panel: usa WhatsApp y /mis-viajes',
+  operador: 'No entra a este panel: su único canal es WhatsApp',
   superadmin: 'Personal de Likida — no pertenece a la flota',
 };
 
@@ -103,7 +111,11 @@ export default async function UsuariosPage({
                           )}
                         </td>
                         <td className="px-5 py-3">
-                          <StatusPill estado={u.rol === 'flota_admin' ? 'ok' : 'neutral'}>{u.rol}</StatusPill>
+                          {/* AUDITORÍA 17 (pase 5), MEDIO — aquí salía `u.rol`
+                              crudo (`flota_admin`), en la pantalla cuyo trabajo
+                              es explicar la matriz de permisos, y contradiciendo
+                              a la insignia del sidebar de la misma sesión. */}
+                          <StatusPill estado={u.rol === 'flota_admin' ? 'ok' : 'neutral'}>{etiquetaRol(u.rol)}</StatusPill>
                         </td>
                         <td className="px-5 py-3" style={{ color: 'var(--muted)' }}>
                           {ROLES[u.rol] ?? 'Rol sin descripción'}

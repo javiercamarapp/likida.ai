@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Maximize2, Minimize2, Sparkles } from 'lucide-react';
 import ChatFlota from './chat';
-import { marcaAsistente, RUTA_SIN_RAIL } from './rail-marca';
+import { marcaAsistente, estaExpandido, RUTA_SIN_RAIL } from './rail-marca';
 import type { DashboardKpis, Acreditables } from '@/lib/likida/analytics';
 import { mxn } from '@/lib/formato';
 
@@ -37,7 +37,14 @@ export default function RailAsistente() {
   const sp = useSearchParams();
   const tenant = sp.get('tenant');
 
-  const [expandido, setExpandido] = useState(false);
+  // AUDITORÍA 17 (pase 5), MEDIO — el estado NO es "está expandido" sino "en
+  // qué página se pidió pantalla completa". Este componente vive en el layout
+  // y no se desmonta al navegar, así que un booleano suelto se llevaba el chat
+  // a pantalla completa encima de la siguiente página. Reiniciarlo con un
+  // efecto está prohibido aquí (`set-state-in-effect`, ver abajo); guardando la
+  // ruta, la respuesta es una derivación pura (`estaExpandido`).
+  const [expandidoEn, setExpandidoEn] = useState<string | null>(null);
+  const expandido = estaExpandido(expandidoEn, pathname);
   const [datos, setDatos] = useState<Datos | null>(null);
   const [cargando, setCargando] = useState(true);
 
@@ -110,7 +117,7 @@ export default function RailAsistente() {
       <div className="flex items-center gap-2 px-3.5 pt-3.5 shrink-0">
         <Sparkles width={14} height={14} strokeWidth={1.75} />
         <span className="font-semibold text-[13px]">Asistente de negocio</span>
-        <button type="button" onClick={() => setExpandido((v) => !v)}
+        <button type="button" onClick={() => setExpandidoEn(expandido ? null : pathname)}
           aria-label={expandido ? 'Contraer chat' : 'Expandir chat a pantalla completa'}
           className="ml-auto w-6 h-6 rounded-md hairline flex items-center justify-center hover:opacity-70 transition-opacity"
           style={{ background: 'var(--surface)' }}>

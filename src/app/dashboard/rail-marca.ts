@@ -21,6 +21,28 @@
  *  es justo la desincronización que causó el hallazgo. */
 export const RUTA_SIN_RAIL = '/dashboard';
 
+/** El ancho mínimo (px) al que el asistente EXISTE: `hidden xl:flex` en
+ *  `rail.tsx`, o sea el `xl` de Tailwind. Abajo de aquí el `<aside>` no se
+ *  pinta —pero el componente NO se desmonta—, así que la regla de `globals.css`
+ *  que retira la columna del centro tiene que estar acotada al mismo número: si
+ *  no, el panel se queda invisible sin ningún botón para revertirlo (AUDITORÍA
+ *  17, pase 5, ALTO). Vive aquí para que una prueba pueda cruzar el CSS contra
+ *  el componente; el valor real lo aplica Tailwind. */
+export const ANCHO_MIN_ASISTENTE = 1280;
+
+/** ¿El chat está a pantalla completa EN ESTA PÁGINA?
+ *
+ *  AUDITORÍA 17 (pase 5), MEDIO — `expandido` era un `useState(false)` en un
+ *  componente montado en el LAYOUT, así que sobrevivía a la navegación: se
+ *  expandía en ARCO y el chat reaparecía tapando Soporte tres clics después.
+ *  Reiniciarlo con un `useEffect` está prohibido en este repo
+ *  (`react-hooks/set-state-in-effect`, ver la nota de `rail.tsx`), así que el
+ *  estado deja de ser un booleano: guarda LA RUTA donde se pidió pantalla
+ *  completa, y "¿está expandido aquí?" pasa a ser una derivación pura. */
+export function estaExpandido(expandidoEn: string | null, pathname: string): boolean {
+  return expandidoEn !== null && expandidoEn === pathname;
+}
+
 /** Qué debe valer `document.documentElement.dataset.asistente` para este
  *  estado. `null` = sin marca, el centro se ve. */
 export function marcaAsistente(expandido: boolean, pathname: string): 'expandido' | null {

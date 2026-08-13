@@ -6,9 +6,16 @@ import type { RutaConRegion } from '@/lib/likida/analytics';
  *  magnitud, y siete tonos de naranja no se distinguen entre sí a simple
  *  vista. `null` (sin clasificar) usa el gris neutro de `--muted`, nunca
  *  un color que sugiera una región que no se pudo confirmar. */
-const COLOR_REGION: Record<string, string> = {
+/** Los siete pasan AA (4.5:1) como TINTA sobre `--surface` — son texto de
+ *  12px, no manchas de color, así que les aplica el umbral de texto normal.
+ *  "Golfo" era #0891b2 (3.68:1), el único que reprobaba: AUDITORÍA 17, pase 5,
+ *  segunda instancia del mismo agujero (el guardarraíl de contraste vigilaba
+ *  tokens, y un color escrito en un componente quedaba fuera de su universo).
+ *  #0e7490 es el mismo cian un paso más oscuro: 5.36:1. Medido en
+ *  `contraste_tinta_componente.test.ts`. */
+export const COLOR_REGION: Record<string, string> = {
   Centro: '#c2410c', Occidente: '#0369a1', Noreste: '#15803d',
-  Noroeste: '#7c3aed', Golfo: '#0891b2', Sureste: '#b45309', Sur: '#be123c',
+  Noroeste: '#7c3aed', Golfo: '#0e7490', Sureste: '#b45309', Sur: '#be123c',
 };
 
 function colorDe(region: string | null): string {

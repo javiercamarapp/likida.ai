@@ -184,8 +184,14 @@ export default async function CombustibleCasetasPage({
               <KpiTile icono={<RouteIcon width={15} height={15} strokeWidth={1.75} style={{ color: 'var(--marca)' }} />}
                 etiqueta="Gastado en casetas" valor={caseta?.total ?? 0} formato="mxn"
                 nota={caseta ? `${caseta.n} casetas registradas` : 'Sin casetas registradas todavía'} />
+              {/* AUDITORÍA 17 (pase 5), ALTO — iba `?? 0`, y `acred` es null
+                  SOLO cuando `getAcreditables` se cayó (`safe()` se come el
+                  fallo): "0.00 L" bajo "LIF 2026, Art. 20-A" le decía a una
+                  flota con 4,200 L comprobados que no acredita nada. Sin el
+                  `??`, `KpiTile` pinta '—' y el `vacio` dice por qué. */}
               <KpiTile icono={<Fuel width={15} height={15} strokeWidth={1.75} style={{ color: 'var(--marca)' }} />}
-                etiqueta="Litros elegibles para el estímulo" valor={acred?.litrosDiesel ?? 0} formato="litros"
+                etiqueta="Litros elegibles para el estímulo" valor={acred?.litrosDiesel ?? null} formato="litros"
+                vacio={acred === null ? 'No se pudieron leer los litros — no es que sean cero' : undefined}
                 nota="LIF 2026, Art. 20-A" />
               <KpiTile icono={<Receipt width={15} height={15} strokeWidth={1.75} style={{ color: 'var(--marca)' }} />}
                 etiqueta="Sin CFDI (combustible y casetas)" valor={pctSinCfdi ?? 0} formato="porcentaje"

@@ -41,6 +41,29 @@ export function TituloSeccion({ children }: { children: ReactNode }) {
  *  dos. */
 export const DEGRADADO_MARCA = 'linear-gradient(135deg, var(--g3) 0%, var(--marca) 100%)';
 
+/**
+ * EL MISMO NARANJA, PERO PARA LO QUE LLEVA TINTA BLANCA ENCIMA.
+ *
+ * AUDITORÍA 17 (pase 5), MEDIO. `DEGRADADO_MARCA` arranca en `--g3` (#f2913f),
+ * que da 2.36:1 contra blanco: las tres tarjetas de KPI que abren el demo
+ * pintaban su etiqueta a 2.09:1 y su cifra a 2.57:1 (AA pide 4.5:1 y 3:1), y
+ * el item activo del sidebar a 2.57:1. Ni en el extremo más oscuro del
+ * degradado viejo la etiqueta llegaba al umbral.
+ *
+ * Que había dos tratamientos peleando ya estaba a la vista en este archivo: el
+ * hero usa este degradado con tinta OSCURA (#1a1207, 7.85:1) 45 líneas más
+ * arriba. Así que se separan: quien escribe en oscuro se queda con la rampa
+ * clara (`DEGRADADO_MARCA`, el hero), y quien escribe en blanco usa ésta, que
+ * va de `--marca` a `--marca-oscura` y pasa 4.5:1 en TODO su recorrido.
+ *
+ * No es un color nuevo de marca: son las dos paradas oscuras de la misma rampa
+ * naranja. El guardarraíl vive en `contraste_tinta_componente.test.ts`, que
+ * muestrea el degradado cada 5% en vez de mirar solo los extremos —
+ * `contraste.test.ts` no podía cazarlo porque mide tokens contra `--surface`,
+ * nunca una tinta sobre un color de componente.
+ */
+export const DEGRADADO_MARCA_TINTA_BLANCA = 'linear-gradient(135deg, var(--marca) 0%, var(--marca-oscura) 100%)';
+
 /** Foto de `public/hero-camion.webp` (12000×596, ~20:1) — el banner entero
  *  DEBE ser la foto, sin ningún parche de degradado a la vista (dirección
  *  del 8-ago-2026, tras dos intentos previos): `cover` con un contenedor
@@ -119,13 +142,21 @@ export function KpiDegradado({
   return (
     <div
       className="rounded-2xl p-4 text-white flex items-center justify-between gap-3 min-w-0 h-full"
-      style={{ background: DEGRADADO_MARCA }}
+      style={{ background: DEGRADADO_MARCA_TINTA_BLANCA }}
     >
       <div className="min-w-0">
-        <div className="text-xs font-medium opacity-85 truncate">{etiqueta}</div>
+        {/* SIN `opacity-85`: blanco al 85% sobre el extremo claro de este
+            degradado mide 4.17:1, por debajo del 4.5:1 que AA pide para
+            12px. La jerarquía entre etiqueta y cifra ya la dan el tamaño y
+            el peso; bajarle opacidad a la única línea que dice QUÉ es la
+            cifra era el detalle que la volvía ilegible en la sala. */}
+        <div className="text-xs font-medium truncate">{etiqueta}</div>
         <div className="text-xl font-semibold tracking-tight tabular mt-1 truncate">{valor === null ? '—' : fmt(valor)}</div>
         {tendencia && (
-          <div className="text-[11px] font-semibold mt-1 tabular" style={{ color: tendencia.bueno ? '#bbf7d0' : '#fecaca' }}>
+          // Tintes más claros que los de antes (#bbf7d0 daba 4.27:1 y #fecaca
+          // 3.58:1 sobre este naranja): 4.72:1 y 4.73:1. Siguen siendo verde y
+          // rojo, y el signo ↑/↓ dice lo mismo sin depender del matiz.
+          <div className="text-[11px] font-semibold mt-1 tabular" style={{ color: tendencia.bueno ? '#dcfce7' : '#fef2f2' }}>
             {tendencia.pct >= 0 ? '↑' : '↓'} {Math.abs(tendencia.pct)}% vs periodo anterior
           </div>
         )}

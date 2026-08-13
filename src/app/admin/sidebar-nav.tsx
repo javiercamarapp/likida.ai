@@ -31,8 +31,13 @@ function Seccion({ titulo, items, defaultAbierto = false }: { titulo: string; it
         {titulo}
         <ChevronDown width={12} height={12} strokeWidth={2} className="transition-transform" style={{ transform: abierto ? 'rotate(180deg)' : 'none' }} />
       </button>
+      {/* `aria-current="page"` — AUDITORÍA 17 (pase 5), BAJO: no había una sola
+          ocurrencia en todo el producto, así que un lector de pantalla oía
+          ~29 enlaces idénticos en estructura sin saber cuál corresponde a la
+          pantalla abierta. Aquí ni siquiera hay indicador visual del activo,
+          de modo que era el único canal posible y estaba vacío. */}
       {abierto && items.map(({ href, nombre, Icono }) => (
-        <Link key={href} href={href} className={ITEM}>
+        <Link key={href} href={href} className={ITEM} aria-current={href === pathname ? 'page' : undefined}>
           <Icono {...ICONO} /> {nombre}
         </Link>
       ))}
@@ -41,10 +46,11 @@ function Seccion({ titulo, items, defaultAbierto = false }: { titulo: string; it
 }
 
 export default function SidebarNav() {
+  const pathname = usePathname();
   return (
     <>
       <div>
-        <Link href="/admin" className={`${ITEM} font-medium`}>
+        <Link href="/admin" className={`${ITEM} font-medium`} aria-current={pathname === '/admin' ? 'page' : undefined}>
           <LayoutGrid {...ICONO} /> Inicio
         </Link>
       </div>

@@ -1,5 +1,6 @@
 import { getResumenNegocio, getCostoPorFaseModelo } from '@/lib/admin/negocio';
 import { usd } from '@/lib/formato';
+import type { FaseCosto } from '@/lib/likida/costos';
 import { Settings2, ScanText, Calculator, Smartphone } from 'lucide-react';
 import { Dona } from '../charts';
 import { ChartCard, EstadoVacio } from '../ui/kit';
@@ -26,7 +27,23 @@ function TituloSeccion({ children }: { children: React.ReactNode }) {
   );
 }
 
-const FASE_LABEL: Record<string, string> = { ocr: 'Agente OCR', cuadre: 'Agente de Cuadre', whatsapp: 'Agente de WhatsApp' };
+/** Las SEIS fases de `FaseCosto` (`lib/likida/costos.ts`), no solo las tres
+ *  que tienen agente con ficha abajo.
+ *
+ *  AUDITORÍA 17 (pase 5), MEDIO — el mapa cubría `ocr`, `cuadre` y `whatsapp`,
+ *  y la dona de "Costo por fase" lee `r.porFase`, que trae lo que de verdad se
+ *  gastó: un gasto de `escalacion` caía al `?? f.fase` y se etiquetaba
+ *  `escalacion`, en minúscula y crudo, junto a "Agente de Cuadre". Las otras
+ *  tres copias del mapa (`admin/page.tsx`, `admin/analitica`,
+ *  `admin/costos-facturacion`) sí cubren las seis, así que la misma fase se
+ *  leía distinto en dos pantallas de la misma consola.
+ *
+ *  `Record<FaseCosto, string>` en vez de `Record<string, string>`: una fase
+ *  nueva en el tipo rompe la compilación en vez de salir cruda en una dona. */
+const FASE_LABEL: Record<FaseCosto, string> = {
+  ocr: 'Agente OCR', cuadre: 'Agente de Cuadre', escalacion: 'Agente de Escalación',
+  chat: 'Agente de Chat', router: 'Agente Router', whatsapp: 'Agente de WhatsApp',
+};
 
 /** Las TRES fases reales del pipeline — en ese orden, porque es el orden en
  *  el que de verdad corren para cada viaje. No hay una cuarta fase, ni un
@@ -105,7 +122,7 @@ export default async function ModelOpsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-3">
             <ChartCard titulo="Costo por fase" tamano="L">
               {r.porFase.length > 0 ? (
-                <Dona segmentos={r.porFase.map((f) => ({ etiqueta: FASE_LABEL[f.fase] ?? f.fase, valor: f.costoUsd }))} />
+                <Dona segmentos={r.porFase.map((f) => ({ etiqueta: FASE_LABEL[f.fase as FaseCosto] ?? f.fase, valor: f.costoUsd }))} />
               ) : (
                 <div className="flex items-center h-full text-sm" style={{ color: 'var(--muted)' }}>Todavía no hay actividad de IA registrada.</div>
               )}

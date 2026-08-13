@@ -3,8 +3,8 @@ import { Wallet, Calculator, Fuel, PiggyBank } from 'lucide-react';
 import {
   getKpis, getAcreditables, detectarAnomalias, getViajes, getViajesPorMes,
   getGastoPorSemanaSeries, getLiquidadoPorSemanaSeries, getTopRutasPorGastoSeries,
-  getSeriesKpiCards,
-  type ViajeRow,
+  getSeriesKpiCards, getLiquidaciones,
+  type ViajeRow, type LiqRow,
   type DashboardKpis, type Acreditables, type Anomalia,
   type GastoSemanalSeries, type LiquidadoSemanalSeries, type TopRutasSeries, type SeriesKpiCards,
 } from '@/lib/likida/analytics';
@@ -24,7 +24,9 @@ import {
 import { KpiPeriodo } from './kpi-periodo';
 import { MotorFiscalPeriodo } from './motor-fiscal-periodo';
 import { PanelPeriodo } from './panel-periodo';
+import { UltimasLiquidaciones } from './ultimas-liquidaciones';
 import { InicioOperacion } from './inicio-operacion';
+import { sufijoTenant } from './sufijo';
 import { puedeVerArea } from '@/lib/auth/visibilidad';
 import { AvisoSinFlota } from './sin-flota';
 
@@ -54,11 +56,15 @@ async function safe<T>(fn: () => Promise<T>): Promise<T | null> {
  * la pantalla REAL, no una copia que puede haber divergido.
  */
 export async function InicioContenido({
-  tenantId, tenantNombre, nombre, tenantExiste = true,
+  tenantId, tenantNombre, nombre, tenantExiste = true, sufijo = '',
 }: {
   tenantId: string;
   tenantNombre: string | null;
   nombre: string | null;
+  /** El `?tenant=`/`?vista=`/`?rol=` que arrastran los links internos de esta
+   *  pantalla (hoy, los del expediente de cada liquidación). Vacío para un
+   *  cliente real, que entra por /login sin query string. */
+  sufijo?: string;
   /** `false` cuando el uuid al que apunta la página no tiene fila en `tenant`
    *  — ver `sin-flota.tsx`. Default `true` para no cambiar el render de
    *  ningún cliente real, cuyo tenant existe por llave foránea. */
@@ -91,6 +97,7 @@ export async function InicioContenido({
     acred, kpis, anomalias, viajes,
     gastoSemanalSeries, liquidadoSemanalSeries, seriesKpis,
     cfgFiscal, gastosFiscales, gastosFiscalesSeries, viajesPorMes, topRutasSeries,
+    liquidaciones,
   ] = await Promise.all([
     safe<Acreditables>(() => getAcreditables(tenantId, diasEjercicio)),
     safe<DashboardKpis>(() => getKpis(tenantId)),
@@ -119,6 +126,10 @@ export async function InicioContenido({
     // leería como "todo el histórico" en una flota que ya lo superó.
     safe<Array<{ dia: string; valor: number }>>(() => getViajesPorMes(tenantId)),
     safe<TopRutasSeries>(() => getTopRutasPorGastoSeries(tenantId, 5, hoy)),
+    // AUDITORÍA 17 (pases 4 y 5), ALTO — la única puerta a `/dashboard/<uuid>`,
+    // que es donde vive el desglose de IVA/IEPS y el "Descargar PDF". La
+    // consulta ya existía y no la llamaba nadie desde que se borró Cuadre.
+    safe<LiqRow[]>(() => getLiquidaciones(tenantId)),
   ]);
   const resumenPerdidas: ResumenPerdidas | null = cfgFiscal && gastosFiscales
     ? resumirPerdidas(gastosFiscales, opcionesDe(cfgFiscal))
@@ -304,15 +315,35 @@ export async function InicioContenido({
               </div>
             </div>
 
+            {/* ── Últimas liquidaciones ── LA PUERTA AL EXPEDIENTE.
+                AUDITORÍA 17 (pases 4 y 5), ALTO: `/dashboard/<uuid>` —el
+                desglose de IVA/IEPS, la deducibilidad por renglón y el
+                "Descargar PDF"— llevaba dos pases sin un solo enlace entrante
+                en todo el producto, así que el entregable que da nombre a
+                Likida no se podía enseñar desde la interfaz. Va JUNTO al motor
+                fiscal a propósito: es el papel donde el contralor cruza esas
+                mismas cifras contra su contador. */}
+            <div className="px-5 pb-4 border-t pt-4" style={{ borderColor: 'var(--line)' }}>
+              <TituloSeccion>Últimas liquidaciones</TituloSeccion>
+              <div className="mt-2.5">
+                <UltimasLiquidaciones liquidaciones={liquidaciones} sufijo={sufijo} />
+              </div>
+            </div>
+
             {/* ── Viajes / Actividad / Gasto por categoría / Liquidado /
                 Top rutas — UN SOLO selector Semanal/Mensual/Histórico que
                 mueve las 5 juntas (pedido explícito, 8-ago-2026).
                 "Próximos vencimientos" se quitó (pedido explícito, mismo
                 día). */}
             <div className="border-t pt-4" style={{ borderColor: 'var(--line)' }}>
+              {/* AUDITORÍA 17 (pase 5), ALTO — iban `?? []`, y las dos salen
+                  de `safe()`: el arreglo vacío hacía que "Actividad" afirmara
+                  "Aún no hay viajes registrados" con la consulta caída, sin que
+                  la banda de 'parcial' se disparara (`estado.ts` no vigila
+                  estas dos). El null viaja hasta `Actividad`, que lo dice. */}
               <PanelPeriodo
-                viajes={viajes ?? []}
-                porMes={viajesPorMes ?? []}
+                viajes={viajes}
+                porMes={viajesPorMes}
                 seriesKpis={seriesKpis}
                 gastoSemanalSeries={gastoSemanalSeries}
                 liquidadoSemanalSeries={liquidadoSemanalSeries}
@@ -353,8 +384,13 @@ export default async function DashboardInicio({
   // El criterio es "¿ve dinero?" y no "¿es encargado?": un rol nuevo que
   // tampoco vea finanzas cae aquí solo, sin tocar esta línea.
   if (!puedeVerArea(rol, 'dinero')) {
-    return <InicioOperacion tenantId={tenantId} tenantNombre={tenantNombre} nombre={nombre} tenantExiste={tenantExiste} />;
+    return (
+      <InicioOperacion
+        tenantId={tenantId} tenantNombre={tenantNombre} nombre={nombre} tenantExiste={tenantExiste}
+        rol={rol} sufijo={sufijoTenant(sp)} tenantPedido={sp.tenant}
+      />
+    );
   }
 
-  return <InicioContenido tenantId={tenantId} tenantNombre={tenantNombre} nombre={nombre} tenantExiste={tenantExiste} />;
+  return <InicioContenido tenantId={tenantId} tenantNombre={tenantNombre} nombre={nombre} tenantExiste={tenantExiste} sufijo={sufijoTenant(sp)} />;
 }

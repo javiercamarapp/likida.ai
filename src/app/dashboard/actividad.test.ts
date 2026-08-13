@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { bucketsPorDia } from './actividad';
+import { bucketsPorDia, hoyMx } from './actividad';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // `bucketsPorDia` es la única lógica nueva y no probada de `actividad.tsx`
@@ -10,22 +10,18 @@ import { bucketsPorDia } from './actividad';
 // (un timestamptz que fechaba el día siguiente).
 // ═══════════════════════════════════════════════════════════════════════════
 
-// `.toISOString()` sin fijar la hora primero convierte el MOMENTO actual a
-// UTC, no "hoy" en hora local — en México (UTC-6), desde las 18:00 eso ya es
-// mañana en UTC, y esta prueba fallaba cada noche comparando contra la fecha
-// equivocada. `setHours(0,0,0,0)` fija medianoche LOCAL antes de convertir,
-// igual que ya hace `bucketsPorDia` en el código real.
-const hoyIso = () => {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString().slice(0, 10);
-};
-const haceNDiasIso = (n: number) => {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() - n);
-  return d.toISOString().slice(0, 10);
-};
+// AUDITORÍA 17 (pase 5), MEDIO — EL DÍA ES EL DE MÉXICO, NO EL DEL PROCESO.
+//
+// Estas dos ayudantes usaban medianoche LOCAL (`setHours(0,0,0,0)`), que es
+// medianoche de la máquina que corre la prueba, no de la flota. En Vercel el
+// proceso corre en UTC: entre las 18:00 y las 24:00 hora de México el "hoy"
+// local ya es el día siguiente, y la barra de hoy quedaba corrida un día
+// respecto de las cifras de arriba (que sí se agregan con `TZ_MX`, ver
+// `analytics.ts`). Esta misma prueba lo destapó al correr a las 00:20 UTC:
+// esperaba 2026-08-13 cuando en México todavía era 12.
+const hoyIso = () => hoyMx();
+const haceNDiasIso = (n: number) =>
+  new Date(Date.parse(`${hoyMx()}T00:00:00Z`) - n * 86_400_000).toISOString().slice(0, 10);
 
 describe('bucketsPorDia', () => {
   it('devuelve exactamente `dias` buckets, terminando en hoy', () => {
@@ -67,5 +63,38 @@ describe('bucketsPorDia', () => {
     expect(buckets).toHaveLength(30);
     expect(buckets[29].dia).toBe(hoyIso());
     expect(buckets[0].dia).toBe(haceNDiasIso(29));
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUDITORÍA 17 (pase 5), MEDIO — "ACTIVIDAD" BUCKETEABA CON LA ZONA HORARIA
+// DEL PROCESO.
+//
+// El escenario con valores: son las 20:00 del 12-ago en Monterrey. En Vercel
+// (UTC) eso son las 02:00 del 13-ago. `new Date()` + `setHours(0,0,0,0)` +
+// `toISOString()` daba '2026-08-13', así que la última barra del gráfico de
+// 7 días era MAÑANA y el viaje que el operador acababa de iniciar caía en un
+// bucket que el contralor no ve. Las cifras de arriba, en cambio, se agregan
+// con `TZ_MX` (`analytics.ts`): dos "hoy" distintos en la misma pantalla.
+//
+// El instante se inyecta en vez de tocar `process.env.TZ`: así la prueba mide
+// la conversión y no depende de en qué zona corra el CI.
+// ═══════════════════════════════════════════════════════════════════════════
+describe('hoyMx — el día de la flota, no el del servidor', () => {
+  it('EL BUG: 02:00 UTC del 13 es todavía el 12 en México', () => {
+    expect(hoyMx(new Date('2026-08-13T02:00:00Z'))).toBe('2026-08-12');
+  });
+
+  it('a las 06:00 UTC ya cambió el día en México (medianoche de allá, CST)', () => {
+    expect(hoyMx(new Date('2026-08-13T06:00:00Z'))).toBe('2026-08-13');
+  });
+
+  it('el bucket de hoy es el de México, y la ventana termina ahí', () => {
+    const buckets = bucketsPorDia(
+      [{ fechaInicio: '2026-08-12' }], 7, hoyMx(new Date('2026-08-13T02:00:00Z')),
+    );
+    expect(buckets[6].dia).toBe('2026-08-12');
+    expect(buckets[6].valor, 'el viaje de hoy cayó fuera de la ventana').toBe(1);
+    expect(buckets[0].dia).toBe('2026-08-06');
   });
 });

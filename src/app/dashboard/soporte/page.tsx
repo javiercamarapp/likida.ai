@@ -12,6 +12,36 @@ async function safe<T>(fn: () => Promise<T>): Promise<T | null> {
   try { return await fn(); } catch { return null; }
 }
 
+// ── Los tres dominios de `ticket_soporte`, en lenguaje de contralor ────────
+//
+// AUDITORÍA 17 (pase 5), MEDIO — esta tabla imprimía las claves crudas del
+// check constraint: `facturacion` · `alta` · `en_proceso`. Sin acento, con
+// guion bajo, en minúscula, y en la MISMA fila donde la fecha sí sale
+// formateada con `fechaMx`. Era la única de las ocho páginas vivas sin mapa
+// de etiquetas, y hasta `8d6ac51` nadie podía llegar a ella con un clic.
+//
+// Los valores son los de `0051_soporte_y_cotizacion.sql:41-44`, uno por uno;
+// `etiqueta()` cae a la clave cruda si aparece un valor nuevo, nunca a vacío.
+
+const CATEGORIA: Record<string, string> = {
+  facturacion: 'Facturación', operacion: 'Operación', tecnico: 'Técnico',
+  cuenta: 'Cuenta', otro: 'Otro',
+};
+const PRIORIDAD: Record<string, string> = {
+  baja: 'Baja', media: 'Media', alta: 'Alta', urgente: 'Urgente',
+};
+const ESTADO: Record<string, string> = {
+  abierto: 'Abierto', en_proceso: 'En proceso', esperando: 'Esperando respuesta',
+  resuelto: 'Resuelto', cerrado: 'Cerrado',
+};
+/** Nunca `undefined` ni una etiqueta inventada: mismo criterio que
+ *  `etiquetaEstatus` y que `MOTIVO_ERROR` en Combustible & Casetas. */
+function etiqueta(mapa: Record<string, string>, clave: string): string {
+  return mapa[clave] ?? clave;
+}
+
+const CERRADOS = ['resuelto', 'cerrado'];
+
 /**
  * SOPORTE — cola de tickets con reloj de SLA, sobre `ticket_soporte` (0051).
  *
@@ -36,7 +66,7 @@ export default async function SoportePage({
   const ahora = ahoraMs();
   const tickets = await safe<TicketRow[]>(() => getTickets(tenantId, ahora));
 
-  const abiertos = tickets?.filter((t) => t.estado !== 'resuelto' && t.estado !== 'cerrado') ?? [];
+  const abiertos = tickets?.filter((t) => !CERRADOS.includes(t.estado)) ?? [];
   const vencidos = abiertos.filter((t) => t.horasRestantes != null && t.horasRestantes < 0);
   const sinSla = abiertos.filter((t) => t.horasRestantes == null);
 
@@ -107,11 +137,17 @@ export default async function SoportePage({
                   {tickets.map((t) => (
                     <tr key={t.id} style={{ borderTop: '1px solid var(--line)' }}>
                       <td className="px-5 py-3 font-medium">{t.asunto}</td>
-                      <td className="px-5 py-3" style={{ color: 'var(--muted)' }}>{t.categoria}</td>
-                      <td className="px-5 py-3">{t.prioridad}</td>
+                      <td className="px-5 py-3" style={{ color: 'var(--muted)' }}>{etiqueta(CATEGORIA, t.categoria)}</td>
+                      <td className="px-5 py-3">{etiqueta(PRIORIDAD, t.prioridad)}</td>
                       <td className="px-5 py-3">
-                        <StatusPill estado={t.estado === 'resuelto' || t.estado === 'cerrado' ? 'ok' : 'warn'}>
-                          {t.estado}
+                        {/* El color decía `warn` (naranja) para CUALQUIER estado
+                            abierto, así que un ticket recién levantado con 23 h
+                            de SLA por delante llevaba la misma insignia de
+                            alerta que uno vencido — y entonces la insignia deja
+                            de significar algo. La urgencia la dice la columna
+                            de SLA, que sí la mide; ésta dice el estado. */}
+                        <StatusPill estado={CERRADOS.includes(t.estado) ? 'ok' : 'neutral'}>
+                          {etiqueta(ESTADO, t.estado)}
                         </StatusPill>
                       </td>
                       <td className="px-5 py-3 text-xs" style={{ color: 'var(--muted)' }}>{fechaMx(t.abiertoEn)}</td>

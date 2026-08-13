@@ -62,8 +62,21 @@ export default function DashboardChrome({
             )}
           </div>
 
-          <nav className="flex-1 overflow-y-auto px-2 space-y-2 pb-3">
-            <SidebarNav rol={rol} />
+          {/* AUDITORÍA 17 (pase 5), MEDIO — LAS ETIQUETAS CORTADAS A DIEZ PÍXELES.
+              `MARCO_SIDEBAR` es `w-[72px] lg:w-[232px]`, así que entre `md`
+              (768) y `lg` (1024) la columna mide 72: menos `px-2` del nav, el
+              `px-2.5` del item y el ícono de 16 + gap, quedan ~10px para
+              "Combustible & Casetas" — y el `aside` trae `overflow-hidden`, o
+              sea corte a filo, sin elipsis ni scroll. Hasta `8d6ac51` no se
+              veía porque el `<nav>` estaba VACÍO; con las ocho filas puestas,
+              el iPad en vertical y el zoom de sala (150% en un 1440 → 960px)
+              enseñan una interfaz rota.
+              /admin ya lo había resuelto con este mismo par (`layout.tsx`), y
+              este marco comparte `marco.ts` con él pero no el par. Mismas
+              medidas, dos comportamientos: ahora uno. */}
+          <nav aria-label="Navegación del panel" className="flex-1 overflow-y-auto px-2 space-y-2 pb-3">
+            <div className="hidden lg:block space-y-2"><SidebarNav rol={rol} /></div>
+            <div className="lg:hidden space-y-2"><SidebarNav rol={rol} soloIconos /></div>
           </nav>
 
           <div className="px-2 pb-2 pt-2" style={{ borderTop: '1px solid var(--line)' }}>

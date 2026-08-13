@@ -4,7 +4,10 @@ import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { mxn } from '@/lib/formato';
 
-const BOTON = 'w-4 h-4 rounded flex items-center justify-center transition-opacity disabled:opacity-30 hover:bg-black/5 disabled:hover:bg-transparent';
+// AUDITORÍA 17 (pase 5), MEDIO — 16×16 px y `gap-0`, o sea el "‹" y el "›"
+// compartiendo borde: WCAG 2.5.8 pide 24×24. Mismo tamaño que `kpi-periodo`,
+// que es su gemelo visual en la misma fila.
+const BOTON = 'w-6 h-6 rounded flex items-center justify-center transition-opacity disabled:opacity-30 hover:bg-black/5 disabled:hover:bg-transparent';
 
 type Modo = 'semanal' | 'mensual' | 'historico';
 const MODOS: Modo[] = ['semanal', 'mensual', 'historico'];
@@ -46,7 +49,7 @@ export function MotorFiscalPeriodo({ series }: { series: Record<Modo, ResumenSim
       <div className="rounded-2xl p-4 flex-1 min-w-[200px]" style={{ background: 'color-mix(in srgb, var(--color-bad) 10%, transparent)' }}>
         <div className="flex items-center justify-between gap-2">
           <div className="text-xs font-medium" style={{ color: 'var(--muted)' }}>En riesgo / perdido</div>
-          <div className="flex items-center gap-0 shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
             <button type="button" aria-label="Periodo más corto" disabled={modoIdx <= 0}
               onClick={() => setModoIdx((i) => Math.max(i - 1, 0))} className={BOTON} style={{ color: 'var(--muted)' }}>
               <ChevronLeft width={12} height={12} strokeWidth={2} />

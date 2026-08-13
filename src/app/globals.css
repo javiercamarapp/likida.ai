@@ -94,6 +94,20 @@
   --marca: #c2410c;
   --marca-fg: #ffffff;
 
+  /* EL EXTREMO OSCURO DEL DEGRADADO CUANDO ENCIMA VA TINTA BLANCA.
+     AUDITORÍA 17 (pase 5), MEDIO — las tres tarjetas de KPI del Resumen (y el
+     item activo del sidebar) pintaban `--marca-fg` sobre
+     `--g3 → --marca`, y `--g3` (#f2913f) da 2.36:1 contra blanco: la etiqueta
+     de 12px medía 2.09:1 y la cifra 2.57:1, cuando AA pide 4.5:1 y 3:1. El
+     hero usa el MISMO degradado con tinta oscura (#1a1207, 7.85:1) y ese se
+     queda como está: lo que no funciona no es el degradado, es blanco encima
+     de su extremo claro.
+     Este tono cierra la rampa por el otro lado: de `--marca` (5.18:1 con
+     blanco) a #8f3008 (8.09:1), así que CUALQUIER punto del degradado pasa
+     4.5:1 con tinta blanca — medido en `contraste_tinta_componente.test.ts`,
+     que muestrea el degradado, no solo sus extremos. */
+  --marca-oscura: #8f3008;
+
   /* --ok/--warn/--bad NUEVOS (para la librería de componentes de /admin) —
      no reemplazan --color-ok/--color-bad, que siguen siendo los que usa el
      resto de la app (auditados AA arriba). Estos también pasan AA sobre
@@ -214,17 +228,31 @@ html, body {
   transition: opacity 480ms cubic-bezier(0.22, 1, 0.36, 1),
               transform 480ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-:root[data-asistente="expandido"] .columna-centro {
-  opacity: 0;
-  /* Se va HACIA LA IZQUIERDA, no se encoge: encogerlo reflowea la página
-     entera cada frame (las gráficas se recalculan) y la animación tironea.
-     Mover con `transform` no toca el layout. */
-  transform: translateX(-24px);
-  pointer-events: none;
+
+/* AUDITORÍA 17 (pase 5), ALTO — SOLO DONDE EL ASISTENTE EXISTE.
+   El `<aside>` del rail es `hidden xl:flex` (rail.tsx): abajo de 1280px no se
+   pinta, pero el componente NO se desmonta, así que la marca de la raíz seguía
+   puesta y esta regla dejaba la página en blanco SIN el botón de contraer —
+   que vive dentro del aside que acaba de desaparecer. Basta con subir el zoom
+   del navegador a 125% en un portátil de 1440 (viewport CSS → 1152) para
+   caer ahí, y solo se sale recargando.
+   El breakpoint es el mismo `xl` de Tailwind, y `ANCHO_MIN_ASISTENTE`
+   (rail-marca.ts) lo cruza con el componente en una prueba. */
+@media (min-width: 1280px) {
+  :root[data-asistente="expandido"] .columna-centro {
+    opacity: 0;
+    /* Se va HACIA LA IZQUIERDA, no se encoge: encogerlo reflowea la página
+       entera cada frame (las gráficas se recalculan) y la animación tironea.
+       Mover con `transform` no toca el layout. */
+    transform: translateX(-24px);
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root[data-asistente="expandido"] .columna-centro { transform: none; }
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .columna-centro { transition: none; }
-  :root[data-asistente="expandido"] .columna-centro { transform: none; }
 }
 
 /* El logo de la pantalla de carga: respira, no parpadea. `animate-pulse` de

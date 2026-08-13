@@ -6,6 +6,7 @@ import { GastoSemanalChart } from './gasto-semanal-chart';
 import { TopRutas } from './top-rutas';
 import { TituloSeccion } from './resumen-visual';
 import { Actividad, type ModoPeriodo } from './actividad';
+import { ETIQUETA_MODO } from './periodo';
 import { mxn } from '@/lib/formato';
 import type {
   SeriesKpiCards, GastoSemanalSeries, LiquidadoSemanalSeries, TopRutasSeries,
@@ -34,8 +35,10 @@ const OPCIONES: Array<{ id: ModoPeriodo; etiqueta: string }> = [
 export function PanelPeriodo({
   viajes, porMes, seriesKpis, gastoSemanalSeries, liquidadoSemanalSeries, topRutasSeries,
 }: {
-  viajes: Array<{ fechaInicio: string | null }>;
-  porMes: Array<{ dia: string; valor: number }>;
+  /** `null` = la consulta se cayó; `[]` = de verdad no hay. `Actividad`
+   *  distingue los dos, así que aquí NO se aplana (AUDITORÍA 17, pase 5). */
+  viajes: Array<{ fechaInicio: string | null }> | null;
+  porMes: Array<{ dia: string; valor: number }> | null;
   seriesKpis: SeriesKpiCards | null;
   gastoSemanalSeries: GastoSemanalSeries | null;
   liquidadoSemanalSeries: LiquidadoSemanalSeries | null;
@@ -67,7 +70,7 @@ export function PanelPeriodo({
       {/* ── Viajes / Actividad ── */}
       <div className="px-5 pb-4 pt-2 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <TituloSeccion>Viajes</TituloSeccion>
+          <TituloSeccion>Viajes — {ETIQUETA_MODO[modo]}</TituloSeccion>
           <div className="mt-2.5">
             {kpiModo && kpiModo.totalViajes > 0 ? (
               <Dona segmentos={[
@@ -80,7 +83,7 @@ export function PanelPeriodo({
           </div>
         </div>
         <div className="md:col-span-2">
-          <TituloSeccion>Actividad</TituloSeccion>
+          <TituloSeccion>Actividad — {ETIQUETA_MODO[modo]}</TituloSeccion>
           <div className="mt-3">
             <Actividad viajes={viajes} porMes={porMes} modo={modo} />
           </div>
@@ -90,9 +93,18 @@ export function PanelPeriodo({
       {/* ── Gasto por categoría / Liquidado por semana ── */}
       <div className="px-5 pb-4 border-t pt-4 grid grid-cols-1 md:grid-cols-2 gap-4" style={{ borderColor: 'var(--line)' }}>
         <div>
-          <TituloSeccion>Gasto por categoría</TituloSeccion>
+          <TituloSeccion>Gasto por categoría — {ETIQUETA_MODO[modo]}</TituloSeccion>
           <div className="mt-3">
-            {gastoModo && gastoModo.series.some((s) => s.valores.some((v) => v > 0)) ? (
+            {/* AUDITORÍA 17 (pase 5), MEDIO — esta rama colapsaba `null` (la
+                consulta murió) y `[]` (de verdad no hay) en el mismo texto,
+                así que con `getGastoPorSemanaSeries` caído la pantalla
+                afirmaba "Aún no hay gastos capturados". Sus dos hermanas de
+                este mismo archivo ya distinguían las dos cosas. */}
+            {gastoModo === null ? (
+              <p className="text-sm" style={{ color: 'var(--muted)' }}>
+                No se pudo cargar esta gráfica. La consulta falló — no es que no haya gastos.
+              </p>
+            ) : gastoModo.series.some((s) => s.valores.some((v) => v > 0)) ? (
               <GastoSemanalChart categorias={gastoModo.categorias} series={gastoModo.series} />
             ) : (
               <p className="text-sm" style={{ color: 'var(--muted)' }}>Aún no hay gastos capturados.</p>
@@ -100,9 +112,14 @@ export function PanelPeriodo({
           </div>
         </div>
         <div>
-          <TituloSeccion>Liquidado</TituloSeccion>
+          <TituloSeccion>Liquidado — {ETIQUETA_MODO[modo]}</TituloSeccion>
           {totalLiquidado > 0 && (
-            <div className="text-2xl font-semibold tracking-tight tabular mt-1">{mxn(totalLiquidado)}</div>
+            <>
+              <div className="text-2xl font-semibold tracking-tight tabular mt-1">{mxn(totalLiquidado)}</div>
+              {/* La cifra grande TAMBIÉN lleva su ventana: es la que el
+                  contralor copia al correo, y sola no dice de cuándo es. */}
+              <div className="text-[11px]" style={{ color: 'var(--muted)' }}>{ETIQUETA_MODO[modo]}</div>
+            </>
           )}
           <div className="mt-2.5">
             {liquidadoModo === null ? (
@@ -122,7 +139,7 @@ export function PanelPeriodo({
 
       {/* ── Top rutas por gasto ── */}
       <div className="px-5 pb-4 border-t pt-4" style={{ borderColor: 'var(--line)' }}>
-        <TituloSeccion>Top rutas por gasto</TituloSeccion>
+        <TituloSeccion>Top rutas por gasto — {ETIQUETA_MODO[modo]}</TituloSeccion>
         <div className="mt-2.5 overflow-x-auto">
           {rutasModo ? (
             <TopRutas rutas={rutasModo} />
