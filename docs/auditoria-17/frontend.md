@@ -1,743 +1,533 @@
-# Frontend — auditoría 17 · pase 5 (12-ago-2026)
+# Frontend — auditoría 17 · pase 6 (13-ago-2026)
 
-**Nota: 5/10** (antes 3). Razón del movimiento: **se atacó y subió**. El CRÍTICO
-del pase 4 —el panel del cliente sin navegación— está **cerrado de verdad**:
-lo verifiqué con ojos que no escribieron el arreglo, contando los `href` que
-salen del `<nav>` para los tres roles y revirtiendo el commit en el árbol para
-comprobar que su prueba se pone roja. No sube más de 5 porque el arreglo no
-tocó ninguno de los 13 hallazgos abiertos, **le devolvió el alcance a dos de
-ellos** (las páginas que volvieron a ser clickeables son justo donde viven), y
-al poner siete filas nuevas en una columna que antes estaba vacía destapó un
-defecto responsive que nadie había podido ver: entre 768 y 1023 px esa columna
-mide 72 px y las etiquetas se cortan a diez píxeles.
+**Nota: 4/10** (antes 5). Razón del movimiento: **deuda que cobró factura**. La
+v3 del 12-ago sí cerró de verdad ocho hallazgos míos (lo verifico abajo, con
+sus pruebas verdes), pero entregó las dos pantallas nuevas —el chat y el alta
+de viaje, que son las que se van a enseñar— **sin una sola prueba de frontend
+propia**, y con ellas entró el defecto que el ancla del rubro castiga por
+nombre: *"4 o menos si el comprador puede ver una cifra mal formateada"*. La
+tabla del chat imprime **`184320.00`** donde el resto del producto imprime
+**`$184,320.00`**, y no es un descuido de un `map`: `prompts.ts:55` le **pide
+al modelo** que mande los montos "como número en texto plano", y
+`chat.tsx:63` los pasa sin tocar. El formato de una cifra de dinero dejó de
+vivir en `lib/formato.ts` y pasó a vivir en un prompt.
 
-Riesgo mayor hoy: el Resumen —las tres tarjetas de KPI que abren la demo—
-pinta blanco sobre el degradado naranja de marca a **2.1:1 – 2.6:1**, cuando el
-propio repo tiene una prueba que existe porque `--color-ok` medía 2.22:1 y "es
-la cifra que se proyecta en una sala iluminada". Esa prueba no mide esto.
+Riesgo mayor hoy: esa cifra. Es la pantalla que el pedido del 12-ago puso al
+frente ("que responda con gráficas, tablas y muy visual"), el contralor la va a
+cruzar contra su PDF, y `formato.test.ts` no puede verla porque prohíbe
+`toLocaleString('es-MX')` fuera de un archivo — aquí el problema es que el
+formato **no ocurre**.
 
----
-
-## Verificación del arreglo del pase 4 (`8d6ac51`)
-
-**Veredicto: el CRÍTICO está cerrado.** No parcialmente, no "en el camino
-feliz": cerrado en las dos direcciones y con arnés que lo sostiene.
-
-### 1. Qué `href` salen HOY del `<nav>` de `chrome.tsx:65-67`
-
-El sidebar lee cuatro listas (`sidebar-nav.tsx:6`: `SIDEBAR_PRINCIPAL`,
-`FISCAL`, `NEGOCIO`, `GESTION`) y filtra cada una con `puedeVerRuta`
-(`:105`), más el "Resumen" gateado en `:111`. `SIDEBAR_PRINCIPAL`
-(`rutas.ts:67`) y `FISCAL` (`:40`) siguen vacíos; `NEGOCIO` (`:34-36`) trae 1 y
-`GESTION` (`:44-51`) trae 6. Cruzado contra `AREA_POR_RUTA`
-(`visibilidad.ts:75-92`):
-
-| Rol | `href` pintados | Cuáles |
-|---|---|---|
-| **flota_admin** | **8** | `/dashboard`, `/dashboard/combustible-casetas`, `/dashboard/arco`, `/dashboard/soporte`, `/dashboard/usuarios`, `/dashboard/politicas`, `/dashboard/suscripcion`, `/dashboard/configuracion` |
-| **contador** | **2** | `/dashboard/combustible-casetas` (sección "Negocio"), `/dashboard/suscripcion` (sección "Cuenta") |
-| **encargado** | **3** | `/dashboard`, `/dashboard/arco`, `/dashboard/soporte` |
-| **superadmin** sin `?rol=` | **8** | las mismas del dueño, con sufijo `?vista=demo` (`sidebar-nav.tsx:87`) |
-
-El escenario exacto del CRÍTICO —`/admin` → "Contador"
-(`admin/selector-vista.tsx:54`) → `?vista=demo&rol=contador`— ya **no** deja el
-`<nav>` vacío: `rolMenu = 'contador'` (`sidebar-nav.tsx:99`) y salen 2 links.
-
-### 2. ¿Quedó alguna página viva sin link? ¿Algún link a página borrada?
-
-- Páginas con `page.tsx` bajo `src/app/dashboard/`: **9**
-  (`[id]`, `arco`, `combustible-casetas`, `configuracion`, raíz, `politicas`,
-  `soporte`, `suscripcion`, `usuarios`).
-- `TODAS_LAS_RUTAS` (`rutas.ts:55-58`) enumera **8** y **las 8 existen en
-  disco**. Ningún `href` cuelga de una de las 35 borradas — recorrí todos los
-  `href="/dashboard…"`, `redirect('/dashboard…')` y `revalidatePath` del repo
-  (14 sitios, ninguno muerto).
-- **La única página viva sin un solo enlace entrante sigue siendo
-  `/dashboard/[id]`** — la del expediente y el botón "Descargar PDF"
-  (`[id]/page.tsx:191`). Es ruta dinámica y por construcción no puede estar en
-  `rutas.ts`, así que el arreglo del sidebar no la alcanza. Sigue abierta como
-  ALTO (ver hallazgos).
-
-### 3. ¿La prueba falla de verdad si se revierte el arreglo?
-
-Sí. Lo comprobé sobre el árbol, no leyéndolo:
-
-```
-$ git show 8d6ac51^:src/app/dashboard/sidebar-nav.tsx > src/app/dashboard/sidebar-nav.tsx
-$ npx vitest run src/app/dashboard/sidebar_puerta.test.tsx
- Tests  4 failed | 1 passed (5)
-  × a flota_admin no le falta ninguna puerta
-      /dashboard/combustible-casetas /dashboard/arco /dashboard/soporte
-      /dashboard/usuarios /dashboard/politicas /dashboard/suscripcion
-      /dashboard/configuracion          (7 faltantes)
-  × a contador no le falta ninguna puerta
-      /dashboard/combustible-casetas /dashboard/suscripcion   (2 faltantes)
-  × a encargado no le falta ninguna puerta
-      /dashboard/arco /dashboard/soporte                      (2 faltantes)
-  × el contador no se queda con el menú en blanco
-      AssertionError: expected 0 to be greater than 0
-$ git checkout -- src/app/dashboard/sidebar-nav.tsx
-$ git status --short
- M docs/auditoria-17/MAPA.md        ← lo único modificado, y ya lo estaba
-```
-
-Con el arreglo puesto: **5/5 verdes** (30 ms). El árbol quedó limpio.
-
-La prueba mide lo correcto: renderiza el componente REAL con
-`renderToStaticMarkup` y afirma sobre los `href` del HTML
-(`sidebar_puerta.test.tsx:41-44`), no sobre una lista paralela. Y cubre la
-dirección contraria (`:73-80`: ningún link que el rol no pueda abrir), que es
-la mitad que suele faltar.
-
-### 4. El guardarraíl viejo (`visibilidad.test.ts:85-125`): ¿sigue con el hueco?
-
-**Sí, intacto.** `const todas = [...INICIO, ...NEGOCIO, ...OPERACION,
-...FISCAL, ...DOCUMENTOS_DINERO, ...GESTION]` (`visibilidad.test.ts:89`) se
-sigue armando de las **seis** constantes de sección, no de lo que el componente
-importa; su caso *"está en el sidebar, no solo en el mapa de áreas"* (`:125`)
-seguiría verde con el bug. Nadie lo tocó, y está bien que no: hoy no es el
-guardarraíl de esa regla, `sidebar_puerta.test.tsx` lo es.
-
-**Hueco residual, honesto:** `hrefsEsperados` (`sidebar_puerta.test.tsx:47-49`)
-deriva de `TODAS_LAS_RUTAS`, que a su vez (`rutas.ts:57`) se arma de esas
-**mismas seis** constantes. O sea: una séptima constante que alguien agregue a
-`rutas.ts`, importe en el sidebar y olvide meter en `TODAS_LAS_RUTAS` no
-dispararía el caso de "faltantes". El modo de falla que de verdad ocurrió —una
-lista viva en `rutas.ts` que el sidebar no importa— **sí** queda cazado, que es
-lo que se pedía. No lo reporto como hallazgo: sería pedir un arnés del arnés.
+Los 15 rojos de la tabla del MAPA no se recuentan aquí; sí agrego dos
+ampliaciones sobre ellos.
 
 ---
 
 ## Hallazgos
 
-### [ALTO] El expediente de la liquidación y su "Descargar PDF" siguen sin un solo enlace entrante
-
-`src/app/dashboard/[id]/page.tsx:191` (`<a href={\`/api/export/pdf/${d.id}\`}>`),
-`:169` (su "← Panel", que es solo salida); enlaces entrantes hoy: **cero**
-(`grep` de `href.*"/dashboard` → 14 sitios, ninguno apunta a `/dashboard/<uuid>`).
-
-Escenario: el contralor pide "enséñame la liquidación de TI-0412 y el PDF que
-le llega a mi contador". El presentador ya tiene sidebar (el arreglo funcionó),
-clickea las 8 puertas, y en ninguna hay una tabla de liquidaciones ni un
-"Ver →": las dos que enlazaban (`dashboard/cuadre` y `dashboard/analitica`) se
-borraron en `2be4b1c`. La única forma es pegar en la barra de direcciones el
-UUID de `liquidacion.viaje_id`, que nadie tiene a la vista.
-
-Consecuencia: el entregable del producto —"entrega la liquidación en PDF",
-primera línea de `CLAUDE.md`— no se puede enseñar desde la interfaz. Es también
-la única pantalla con el desglose de IVA/IEPS y la deducibilidad por renglón
-(`:240-261`), que es lo que el contralor cruza contra su contador.
-
-Causa raíz probable: nada mecánico vigila los enlaces *entrantes* de una ruta
-dinámica; `sidebar_puerta.test.tsx` solo puede cubrir las estáticas.
-
-(REINCIDENTE — del pase 4, sin cambios.)
-
----
-
-### [ALTO] El panel del jefe de tráfico le grita "3 viajes sin chofer" y no tiene con qué asignarlos
-
-`src/app/dashboard/inicio-operacion.tsx:55-57` (arma la banda de urgentes),
-`:111-120` (la pinta con `StatusPill estado="warn">Atender`), `:148-158` (la
-lista "Sin asignar": `<li>` de puro texto, ni un `<select>` ni un `<form>` en
-toda la pantalla); `src/app/dashboard/tablero-operacion.tsx:13-15` (el
-comentario que deja constancia de que `TablaSinAsignar`/`FormaAlta` **no** se
-movieron); `src/app/dashboard/[id]/page.tsx:54` (la otra vía, negada a este rol).
-
-Escenario con valores: 3 viajes `abierto` sin `operador_id`. El encargado entra
-a `/dashboard`, `page.tsx:355-357` lo manda a `InicioOperacion`, y lee
-**"Atender · 3 viajes sin chofer."** con los folios `TI-0412`, `TI-0413`,
-`TI-0414` debajo. Ninguno es clickeable. `/dashboard/despacho` (donde vivía el
-`<select>` de operador y la server action `asignar`) se borró; `/dashboard/<id>`
-sí tiene "Reasignar" (`[id]/page.tsx:209-219`, y `puedeAsignar` **sí** incluye
-a `encargado`) pero la página entera se le niega antes en `:54`
-(`puedeVerArea(rol,'dinero')`, y el encargado solo tiene `operacion`).
-
-Consecuencia: el usuario diario recibe una alerta que le exige actuar y el panel
-no le da con qué — exactamente lo que el propio archivo dice evitar en `:52-53`
-(*"una banda de alertas que siempre dice algo entrena a ignorarla"*). Es la
-tercera de las tres vistas de `admin/selector-vista.tsx:61`.
-
-(REINCIDENTE — del pase 4, sin cambios.)
-
----
-
-### [ALTO] "Litros elegibles para el estímulo: 0.00 L", con la cita de la LIF al lado, cuando la consulta se cayó
-
-`src/app/dashboard/combustible-casetas/page.tsx:188`
-(`valor={acred?.litrosDiesel ?? 0}` con `nota="LIF 2026, Art. 20-A"` en `:189`),
-contra su vecino de `:191-193`, que sí lo hace bien.
-
-Escenario: `getAcreditables` lanza; `safe()` (`:37-39`) lo convierte en `null`;
-`?? 0` lo aplana. La flota comprueba 4,200 L de diésel ese mes y la tarjeta dice
-**0.00 L** bajo el rótulo "Litros elegibles para el estímulo · LIF 2026, Art.
-20-A". `porConcepto === null` sí tiene su rama de error (`:177-178`), pero
-`acred` es otra consulta y no la comparte, así que la sección se pinta "sana"
-con un cero inventado adentro.
-
-Consecuencia: el número que sostiene el argumento de venta (el estímulo de IEPS
-al diésel) se lee como "esta flota no acredita nada" en vez de "no se pudo
-leer" — la regla que `CLAUDE.md` pone primero. El tile de al lado (`:191`) usa
-`vacio={pctSinCfdi === null ? … }` y demuestra que el patrón correcto ya existe
-en el mismo `KpiTile`, dos líneas abajo.
-
-(REINCIDENTE — del pase 1, **5ª ronda**.)
-
----
-
-### [ALTO] "Aún no hay viajes registrados" cuando `getViajesPorMes` se cayó
-
-`src/app/dashboard/page.tsx:315` (`porMes={viajesPorMes ?? []}`),
-`src/app/dashboard/actividad.tsx:54` (`porMes.every((d) => d.valor === 0)`) y
-`:59` (el texto), `src/app/dashboard/estado.ts:30` (mira 4 consultas de las 12).
-
-Escenario: la flota tiene 340 viajes históricos. `getViajesPorMes` falla,
-`safe()` devuelve `null`, `?? []` lo aplana a arreglo vacío, `sinDatos` sale
-`true` y la sección "Actividad" en modo Histórico afirma **"Aún no hay viajes
-registrados."**. Y no hay aviso de degradación: `estadoPanel` solo vigila
-`acreditables`, `kpis`, `liquidaciones` y `anomalias` (`estado.ts:30`), así que
-la rama `'parcial'` (`page.tsx:223-235`) no se dispara y la pantalla se ve
-íntegra.
-
-Consecuencia: la afirmación más fuerte que el panel puede hacer sobre el negocio
-del cliente —"no tienes viajes"— se emite estando ciego. Es la misma clase de
-fallo que `estado.ts:10-12` documenta querer impedir.
-
-(REINCIDENTE — del pase 2.)
-
----
-
-### [ALTO] El asistente expandido bajo 1280 px deja el panel invisible, y `8d6ac51` le devolvió el alcance
-
-`src/app/dashboard/rail.tsx:105` (`hidden xl:flex`),
-`src/app/dashboard/rail-marca.ts:26-30` (la marca solo mira `expandido` y
-`pathname`, nunca el viewport), `src/app/globals.css:213-224`
-(`:root[data-asistente="expandido"] .columna-centro { opacity: 0;
-pointer-events: none }`).
-
-Escenario con valores: en `/dashboard/combustible-casetas` a 1440 px, el
-presentador expande el asistente (`rail.tsx:113`). `marcaAsistente` pone
-`data-asistente="expandido"` en `<html>` y el CSS retira la columna central.
-Ahora el proyector no se lee y sube el zoom del navegador a 125 %: el viewport
-CSS pasa a 1152 px, `hidden xl:flex` deja de pintar el `<aside>` — **pero el
-componente no se desmonta, así que la marca sigue puesta**. Queda el sidebar,
-un fondo, y ningún control para revertirlo: el botón "Contraer chat"
-(`rail.tsx:112-120`) vive dentro del `<aside>` que acaba de desaparecer.
-
-Consecuencia: pantalla en blanco irrecuperable sin recargar, delante del
-comprador. Y esto vuelve a importar hoy: en el pase 4 el escenario era
-inalcanzable porque `/dashboard` es la única ruta donde el rail devuelve `null`
-(`rail.tsx:90`) y era la única página a la que se llegaba. `8d6ac51` reabrió las
-otras siete, que son justo donde el rail sí se pinta.
-
-Causa raíz probable: `marcaAsistente` es la regla correcta con un eje de menos
-—se protegió de la ruta y no del breakpoint que decide si el `<aside>` existe.
-
-(REINCIDENTE — del pase 1, **6ª ronda**; alcance restaurado por `8d6ac51`.)
-
----
-
-### [MEDIO · NUEVO] Las tres tarjetas de KPI del Resumen pintan blanco sobre el degradado naranja: 2.1:1 – 2.6:1
-
-`src/app/dashboard/resumen-visual.tsx:121` (`className="… text-white …"`),
-`:122` (`background: DEGRADADO_MARCA`), `:125` (etiqueta `text-xs` +
-`opacity-85`), `:126` (la cifra, `text-xl font-semibold`);
-`:42` (`DEGRADADO_MARCA = linear-gradient(135deg, var(--g3) 0%, var(--marca) 100%)`);
-`src/app/globals.css:85` (`--g3: #f2913f`), `:94` (`--marca: #c2410c`);
-mismo problema en `src/app/dashboard/sidebar-nav.tsx:22`
-(`estiloItem` → `color: var(--marca-fg)` = `#ffffff` sobre el mismo degradado).
-
-Escenario con valores medidos (WCAG 2.1, misma fórmula que
-`dashboard/contraste.test.ts:25-35`). El degradado va a 135° sobre una tarjeta
-de ~360×90; el texto vive en el borde IZQUIERDO, o sea en el extremo `--g3`
-(#f2913f, L = 0.395). A ~10 % del recorrido el color es ≈ `#ed8839`:
-
-| Elemento | Color efectivo | Contraste | AA pide |
-|---|---|---|---|
-| "Gasto total — últimos 7 días" (12 px, blanco al 85 %) | ≈ `#fdeee2` sobre `#ed8839` | **2.09:1** | 4.5:1 |
-| "$184,320.00" (20 px semibold, blanco puro) | `#ffffff` sobre `#ed8839` | **2.57:1** | 3:1 (texto grande) |
-| Lo mismo en el punto MEDIO del degradado | `#ffffff` sobre `#da6926` | **3.48:1** | 4.5:1 para la etiqueta |
-| Item activo del sidebar (14 px medium) | `#ffffff` sobre `#ed8839` | **2.57:1** | 4.5:1 |
-
-Ni en el extremo más oscuro (`#c2410c`, 5.18:1 en blanco puro) la etiqueta al
-85 % de opacidad llega a 4.5:1.
-
-Consecuencia: son "Gasto total", "Costo por viaje" y "Ahorro generado —
-Ejercicio 2026", las tres cifras con las que abre el demo, y el sitio donde una
-sala iluminada castiga más. Es la misma clase exacta de defecto que ya costó una
-ronda: `contraste.test.ts:11-13` existe porque `--color-ok` medía 2.22:1 y era
-"la cifra que se proyecta en una sala iluminada". La prueba mide `--color-ok`,
-`--color-bad` y `--faint` **contra `--surface` y `--bg`** — nunca una tinta
-sobre un color de componente, así que este caso está fuera de su alcance por
-construcción.
-
-Prueba de que alguien ya conocía el problema en este mismo archivo: el hero usa
-el MISMO `DEGRADADO_MARCA` y escribe con tinta oscura `#1a1207`
-(`resumen-visual.tsx:77` y `:80`) — **7.85:1** sobre `#f2913f`. Dos tratamientos
-del mismo fondo, a 45 líneas de distancia.
-
-Segunda instancia del mismo agujero, más barata: `top-rutas.tsx:11`, la píldora
-de región "Golfo" usa `#0891b2` a `text-xs` — **3.68:1** sobre blanco (las otras
-seis regiones pasan: 5.02 – 6.28:1).
-
-Causa raíz probable: el guardarraíl de contraste vigila los *tokens*, y todo
-color escrito directamente en un componente (`text-white`, `#0891b2`) queda
-fuera de su universo.
-
----
-
-### [MEDIO · NUEVO] Entre 768 y 1023 px el sidebar recién restaurado corta las etiquetas a diez píxeles
-
-`src/app/marco.ts:22-23` (`MARCO_SIDEBAR = 'glass-panel w-[72px] lg:w-[232px] …
-overflow-hidden'`), `src/app/dashboard/chrome.tsx:65-67` (mete `<SidebarNav>` en
-esa columna **sin** ninguna variante colapsada), `src/app/dashboard/sidebar-nav.tsx:10`
-(`ITEM = 'flex items-center gap-2.5 px-2.5 py-2 … text-sm'`, sin `truncate` ni
-`hidden lg:inline`), `:39` (el encabezado de `Seccion`, igual), `:46`
-(`<Icono …/> {nombre}` — el nombre es un nodo de texto suelto, ni siquiera hay
-un `<span>` al que colgarle una clase).
-
-Aritmética, con los números del árbol: `aside` = 72 px; `nav px-2` → 56; item
-`px-2.5` → 36; ícono 16 + `gap-2.5` 10 = 26 → quedan **≈ 10 px** para
-"Combustible & Casetas". El encabezado "NEGOCIO" (`text-[11px]` uppercase
-`tracking-wide`, ≈ 55 px) tiene 36 y sale como "NEG". Con `overflow-hidden` en
-el `aside` no hay elipsis ni scroll: se corta a filo.
-
-Escenario: el contralor abre el panel en un iPad en vertical (768 px CSS), o el
-presentador sube el zoom del navegador a 150 % en un portátil de 1440
-(→ 960 px CSS). Antes de `8d6ac51` ahí no se veía nada porque el `<nav>` estaba
-vacío; hoy se ven **ocho filas y dos encabezados** de texto cortado a mitad de
-letra.
-
-Consecuencia: en ese rango el panel del cliente se lee como una interfaz rota, y
-el rango incluye la tableta y el zoom de sala, que son dos formas normales de
-mirarlo.
-
-`/admin` ya resolvió esto y lo dejó escrito: `admin/layout.tsx:62-67` documenta
-el criterio ("colapsa a solo íconos entre `md` y `lg`") y `:81-82` lo implementa
-con dos componentes, `<div className="hidden lg:block"><SidebarNav/></div>` y
-`<div className="lg:hidden"><SidebarNavIconos/></div>`. `chrome.tsx` comparte
-`marco.ts` con él pero no ese par. Mismas medidas, dos comportamientos.
-
-Causa raíz probable: `8d6ac51` llenó una columna cuyo estado colapsado nunca se
-había ejercitado, porque hasta ayer estaba vacía.
-
----
-
-### [MEDIO · NUEVO] "Usuarios & Roles" —la pantalla cuyo trabajo es decir quién es quién— imprime la clave cruda de la base
-
-`src/app/dashboard/usuarios/page.tsx:106`
-(`<StatusPill estado={…}>{u.rol}</StatusPill>`), con el encabezado "Rol" en `:92`.
-
-Escenario con valores: el contralor abre Usuarios & Roles (link nuevo del
-sidebar, sección "Cuenta") y su propia fila dice, en la columna **Rol**:
-`flota_admin`. La de su contador: `contador`. La del jefe de tráfico:
-`encargado`. Snake_case, minúsculas, tal como sale del `check constraint` de
-`app_user.rol`.
-
-Y no cuadra con lo que el mismo usuario ve tres centímetros a la izquierda: el
-badge del sidebar de esa misma sesión dice **"ADMIN FLOTA"**
-(`chrome.tsx:26-32`, `ROL_BADGE`). Hay cuatro mapas de rol en el producto y
-los cuatro coinciden en la etiqueta legible —`admin/equipo/page.tsx:13-18`
-(`Record<RolAppUser,string>`, "Dueño / Admin de flota"),
-`admin/mi-perfil/page.tsx:9`, `dashboard/aviso-rol.tsx:7-11` ("Dueño de la
-flota"), `chrome.tsx:26`— y esta columna no usa ninguno. El mapa `ROLES` que la
-propia página declara en `:12-18` se usa solo para la columna "Qué puede hacer"
-(`:109`).
-
-Consecuencia: la pantalla que el contralor abre para entender la matriz de
-permisos de su empresa le enseña identificadores de base de datos, y el mismo
-rol se lee de dos maneras distintas en dos pantallas de la misma sesión.
-
----
-
-### [MEDIO · NUEVO] Soporte imprime categoría, prioridad y estado crudos del `check constraint`
-
-`src/app/dashboard/soporte/page.tsx:110` (`{t.categoria}`), `:111`
-(`{t.prioridad}`), `:113-115` (`<StatusPill …>{t.estado}</StatusPill>`) — la
-página no declara ni un mapa de etiquetas.
-
-Escenario con valores: un ticket abierto por facturación, prioridad alta, que ya
-se contestó y espera respuesta del cliente. La fila sale:
-`facturacion` · `alta` · `en_proceso`. Los dominios son
-`('facturacion','operacion','tecnico','cuenta','otro')`,
-`('baja','media','alta','urgente')` y
-`('abierto','en_proceso','esperando','resuelto','cerrado')`
-(`supabase/migrations/0051_soporte_y_cotizacion.sql:41-44`). O sea: sin acento
-en "facturacion", con guion bajo en "en_proceso", y todo en minúscula dentro de
-una tabla que a su lado sí formatea la fecha con `fechaMx` (`:117`).
-
-Y el color miente por omisión: `:113` pinta `warn` (naranja) para cualquier
-estado que no sea `resuelto`/`cerrado`, así que un ticket recién abierto con 23
-horas de SLA por delante sale con la misma insignia de alerta que uno vencido.
-
-Consecuencia: se degrada y se nota, en una pantalla que el sidebar ahora enlaza
-para tres roles. Es la única de las ocho páginas vivas sin mapa de etiquetas:
-`arco/page.tsx:14-16` mapea sus 4 tipos y despliega el estado con ternarios en
-`:130`; `estatus.ts:17-26` cubre los 3 de `EstatusLiquidacion` y hasta tiene
-prueba (`etiquetas_sincronizadas.test.ts`);
-`combustible-casetas/page.tsx:29-35` cubre los 5 motivos de
-`ResultadoResolverLinea` uno por uno.
-
-Causa raíz probable: el pase 4 dejó `soporte/page.tsx` explícitamente sin leer
-("solo verifiqué que existe"), y hasta `8d6ac51` no tenía un solo enlace
-entrante, así que nadie la miró.
-
----
-
-### [MEDIO] "Vencen pronto (≤ 5 días)" cuenta solo lo que YA venció
-
-`src/app/dashboard/arco/page.tsx:71` (`venceEn(s.venceEn) <= hoy`), rótulo en
-`:87`, `hoy` en `:31` (`new Date().toISOString()`, UTC).
-
-Escenario: una solicitud ARCO recibida con vencimiento el 15-ago y hoy es 12-ago.
-Vence en 3 días → tiene que contar. `'2026-08-15' <= '2026-08-12'` es `false` →
-el KPI dice **0** bajo el rótulo "Vencen pronto (≤ 5 días)". Solo entra cuando
-ya se pasó el plazo, momento en que el rótulo es falso en la otra dirección.
-
-Consecuencia: el plazo de 20 días hábiles del art. 32 LFPDPPP se pasa sin que el
-tablero lo haya anunciado ni una vez. La flota es la responsable obligada, y la
-única alarma que tiene está apagada.
-
-(REINCIDENTE — del pase 1, **5ª ronda**.)
-
----
-
-### [MEDIO] El panel manda al chofer a `/mis-viajes`, que devuelve 404
-
-`src/app/dashboard/usuarios/page.tsx:16`
-(`operador: 'No entra a este panel: usa WhatsApp y /mis-viajes'`), dentro del
-`ROLES` de `:12`.
-
-`/mis-viajes` y `/chofer` se borraron el 7-ago-2026 con el retiro del rol
-`operador` (mig. `0086`); `src/app/` no tiene esa carpeta. El texto lo lee el
-dueño de la flota mientras decide cómo dar de alta a su gente.
-
-(REINCIDENTE — del pase 1.)
-
----
-
-### [MEDIO] Un pill gobierna cinco ventanas de tiempo y ninguna sección la rotula
-
-`src/app/dashboard/panel-periodo.tsx:47-51` (las cinco derivadas del mismo
-`modo`), pill en `:55-65`, y los `TituloSeccion` de `:70` ("Viajes"), `:83`
-("Actividad"), `:93` ("Gasto por categoría"), `:103` ("Liquidado") y `:125`
-("Top rutas por gasto") — ninguno dice de qué ventana habla. La cifra grande de
-`:105` (`mxn(totalLiquidado)`) tampoco.
-
-Escenario: el contralor deja el pill en "Histórico", baja a "Liquidado", ve
-**$2,840,500.00** y lo cita como el mes. El pill quedó cinco secciones arriba,
-fuera del scroll.
-
-Que hay una forma correcta a la vista lo prueban las tarjetas de al lado:
-`kpi-periodo.tsx:66` rotula `${nombre} — ${ETIQUETA_MODO[modo]}` y
-`motor-fiscal-periodo.tsx:63,70` imprime la ventana bajo cada cifra.
-
-(REINCIDENTE — del pase 2.)
-
----
-
-### [MEDIO] "Aún no hay gastos capturados" con la consulta caída
-
-`src/app/dashboard/panel-periodo.tsx:95-99` — `gastoModo && gastoModo.series.some(…)`
-colapsa `null` (la consulta murió) y `[]` (de verdad no hay) en el mismo texto.
-Sus dos hermanas del mismo archivo sí los distinguen: `:108-111` ("No se pudo
-cargar esta gráfica" vs "Sin cierres en este periodo") y `:127-131`.
-
-(REINCIDENTE — del pase 2.)
-
----
-
-### [MEDIO] "Diésel" en el Resumen, "Combustible" en el PDF, en Combustible & Casetas y en Políticas
-
-`src/app/dashboard/gasto-semanal-chart.tsx:9-13` (`CONCEPTO_LABEL`, con
-`diesel: 'Diésel'`, `caseta: 'Casetas'`, `otro: 'Otros'`), usado en `:40` y
-`:75`; contra `src/lib/likida/cuadre/engine.ts:1191-1198`
-(`etiquetaConcepto('diesel')` sin `ocrExtra` devuelve **'Combustible'**) y
-`:1201` (`label()` dice 'Caseta' y 'Otro', en singular, con el comentario
-*"tiene que decir lo MISMO que pdf.ts y el dashboard"*).
-
-Escenario con valores: la leyenda de "Gasto por categoría" en el Resumen dice
-**Diésel · $412,800**. El contralor clickea "Combustible & Casetas" en el
-sidebar y la misma cubeta aparece como **Combustible · $412,800**
-(`combustible-casetas/page.tsx:202,205`). Abre Políticas y el renglón se llama
-**Combustible** (`politicas/page.tsx:155`). Descarga el PDF: **Combustible**.
-Tres nombres, un número.
-
-Peor en la dirección fiscal: `etiquetaConcepto` se salta el mapa para
-combustible precisamente porque el estímulo de IEPS es SOLO diésel (LIF 20-A
-fr. IV) y un ticket de Magna capturado como `diesel` debe leerse "Combustible
-Magna" (`[id]/page.tsx:386-397` lo explica entero). La gráfica del Resumen
-agrupa por `concepto` sin `ocrExtra`, así que rotula "Diésel" una cubeta que
-puede traer gasolina.
-
-`etiquetas_sincronizadas.test.ts:37` ancla el mapa de `[id]/page.tsx`, no éste.
-
-(REINCIDENTE — del pase 3; agravado porque las dos pantallas que se contradicen
-ya son alcanzables con un clic cada una.)
-
----
-
-### [MEDIO] "Gasto por categoría" desborda su columna en Mensual y en Histórico
-
-`src/app/dashboard/gasto-semanal-chart.tsx:50` (la fila de clusters, sin
-`min-w-0` ni `overflow-x`), la celda de `panel-periodo.tsx:91-101` (tampoco), y
-el ancestro que recorta: `page.tsx:165` (`glass-panel overflow-hidden`).
-
-A 1440 px: 1440 − 16 − 232 − 16 − 16 = 1160; `px-5` → 1120; `md:grid-cols-2
-gap-4` → celda 552; menos el eje Y de 44 (`:45`) y el `gap-2` → **500 px** de
-pista. Con `min-content` ≈ 27 px por cluster (`2026-S32` a `text-[11px]`) y
-`gap-3` = 12:
-
-| Vista | Clusters | Mínimo | 1440 | 1366 | 1280 |
-|---|---|---|---|---|---|
-| Semanal | 5 | 183 px | ✔ | ✔ | ✔ |
-| Mensual | 13 | 495 px | ✔ (por 5 px) | ✘ | ✘ |
-| Histórico | 52 | **2 016 px** | ✘ | ✘ | ✘ |
-
-El recorte es `hidden`, no `auto`: lo que se sale no se puede recuperar con
-scroll, desaparece.
-
-(REINCIDENTE — del pase 2.)
-
----
-
-### [MEDIO] Las flechas de periodo miden 16 × 16 px y van a 2 px una de otra
-
-`src/app/dashboard/kpi-periodo.tsx:10` (`BOTON = 'w-4 h-4 …'`) + `:76`
-(`gap-0.5`); `src/app/dashboard/motor-fiscal-periodo.tsx:7` (idéntico) + `:49`
-(`gap-0`, o sea pegadas).
-
-WCAG 2.5.8 pide 24 × 24 CSS px de objetivo. Son seis pares de flechas en el
-Resumen (3 KPI + 1 motor fiscal), cada una de 16 px, y en `motor-fiscal-periodo`
-sin separación: el "‹" y el "›" comparten borde, así que el dedo que apunta a
-"periodo más corto" abre el más largo.
-
-(REINCIDENTE — del pase 2.)
-
----
-
-### [MEDIO] El chat se queda "expandido" al navegar, y el escenario volvió a ser alcanzable
-
-`src/app/dashboard/rail.tsx:40` (`useState(false)` que nadie reinicia), `:90`
-(`if (pathname === RUTA_SIN_RAIL) return null`), `rail-marca.ts:26-30`.
-
-Escenario, con los clics que `8d6ac51` devolvió: sidebar → "Privacidad (ARCO)"
-→ expandir el asistente → sidebar → "Resumen" (el rail devuelve `null`, la marca
-se limpia, todo se ve bien) → sidebar → "Soporte & Quejas". El asistente
-reaparece **a pantalla completa** sobre una página que nunca se pidió así,
-porque `expandido` vive en un componente montado en el layout y sobrevive a la
-navegación.
-
-En el pase 4 esto quedó anotado como "escenario degradado: hoy solo se alcanza
-tecleando URLs". Ya no: son tres clics de sidebar, exactamente como se reportó
-la primera vez.
-
-(REINCIDENTE — del pase 3; escenario restaurado por `8d6ac51`.)
-
----
-
-### [MEDIO] "Actividad" bucketea con la zona horaria del proceso
-
-`src/app/dashboard/actividad.tsx:20-21` (`new Date()` + `setHours(0,0,0,0)`,
-hora local del runtime) y `:25` (`d.toISOString().slice(0,10)`, que vuelve a
-UTC), contra `fechaInicio`, que es columna `date` de México. `TZ_MX` existe en
-`analytics.ts` y aquí no se usa.
-
-En Vercel el proceso corre en UTC: entre las 18:00 y las 24:00 hora de México el
-`hoy` local ya es el día siguiente, y la barra de "hoy" del gráfico de 7 días
-queda corrida un día respecto de las cifras que tiene arriba.
-
-(REINCIDENTE — del pase 3.)
-
----
-
-### [MEDIO] `/admin/model-ops` rotula 3 de las 6 fases del pipeline
-
-`src/app/admin/model-ops/page.tsx:29` (`FASE_LABEL` con `ocr`, `cuadre`,
-`whatsapp`) usado en `:108`, contra `src/lib/likida/costos.ts:41`
-(`FaseCosto = 'ocr' | 'cuadre' | 'escalacion' | 'chat' | 'router' | 'whatsapp'`).
-
-Un gasto de la fase `escalacion` cae al `?? f.fase` y la dona lo etiqueta
-`escalacion`, minúscula y cruda, junto a "Agente de Cuadre". Las otras tres
-copias del mapa sí cubren las seis (`admin/page.tsx:21`,
-`admin/analitica/page.tsx:11`, `admin/costos-facturacion/page.tsx:63`), así que
-la misma fase se lee distinto en dos pantallas de la misma consola.
-
-Solo la usa Javier; por eso MEDIO y no más.
-
-(REINCIDENTE — del pase 3.)
-
----
-
-### [BAJO] El eje de pesos mezcla centavos y enteros
-
-`src/app/dashboard/gasto-semanal-chart.tsx:17-19` (`marcasEje` reparte `max` en
-cuartos, sin redondear a un múltiplo legible) + `:47`
-(`mxn(v).replace('.00','')`). Con `max = 37,412.55` el eje sale
-`$37,412.55 / $28,059.41 / $18,706.28 / $9,353.14 / $0` — cuatro decimales
-distintos y solo el cero pierde los centavos, porque el `.replace` únicamente
-acierta cuando la cifra ya era redonda.
-
-(REINCIDENTE — del pase 3.)
-
----
-
-### [BAJO · NUEVO] El sidebar restaurado no le dice a un lector de pantalla en qué página estás
-
-`src/app/dashboard/sidebar-nav.tsx:45` y `:113` (los dos `<Link>`; el estado
-activo se comunica **solo** con `style={estiloItem(activo)}`, o sea color),
-`src/app/dashboard/chrome.tsx:65` (el `<nav>` sin `aria-label`).
-`grep -rn "aria-current" src/app` → **cero** ocurrencias en todo el producto;
-`admin/layout.tsx:80` tiene el mismo hueco.
-
-Con `aria-current="page"` ausente, un usuario de lector de pantalla oye ocho
-enlaces idénticos en estructura y no sabe cuál corresponde a la pantalla que
-tiene abierta; el único indicador es el degradado, que es justamente el que
-falla contraste (arriba). Un producto que se vende a un departamento de
-administración va a topar con esto en la primera revisión de accesibilidad de un
-cliente corporativo.
-
----
-
-## Hallazgos de pases anteriores que YA NO APLICAN
-
-| # | Estado |
+### [ALTO · NUEVO] La tabla del chat imprime montos sin formato de moneda — y quien decide el formato es el MODELO, no `lib/formato.ts`
+
+`src/app/dashboard/chat.tsx:63` (`filas: (b.filas as Array<[string, string | number]>).map(([k, v]) => [k, typeof v === 'number' ? numero(v) : v])`),
+`src/app/dashboard/chat.tsx:52-53` (el comentario que afirma lo contrario:
+*"El agente manda números crudos; aquí se formatean con lib/formato — UNA sola
+fuente de formato, como siempre"*),
+`src/lib/agents/prompts.ts:55` (`'tabla': desgloses — cada fila como {concepto, valor}. Máximo 10 filas; los montos como número en texto plano (ej. "8340.50")`),
+`src/lib/agents/analista.ts:216-221` (el schema de la tool declara
+`valor: { type: 'string' }`) y `:82-83` (`validarBloques` acepta el string tal cual).
+
+Escenario con valores: el contralor escribe *"desglósame lo comprobado"*. El
+analista llama sus tools, obtiene 184320.5 y —obedeciendo el prompt— entrega
+`{concepto: "Monto comprobado", valor: "184320.50"}`. En el cliente,
+`typeof v === 'number'` es **false** (es string), así que la rama de formato no
+corre y la celda sale literal:
+
+| Dónde | Qué imprime |
 |---|---|
-| **P4-CRÍTICO** El panel del cliente se quedó sin navegación | **CERRADO POR ARREGLO** — `8d6ac51`, verificado arriba de forma independiente: 8/2/3 `href` para dueño/contador/encargado, prueba que se pone roja 4/5 al revertir |
-| **P2-ALTO 6** 16 páginas del panel sin un solo link | **CERRADO** — subsumido en el anterior; hoy 7 de las 8 estáticas tienen link y la 8ª (`/dashboard`) es la raíz. Queda solo `[id]`, que se reporta aparte por ser ruta dinámica |
-| **P1-2** "Comprobación del periodo" no filtra por fecha | CERRADO POR SUPRESIÓN (`dashboard/cuadre/`, `2be4b1c`) |
-| **P1-3** "PDF por liquidación" pierde el `?tenant=` | CERRADO POR SUPRESIÓN (`dashboard/analitica/`, `2be4b1c`) |
-| **P3-MEDIO 2** El mensaje crudo de PostgREST en la pantalla del contador | CERRADO POR SUPRESIÓN (`dashboard/contador/comun.tsx`, `003c88a`). Sobrevive la variante truncada, `arco/page.tsx:97` (`errorCarga.slice(0,120)`), que no elevo: dice explícitamente que no se pudo leer y no afirma vacío |
-| **P2-CRÍTICO** Volver a "Resumen" con el chat expandido deja el panel en blanco | CERRADO POR ARREGLO (`d7b71a8`); `rail-marca.ts:28` sigue puesto y `rail_marca.test.ts` verde |
-| **P2-ALTO 2** "Ahorro generado $0.00" con la consulta caída | CERRADO POR ARREGLO (`b9a191c`); hoy `page.tsx:265` es `resumenPerdidas?.montoRecuperable ?? null` |
-| **P2-ALTO 4** "Costo por viaje $0.00" | CERRADO POR ARREGLO (`e47b124`); `kpi-periodo.tsx:70` |
+| Tabla del chat (`chat.tsx:176`) | **`184320.50`** |
+| Fallback local del mismo chat (`chat.tsx:83`, `mxn`) | **`$184,320.50`** |
+| KPI del Resumen (`StatCard` → `resolverFormato('mxn')`) | **`$184,320.50`** |
+| El PDF de la liquidación | **`$184,320.50`** |
+
+Y si el modelo manda el número en vez del string, la rama que sí corre es
+`numero()`, no `mxn()`: `numero(184320.5)` = **`184,320.5`** — sin `$` y con un
+decimal. Ninguna de las dos ramas produce pesos.
+
+Consecuencia: el contralor lee en la pantalla estrella del rediseño una cifra
+fiscal en un formato que ningún contador usa, y la misma cifra escrita de dos
+maneras en la misma sesión —que es exactamente lo que `CLAUDE.md` describe como
+"se lee como dos cálculos". El bloque `cifra` sí está bien
+(`chat.tsx:60-61` resuelve `mxn`/`litros`/`numero` desde `formato`): la
+inconsistencia es solo del bloque `tabla`, que es el que el prompt empuja a usar
+para desgloses.
+
+Causa raíz probable: el contrato de `tabla` se definió con `valor: string`
+(`analista.ts:219`) para que Gemini aceptara el schema, y con eso el formato
+salió de la única fuente y se delegó al prompt.
+
+---
+
+### [ALTO · NUEVO] El alta de viaje reabre, en una línea, el fail-open que `repo.ts` prohíbe por escrito
+
+`src/app/dashboard/viajes/nuevo/page.tsx:36` (`const operadores = await listOperadores(tenantId).catch(() => []);`),
+contra `src/lib/likida/repo.ts:102-104`:
+
+```
+  // Un error leído como lista vacía se pinta "no hay choferes" — falso, y
+  // esconde justo la sección que decide si "Reasignar" tiene sentido mostrarse.
+  if (error) throw new Error(`listOperadores: ${error.message}`);
+```
+
+El `throw` existe precisamente para que nadie aplane el error a `[]`. La página
+nueva lo aplana en el call site.
+
+Escenario con valores: la flota tiene 9 operadores activos. La consulta a
+`operador` falla (RLS, PostgREST caído, timeout). El `.catch(() => [])`
+devuelve `[]`; `forma-viaje.tsx:74-79` pinta el `<select>` con **una sola
+opción, "Sin asignar todavía"**, y justo debajo, en `:80-82`, la promesa
+*"Con operador asignado, Likida le avisa por WhatsApp en cuanto el viaje
+exista."* El jefe de tráfico concluye que no tiene choferes dados de alta,
+crea el viaje sin operador, y `crearViaje` (`operacion.ts:585`) nunca llama
+`avisarAlChofer`.
+
+Consecuencia: el lazo central del producto —el operador recibe su viaje por
+WhatsApp y empieza a mandar comprobantes— se rompe en silencio, y la pantalla
+afirma un hecho falso sobre la plantilla de la flota. Ningún aviso, ninguna
+diferencia visual respecto al caso "de verdad no hay operadores".
+
+Causa raíz probable: se copió el patrón `safe()` del Resumen a una consulta
+cuyo autor lo prohibió explícitamente; `safe()` sirve cuando la pantalla sabe
+pintar el `null`, y aquí no lo distingue de `[]`.
+
+---
+
+### [ALTO · NUEVO] El chat se traga el error del servidor y contesta de su tabla de palabras clave sin decir que falló
+
+`src/app/dashboard/chat.tsx:382-387`:
+
+```
+      const r: Respuesta = resp.ok && d && Array.isArray(d.bloques)
+        ? respuestaDeBloques(d.bloques as Array<Record<string, unknown>>)
+        : responder(q, kpis, acred);
+      setHistorial((h) => [...h.slice(0, -1), { q, r }]);
+    } catch {
+      setHistorial((h) => [...h.slice(0, -1), { q, r: responder(q, kpis, acred) }]);
+```
+
+El campo `error` del cuerpo se descarta; el `status` no se mira.
+
+Escenario con valores: el contralor adjunta su Excel de gastos y pregunta
+*"¿este archivo cuadra con lo que tienes tú?"*. `ejecutarAnalista` revienta
+(OpenRouter 5xx, o su `AbortController` de 40 s en `analista.ts:309`), y
+`api/dashboard/chat/route.ts:104-107` responde **502**
+`{error: 'el analista no pudo responder en este momento'}`. El cliente cae a
+`responder(q, kpis, acred)` (`chat.tsx:144`) y pinta:
+
+> **"Todavía no sé responder eso — pregúntame sobre lo comprobado, diferencias,
+> diésel, IVA, peaje o tu tasa de cuadre."**
+
+El documento adjunto sigue en la píldora de arriba, intacto, y la respuesta no
+lo menciona. Lo mismo con el 504 de Vercel: `maxDuration = 60`
+(`route.ts:28`) contra el `AbortSignal.timeout(75_000)` del cliente
+(`chat.tsx:379`) — a los 60 s el runtime corta, `resp.ok` es false, y tras
+haber recorrido las cinco fases de "Pensando…" hasta *"Esto está tardando más
+de lo normal…"* (`chat.tsx:43-49`) sale la misma frase. Y con **401** (cookie
+vencida a media demo, `route.ts:42`) igual: el chat sigue "contestando" a un
+usuario que ya no tiene sesión.
+
+Consecuencia: una falla de infraestructura se le presenta al comprador como
+*límite de capacidad del producto* — "no sabe leer mi Excel". Es la clase de
+degradación que el propio endpoint sabe hacer bien: el tope diario
+(`route.ts:88-95`) responde **200** con un bloque de texto que explica qué pasó,
+y el chat lo pinta correcto. La ruta de error no tiene ese trato.
+
+Causa raíz probable: el fallback se diseñó para el caso "el agente no está
+disponible, aquí va lo que sí puedo calcular", pero se aplica a **todo**
+`!resp.ok`, y el respondedor local no tiene forma de decir "esto no lo contesté
+yo por elección".
+
+---
+
+### [ALTO · NUEVO] "aún sin liquidación" y el "—" de la columna Acción mienten sobre viajes que sí están liquidados
+
+`src/app/dashboard/inicio-contenido.tsx:147`
+(`const liqPorFolio = new Map((liquidaciones ?? []).map((l) => [l.folio, l.id]));`),
+`:152` y `:161` (`liqId = v.estatus === 'liquidado' ? liqPorFolio.get(v.folio) ?? null : null`),
+`src/app/dashboard/barra-acciones.tsx:81` (`{r.detalle}{!r.href && ' · aún sin liquidación'}`),
+`src/app/dashboard/resumen-visual.tsx:156-162` (el `Link` "Ver" o el "—"),
+contra `src/lib/likida/analytics.ts:1556` (`getLiquidaciones` → `.limit(50)`) y
+`:802` (`getViajes(tenantId, limite = 100)`).
+
+**Dos formas de fallar, las dos silenciosas:**
+
+1. **El tope de 50 contra el tope de 100.** Flota con 74 viajes liquidados. El
+   Resumen carga los 100 viajes más recientes y solo las **50** liquidaciones
+   más recientes. El contralor teclea `TI-0301` en el buscador de la barra; el
+   viaje aparece —está en los 100— y la línea de abajo dice
+   **"Silao → Monterrey · Ramírez · aún sin liquidación"**. Su liquidación
+   existe, está cerrada y su PDF se puede descargar; simplemente es la número
+   58 y quedó fuera de la ventana. En la tabla, esa fila sale con la píldora
+   verde **"Liquidado"** y, en la columna de al lado, un **"—"** donde sus
+   vecinas tienen "Ver". Dos afirmaciones contradictorias en la misma fila.
+
+2. **`getLiquidaciones` caída no se avisa.** `estadoPanel`
+   (`inicio-contenido.tsx:135`) recibe `liquidaciones: liquidacionesDeViajes(viajes)`
+   —derivado de `getViajes`—, **no** el resultado de `getLiquidaciones`. Si esa
+   consulta falla, `safe()` devuelve `null`, `?? []` lo aplana, `liqPorFolio`
+   queda vacío, **todos** los viajes liquidados pierden su "Ver" y el buscador
+   le dice "aún sin liquidación" a la flota entera — con `estado === 'datos'`
+   y sin la cinta de "Faltan datos por cargar" (`:258-268`).
+
+Consecuencia: el rótulo miente sobre dinero, y la única puerta que hoy existe
+hacia el expediente y su "Descargar PDF" se cierra sin decir por qué. En el
+demo, el presentador busca el folio que quiere enseñar y el panel le contesta
+que ese viaje no está liquidado.
+
+Causa raíz probable: el cruce se hace por `folio` en el cliente en vez de traer
+`liquidacion.viaje_id`, y las dos consultas tienen ventanas distintas que nadie
+concilia. (Aparte: `viaje` no tiene índice único `(tenant_id, folio)` —los
+únicos que existen son de `factura_emitida` y `cotizacion`, migs. 0049/0051— y
+el `folio` del alta nueva es texto libre sin validar, así que dos viajes con
+`F-0148` colapsan a una sola entrada del `Map`: gana la última del arreglo, que
+por el `order created_at desc` es la **más vieja**.)
+
+---
+
+### [MEDIO · NUEVO] Adjuntar un comprobante deja la caja del chat muerta, sin un solo píxel que diga que está trabajando — y sin reloj que la libere
+
+`src/app/dashboard/chat.tsx:264-307` (la rama de imagen de `leerArchivo`: pone
+`setOcupado(true)` en `:264` y **no** empuja ningún mensaje al historial hasta
+`:294`), `:273-276` (el `fetch` a `/api/dashboard/ingesta` **sin**
+`AbortSignal`), contra sus dos hermanos del mismo archivo que sí lo llevan:
+`:238-242` (`/api/dashboard/archivo`, `signal: AbortSignal.timeout(75_000)`) y
+`:374-380` (`/api/dashboard/chat`, con el comentario *"Sin esto, un servidor
+colgado dejaba 'pensando…' para siempre (reportado en vivo el 12-ago)"*).
+
+Escenario con valores: en el demo, el presentador aprieta el clip → "Tomar
+foto" → fotografía el ticket de diésel. La imagen viaja como data URL (una foto
+de teléfono son 3–7 MB de base64) y el OCR corre hasta 45 s
+(`api/dashboard/ingesta/route.ts:49`). Durante esos 45 segundos la pantalla no
+cambia: no hay burbuja, no hay `skeleton`, no hay "Leyendo el comprobante…" —
+solo el botón de enviar y el clip atenuados al 50 % (`chat.tsx:508`, `:515`).
+El presentador aprieta otra vez, no pasa nada (`leerArchivo:225`
+`if (ocupado) return`), y vuelve a apretar.
+
+Y si la conexión se cae a media subida —Wi-Fi de sala de juntas— el `fetch` sin
+`signal` **nunca resuelve**: `ocupado` se queda en `true` para siempre y la caja
+no vuelve a aceptar ni una pregunta escrita hasta recargar la página. Ese es
+literalmente el modo de falla que el comentario de `:377-378` dice haber
+cerrado el 12-ago para el otro endpoint.
+
+Consecuencia: el paso más vistoso del demo —"le tomas foto al ticket y el motor
+lo lee"— se ve como una interfaz congelada. La rama de texto, dos bloques
+arriba, tiene el mismo hueco de feedback (75 s de silencio para un Excel), pero
+al menos no se puede colgar.
+
+---
+
+### [MEDIO · NUEVO] Las píldoras de región de "Top rutas" reprueban AA sobre el fondo que de verdad pintan — y su prueba murió en el merge
+
+`src/app/dashboard/top-rutas.tsx:55-56`
+(`className="text-xs …"` con `style={{ color: colorDe(r.region), background: \`color-mix(in srgb, ${colorDe(r.region)} 12%, transparent)\` }}`),
+`:16-19` (`COLOR_REGION`), `:22` (`colorDe` → `'var(--muted)'` para "Sin
+clasificar"), y `:9-15`, el comentario que afirma lo contrario:
+
+> *"Los siete pasan AA (4.5:1) como TINTA sobre `--surface` … Medido en
+> `contraste_tinta_componente.test.ts`."*
+
+El fondo no es `--surface`. Es la propia tinta al 12 % compuesta sobre
+`--surface`, o sea un tinte del mismo tono, y eso **baja** el contraste. Misma
+fórmula WCAG 2.1 que `contraste.test.ts:25-35`:
+
+| Región | Tinta | Sobre `--surface` (lo medido) | Sobre la píldora real | AA (12 px) |
+|---|---|---|---|---|
+| Sureste | `#b45309` | 5.02 | **4.25** | ✘ |
+| Noreste | `#15803d` | 5.02 | **4.27** | ✘ |
+| Centro | `#c2410c` | 5.18 | **4.35** | ✘ |
+| Sin clasificar | `--muted` `#6b7280` | 4.83 | **4.16** | ✘ |
+| Golfo | `#0e7490` | 5.36 | 4.53 | ✔ (por 0.03) |
+| Noroeste | `#7c3aed` | 5.70 | 4.75 | ✔ |
+| Occidente | `#0369a1` | 5.93 | 4.98 | ✔ |
+| Sur | `#be123c` | 6.29 | 5.12 | ✔ |
+
+Y ya no hay red: **`contraste_tinta_componente.test.ts` no existe en el árbol**
+(`git show 65da222:…` lo muestra; `ls src/app/dashboard/*.test.*` ya no). El
+MAPA lo clasificó como "colateral del borrado, SIN hallazgo detrás", y para el
+degradado naranja es cierto —`DEGRADADO_MARCA` se retiró de
+`resumen-visual.tsx`—, pero **`COLOR_REGION` sobrevivió** y se quedó sin nadie
+que lo mida.
+
+Escenario: "Centro" es la región del 60 % de las rutas de una flota del Bajío;
+es la píldora que más se repite en la tabla, a 12 px, proyectada en una sala
+iluminada. `--muted` ("Sin clasificar") es el peor de los ocho y es justo el que
+marca la ruta que el catálogo no reconoció, o sea la que hay que mirar.
+
+Causa raíz probable: la medición se hizo contra `--surface` porque así lo hacía
+el guardarraíl que existía; el componente pinta sobre otra cosa desde
+`top-rutas.tsx:56`.
+
+---
+
+### [MEDIO] Entre 768 y 1023 px el sidebar vuelve a cortar sus etiquetas a ~10 px (REINCIDENTE — reabierto por el merge)
+
+`src/app/marco.ts:22-23` (`MARCO_SIDEBAR = 'glass-panel w-[72px] lg:w-[232px] … overflow-hidden'`),
+`src/app/dashboard/chrome.tsx:63-72` (el `<nav>` mete `<SidebarNav rol={rol}/>`
+en esa columna **sin** variante colapsada; el propio comentario deja constancia:
+*"El modo COLAPSADO que lo acompañaba —`<SidebarNav soloIconos />` entre `md` y
+`lg`— NO sobrevive al merge del 13-ago … El corte de etiquetas a ~10px que
+tapaba vuelve a estar abierto"*),
+`src/app/dashboard/sidebar-nav.tsx:9` (`ITEM = 'flex items-center gap-2.5 px-2.5 py-1.5 … text-[13px] sb-centrable'`),
+`:45` y `:113` (`<span className="sb-texto truncate">{nombre}</span>`),
+`src/app/globals.css:318-324` (las reglas de colapso solo se activan con
+`:root[data-sidebar='min']`, que lo pone `boton-sidebar.tsx` — y ese botón vive
+en `chrome.tsx:50` dentro de un `hidden lg:block`, o sea **no existe** en este
+rango).
+
+Aritmética con los números del árbol de hoy: `aside` 72 → `nav px-2` 56 →
+item `px-2.5` 36 → ícono 16 + `gap-2.5` 10 = 26 → quedan **≈ 10 px** de texto.
+
+Escenario: el contralor abre el panel en un iPad vertical (768 px CSS) o el
+presentador sube el zoom a 150 % en un portátil de 1440 (→ 960 px CSS). Salen
+dos filas —"Resumen" y "Chatea con tus datos"— reducidas a un ícono y una
+elipsis, sin ningún control para ensanchar (el colapsador es `lg`+).
+
+Diferencia honesta con el pase 5: el daño es **menor** que entonces, porque hoy
+el sidebar solo pinta 2 items (`rutas.ts:67-71` + el Resumen) en vez de 8 + 2
+encabezados, y `:45` sí tiene `truncate`, así que corta con elipsis y no a
+mitad de letra. Por eso MEDIO y no más. `/admin` sigue teniendo la solución
+escrita al lado (`admin/layout.tsx`, el par
+`hidden lg:block`/`lg:hidden` con `SidebarNavIconos`) y comparte `marco.ts` con
+esta pantalla.
+
+(REINCIDENTE — del pase 5. **El MAPA lo cuenta como "colateral sin hallazgo
+detrás"** por el borrado de `sidebar_colapsado.test.tsx`; el sujeto no
+desapareció, solo su prueba.)
+
+---
+
+### [MEDIO · NUEVO] "Crear viaje" con el formulario vacío crea el viaje, y el Resumen imprime 8 dígitos hexadecimales en la columna "Viaje"
+
+`src/app/dashboard/forma-viaje.tsx:49-79` (los seis campos: **ninguno** lleva
+`required`, ninguno lleva validación de cliente),
+`src/app/dashboard/viajes/nuevo/page.tsx:48-60` (la action solo valida el monto
+del anticipo y el formato de la fecha; folio/origen/destino pasan como `null`
+por `texto()` en `:48-51`),
+`src/lib/likida/operacion.ts:559-569` (`folio: v.folio || null, origen: … || null, destino: … || null, anticipo: v.anticipo ?? 0`),
+`src/lib/likida/analytics.ts:812` (`folio: (v.folio as string) || (v.id as string).slice(0, 8)`),
+`src/app/dashboard/resumen-visual.tsx:146` (`<div className="text-sm font-medium">{v.folio}</div>`).
+
+Escenario con valores: el jefe de tráfico abre "Nuevo viaje" desde el botón del
+Resumen (`inicio-contenido.tsx:215-219`), se distrae, y aprieta **Crear
+viaje**. La action pasa las dos validaciones que hay (`anticipo = 0` es finito y
+≥ 0; `fecha = null` no entra al regex), `crearViaje` inserta la fila, y
+`redirect` devuelve al Resumen. Ahí aparece, como primera fila de "Viajes
+recientes":
+
+| Viaje | Operador | Anticipo | Estatus | Inicio | Acción |
+|---|---|---|---|---|---|
+| **`a3f91c2e`** · — | Sin asignar | $0.00 | Abierto | — | — |
+
+`a3f91c2e` son los primeros 8 caracteres del UUID: `getViajes` los usa como
+folio sintético cuando la columna es nula. El viaje entra al conteo de "viajes
+activos", a la dona de "Viajes" del periodo y a `AvanceCierre`. No hay cómo
+borrarlo desde la interfaz (no existe pantalla de viajes).
+
+Consecuencia: el único camino de escritura que hoy tiene el panel acepta un
+registro completamente vacío y lo publica en la pantalla de apertura del demo,
+con un fragmento de identificador de base de datos donde va el folio del viaje.
+El `maxLength` de los campos indica que alguien pensó en la forma del dato; el
+`required` no se puso.
+
+---
+
+### [BAJO · NUEVO] "Ver los N" presenta el tope de 100 como si fuera el total de viajes de la flota
+
+`src/app/dashboard/viajes-recientes.tsx:22` (`filas.length > 6`) y `:27`
+(`Ver los {filas.length}`), alimentado por `inicio-contenido.tsx:148`
+(`(viajes ?? []).map(...)`) sobre `getViajes(tenantId)` con `limite = 100`
+(`analytics.ts:802`).
+
+Escenario: flota con 340 viajes. El botón dice **"Ver los 100"** y al abrirlo
+enseña 100. `contarViajes` (`analytics.ts:750`) existe exactamente para esto y
+su docstring lo dice con todas sus letras —*"el KPI enseñaba `viajes.length`
+como si fuera el total … Es el rótulo que miente, que es la regla que define
+este producto"*—; `grep -rn "contarViajes" src/` fuera de `analytics.ts` y su
+prueba da **cero** llamadores.
+
+BAJO porque el botón no afirma "todos"; se vuelve MEDIO en cuanto alguien lo
+convierta en el "Ver todo" que el comentario de `:11-12` ya anuncia.
+
+---
+
+## Ampliaciones de fichas conocidas (NO son hallazgos nuevos)
+
+### Sobre `kpi-periodo.test.tsx` y `ahorro_sin_dato.test.ts` (los dos `?? 0`)
+
+La ficha señala dos líneas (`kpi-periodo.tsx:67` y el mismo patrón en
+`inicio-contenido.tsx:287`). El radio es estructural, no de dos líneas: la v3
+cambió `KpiDegradado` —que aceptaba `number | null` y sabía pintar "sin dato"—
+por `StatCard` de `admin/ui/kit.tsx:110-115`, cuya firma es **`valor: number`**.
+Con ese contrato, *todo* call site está obligado a aplanar, y `tsc` lo exige.
+Son **6 usos** en 3 archivos (`inicio-contenido.tsx`, `kpi-periodo.tsx`,
+`tablero-operacion.tsx`): mientras `StatCard` no recupere el `null`, cerrar los
+dos `?? 0` fichados deja el agujero abierto para el siguiente KPI que se agregue.
+
+### Sobre `expediente_alcanzable.test.tsx`
+
+La prueba falla afirmando que `dashboard/page.tsx` debe contener
+`'UltimasLiquidaciones'`. Eso ya no es cierto por mudanza, no por defecto:
+`page.tsx` se partió y el contenido vive en `inicio-contenido.tsx`, que **sí**
+abre el expediente por dos caminos nuevos (`resumen-visual.tsx:156-159`, el
+"Ver" de la tabla; y `barra-acciones.tsx:77`, el buscador). O sea: la puerta
+existe, la prueba apunta al archivo equivocado. Lo que **no** está cerrado es la
+fiabilidad de esa puerta — ver mi ALTO del `liqPorFolio`: solo funciona para las
+50 liquidaciones más recientes, se apaga entera si `getLiquidaciones` se cae, y
+nunca funciona para un viaje sin folio (los folios sintéticos salen de
+`viaje.id.slice(0,8)` en `analytics.ts:812` y de `liquidacion.id.slice(0,8)` en
+`:1563` — dos tablas distintas, nunca cruzan).
+
+---
+
+## Hallazgos del pase 5 que YA NO APLICAN
+
+Verificado uno por uno, con la prueba que lo ancla:
+
+| Pase 5 | Estado hoy |
+|---|---|
+| **[MEDIO] KPIs blanco sobre el degradado naranja a 2.1–2.6:1** | **CERRADO POR SUPRESIÓN + ARREGLO.** `DEGRADADO_MARCA`/`KpiDegradado` se retiraron de `resumen-visual.tsx` (ver su cabecera, `:14-19`), y `.tema-neutro` (`globals.css:152-162`) pone `--marca: #18181b` en las dos consolas: blanco sobre negro ≈ 16.9:1. El item activo del sidebar hoy es pill suave `--g1` con tinta `--marca` (`sidebar-nav.tsx:20-22`), ~15.4:1 |
+| **[MEDIO] "Golfo" `#0891b2` a 3.68:1** | **CERRADO POR ARREGLO** — `top-rutas.tsx:18` es `#0e7490`. (La medición se hizo contra el fondo equivocado: ver mi MEDIO de arriba) |
+| **[ALTO] "Litros elegibles … 0.00 L" con la consulta caída** | **CERRADO POR ARREGLO** — `combustible-casetas/litros_sin_dato.test.tsx`, 4 verdes |
+| **[MEDIO] "Usuarios & Roles" imprime `flota_admin` crudo** | **CERRADO POR ARREGLO** — `usuarios/roles_legibles.test.ts`, 5 verdes |
+| **[MEDIO] Soporte imprime `facturacion` / `en_proceso` crudos** | **CERRADO POR ARREGLO** — `soporte/etiquetas_soporte.test.ts`, 6 verdes |
+| **[MEDIO] "Vencen pronto (≤ 5 días)" cuenta solo lo vencido** | **CERRADO POR ARREGLO** — `arco/vencimiento.test.ts`, 11 verdes |
+| **[MEDIO] "Actividad" bucketea con la zona del proceso** | **CERRADO POR ARREGLO** — `actividad.test.ts` (9) y `actividad_ciega.test.tsx` (5), verdes |
+| **[ALTO] "Aún no hay viajes registrados" con `getViajesPorMes` caída** | **CERRADO POR ARREGLO** — `actividad_ciega.test.tsx` verde |
+| **[ALTO] El asistente expandido bajo 1280 px deja el panel invisible** | **CERRADO POR SUPRESIÓN** — el rail se borró el 12-ago (`chrome.tsx:108-111`: *"nunca más debe aparecer en ninguna página"*), con él su endpoint. `rail.tsx` ya no existe |
+| **[MEDIO] El chat se queda "expandido" al navegar** | **CERRADO POR SUPRESIÓN** — mismo borrado del rail |
+| **[MEDIO] "Diésel" vs "Combustible"** | **CERRADO POR ARREGLO** — `etiquetas_panel.test.ts`, 3 verdes |
+| **[BAJO] El eje de pesos mezcla centavos y enteros** | **CERRADO POR ARREGLO** — `gasto_semanal_chart.test.tsx`, 12 verdes |
+| **[MEDIO] "El panel manda al chofer a `/mis-viajes`"** | **CERRADO** — el texto ya no está en `usuarios/page.tsx` (`roles_legibles.test.ts` verde) |
+| **[MEDIO] `/admin/model-ops` rotula 3 de 6 fases** | **NO VERIFICADO este pase** (ver "lo que no alcancé") |
 
 ---
 
 ## Lo que revisé y está bien
 
-**Los mapas literales del panel contra `src/types/likida.ts` y los dominios de
-la base — el trabajo obligatorio del rubro, recorrido entero, no una muestra.**
-`grep "Record<string," src/app` da 21 sitios fuera de pruebas y los abrí todos.
-Sanos:
+**La superficie nueva, archivo por archivo** (era la prioridad del pase):
 
-- `MOTIVO_ERROR` (`combustible-casetas/page.tsx:29-35`) — los **5** valores de
-  `ResultadoResolverLinea.motivo`, uno por uno, con `?? 'No se pudo resolver la
-  línea.'` en `:167`. Sigue siendo el mejor hecho del panel.
-- `CONCEPTO_LABEL` de `gasto-semanal-chart.tsx:9-13` — **cubre las 9 claves** de
-  `ConceptoGasto` (`types/likida.ts:20-25`), ninguna falta. Su problema es otro
-  (qué palabra usa), no cobertura.
-- `CONCEPTO` de `[id]/page.tsx:29-33` — las mismas 9, y solo entra como red
-  cuando `etiquetaConcepto` devuelve la clave cruda (`:399-402`).
-- `ESTATUS`/`etiquetaEstatus` (`estatus.ts:17-26`) — los 3 de
-  `EstatusLiquidacion`, con clave cruda en gris para un cuarto;
-  `etiquetas_sincronizadas.test.ts` lo ata al tipo.
-- `ETIQUETA_TIPO` (`arco/page.tsx:14-16`) y los de `admin/compliance/page.tsx:14,17`
-  — las 4 y 4 claves exactas de `arco_tipo_dominio`/`arco_estado_dominio`, con `?? s.tipo`.
-- `ESTADO_PILL` (`suscripcion/page.tsx:50-56`) — `Record<Suscripcion['estado'],…>`,
-  cerrado por `tsc`, las 5 de `suscripcion_estado_dominio`
-  (`0052:66-67`). El de facturas (`:446`) cubre las 4 de
-  `factura_saas_estado_dominio` (`0052:98-99`) con el default en 'Cancelada',
-  que es la cuarta real: no hay quinta.
-- `COLOR_REGION` (`top-rutas.tsx:9-12`) — las 7 regiones que `regionDe`
-  (`analytics.ts:949-956`) puede devolver; `colorDe` cae a `--muted` y el texto
-  a "Sin clasificar".
-- `ETIQUETA_MODO` (`kpi-periodo.tsx:14-18`, `motor-fiscal-periodo.tsx:11-13`) —
-  `Record<Modo,string>`, un cuarto modo rompe la compilación.
-- `ROL_LABEL` (`admin/equipo/page.tsx:13-18`) — `Record<RolAppUser,string>`, el
-  único mapa de roles que `tsc` protege.
-- `FASE_LABEL` de `admin/page.tsx:21`, `admin/analitica/page.tsx:11` y
-  `admin/costos-facturacion/page.tsx:63` — las 6 de `FaseCosto`. La cuarta copia
-  (`model-ops`) es el reincidente de arriba.
+- **`chat/page.tsx:29`** — `puedeVerArea(rol, 'dinero')` corre **antes** de
+  `getKpis`/`getAcreditables` (`:31-34`). Un encargado no puede sacar cifras de
+  dinero por esta pantalla. El endpoint repite el chequeo
+  (`api/dashboard/chat/route.ts:44-46`), o sea dos capas independientes.
+- **`api/dashboard/chat/route.ts:83-95`** — el tope diario **falla cerrado y lo
+  dice**: si no se puede leer `llm_costo`, responde 200 con un bloque de texto
+  que explica que el análisis descansa, y el cliente lo pinta tal cual. Es el
+  patrón correcto del repo, y contrasta con la ruta de error (mi ALTO).
+- **`sidebar-nav.tsx:104`** — el menú se filtra con la MISMA `puedeVerRuta` que
+  gatea la página; `rolMenu` (`:98`) replica `rolEfectivo` sin poder **dar**
+  permisos (`visibilidad.ts:154-158`). El sufijo `?tenant=`/`?vista=`/`?rol=`
+  viaja en cada `href` (`:83-92`) y en los de `inicio-contenido.tsx:166`, `:215`
+  y `viajes/nuevo/page.tsx:33-34`, `:78`, `:88`. `sufijo.test.ts` verde (5).
+- **`viajes/nuevo/page.tsx:38-46`** — la server action **re-verifica sesión y
+  permiso adentro** (`requireSessionTenant` + `puedeAsignar(sesion.rol)`, con el
+  rol REAL, no el previsualizado): el gateo del render no es la única puerta. Y
+  `crearViaje` (`operacion.ts:545-557`) revalida en el servidor que el operador
+  sea de esta flota — el `<select>` no se cree.
+- **`inicio-contenido.tsx:141` y `:173`** — las alertas se dejaron **vacías** a
+  propósito, con el motivo escrito, en vez de enlazar a `/dashboard/cuadre`,
+  que ya no existe. Los pendientes de la campana salen como texto sin link.
+  Esa es la disciplina correcta: cero `href` muertos. Recorrí los 14
+  `href="/dashboard…"` / `redirect('/dashboard…')` del repo y **ninguno apunta a
+  una página borrada**.
+- **`resumen-visual.tsx:141`** — `PILL_ESTATUS` cubre los **3** valores del
+  constraint `viaje_estatus_dominio` y cae a la clave cruda en neutro. `:142` y
+  `:149`: sin origen/destino no inventa ruta, pone "—".
+- **`analista.ts:166-190` (`cifrasRespaldadas`) + `chat.tsx:70`** — el bloque
+  `cifra` sí resuelve `mxn`/`litros`/`numero` desde `lib/formato`, y el bloque
+  `serie` pasa `mxn` como `etiquetaValor`. La guardia de cifras del servidor es
+  determinística y el cliente no la puede saltar. Mi hallazgo es solo del bloque
+  `tabla`.
+- **`barra-acciones.tsx:44-50`** — el dropdown se cierra al clic fuera, con
+  `removeEventListener` en el cleanup. `:53-54` normaliza acentos antes de
+  filtrar, así que "Monterrey" encuentra "montérrey". `:75` la `key` compone
+  etiqueta+detalle.
+- **`boton-sidebar.tsx:32`** — `useSyncExternalStore` con snapshot de servidor
+  fijo en `false`: sin mismatch de hidratación y sin `setState` en efecto.
+- **`chat.tsx:216-218`** — el ancla al último mensaje depende de
+  `historial.length`, no del objeto, así que no re-scrollea en cada render.
 
-**El arreglo del ALTO vecino (`58c44f9`, `[id]/id.ts`).** No es mi rubro pero
-toca mi pantalla: `esIdDeLiquidacion` (`id.ts:26-28`) valida el UUID **antes**
-de la consulta (`[id]/page.tsx:62`), así que un marcador viejo a
-`/dashboard/viajes` da 404 y no la pantalla de error. Verificado que el orden es
-el correcto y que `exigir()` no se aflojó.
+**Formato de cifras — el barrido completo.** `src/lib/formato.ts` sigue siendo
+la única fuente: `dashboard/formato.ts` es reexport puro, `lib/utils.ts:12`
+también, `admin/ui/formato-preset.ts` resuelve presets llamando a esas
+funciones. `formato.test.ts` (7 casos, incluida la prohibición de
+`toLocaleString('es-MX')` fuera del archivo) **verde**. El agujero que reporto
+no lo viola por copiar la función: la evita.
 
-**Estados vacío / error / parcial de las ocho páginas vivas**, uno por uno:
-`combustible-casetas:66-76` (`safeConciliacion` distingue a propósito "nunca
-llegó un consolidado" de "la consulta falló" — el patrón correcto del repo),
-`:177-178`, `:221-222`, `:253-254`, `:278-282`;
-`soporte:55-60` ("No se pudo leer la cola. La consulta falló — no es que no haya
-tickets") y `:41,88` (un ticket sin SLA no está vencido, y lo dice);
-`arco:95-99` (fail-cerrado explícito);
-`politicas:124-127` y `:187-191` (vacío = sin tope, 0 = tope de cero, dicho en
-pantalla; y `armarPolitica` repone las reglas por ruta que el formulario no
-edita, `:87-99`);
-`configuracion:47-50`, `:98-104`, `:136-141`;
-`usuarios:71-72`;
-`suscripcion:234`, `:330-331`, `:445-459` ("Sin timbrar" para una factura pagada
-sin CFDI es un estado real y se ve);
-`inicio-operacion:96` (`tablero?.viajesActivos ?? '—'`, no `?? 0`), `:123-126`,
-`:139-140`, `:169-170`;
-`dashboard/error.tsx:66-71` (el `digest` en pantalla, `select-all`, más línea de
-log). Ninguno de éstos pinta un cero por una consulta caída.
+**Modo oscuro: ya no es un riesgo.** `globals.css:124-130` retiró el
+`@media (prefers-color-scheme: dark)`; las dos reglas `[data-theme]` quedan
+declaradas pero nada las dispara, y no hay switch. Esto cierra el hueco que
+dejé anotado en el pase 5 y hace inofensivo el `bg-white` literal de
+`ChipFecha` (`resumen-visual.tsx:57`).
 
-**Formato de cifras.** Una sola fuente: `src/lib/formato.ts`.
-`dashboard/formato.ts` es reexport puro, `lib/utils.ts:12` también, y
-`admin/ui/formato-preset.ts` resuelve presets llamando a esas funciones.
-`formato.test.ts` (7 casos, la prueba que bloquea `toLocaleString('es-MX')`
-fuera del archivo) verde.
+**Claves de React en filas de dinero.** `TablaViajes` (`resumen-visual.tsx:144`)
+usa `v.id`; `TopRutas` (`top-rutas.tsx:49`) usa `origen→destino`, que es la
+llave de agrupación de `getTopRutasPorGasto`; `TablaCarga`, `c.operadorId`;
+`arco`, `s.id`; `usuarios`, `u.id`; `soporte`, `t.id`. Los `key={i}` que quedan
+(`chat.tsx:396`, `:561`, `:577`; `MotorFiscal` `resumen-visual.tsx:207`) son
+listas append-only sin reordenamiento. Ninguna clave inestable mueve una fila de
+dinero.
 
-**Claves de React en filas de dinero.** `TopRutas` (`top-rutas.tsx:41`) usa
-`` `${r.origen}→${r.destino}` ``, que es exactamente la llave de agrupación de
-`getTopRutasPorGasto` (`analytics.ts:999`) — no puede colisionar.
-`TablaCarga` (`tablero-operacion.tsx:83`) usa `c.operadorId`; `suscripcion`,
-`f.id`/`p.clave`; `arco`, `s.id`; `usuarios`, `u.id`; `politicas`,
-`` `${p.concepto}-${p.ruta ?? ''}` ``; `soporte`, `t.id`. Los dos `key={i}` que
-quedan (`[id]/page.tsx:285` diferencias y `:325` comprobantes) son listas de
-Server Component sin reordenamiento en cliente: el índice es estable ahí y no
-mueve una fila de dinero. Ninguna clave inestable.
-
-**Autorización de la UI.** `sidebar-nav.tsx:105` filtra con la MISMA
-`puedeVerRuta` que gatea la página; `rolMenu` (`:99`) replica `rolEfectivo`
-(`visibilidad.ts:146-150`); el sufijo `?tenant=`/`?vista=`/`?rol=` viaja en cada
-link (`:84-93`, cubierto por `sufijo.test.ts`, 5 casos) y también en los
-redirects de servidor (`tenant-efectivo.ts:64-75`). `sufijoTenant`
-(`sufijo.ts:20-26`) arrastra los tres. `AvisoSinFlota` va antes que cualquier
-cifra (`page.tsx:184-186`) y `AvisoRol` sigue siendo la única salida de vuelta a
-`/admin`. `resolverTenantEfectivo:105-107` no puede hacer bucle: rebota a
-`inicioDe(rol)`, que por construcción ese rol sí ve —comprobado para contador
-(`/dashboard/suscripcion`) y encargado (`/dashboard`).
+**Estados vacío/error/parcial de las páginas heredadas**, releídos porque el
+merge las tocó: `combustible-casetas:66-76` (distingue "nunca llegó consolidado"
+de "la consulta falló" — sigue siendo el mejor hecho del panel),
+`soporte:55-60`, `arco:95-99`, `politicas:124-127`, `configuracion:47-50`,
+`suscripcion:234`/`:445-459`, `inicio-operacion.tsx:96` (`?? '—'`, no `?? 0`),
+`:123-129`, `:139-140`, `:169-170`, `dashboard/error.tsx:66-71` (el `digest` en
+pantalla, `select-all`). Ninguno pinta un cero por una consulta caída.
 
 **Compuerta.** `npx tsc --noEmit -p .` → **0 errores**.
-`npx vitest run src/app/dashboard src/app/admin src/lib/auth` → **28 archivos,
-251 pruebas verdes**. Árbol limpio al terminar (solo `MAPA.md`, que ya lo estaba).
+`npx vitest run src/app/dashboard` → **28 archivos, 186 pruebas: 171 verdes,
+15 rojos** — los 15 son exactamente la tabla del MAPA (`ahorro_sin_dato` ×3,
+`aria_current` ×2, `expediente_alcanzable` ×1, `kpi-periodo` ×1,
+`objetivo_de_toque` ×2, `panel_periodo` ×3, `sidebar_puerta` ×3), ni uno más.
+Árbol limpio: no toqué ningún archivo fuera de éste.
 
 ---
 
 ## Lo que NO alcancé a revisar
 
-- **Nada se renderizó en un navegador, quinta ronda seguida.** Los dos hallazgos
-  nuevos de layout/contraste son **aritmética verificable** —fórmula WCAG 2.1
-  igual a la de `contraste.test.ts:25-35`, y anchos derivados de las clases
-  Tailwind del árbol de hoy— pero no vi el degradado en una pantalla ni el
-  sidebar a 768 px. Lo mismo para P2-ALTO 5.
-- **`suscripcion/page.tsx` completa (≈ 480 líneas).** Leí el gateo, los mapas de
-  estado, el bloque de facturas y las ramas de degradación de Stripe; **no** leí
-  `./vista.tsx` (`Uso`, `TarjetaPlan`, `InstruccionesTransferencia`) ni las tres
-  server actions de contratación. Es la pantalla de aterrizaje del contador en
-  el demo, así que el hueco importa.
-- **`combustible-casetas/vista-consolidado.tsx`** (`LineasPorConciliar`, el único
-  formulario interactivo de resolución de líneas). Solo verifiqué su contrato
-  desde la página.
-- **Las ~30 páginas de `/admin` por dentro.** Abrí `page.tsx`, `layout.tsx`,
-  `selector-vista.tsx`, `flotas`, `model-ops`, `compliance`, `equipo`,
-  `mi-perfil` y `sidebar-nav.tsx`. Sigue sin haber `admin/error.tsx`: un fallo
-  ahí sube a `global-error.tsx` y recarga el documento entero.
+- **Nada se renderizó en un navegador, SEXTA ronda seguida.** Los números de
+  contraste son aritmética verificable (misma fórmula que
+  `contraste.test.ts:25-35`, tokens leídos de `globals.css`) y los anchos del
+  sidebar salen de las clases Tailwind del árbol de hoy — pero no vi la píldora
+  "Centro" en una pantalla ni el chat después de adjuntar una foto. El hallazgo
+  del feedback ausente es lectura de código, no observación.
+- **`/dashboard/chat` con el agente vivo.** No lo ejercité contra OpenRouter
+  (no hay llaves aquí), así que **no vi una tabla real del modelo**: el formato
+  que reporto lo deduzco del contrato (`prompts.ts:55` + `analista.ts:219` +
+  `chat.tsx:63`), que es determinístico, pero no de una respuesta capturada.
+  Tampoco medí cuántas de las 12 respuestas del catálogo de Consulta
+  (`chat.tsx:315-342`) el agente contesta con `tabla` y cuántas con `cifra`.
+- **`/api/dashboard/archivo` y el lector universal** (`intake/archivo.ts`). Solo
+  leí el contrato desde el cliente: qué trae `d.extracto` y `d.meta`, y que
+  `d.meta` se pinta como tabla sin validar su forma (`chat.tsx:253`,
+  `Array.isArray` y nada más). Es frontera de confianza nueva y no la abrí.
+- **`suscripcion/page.tsx` completa** (≈480 líneas) y su `./vista.tsx` — la
+  pantalla de aterrizaje del contador. Leí el gateo, los mapas de estado y las
+  ramas de Stripe; no las tres server actions de contratación.
+- **`combustible-casetas/vista-consolidado.tsx`** — el único formulario
+  interactivo de resolución de líneas. Solo su contrato.
+- **Las ~30 páginas de `/admin` por dentro**, incluido si el reincidente de
+  `model-ops` (`FASE_LABEL` con 3 de 6 fases) sigue abierto. Sigue sin haber
+  `admin/error.tsx`.
 - **Accesibilidad más allá de contraste, tamaño de toque y `aria-current`.** No
-  verifiqué orden de foco, trampa de foco del asistente expandido (que es
-  `fixed` y cubre la página sin `role="dialog"` ni `aria-modal`), teclado en los
-  formularios de ARCO/políticas/consolidado, ni `aria-live` tras las server
-  actions. El pill de `panel-periodo.tsx:57-63` sigue sin `aria-pressed` ni rol
-  de grupo de radio — cuarta vez que se anota sin contarlo como hallazgo nuevo.
-- **Responsive por debajo de `md` (768 px).** El hallazgo nuevo cubre 768–1023.
-  Abajo de 768 los `grid-cols-1 md:grid-cols-2/3` los leí, no los medí, y no
-  evalué qué hace la tabla de `[id]` ni la de `soporte` en un teléfono.
-- **Modo oscuro.** `globals.css:118` redefine la paleta completa; medí `--g3` y
-  `--marca`, que no cambian entre modos, pero no re-medí `--muted` (#9aa0aa en
-  oscuro) ni el hero.
-- **La suite completa** (`npx vitest run` a secas). Corrí 28 archivos de
-  `src/app/` y `src/lib/auth/`; la cifra global de este pase la tomo del MAPA.
+  verifiqué orden de foco, teclado en el menú de adjuntar de `chat.tsx:484-505`
+  (es un `div` flotante sin `role="menu"` ni cierre con Escape ni clic-fuera —
+  a diferencia del de `barra-acciones.tsx`), ni `aria-live` en la burbuja de
+  "Pensando…" ni tras las server actions. El pill de `panel-periodo.tsx:59-65`
+  sigue sin `aria-pressed` — quinta vez que se anota sin contarlo como hallazgo.
+- **Responsive por debajo de 768 px.** El buscador de la barra es
+  `hidden md:block` (`barra-acciones.tsx:59`), o sea desaparece en teléfono
+  junto con la única entrada al expediente que no es la tabla; no medí qué hace
+  la tabla de viajes ni la conversación del chat a 390 px.
+- **La suite completa** (`npx vitest run` a secas). Corrí los 28 archivos de
+  `src/app/dashboard`; la cifra global la tomo del MAPA.
