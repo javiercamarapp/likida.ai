@@ -2,16 +2,12 @@
 
 import { useState, type ReactNode } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { KpiDegradado } from './resumen-visual';
+import { StatCard } from '../admin/ui/kit';
 import type { ComparativoPeriodo, SeriesKpiCards } from '@/lib/likida/analytics';
 import { pctCambio } from '@/lib/formato';
 import type { FormatoPreset } from '../admin/ui/formato-preset';
 
-// AUDITORÍA 17 (pase 5), MEDIO — medían 16×16 px y WCAG 2.5.8 pide 24×24 de
-// objetivo. Son seis pares de flechas en el Resumen (3 KPI + el motor fiscal),
-// y el dedo que apunta a "periodo más corto" abría el más largo. El ÍCONO se
-// queda en 13 px: lo que crece es el área que recibe el toque, no el dibujo.
-const BOTON = 'w-6 h-6 rounded flex items-center justify-center transition-opacity disabled:opacity-30 hover:bg-white/20 disabled:hover:bg-transparent';
+const BOTON = 'w-4 h-4 rounded flex items-center justify-center transition-colors disabled:opacity-30 hover:bg-black/5 disabled:hover:bg-transparent';
 
 type Modo = 'semanal' | 'mensual' | 'historico';
 const MODOS: Modo[] = ['semanal', 'mensual', 'historico'];
@@ -65,19 +61,16 @@ export function KpiPeriodo({
     : pctCambio(valorActual, valorAnterior);
 
   return (
-    <KpiDegradado
+    <StatCard
       icono={icono}
       etiqueta={`${nombre} — ${ETIQUETA_MODO[modo]}`}
-      // Sin `?? 0`: `costoPorViaje` es `number | null` a propósito
-      // (`analytics.ts:58-61`) y aplanarlo pintaba "$0.00 Costo por viaje"
-      // junto a "$18,400 Gasto total" — AUDITORÍA 17 (pase 2), ALTO.
-      valor={valorActual ?? null}
+      valor={valorActual ?? 0}
       formato={formato}
-      tendencia={pct === null ? null : { pct, bueno: subeEsBueno ? pct >= 0 : pct <= 0 }}
+      delta={pct === null ? null : { pct, bueno: subeEsBueno ? pct >= 0 : pct <= 0 }}
       flechas={
         // Derecha = hacia histórico, izquierda = hacia semanal (pedido
         // explícito del 8-ago-2026 — antes estaba al revés).
-        <div className="flex items-center gap-1 opacity-90">
+        <div className="flex items-center gap-0.5 shrink-0" style={{ color: 'var(--muted)' }}>
           <button type="button" aria-label="Periodo más corto" disabled={modoIdx <= 0}
             onClick={() => setModoIdx((i) => Math.max(i - 1, 0))} className={BOTON}>
             <ChevronLeft width={13} height={13} strokeWidth={2} />

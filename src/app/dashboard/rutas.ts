@@ -1,5 +1,5 @@
 import {
-  LayoutGrid, Fuel,
+  LayoutGrid, Fuel, MessageCircle,
   LifeBuoy, Users, ScrollText, Settings, CreditCard, ShieldCheck,
 } from 'lucide-react';
 
@@ -64,4 +64,8 @@ export const TODAS_LAS_RUTAS: Item[] = [
  * Cobranza, Valor y ahorro) se borraron para el rediseño desde cero. Se
  * vuelve a llenar página por página conforme se reconstruyan.
  */
-export const SIDEBAR_PRINCIPAL: Item[] = [];
+export const SIDEBAR_PRINCIPAL: Item[] = [
+  // La PRIMERA página reconstruida (12-ago-2026): la regla es que cada link
+  // aparece cuando su página se rehace — nunca en bloque.
+  { href: '/dashboard/chat', nombre: 'Chatea con tus datos', Icono: MessageCircle },
+];

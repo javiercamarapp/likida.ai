@@ -3,8 +3,8 @@ import { LogOut } from 'lucide-react';
 import Fondo from '../fondo';
 import { MARCO_FILA, MARCO_SIDEBAR, MARCO_COLUMNA, MARCO_SCROLL, CLASE_COLUMNA_CENTRO } from '../marco';
 import SidebarNav from './sidebar-nav';
+import { BotonSidebar } from '../boton-sidebar';
 import AvisoRol from './aviso-rol';
-import RailAsistente from './rail';
 import { Logo } from '../logo';
 
 /**
@@ -41,12 +41,13 @@ export default function DashboardChrome({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-dvh" style={{ fontFamily: 'var(--font-sans-handle), var(--font-sans)' }}>
+    <div className="min-h-dvh tema-neutro" style={{ fontFamily: 'var(--font-sans-handle), var(--font-sans)' }}>
       <Fondo />
             <div className={MARCO_FILA}>
-        <aside className={MARCO_SIDEBAR}>
-          <div className="px-3 py-3 flex items-center justify-center lg:justify-start gap-1.5">
-            <Logo alto="h-[18px]" />
+        <aside className={`${MARCO_SIDEBAR} sb-aside`}>
+          <div className="px-3 py-3 flex items-center justify-center lg:justify-start gap-1.5 sb-centrable">
+            <span className="sb-logo min-w-0"><Logo alto="h-[18px]" /></span>
+            <span className="ml-auto hidden lg:block"><BotonSidebar /></span>
             {/* La insignia usa el rol REAL de la sesión, no el previsualizado.
                 Para un superadmin eso significa que el panel que se presenta
                 como "el de una flota ejemplo" lleva SUPERADMIN escrito
@@ -55,50 +56,45 @@ export default function DashboardChrome({
                 tráfico". Se esconde solo en ese caso: para los roles reales
                 (flota_admin, contador, encargado) la insignia sí dice la
                 verdad y se queda, porque ahí sirve. */}
-            {rol !== 'superadmin' && (
-              <span className="hidden lg:inline text-[9px] font-medium px-1.5 py-0.5 rounded whitespace-nowrap" style={{ background: 'var(--surface)', color: 'var(--muted)', border: '1px solid var(--line)' }}>
-                {ROL_BADGE[rol] ?? rol.toUpperCase()}
-              </span>
-            )}
+{/* El rol vive en el user card de abajo (12-ago-2026, referencia
+                FlowAI) — junto al logo no hay badge. */}
           </div>
 
-          {/* AUDITORÍA 17 (pase 5), MEDIO — LAS ETIQUETAS CORTADAS A DIEZ PÍXELES.
-              `MARCO_SIDEBAR` es `w-[72px] lg:w-[232px]`, así que entre `md`
-              (768) y `lg` (1024) la columna mide 72: menos `px-2` del nav, el
-              `px-2.5` del item y el ícono de 16 + gap, quedan ~10px para
-              "Combustible & Casetas" — y el `aside` trae `overflow-hidden`, o
-              sea corte a filo, sin elipsis ni scroll. Hasta `8d6ac51` no se
-              veía porque el `<nav>` estaba VACÍO; con las ocho filas puestas,
-              el iPad en vertical y el zoom de sala (150% en un 1440 → 960px)
-              enseñan una interfaz rota.
-              /admin ya lo había resuelto con este mismo par (`layout.tsx`), y
-              este marco comparte `marco.ts` con él pero no el par. Mismas
-              medidas, dos comportamientos: ahora uno. */}
+          {/* El `aria-label` es del pase 5 (con dos `<nav>` en la página, uno
+              sin nombre se anuncia como "navegación" a secas) y se conserva.
+              El modo COLAPSADO que lo acompañaba —`<SidebarNav soloIconos />`
+              entre `md` y `lg`— NO sobrevive al merge del 13-ago: la
+              dirección v3 de `master` reescribió `sidebar-nav.tsx` sin ese
+              prop. El corte de etiquetas a ~10px que tapaba vuelve a estar
+              abierto y se re-levanta como hallazgo de la ronda 18. */}
           <nav aria-label="Navegación del panel" className="flex-1 overflow-y-auto px-2 space-y-2 pb-3">
-            <div className="hidden lg:block space-y-2"><SidebarNav rol={rol} /></div>
-            <div className="lg:hidden space-y-2"><SidebarNav rol={rol} soloIconos /></div>
+            <SidebarNav rol={rol} />
           </nav>
 
+          {/* El user card de la referencia FlowAI: tarjeta con hairline,
+              avatar + nombre + rol, y salir como icono al lado — el botón
+              rojo de ancho completo gritaba más que cualquier contenido. */}
           <div className="px-2 pb-2 pt-2" style={{ borderTop: '1px solid var(--line)' }}>
-            <div className="flex items-center justify-center lg:justify-start gap-2 px-2 py-2">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[11px] font-semibold" style={{ background: 'var(--marca)', color: 'var(--marca-fg)' }}>
+            <div className="hairline rounded-xl p-2 flex items-center justify-center lg:justify-start gap-2 sb-centrable" style={{ background: 'var(--surface)' }}>
+              <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[11px] font-semibold" style={{ background: 'var(--marca)', color: 'var(--marca-fg)' }}>
                 {(nombre ?? 'F')[0].toUpperCase()}
               </div>
-              <Link href="/cuenta" className="hidden lg:block text-[13px] font-medium hover:opacity-70 transition-opacity truncate">
-                {nombre ?? 'Mi cuenta'}
-              </Link>
+              <div className="hidden lg:block min-w-0 flex-1 sb-texto">
+                <Link href="/cuenta" className="block text-[13px] font-medium hover:opacity-70 transition-opacity truncate leading-tight">
+                  {nombre ?? 'Mi cuenta'}
+                </Link>
+                <div className="text-[10px] truncate" style={{ color: 'var(--faint)' }}>{ROL_BADGE[rol] ?? rol.toUpperCase()}</div>
+              </div>
+              {cerrarSesion && (
+                <form action={cerrarSesion} className="hidden lg:block shrink-0 sb-texto">
+                  <button type="submit" title="Cerrar sesión" aria-label="Cerrar sesión"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--badbg)]"
+                    style={{ color: 'var(--bad)' }}>
+                    <LogOut width={14} height={14} strokeWidth={1.75} />
+                  </button>
+                </form>
+              )}
             </div>
-
-            {cerrarSesion && (
-              <form action={cerrarSesion} className="mt-0.5">
-                <button type="submit" title="Cerrar sesión"
-                  className="w-full flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-opacity hover:opacity-85"
-                  style={{ background: 'var(--badbg)', color: 'var(--bad)' }}>
-                  <LogOut width={14} height={14} strokeWidth={1.75} />
-                  <span className="hidden lg:inline">Cerrar sesión</span>
-                </button>
-              </form>
-            )}
           </div>
         </aside>
 
@@ -109,8 +105,10 @@ export default function DashboardChrome({
           </div>
         </div>
 
-        {/* El rail, fijo a la derecha en las 20 páginas. */}
-        <RailAsistente />
+        {/* El rail del Asistente se BORRÓ el 12-ago-2026 (pedido explícito:
+            "nunca más debe aparecer en ninguna página") — su casa es
+            /dashboard/chat, "Chatea con tus datos". Con él se fue su
+            endpoint /api/dashboard/asistente. */}
       </div>
     </div>
   );

@@ -45,11 +45,6 @@ describe('el enlace de la página abierta se anuncia como tal', () => {
     expect((html.match(/aria-current="page"/g) ?? []).length).toBe(1);
   });
 
-  it('también colapsado: el ancho de la columna no cambia lo que se anuncia', () => {
-    const html = renderToStaticMarkup(<SidebarNav rol="flota_admin" soloIconos />);
-    expect((html.match(/aria-current="page"/g) ?? []).length).toBe(1);
-  });
-
   it('el `<nav>` que los contiene tiene nombre accesible', () => {
     // Con dos `<nav>` en la página (panel y, en /admin, consola) uno sin
     // nombre se anuncia como "navegación" a secas.

@@ -94,6 +94,80 @@ export function KpiTile({
   );
 }
 
+// ── StatCard (referencia FlowAI, 12-ago-2026) ────────────────────────────
+
+/** La stat card de la referencia FlowAI: chip de ícono neutro + etiqueta
+ *  arriba, la CIFRA grande en tinta, y el delta como TEXTO verde/rojo bajo
+ *  un hairline ("+12% vs periodo anterior") — así lo pinta la referencia,
+ *  no como pill. Reemplaza a `KpiDegradado` (7-ago) en todo el producto.
+ *
+ *  `delta.bueno` lo decide el LLAMADOR — gastar más no es buena noticia
+ *  aunque el número suba. Sin dato comparable el llamador OMITE el delta:
+ *  un "0.0%" inventado afirmaría "sin cambio", que no es lo mismo que "no
+ *  se pudo comparar". La diferencia con `KpiTile` (que sigue viva en
+ *  /admin): jerarquía cifra-primero y el slot `flechas` para los ‹ › de
+ *  periodo de /dashboard. */
+export function StatCard({
+  icono, etiqueta, valor, formato = 'numero', delta, deltaNota = 'vs periodo anterior', flechas, nota,
+}: {
+  icono: React.ReactNode;
+  etiqueta: string;
+  valor: number;
+  formato?: FormatoPreset;
+  /** `{ pct, bueno }` — misma forma que tenía `KpiDegradado.tendencia`. */
+  delta?: { pct: number; bueno: boolean } | null;
+  deltaNota?: string;
+  /** Los ‹ › de `KpiPeriodo` — viven aquí para que el layout no se duplique
+   *  en cada llamador que necesite paginar el periodo. */
+  flechas?: React.ReactNode;
+  /** Nota fija de una línea (cita legal, aclaración del supuesto). */
+  nota?: string;
+}) {
+  const reducido = usePrefersReducedMotion();
+  const mostrado = useCountUp(valor, !reducido);
+  const fmt = resolverFormato(formato);
+  return (
+    // La anatomía EXACTA de la referencia: tarjeta blanca con una CAJA
+    // INTERNA tenue (ícono + etiqueta + cifra) y el delta como línea de
+    // texto DEBAJO de la caja, dentro de la tarjeta. El chip del ícono es
+    // oscuro (--marca) con el glifo claro, como en la foto.
+    <div className="card p-2 h-full flex flex-col min-w-0">
+      <div className="rounded-xl px-3 py-2 min-w-0" style={{ background: 'var(--canvas)', border: '1px solid var(--line2)' }}>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--marca)', color: 'var(--marca-fg)' }}>
+            {icono}
+          </div>
+          <div className="text-[13px] min-w-0 flex-1 line-clamp-2" style={{ color: 'var(--muted)' }}>{etiqueta}</div>
+          {flechas}
+        </div>
+        <div className="font-display text-[20px] leading-tight font-semibold tabular mt-0.5">{fmt(mostrado)}</div>
+      </div>
+      {/* El espaciador alinea los pies en una fila de tarjetas parejas
+          (`h-full`) aunque una etiqueta envuelva a dos líneas. */}
+      <div className="grow" />
+      {delta ? (
+        <div className="px-1.5 pt-1.5 pb-0 text-xs flex items-baseline gap-1.5 min-w-0">
+          {/* Un 0% real (comparó y no cambió) va en gris neutro, no en verde
+              ni rojo: "no se movió" no es buena ni mala noticia. */}
+          <span className="font-medium tabular shrink-0"
+            style={{ color: delta.pct === 0 ? 'var(--faint)' : delta.bueno ? 'var(--ok)' : 'var(--bad)' }}>
+            {delta.pct === 0 ? '' : delta.pct > 0 ? '↑ ' : '↓ '}{Math.abs(delta.pct)}%
+          </span>
+          <span className="truncate" style={{ color: 'var(--faint)' }}>{delta.pct === 0 ? 'sin cambio vs periodo anterior' : deltaNota}</span>
+        </div>
+      ) : nota ? (
+        <p className="text-xs px-1.5 pt-1.5 pb-0" style={{ color: 'var(--faint)' }}>{nota}</p>
+      ) : delta === null ? (
+        // Se intentó comparar y no hay contra qué: el pie no se queda vacío
+        // (pedido del 12-ago), pero en gris y sin inventar dirección. Con
+        // `delta` OMITIDO (undefined) no se pinta nada — métricas sin
+        // concepto de comparativo (Diésel) van limpias, pedido del mismo día.
+        <p className="text-xs px-1.5 pt-1.5 pb-0 tabular" style={{ color: 'var(--faint)' }}>0% · sin movimiento</p>
+      ) : null}
+    </div>
+  );
+}
+
 // ── StatusPill / Semaphore ───────────────────────────────────────────────
 
 export type Estado = 'ok' | 'warn' | 'bad' | 'neutral';

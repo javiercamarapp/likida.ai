@@ -6,7 +6,6 @@ import { GastoSemanalChart } from './gasto-semanal-chart';
 import { TopRutas } from './top-rutas';
 import { TituloSeccion } from './resumen-visual';
 import { Actividad, type ModoPeriodo } from './actividad';
-import { ETIQUETA_MODO } from './periodo';
 import { mxn } from '@/lib/formato';
 import type {
   SeriesKpiCards, GastoSemanalSeries, LiquidadoSemanalSeries, TopRutasSeries,
@@ -35,10 +34,8 @@ const OPCIONES: Array<{ id: ModoPeriodo; etiqueta: string }> = [
 export function PanelPeriodo({
   viajes, porMes, seriesKpis, gastoSemanalSeries, liquidadoSemanalSeries, topRutasSeries,
 }: {
-  /** `null` = la consulta se cayó; `[]` = de verdad no hay. `Actividad`
-   *  distingue los dos, así que aquí NO se aplana (AUDITORÍA 17, pase 5). */
-  viajes: Array<{ fechaInicio: string | null }> | null;
-  porMes: Array<{ dia: string; valor: number }> | null;
+  viajes: Array<{ fechaInicio: string | null }>;
+  porMes: Array<{ dia: string; valor: number }>;
   seriesKpis: SeriesKpiCards | null;
   gastoSemanalSeries: GastoSemanalSeries | null;
   liquidadoSemanalSeries: LiquidadoSemanalSeries | null;
@@ -54,8 +51,10 @@ export function PanelPeriodo({
   const totalLiquidado = liquidadoModo?.reduce((s, d) => s + d.valor, 0) ?? 0;
 
   return (
+    // Cada bloque es una TARJETA blanca sobre el lienzo tenue (referencia
+    // FlowAI, 12-ago-2026) — el padding horizontal lo pone el padre.
     <>
-      <div className="px-5 flex items-center justify-end">
+      <div className="flex items-center justify-end">
         <div className="inline-flex items-center gap-1 p-0.5 rounded-full shrink-0" style={{ background: 'var(--canvas)' }}>
           {OPCIONES.map((o) => (
             <button key={o.id} type="button" onClick={() => setModoIdx(MODOS.indexOf(o.id))}
@@ -68,68 +67,54 @@ export function PanelPeriodo({
       </div>
 
       {/* ── Viajes / Actividad ── */}
-      <div className="px-5 pb-4 pt-2 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <TituloSeccion>Viajes — {ETIQUETA_MODO[modo]}</TituloSeccion>
-          <div className="mt-2.5">
+      <div className="pt-2 grid grid-cols-1 md:grid-cols-3 gap-2">
+        <div className="card p-3 h-full flex flex-col">
+          <TituloSeccion>Viajes</TituloSeccion>
+          <div className="mt-2.5 flex-1 flex flex-col">
             {kpiModo && kpiModo.totalViajes > 0 ? (
               <Dona segmentos={[
                 { etiqueta: 'Liquidados', valor: kpiModo.viajesLiquidados },
                 { etiqueta: 'Pendientes', valor: Math.max(0, kpiModo.totalViajes - kpiModo.viajesLiquidados) },
               ]} />
             ) : (
-              <p className="text-sm" style={{ color: 'var(--muted)' }}>Aún no hay viajes registrados en este periodo.</p>
+              <div className="flex-1 min-h-[110px] w-full flex items-center justify-center"><p className="text-sm text-center max-w-[26ch]" style={{ color: 'var(--muted)' }}>Aún no hay viajes registrados en este periodo.</p></div>
             )}
           </div>
         </div>
-        <div className="md:col-span-2">
-          <TituloSeccion>Actividad — {ETIQUETA_MODO[modo]}</TituloSeccion>
-          <div className="mt-3">
+        <div className="card p-3 md:col-span-2 h-full flex flex-col">
+          <TituloSeccion>Actividad</TituloSeccion>
+          <div className="mt-3 flex-1 flex flex-col">
             <Actividad viajes={viajes} porMes={porMes} modo={modo} />
           </div>
         </div>
       </div>
 
-      {/* ── Gasto por categoría / Liquidado por semana ── */}
-      <div className="px-5 pb-4 border-t pt-4 grid grid-cols-1 md:grid-cols-2 gap-4" style={{ borderColor: 'var(--line)' }}>
-        <div>
-          <TituloSeccion>Gasto por categoría — {ETIQUETA_MODO[modo]}</TituloSeccion>
-          <div className="mt-3">
-            {/* AUDITORÍA 17 (pase 5), MEDIO — esta rama colapsaba `null` (la
-                consulta murió) y `[]` (de verdad no hay) en el mismo texto,
-                así que con `getGastoPorSemanaSeries` caído la pantalla
-                afirmaba "Aún no hay gastos capturados". Sus dos hermanas de
-                este mismo archivo ya distinguían las dos cosas. */}
-            {gastoModo === null ? (
-              <p className="text-sm" style={{ color: 'var(--muted)' }}>
-                No se pudo cargar esta gráfica. La consulta falló — no es que no haya gastos.
-              </p>
-            ) : gastoModo.series.some((s) => s.valores.some((v) => v > 0)) ? (
+      {/* ── Gasto por categoría / Liquidado — mitad y mitad (12-ago) ── */}
+      <div className="pt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div className="card p-3 h-full flex flex-col">
+          <TituloSeccion>Gasto por categoría</TituloSeccion>
+          <div className="mt-3 flex-1 flex flex-col">
+            {gastoModo && gastoModo.series.some((s) => s.valores.some((v) => v > 0)) ? (
               <GastoSemanalChart categorias={gastoModo.categorias} series={gastoModo.series} />
             ) : (
-              <p className="text-sm" style={{ color: 'var(--muted)' }}>Aún no hay gastos capturados.</p>
+              <div className="flex-1 min-h-[110px] w-full flex items-center justify-center"><p className="text-sm text-center max-w-[26ch]" style={{ color: 'var(--muted)' }}>Aún no hay gastos capturados.</p></div>
             )}
           </div>
         </div>
-        <div>
-          <TituloSeccion>Liquidado — {ETIQUETA_MODO[modo]}</TituloSeccion>
+        <div className="card p-3 h-full flex flex-col">
+          <TituloSeccion>Liquidado</TituloSeccion>
           {totalLiquidado > 0 && (
-            <>
-              <div className="text-2xl font-semibold tracking-tight tabular mt-1">{mxn(totalLiquidado)}</div>
-              {/* La cifra grande TAMBIÉN lleva su ventana: es la que el
-                  contralor copia al correo, y sola no dice de cuándo es. */}
-              <div className="text-[11px]" style={{ color: 'var(--muted)' }}>{ETIQUETA_MODO[modo]}</div>
-            </>
+            <div className="text-2xl font-semibold tracking-tight tabular mt-1">{mxn(totalLiquidado)}</div>
           )}
-          <div className="mt-2.5">
+          <div className="mt-2.5 flex-1 flex flex-col">
             {liquidadoModo === null ? (
-              <div className="flex items-center text-sm" style={{ color: 'var(--muted)', height: 140 }}>
+              <div className="flex-1 min-h-[110px] flex items-center justify-center text-sm text-center" style={{ color: 'var(--muted)' }}>
                 No se pudo cargar esta gráfica.
               </div>
             ) : liquidadoModo.some((d) => d.valor > 0) ? (
               <AreaChartSimple datos={liquidadoModo} etiquetaValor={mxn} />
             ) : (
-              <div className="flex items-center text-sm" style={{ color: 'var(--muted)', height: 140 }}>
+              <div className="flex-1 min-h-[110px] flex items-center justify-center text-sm text-center" style={{ color: 'var(--muted)' }}>
                 Sin cierres en este periodo.
               </div>
             )}
@@ -137,15 +122,21 @@ export function PanelPeriodo({
         </div>
       </div>
 
-      {/* ── Top rutas por gasto ── */}
-      <div className="px-5 pb-4 border-t pt-4" style={{ borderColor: 'var(--line)' }}>
-        <TituloSeccion>Top rutas por gasto — {ETIQUETA_MODO[modo]}</TituloSeccion>
-        <div className="mt-2.5 overflow-x-auto">
-          {rutasModo ? (
-            <TopRutas rutas={rutasModo} />
-          ) : (
-            <p className="text-sm" style={{ color: 'var(--muted)' }}>No se pudo cargar esta sección.</p>
-          )}
+      {/* ── Top rutas por gasto — hasta abajo, a TODO lo ancho (12-ago) ── */}
+      <div className="pt-2">
+        <div className="card p-3 flex flex-col">
+          <TituloSeccion>Top rutas por gasto</TituloSeccion>
+          <div className="mt-2 flex-1 flex flex-col">
+            {rutasModo && rutasModo.length > 0 ? (
+              <div className="overflow-x-auto"><TopRutas rutas={rutasModo} /></div>
+            ) : (
+              <div className="flex-1 min-h-[110px] w-full flex items-center justify-center">
+                <p className="text-sm text-center max-w-[26ch]" style={{ color: 'var(--muted)' }}>
+                  {rutasModo ? 'Aún no hay gasto asociado a una ruta.' : 'No se pudo cargar esta sección.'}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </>

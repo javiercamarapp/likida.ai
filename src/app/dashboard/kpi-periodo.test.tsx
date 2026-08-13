@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { KpiPeriodo } from './kpi-periodo';
-import { KpiDegradado } from './resumen-visual';
 import type { ComparativoPeriodo, SeriesKpiCards } from '@/lib/likida/analytics';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -40,31 +39,11 @@ const series = (actual: ComparativoPeriodo, anterior?: ComparativoPeriodo): Seri
   historico: [actual],
 });
 
-describe('KpiDegradado — sin dato no es cero', () => {
-  it('EL BUG: `valor` sin medición pintaba $0.00 en vez de decir que no hay con qué medir', () => {
-    const html = renderToStaticMarkup(
-      <KpiDegradado icono={null} etiqueta="Costo por viaje" valor={null} formato="mxn" />,
-    );
-    expect(html).not.toContain('$0.00');
-    expect(html).toContain('—');
-  });
-
-  it('CONTROL: un cero REAL medido se sigue pintando como cero', () => {
-    // Distinguir las dos cosas es todo el punto: una flota que liquidó $0
-    // esta semana sí midió cero, y eso se enseña.
-    const html = renderToStaticMarkup(
-      <KpiDegradado icono={null} etiqueta="Liquidado" valor={0} formato="mxn" />,
-    );
-    expect(html).toContain('$0.00');
-  });
-
-  it('CONTROL: una cifra normal no se toca', () => {
-    const html = renderToStaticMarkup(
-      <KpiDegradado icono={null} etiqueta="Gasto total" valor={18_400} formato="mxn" />,
-    );
-    expect(html).toContain('18,400');
-  });
-});
+// NOTA (merge del 13-ago, ronda 18): el bloque unitario que probaba
+// `KpiDegradado` directamente se cayó con el componente — la dirección v3
+// de `master` borró `KpiDegradado` de `resumen-visual.tsx` y `KpiPeriodo`
+// ahora pinta con `StatCard`. La prueba DE PUNTA A PUNTA de abajo es la que
+// ancla el bug, y es la que importa: no depende de qué componente pinte.
 
 describe('KpiPeriodo — la tarjeta del Resumen del dueño', () => {
   it('EL BUG, de punta a punta: "Costo por viaje" con 0 viajes en el periodo no dice $0.00', () => {

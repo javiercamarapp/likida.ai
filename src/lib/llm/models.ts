@@ -26,7 +26,7 @@
 //   Para el demo en vivo, tener keys directas de Google/Anthropic como respaldo.
 // ═══════════════════════════════════════════════════════════════════════════
 
-export type ModelRole = 'ocr' | 'cuadre' | 'cuadre_fallback' | 'chat' | 'router';
+export type ModelRole = 'ocr' | 'cuadre' | 'cuadre_fallback' | 'chat' | 'chat_ligero' | 'router';
 
 const DEFAULTS: Record<ModelRole, string> = {
   // OCR de comprobantes (visión). Gemini 3.6 Flash (21-jul-2026): #1 OCR Arena
@@ -41,7 +41,7 @@ const DEFAULTS: Record<ModelRole, string> = {
   // que se cobra) y el lite ~274. Y el sesgo del experimento FAVORECÍA al 3.6,
   // porque los valores asentados los produjo él en producción; aun así perdió.
   //
-  // El override vive en la variable `CUADRA_MODEL_OCR` de Vercel, apuntando ya
+  // El override vive en la variable `LIKIDA_MODEL_OCR` de Vercel, apuntando ya
   // a 3.1-flash-lite. El default se deja aquí a propósito: 18 comprobantes son
   // pocos para reescribir la elección de arquitectura, y revertir tiene que
   // costar una variable de entorno, no un despliegue.
@@ -54,16 +54,24 @@ const DEFAULTS: Record<ModelRole, string> = {
   cuadre_fallback: 'anthropic/claude-opus-5',
   // Chat de alto volumen con el operador (español MX, latencia baja).
   chat: 'google/gemini-3.5-flash-lite',
+  // El CONSERJE del chat del panel (12-ago-2026): recibe TODO mensaje,
+  // contesta charla y dudas del producto, y escala al analista (rol chat)
+  // cuando hay que tocar datos. gpt-5-nano verificado ese día contra el
+  // catálogo de OpenRouter: $0.05/$0.40 por M — 6× más barato que
+  // flash-lite y proveedor US (soberanía: los Qwen/DeepSeek baratos van a
+  // API china directa y RFC/CFDI no pueden pisar ahí).
+  chat_ligero: 'openai/gpt-5-nano',
   // Clasificador de intención por mensaje entrante.
   router: 'google/gemini-3.5-flash-lite',
 };
 
 const ENV_KEY: Record<ModelRole, string> = {
-  ocr: 'CUADRA_MODEL_OCR',
-  cuadre: 'CUADRA_MODEL_CUADRE',
-  cuadre_fallback: 'CUADRA_MODEL_CUADRE_FALLBACK',
-  chat: 'CUADRA_MODEL_CHAT',
-  router: 'CUADRA_MODEL_ROUTER',
+  ocr: 'LIKIDA_MODEL_OCR',
+  cuadre: 'LIKIDA_MODEL_CUADRE',
+  cuadre_fallback: 'LIKIDA_MODEL_CUADRE_FALLBACK',
+  chat: 'LIKIDA_MODEL_CHAT',
+  chat_ligero: 'LIKIDA_MODEL_CHAT_LIGERO',
+  router: 'LIKIDA_MODEL_ROUTER',
 };
 
 /** Devuelve el slug del modelo para un rol, respetando override por env. */
@@ -77,5 +85,6 @@ export const ROLE_PARAMS: Record<ModelRole, { temperature: number; reasoning?: '
   cuadre: { temperature: 0, reasoning: 'high' }, // razonamiento profundo donde importa
   cuadre_fallback: { temperature: 0, reasoning: 'high' },
   chat: { temperature: 0.4 },                 // tono natural
+  chat_ligero: { temperature: 0.6, reasoning: 'low' }, // conversación, sin cifras — nano razona; corto
   router: { temperature: 0 },
 };

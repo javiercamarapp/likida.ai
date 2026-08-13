@@ -139,6 +139,28 @@
   --color-ok: #14602c;    /* 7.67:1 sobre blanco */
 }
 
+/* ── Tema NEUTRO de las consolas (12-ago-2026, pedido explícito) ───────────
+   "Usa el logo en color negro, ya no paleta de color naranja" — los DOS
+   paneles (/admin y /dashboard) van como la referencia FlowAI: tinta, gris
+   y blanco; el color solo en semáforos y estatus. El naranja QUEDA para la
+   marca hacia afuera (login, landing, PDF, ads) — por eso esto es un
+   override con alcance y no un cambio de los tokens base: los chromes de
+   las dos consolas ponen esta clase en su raíz y todo lo de adentro
+   (logo, chips de ícono, pill activa del sidebar, rampa de gráficas,
+   botones --marca) pivota a neutro sin tocar componente por componente.
+   #18181b sobre blanco ≈ 16.9:1 y sobre --g1 #f4f4f5 ≈ 15.4:1 — AA sobra. */
+.tema-neutro {
+  --marca: #18181b;
+  --marca-fg: #ffffff;
+  --accent: #18181b;
+  --accent-fg: #ffffff;
+  --g1: #f4f4f5;
+  --g2: #e4e4e7;
+  --g3: #a1a1aa;
+  --g4: #3f3f46;
+  --g5: #18181b;
+}
+
 * { border-color: var(--line); }
 
 html, body {
@@ -163,18 +185,18 @@ html, body {
   box-shadow: var(--shadow-card);
 }
 
-/* Panel "glass" para /admin: flota sobre el fondo oscuro difuminado de la
-   consola de negocio. Más opaco que `.glass` (pensado para barras sobre
-   fondo CLARO) porque aquí tiene que leerse blanco, no gris, contra una
-   imagen oscura detrás — y con sombra más grande, tipo ventana de macOS,
-   para que se note que está SOBREPUESTO y no pegado al fondo. */
+/* La LÁMINA de las consolas (antes "glass": blur + sombra de ventana sobre
+   el fondo naranja). La dirección del 12-ago-2026 (DESIGN.md v3, referencias
+   de Desktop/DASHBOARD) la vuelve tarjeta blanca sólida con hairline y
+   sombra suave — el mismo material que `.card`, en grande. EL NOMBRE SE
+   QUEDA a propósito: lo usan ~30 páginas de las dos consolas y renombrarlo
+   es churn sin cambio de comportamiento; el material vive aquí, en un solo
+   lugar. Sin blur: ya no hay imagen detrás que difuminar (ver fondo.tsx). */
 .glass-panel {
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
-  backdrop-filter: saturate(160%) blur(28px);
-  -webkit-backdrop-filter: saturate(160%) blur(28px);
-  border: 1px solid color-mix(in srgb, white 45%, var(--line));
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05), 0 24px 48px -20px rgba(0,0,0,0.45);
+  box-shadow: var(--shadow-card);
 }
 
 .hairline { border: 1px solid var(--line); }
@@ -266,3 +288,37 @@ html, body {
 @media (prefers-reduced-motion: reduce) {
   .likida-respira { animation: none; opacity: 0.6; }
 }
+
+/* ── Voces tipográficas de la referencia usehandle.ai (12-ago-2026) ────────
+   Tres voces, cada una con su papel — pedido explícito: "tipografía más
+   corporativa, tipo usehandle.ai":
+   · Inter (base, --font-sans-handle) — todo el texto de UI.
+   · Inter Tight (--font-display) — SOLO titulares y la cifra grande de una
+     stat: la grotesca apretada de los encabezados de la referencia.
+   · IBM Plex Mono (--font-mono) — micro-rótulos en mayúsculas y cifras de
+     tabla: la voz que hace que el panel se lea como estado de cuenta. */
+.font-display {
+  font-family: var(--font-display), var(--font-sans);
+  letter-spacing: -0.02em;
+}
+.etiqueta-mono {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  letter-spacing: 0.08em;
+}
+.cifra-mono {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Sidebar colapsable (botón tipo Handle, 12-ago-2026) ───────────────────
+   `boton-sidebar.tsx` marca la raíz con data-sidebar='min' (y lo recuerda en
+   localStorage). El CSS hace el resto: la lámina baja a 72px y todo lo
+   textual marcado con .sb-texto desaparece — así el colapso no depende del
+   breakpoint responsive, que sigue funcionando igual por debajo de `lg`. */
+:root[data-sidebar='min'] .sb-aside { width: 72px !important; }
+:root[data-sidebar='min'] .sb-texto { display: none !important; }
+:root[data-sidebar='min'] .sb-centrable { justify-content: center !important; }
+/* Colapsado, 72px no dan para logo + botón con aire: queda solo el botón
+   (que es el único camino de regreso). El logo vuelve al expandir. */
+:root[data-sidebar='min'] .sb-logo { display: none; }
+:root[data-sidebar='min'] .sb-aside .ml-auto { margin-left: 0; }

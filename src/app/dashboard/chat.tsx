@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { Send, ArrowUp, Search } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Send, ArrowUp, Search, Paperclip, Camera, FileImage, X, FileText } from 'lucide-react';
 import type { DashboardKpis, Acreditables } from '@/lib/likida/analytics';
-import { mxn, litros } from '@/lib/formato';
+import { mxn, litros, numero } from '@/lib/formato';
+import { useSearchParams } from 'next/navigation';
 import { Logo } from '../logo';
+import { Dona, AreaChartSimple } from '../admin/charts';
 
 /**
  * Mismo criterio que admin/chat.tsx: coincidencia de palabras clave contra
@@ -18,29 +20,166 @@ const PREGUNTAS = [
   '¿Cuántos viajes tengo con diferencia?',
   '¿Cuánto diésel es elegible para el estímulo?',
   '¿Cuál es mi tasa de cuadre?',
+  '¿Cuánto llevo de acreditables?',
 ];
 
-function responder(pregunta: string, kpis: DashboardKpis | null, acred: Acreditables | null): string {
+// ── Respuestas con forma (12-ago-2026: "que responda con gráficas, tablas
+// y muy visual") — cada respuesta puede traer, además del texto, una pieza
+// visual armada con los MISMOS datos ya calculados: una tabla chica, la
+// dona de `admin/charts` o una cifra grande. Nada se grafica sin dato real:
+// con la flota en cero, la respuesta es el texto honesto de siempre.
+
+type Visual =
+  | { tipo: 'tabla'; filas: Array<[string, string]> }
+  | { tipo: 'dona'; segmentos: Array<{ etiqueta: string; valor: number }> }
+  | { tipo: 'cifra'; valor: string; nota?: string }
+  | { tipo: 'serie'; puntos: Array<{ dia: string; valor: number }>; formato: 'mxn' | 'numero' };
+
+interface Respuesta { texto: string; visual?: Visual; visuales?: Visual[]; pendiente?: boolean }
+
+/** Las fases del "pensando" (pedido del 12-ago: como Claude). Son honestas
+ *  por construcción: solo se AVANZA de fase si de verdad sigue trabajando —
+ *  un saludo se resuelve en la primera y nunca dice "leyendo tu operación". */
+const FASES_PENSANDO: Array<[number, string]> = [
+  [0, 'Pensando…'],
+  [3000, 'Leyendo tu operación…'],
+  [9000, 'Cruzando cifras…'],
+  [17000, 'Armando la respuesta…'],
+  [30000, 'Esto está tardando más de lo normal…'],
+];
+
+/** Los bloques del agente analista (/api/dashboard/chat) → la Respuesta que
+ *  esta interfaz ya sabe pintar. El agente manda números crudos; aquí se
+ *  formatean con lib/formato — UNA sola fuente de formato, como siempre. */
+function respuestaDeBloques(bloques: Array<Record<string, unknown>>): Respuesta {
+  const textos: string[] = [];
+  const visuales: Visual[] = [];
+  for (const b of bloques) {
+    if (b.tipo === 'texto' && typeof b.texto === 'string') textos.push(b.texto);
+    else if (b.tipo === 'cifra' && typeof b.valor === 'number') {
+      const f = b.formato === 'mxn' ? mxn : b.formato === 'litros' ? litros : numero;
+      visuales.push({ tipo: 'cifra', valor: f(b.valor), nota: typeof b.nota === 'string' ? b.nota : undefined });
+    } else if (b.tipo === 'tabla' && Array.isArray(b.filas)) {
+      visuales.push({ tipo: 'tabla', filas: (b.filas as Array<[string, string | number]>).map(([k, v]) => [k, typeof v === 'number' ? numero(v) : v]) });
+    } else if (b.tipo === 'dona' && Array.isArray(b.segmentos)) {
+      visuales.push({ tipo: 'dona', segmentos: b.segmentos as Array<{ etiqueta: string; valor: number }> });
+    } else if (b.tipo === 'serie' && Array.isArray(b.puntos)) {
+      visuales.push({ tipo: 'serie', puntos: b.puntos as Array<{ dia: string; valor: number }>, formato: b.formato === 'mxn' ? 'mxn' : 'numero' });
+    }
+  }
+  return { texto: textos.join(' ') || 'Listo.', visuales: visuales.length > 0 ? visuales : undefined };
+}
+
+function responder(pregunta: string, kpis: DashboardKpis | null, acred: Acreditables | null): Respuesta {
   const q = pregunta.toLowerCase();
+  const sinLiq = { texto: 'Todavía no hay liquidaciones para calcular esto.' };
   if (q.includes('comprobad') || q.includes('monto')) {
-    return kpis ? `Llevas ${mxn(kpis.montoComprobado)} comprobados en ${kpis.viajesLiquidados} viaje${kpis.viajesLiquidados === 1 ? '' : 's'}.` : 'Todavía no hay liquidaciones para calcular esto.';
+    if (!kpis) return sinLiq;
+    return {
+      texto: `Llevas ${mxn(kpis.montoComprobado)} comprobados en ${kpis.viajesLiquidados} viaje${kpis.viajesLiquidados === 1 ? '' : 's'}.`,
+      visual: {
+        tipo: 'tabla',
+        filas: [
+          ['Monto comprobado', mxn(kpis.montoComprobado)],
+          ['Viajes liquidados', numero(kpis.viajesLiquidados)],
+          ['Con diferencias', numero(kpis.conDiferencias)],
+          ['Por revisar', numero(kpis.porRevisar)],
+          ['Dinero observado', mxn(kpis.diferenciaDetectada)],
+        ],
+      },
+    };
   }
   if (q.includes('diferencia') || q.includes('revisar')) {
-    return kpis ? `${kpis.conDiferencias + kpis.porRevisar} liquidaciones tienen diferencia o están por revisar, de ${kpis.viajesLiquidados} en total.` : 'Todavía no hay liquidaciones para calcular esto.';
+    if (!kpis) return sinLiq;
+    const limpias = Math.max(0, kpis.viajesLiquidados - kpis.conDiferencias - kpis.porRevisar);
+    return {
+      texto: `${kpis.conDiferencias + kpis.porRevisar} liquidaciones tienen diferencia o están por revisar, de ${kpis.viajesLiquidados} en total.`,
+      visual: kpis.viajesLiquidados > 0
+        ? { tipo: 'dona', segmentos: [
+            { etiqueta: 'Sin diferencias', valor: limpias },
+            { etiqueta: 'Con diferencias', valor: kpis.conDiferencias },
+            { etiqueta: 'Por revisar', valor: kpis.porRevisar },
+          ] }
+        : undefined,
+    };
   }
   if (q.includes('diesel') || q.includes('diésel') || q.includes('litro')) {
-    return acred ? `${litros(acred.litrosDiesel)} elegibles para el estímulo este periodo (LIF 2026, Art. 20-A).` : 'Todavía no hay datos de diésel este periodo.';
+    if (!acred) return { texto: 'Todavía no hay datos de diésel este periodo.' };
+    return {
+      texto: `${litros(acred.litrosDiesel)} elegibles para el estímulo este periodo.`,
+      visual: { tipo: 'cifra', valor: litros(acred.litrosDiesel), nota: 'LIF 2026, Art. 20-A — el estímulo en pesos lo fija la cuota DOF de cada semana.' },
+    };
   }
   if (q.includes('tasa') || q.includes('cuadre') || q.includes('cuadra')) {
-    return kpis ? `Tu tasa de cuadre es ${kpis.tasaCuadre}% — liquidaciones sin diferencias sobre el total.` : 'Todavía no hay liquidaciones para calcular esto.';
+    if (!kpis) return sinLiq;
+    const limpias = Math.max(0, kpis.viajesLiquidados - kpis.conDiferencias - kpis.porRevisar);
+    return {
+      texto: `Tu tasa de cuadre es ${kpis.tasaCuadre}% — liquidaciones sin diferencias sobre el total.`,
+      visual: kpis.viajesLiquidados > 0
+        ? { tipo: 'dona', segmentos: [
+            { etiqueta: 'Sin diferencias', valor: limpias },
+            { etiqueta: 'Con diferencias o por revisar', valor: kpis.conDiferencias + kpis.porRevisar },
+          ] }
+        : undefined,
+    };
   }
-  if (q.includes('iva')) {
-    return acred ? `${mxn(acred.iva)} de IVA acreditable este periodo (LIVA, Art. 5).` : 'Todavía no hay datos de IVA este periodo.';
+  if (q.includes('iva') || q.includes('peaje') || q.includes('caseta') || q.includes('acreditable')) {
+    if (!acred) return { texto: 'Todavía no hay datos de acreditables este periodo.' };
+    return {
+      texto: q.includes('iva')
+        ? `${mxn(acred.iva)} de IVA acreditable este periodo (LIVA, Art. 5).`
+        : q.includes('peaje') || q.includes('caseta')
+          ? `${mxn(acred.peaje)} de peaje acreditable (50%) este periodo — sujeto a elegibilidad.`
+          : 'Esto es lo que llevas de acreditables este periodo:',
+      visual: {
+        tipo: 'tabla',
+        filas: [
+          ['IVA acreditable', mxn(acred.iva)],
+          ['Peaje acreditable (50%)', mxn(acred.peaje)],
+          ['Diésel elegible', litros(acred.litrosDiesel)],
+        ],
+      },
+    };
   }
-  if (q.includes('peaje') || q.includes('caseta')) {
-    return acred ? `${mxn(acred.peaje)} de peaje acreditable (50%) este periodo — sujeto a elegibilidad.` : 'Todavía no hay datos de peaje este periodo.';
+  return { texto: 'Todavía no sé responder eso — pregúntame sobre lo comprobado, diferencias, diésel, IVA, peaje o tu tasa de cuadre.' };
+}
+
+/** La pieza visual de una respuesta — tabla chica, dona o cifra grande,
+ *  con los mismos componentes del resto del panel (nunca una segunda
+ *  librería). */
+function VisualRespuesta({ v }: { v: Visual }) {
+  if (v.tipo === 'cifra') {
+    return (
+      <div className="card px-4 py-3 mt-2 inline-block">
+        <div className="font-display text-[22px] leading-tight font-semibold tabular">{v.valor}</div>
+        {v.nota && <p className="text-[11px] mt-1" style={{ color: 'var(--faint)' }}>{v.nota}</p>}
+      </div>
+    );
   }
-  return 'Todavía no sé responder eso — pregúntame sobre lo comprobado, diferencias, diésel, IVA, peaje o tu tasa de cuadre.';
+  if (v.tipo === 'dona') {
+    return <div className="card p-3 mt-2"><Dona segmentos={v.segmentos} /></div>;
+  }
+  if (v.tipo === 'serie') {
+    return (
+      <div className="card p-3 mt-2">
+        <AreaChartSimple datos={v.puntos} etiquetaValor={v.formato === 'mxn' ? mxn : numero} />
+      </div>
+    );
+  }
+  return (
+    <div className="card p-1.5 mt-2">
+      <table className="w-full border-collapse text-[13px]">
+        <tbody>
+          {v.filas.map(([k, val]) => (
+            <tr key={k} className="border-b last:border-b-0" style={{ borderColor: 'var(--line2)' }}>
+              <td className="px-2.5 py-1.5" style={{ color: 'var(--muted)' }}>{k}</td>
+              <td className="cifra-mono px-2.5 py-1.5 text-right">{val}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 export default function ChatFlota({
@@ -59,13 +198,197 @@ export default function ChatFlota({
    */
   variante?: 'panel' | 'hero';
 }) {
-  const [historial, setHistorial] = useState<Array<{ q: string; a: string }>>([]);
+  const [historial, setHistorial] = useState<Array<{ q: string; r: Respuesta }>>([]);
   const [texto, setTexto] = useState('');
+  // Ingesta REAL de prueba (12-ago): la imagen adjunta viaja a
+  // /api/dashboard/ingesta, que corre el MISMO OCR del motor y devuelve lo
+  // leído — sin registrar nada. `ocupado` bloquea dobles envíos mientras la
+  // visión trabaja.
+  const [ocupado, setOcupado] = useState(false);
+  const [recomendar, setRecomendar] = useState(false);
+  const [menuAdjuntar, setMenuAdjuntar] = useState(false);
+  const inputArchivo = useRef<HTMLInputElement>(null);
+  const inputImagen = useRef<HTMLInputElement>(null);
+  const inputCamara = useRef<HTMLInputElement>(null);
+  const finConversacion = useRef<HTMLDivElement>(null);
+
+  // Ancla la vista al último mensaje, como cualquier chat.
+  useEffect(() => {
+    finConversacion.current?.scrollIntoView({ block: 'end' });
+  }, [historial.length]);
+
+  // El documento adjunto a la conversación (extracto acotado por el
+  // servidor): viaja en cada pregunta hasta que el usuario lo quite.
+  const [documento, setDocumento] = useState<{ nombre: string; extracto: string } | null>(null);
+
+  async function leerArchivo(archivo: File) {
+    if (ocupado) return;
+    if (!archivo.type.startsWith('image/')) {
+      // Lector universal (12-ago): PDF, Excel, CSV, XML de CFDI, texto…
+      // El extracto regresa acotado y se ADJUNTA a la conversación.
+      setOcupado(true);
+      const etiqueta = `Adjuntar: ${archivo.name}`;
+      try {
+        const b64 = await new Promise<string>((res, rej) => {
+          const fr = new FileReader();
+          fr.onload = () => res(String(fr.result));
+          fr.onerror = () => rej(fr.error);
+          fr.readAsDataURL(archivo);
+        });
+        const resp = await fetch('/api/dashboard/archivo', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre: archivo.name, contenido: b64 }),
+          signal: AbortSignal.timeout(75_000),
+        });
+        const d = await resp.json().catch(() => null);
+        if (!resp.ok || !d?.extracto) {
+          setHistorial((h) => [...h, { q: etiqueta, r: { texto: d?.error ?? 'No se pudo leer el archivo en este momento.' } }]);
+          return;
+        }
+        setDocumento({ nombre: archivo.name, extracto: d.extracto });
+        setHistorial((h) => [...h, {
+          q: etiqueta,
+          r: {
+            texto: `Listo, leí «${archivo.name}» y lo tengo a la mano en esta conversación — pregúntame lo que quieras sobre él.`,
+            visual: Array.isArray(d.meta) && d.meta.length > 0 ? { tipo: 'tabla', filas: d.meta as Array<[string, string]> } : undefined,
+          },
+        }]);
+      } catch {
+        setHistorial((h) => [...h, { q: etiqueta, r: { texto: 'No se pudo leer el archivo en este momento.' } }]);
+      } finally {
+        setOcupado(false);
+        if (inputArchivo.current) inputArchivo.current.value = '';
+      }
+      return;
+    }
+    setOcupado(true);
+    const etiquetaQ = `Leer comprobante: ${archivo.name}`;
+    try {
+      const dataUrl = await new Promise<string>((res, rej) => {
+        const fr = new FileReader();
+        fr.onload = () => res(String(fr.result));
+        fr.onerror = () => rej(fr.error);
+        fr.readAsDataURL(archivo);
+      });
+      const resp = await fetch('/api/dashboard/ingesta', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imagen: dataUrl }),
+      });
+      const d = await resp.json().catch(() => null);
+      if (!resp.ok || !d) {
+        setHistorial((h) => [...h, { q: etiquetaQ, r: { texto: d?.error ?? 'No se pudo leer la imagen en este momento.' } }]);
+        return;
+      }
+      if (!d.legible) {
+        setHistorial((h) => [...h, { q: etiquetaQ, r: { texto: `El motor no pudo leer este papel${d.motivo ? ` (${d.motivo})` : ''}. Con una foto más cercana y sin reflejos suele salir.` } }]);
+        return;
+      }
+      const filas: Array<[string, string]> = [];
+      if (d.campos.concepto) filas.push(['Concepto', String(d.campos.concepto)]);
+      if (typeof d.campos.monto === 'number') filas.push(['Monto', mxn(d.campos.monto)]);
+      if (d.campos.fecha) filas.push(['Fecha', String(d.campos.fecha)]);
+      if (d.campos.folio) filas.push(['Folio', String(d.campos.folio)]);
+      if (d.campos.rfcEmisor) filas.push(['RFC emisor', String(d.campos.rfcEmisor)]);
+      if (typeof d.campos.litros === 'number') filas.push(['Litros', litros(d.campos.litros)]);
+      if (typeof d.campos.confianza === 'number') filas.push(['Confianza del OCR', `${Math.round(d.campos.confianza * 100)}%`]);
+      setHistorial((h) => [...h, {
+        q: etiquetaQ,
+        r: {
+          texto: 'Esto fue lo que el motor leyó del papel — lectura de prueba, no se registró ningún gasto.',
+          visual: filas.length > 0 ? { tipo: 'tabla', filas } : undefined,
+        },
+      }]);
+    } catch {
+      setHistorial((h) => [...h, { q: etiquetaQ, r: { texto: 'No se pudo leer la imagen en este momento.' } }]);
+    } finally {
+      setOcupado(false);
+      if (inputArchivo.current) inputArchivo.current.value = '';
+    }
+  }
+
+  /** El catálogo de Consulta, por CATEGORÍA y formal (pedido del 12-ago:
+   *  al ancho de la caja y con muchas más opciones). SIEMPRE completo: las
+   *  respuestas ya degradan con honestidad cuando falta el dato ("todavía
+   *  no hay..."), así que esconder categorías solo empobrecía el menú.
+   *  Cada frase conserva una palabra clave que `responder` entiende —
+   *  verificadas contra sus ramas una por una. */
+  const CATALOGO_CONSULTA: Array<{ categoria: string; preguntas: string[] }> = [
+    {
+      categoria: 'Cuadre y liquidaciones',
+      preguntas: [
+        'Muéstrame el desglose de lo comprobado a la fecha',
+        'Estado de las liquidaciones con diferencia o por revisar',
+        '¿Cuántos viajes están por revisar?',
+        'Monto observado por el motor en las liquidaciones',
+      ],
+    },
+    {
+      categoria: 'Salud del cuadre',
+      preguntas: [
+        'Tasa de cuadre del periodo',
+        '¿Cuántas liquidaciones cerraron sin diferencias?',
+        '¿Cuánto llevo comprobado?',
+      ],
+    },
+    {
+      categoria: 'Fiscal y acreditables',
+      preguntas: [
+        'Desglose de acreditables del periodo',
+        'IVA acreditable del periodo',
+        'Peaje acreditable del periodo',
+        'Litros de diésel elegibles para el estímulo',
+      ],
+    },
+  ];
+
+  const spChat = useSearchParams();
 
   function preguntar(q: string) {
-    if (!q.trim()) return;
-    setHistorial((h) => [...h, { q, a: responder(q, kpis, acred) }]);
+    if (!q.trim() || ocupado) return;
     setTexto('');
+    // TODO mensaje va al agente (12-ago: "no quiero respuestas prehechas").
+    // El orquestador del servidor decide el modelo: conserje barato para
+    // charla/producto, analista con herramientas para datos. El respondedor
+    // local de keywords queda SOLO como paracaídas si el API falla.
+    void preguntarAnalista(q);
+  }
+
+  const [fasePensando, setFasePensando] = useState('Pensando…');
+
+  async function preguntarAnalista(q: string) {
+    setOcupado(true);
+    setFasePensando('Pensando…');
+    setHistorial((h) => [...h, { q, r: { texto: 'Pensando…', pendiente: true } }]);
+    const inicio = Date.now();
+    const relojFases = setInterval(() => {
+      const t = Date.now() - inicio;
+      const fase = [...FASES_PENSANDO].reverse().find(([desde]) => t >= desde);
+      if (fase) setFasePensando(fase[1]);
+    }, 700);
+    try {
+      const previos = historial.flatMap((h) => [
+        { rol: 'usuario' as const, texto: h.q },
+        { rol: 'asistente' as const, texto: h.r.texto },
+      ]);
+      const tenant = spChat.get('tenant');
+      const resp = await fetch(`/api/dashboard/chat${tenant ? `?tenant=${encodeURIComponent(tenant)}` : ''}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mensajes: [...previos, { rol: 'usuario', texto: q }], documento }),
+        // Sin esto, un servidor colgado dejaba "pensando…" para siempre
+        // (reportado en vivo el 12-ago).
+        signal: AbortSignal.timeout(75_000),
+      });
+      const d = await resp.json().catch(() => null);
+      const r: Respuesta = resp.ok && d && Array.isArray(d.bloques)
+        ? respuestaDeBloques(d.bloques as Array<Record<string, unknown>>)
+        : responder(q, kpis, acred);
+      setHistorial((h) => [...h.slice(0, -1), { q, r }]);
+    } catch {
+      setHistorial((h) => [...h.slice(0, -1), { q, r: responder(q, kpis, acred) }]);
+    } finally {
+      clearInterval(relojFases);
+      setOcupado(false);
+    }
   }
 
   const historialView = historial.length > 0 ? (
@@ -73,7 +396,7 @@ export default function ChatFlota({
       {historial.map((h, i) => (
         <div key={i} className="text-sm">
           <div className="font-medium">{h.q}</div>
-          <div style={{ color: 'var(--muted)' }}>{h.a}</div>
+          <div style={{ color: 'var(--muted)' }}>{h.r.texto}</div>
         </div>
       ))}
     </div>
@@ -109,97 +432,203 @@ export default function ChatFlota({
 
   if (variante === 'hero') {
     const vacio = historial.length === 0;
-    return (
-      <div className="h-full w-full flex flex-col items-center justify-center px-4 py-10">
-        <div className="w-full max-w-2xl flex flex-col items-center">
-          {/* Encabezado. Se retira en cuanto hay respuestas: a partir de ahí lo
-              que importa es la conversación, no la portada. */}
-          {vacio && (
-            <>
-              <Logo alto="h-7" className="mb-6" />
-              <h1 className="text-[26px] leading-tight font-medium tracking-tight text-center">
-                Pregunta a tus datos
-              </h1>
-              <p className="mt-2 mb-8 text-sm text-center max-w-md" style={{ color: 'var(--muted)' }}>
-                Lo comprobado, las diferencias, el diésel, el IVA y el peaje — con la cifra que
-                ya calculó el motor.
-              </p>
-            </>
-          )}
 
-          {!vacio && (
-            <div className="w-full mb-6 max-h-[46vh] overflow-y-auto space-y-4 text-left">
+    /* EL recuadro — el mismo en portada y en conversación. Consulta alterna
+       el catálogo; el clip pregunta: tomar foto / subir imágenes / adjuntar
+       archivos (los tres terminan en el mismo OCR real; `capture` abre la
+       cámara del teléfono y en desktop cae al selector). */
+    const caja = (
+      <form
+        onSubmit={(e) => { e.preventDefault(); preguntar(texto); }}
+        className="w-full rounded-2xl px-4 pt-3.5 pb-3 transition-shadow focus-within:shadow-lg"
+        style={{
+          background: 'var(--surface)',
+          border: '1px solid var(--line)',
+          boxShadow: 'var(--shadow-card)',
+        }}
+      >
+        {documento && (
+          <div className="mb-2">
+            <span className="hairline inline-flex items-center gap-1.5 text-[12px] font-medium pl-2.5 pr-1.5 py-1 rounded-full" style={{ background: 'var(--canvas)' }}>
+              <FileText width={13} height={13} strokeWidth={1.75} style={{ color: 'var(--muted)' }} />
+              <span className="max-w-[260px] truncate">{documento.nombre}</span>
+              <button type="button" aria-label="Quitar archivo" onClick={() => setDocumento(null)}
+                className="w-5 h-5 rounded-full inline-flex items-center justify-center transition-colors hover:bg-[var(--line2)]">
+                <X width={12} height={12} strokeWidth={2} />
+              </button>
+            </span>
+          </div>
+        )}
+        <input
+          value={texto}
+          onChange={(e) => setTexto(e.target.value)}
+          placeholder={documento ? `Pregunta sobre «${documento.nombre}» o tu operación…` : 'Pregunta sobre tu operación…'}
+          aria-label="Pregunta sobre tu operación"
+          className="w-full bg-transparent border-0 outline-none text-[15px] leading-relaxed"
+        />
+        <div className="flex items-center justify-between mt-3 relative">
+          <button type="button" onClick={() => setRecomendar((v) => !v)}
+            className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full transition-opacity hover:opacity-85"
+            style={{ background: 'var(--marca)', color: 'var(--marca-fg)' }}>
+            <Search width={11} height={11} strokeWidth={2.25} />
+            Consulta
+          </button>
+
+          <div className="flex items-center gap-1.5">
+            <input ref={inputCamara} type="file" accept="image/*" capture="environment" className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) void leerArchivo(f); }} />
+            <input ref={inputImagen} type="file" accept="image/*" className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) void leerArchivo(f); }} />
+            <input ref={inputArchivo} type="file" accept="image/*,.pdf,.xlsx,.xls,.csv,.tsv,.ods,.xml,.txt,.json,.md" className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) void leerArchivo(f); }} />
+            {menuAdjuntar && (
+              <div className="absolute right-10 bottom-9 card p-1.5 z-30 w-56">
+                <button type="button"
+                  onClick={() => { setMenuAdjuntar(false); inputCamara.current?.click(); }}
+                  className="w-full text-left text-[13px] px-2.5 py-2 rounded-lg transition-colors hover:bg-[var(--canvas)] flex items-center gap-2">
+                  <Camera width={14} height={14} strokeWidth={1.75} style={{ color: 'var(--muted)' }} />
+                  Tomar foto
+                </button>
+                <button type="button"
+                  onClick={() => { setMenuAdjuntar(false); inputImagen.current?.click(); }}
+                  className="w-full text-left text-[13px] px-2.5 py-2 rounded-lg transition-colors hover:bg-[var(--canvas)] flex items-center gap-2">
+                  <FileImage width={14} height={14} strokeWidth={1.75} style={{ color: 'var(--muted)' }} />
+                  Subir imágenes
+                </button>
+                <button type="button"
+                  onClick={() => { setMenuAdjuntar(false); inputArchivo.current?.click(); }}
+                  className="w-full text-left text-[13px] px-2.5 py-2 rounded-lg transition-colors hover:bg-[var(--canvas)] flex items-center gap-2">
+                  <Paperclip width={14} height={14} strokeWidth={1.75} style={{ color: 'var(--muted)' }} />
+                  Adjuntar archivo (PDF, Excel, CSV…)
+                </button>
+              </div>
+            )}
+            <button type="button" aria-label="Adjuntar comprobante" title="Adjuntar comprobante"
+              onClick={() => setMenuAdjuntar((v) => !v)} disabled={ocupado}
+              className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors hover:bg-[var(--canvas)] disabled:opacity-50"
+              style={{ color: 'var(--ink2)' }}>
+              <Paperclip width={14} height={14} strokeWidth={2} />
+            </button>
+            <button
+              type="submit"
+              aria-label="Enviar"
+              disabled={!texto.trim() || ocupado}
+              className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-opacity disabled:cursor-default"
+              style={{
+                background: 'var(--marca)',
+                color: 'var(--marca-fg)',
+                opacity: texto.trim() && !ocupado ? 1 : 0.35,
+              }}
+            >
+              <ArrowUp width={15} height={15} strokeWidth={2.5} />
+            </button>
+          </div>
+        </div>
+      </form>
+    );
+
+    /* El catálogo de Consulta — al ancho de la caja y SCROLLEABLE (pedido
+       del 12-ago): tres columnas de categorías con tope de alto. */
+    const panelConsulta = recomendar && (
+      <div className="w-full max-h-72 overflow-y-auto grid grid-cols-1 sm:grid-cols-3 gap-2.5 pr-0.5">
+        {CATALOGO_CONSULTA.map((c) => (
+          <div key={c.categoria} className="card p-3 self-start">
+            <div className="etiqueta-mono text-[10px] font-medium uppercase mb-1.5" style={{ color: 'var(--muted)' }}>
+              {c.categoria}
+            </div>
+            {c.preguntas.map((rq) => (
+              <button key={rq} type="button"
+                onClick={() => { setRecomendar(false); preguntar(rq); }}
+                className="w-full text-left text-[13px] px-2 py-1.5 rounded-lg transition-colors hover:bg-[var(--canvas)]">
+                {rq}
+              </button>
+            ))}
+          </div>
+        ))}
+      </div>
+    );
+
+    // ── CONVERSACIÓN, tipo ChatGPT/Claude (pedido del 12-ago): al primer
+    // mensaje la portada se retira, las burbujas suben y la caja se ancla
+    // abajo. Tu pregunta a la derecha; el motor a la izquierda con su
+    // tabla/gráfica cuando la trae.
+    if (!vacio) {
+      return (
+        <div className="min-h-full w-full flex-1 flex flex-col px-4 pt-4">
+          <div className="w-full max-w-2xl mx-auto flex-1 flex flex-col">
+            <div className="flex-1 space-y-4 py-2">
               {historial.map((h, i) => (
-                <div key={i} className="text-sm">
-                  <div className="font-medium">{h.q}</div>
-                  <div className="mt-0.5" style={{ color: 'var(--muted)' }}>{h.a}</div>
+                <div key={i}>
+                  <div className="flex justify-end">
+                    <div className="hairline rounded-2xl rounded-br-md px-3.5 py-2 text-sm max-w-[85%]" style={{ background: 'var(--surface)' }}>
+                      {h.q}
+                    </div>
+                  </div>
+                  <div className="mt-2.5 text-sm max-w-[85%]">
+                    {h.r.pendiente ? (
+                      <div className="flex items-center gap-2" style={{ color: 'var(--muted)' }}>
+                        <span className="skeleton inline-block w-3.5 h-3.5 rounded-full shrink-0" />
+                        {fasePensando}
+                      </div>
+                    ) : (
+                      <div>{h.r.texto}</div>
+                    )}
+                    {h.r.visual && <VisualRespuesta v={h.r.visual} />}
+                    {h.r.visuales?.map((v, j) => <VisualRespuesta key={j} v={v} />)}
+                  </div>
                 </div>
+              ))}
+              <div ref={finConversacion} />
+            </div>
+            <div className="sticky bottom-0 shrink-0 pt-3 pb-4" style={{ background: 'var(--g1)' }}>
+              {panelConsulta}
+              <div className={recomendar ? 'mt-3' : ''}>{caja}</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── PORTADA (sin mensajes todavía) ──
+    return (
+      <div className="min-h-full w-full flex-1 flex flex-col items-center justify-center px-4 py-10">
+        <div className="w-full max-w-2xl flex flex-col items-center">
+          <Logo alto="h-7" className="mb-6" />
+          <h1 className="text-[26px] leading-tight font-medium tracking-tight text-center">
+            Pregunta a tus datos
+          </h1>
+          <p className="mt-2 mb-8 text-sm text-center max-w-md" style={{ color: 'var(--muted)' }}>
+            Tu operación, con la cifra que ya calculó el motor — y adjunta un PDF, un Excel
+            o la foto de un comprobante para analizarlo aquí mismo.
+          </p>
+
+          {caja}
+
+          {recomendar ? (
+            <div className="w-full mt-4">{panelConsulta}</div>
+          ) : (
+            <div className="flex flex-wrap justify-center gap-2 mt-4">
+              {PREGUNTAS.map((pq) => (
+                <button
+                  key={pq}
+                  type="button"
+                  onClick={() => preguntar(pq)}
+                  className="text-xs px-3 py-1.5 rounded-full hairline transition-opacity hover:opacity-70"
+                  // BLANCO explícito (12-ago): la página hero vive sobre el
+                  // lienzo tenue --g1 y un chip transparente se veía gris.
+                  style={{ color: 'var(--ink2)', background: 'var(--surface)' }}
+                >
+                  {pq}
+                </button>
               ))}
             </div>
           )}
 
-          {/* EL recuadro — el único de la página. */}
-          <form
-            onSubmit={(e) => { e.preventDefault(); preguntar(texto); }}
-            className="w-full rounded-2xl px-4 pt-3.5 pb-3 transition-shadow focus-within:shadow-lg"
-            style={{
-              background: 'var(--surface)',
-              border: '1px solid var(--line)',
-              boxShadow: 'var(--shadow-card)',
-            }}
-          >
-            <input
-              value={texto}
-              onChange={(e) => setTexto(e.target.value)}
-              placeholder="Pregunta sobre tu operación…"
-              aria-label="Pregunta sobre tu operación"
-              className="w-full bg-transparent border-0 outline-none text-[15px] leading-relaxed"
-            />
-            <div className="flex items-center justify-between mt-3">
-              {/* Lo que esta caja hace, dicho en la caja. No hay un segundo modo:
-                  poner uno apagado prometería algo que no existe. */}
-              <span
-                className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full"
-                style={{ background: 'var(--canvas)', color: 'var(--ink2)' }}
-              >
-                <Search width={11} height={11} strokeWidth={2.25} />
-                Consulta
-              </span>
-              <button
-                type="submit"
-                aria-label="Enviar"
-                disabled={!texto.trim()}
-                className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-opacity disabled:cursor-default"
-                style={{
-                  background: 'var(--marca)',
-                  color: 'var(--marca-fg)',
-                  opacity: texto.trim() ? 1 : 0.35,
-                }}
-              >
-                <ArrowUp width={15} height={15} strokeWidth={2.5} />
-              </button>
-            </div>
-          </form>
-
-          <div className="flex flex-wrap justify-center gap-2 mt-4">
-            {PREGUNTAS.map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => preguntar(p)}
-                className="text-xs px-3 py-1.5 rounded-full hairline transition-colors"
-                style={{ color: 'var(--ink2)' }}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-
           {/* El límite va a la vista, pero sin otro recuadro: es una nota, no una
               tarjeta. Quitarlo dejaría creer que la caja consulta la base. */}
           <p className="mt-8 text-[11px] leading-relaxed text-center max-w-lg" style={{ color: 'var(--faint)' }}>
-            Responde con cifras ya calculadas en el servidor. No traduce preguntas libres a
-            consultas de base de datos, a propósito. Todavía no devuelve gráficas ni tablas.
+            Responde con cifras ya calculadas en el servidor — en texto, tabla o gráfica según
+            la pregunta. No traduce preguntas libres a consultas de base de datos, a propósito.
           </p>
         </div>
       </div>

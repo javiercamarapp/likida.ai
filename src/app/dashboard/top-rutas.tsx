@@ -29,10 +29,10 @@ function colorDe(region: string | null): string {
  * ciudad fuera del catálogo se enseña "Sin clasificar" en vez de una
  * región inventada.
  */
+/** SOLO la tabla — el estado vacío lo pinta la tarjeta (panel-periodo),
+ *  igual que en las demás: aquí adentro, el `overflow-x-auto` del wrapper
+ *  rompía el centrado (reporte del 12-ago: la leyenda se iba hasta abajo). */
 export function TopRutas({ rutas }: { rutas: RutaConRegion[] }) {
-  if (rutas.length === 0) {
-    return <p className="text-sm" style={{ color: 'var(--muted)' }}>Aún no hay gasto asociado a una ruta.</p>;
-  }
   return (
     <table className="w-full text-sm">
       <thead>

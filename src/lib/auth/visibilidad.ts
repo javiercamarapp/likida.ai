@@ -74,11 +74,19 @@ export function puedeVerArea(rol: string, area: Area): boolean {
  */
 const AREA_POR_RUTA: Record<string, Area> = {
   '/dashboard': 'operacion',
+  // Nuevo viaje — reconstruida el 12-ago-2026 (la segunda). Es `operacion`:
+  // crear/asignar es del encargado también; el server action re-gatea con
+  // puedeAsignar adentro.
+  '/dashboard/viajes/nuevo': 'operacion',
   '/dashboard/arco': 'operacion',
   '/dashboard/soporte': 'operacion',
 
   // Dinero — lo que el encargado no ve
   '/dashboard/combustible-casetas': 'dinero',
+  // Preguntar a la IA — reconstruida el 12-ago-2026 (la primera de las 17).
+  // Es `dinero` porque responde montos comprobados/IVA/peaje (§12: las
+  // cifras se piden DESPUÉS de este gateo).
+  '/dashboard/chat': 'dinero',
   // Lo que Likida le cobra a la flota (0052). Es `dinero` y no
   // `administracion` porque el contador necesita las facturas de Likida para su
   // propia contabilidad — es el mismo criterio que la RLS de la 0052, que las

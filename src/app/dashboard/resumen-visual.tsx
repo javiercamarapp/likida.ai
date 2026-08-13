@@ -1,187 +1,184 @@
 import type { ReactNode } from 'react';
-import { resolverFormato, type FormatoPreset } from '../admin/ui/formato-preset';
+import Link from 'next/link';
+import { resolverFormato } from '../admin/ui/formato-preset';
+import { StatusPill, type Estado } from '../admin/ui/kit';
+import { mxn, fechaMx } from '@/lib/formato';
 
 /**
- * Piezas visuales del Resumen de FLOTA — dirección elegida el 7-ago-2026
- * (ver conversación de diseño: degradado de marca, tarjetas con más aire,
- * gráficas de `admin/charts.tsx`/`admin/ui/graficas.tsx` reusadas, nunca
- * reinventadas). Viven en esta página a propósito, no en `admin/ui/kit`:
- * es la única pantalla que usa este tratamiento — admin y el resto de
- * /dashboard se quedan con `KpiTile` monocromo. Si algún día se decide
- * llevar este lenguaje a todo el producto, ESO se sube al kit compartido;
- * mientras tanto una sola pantalla no debe arrastrar a las demás.
+ * Piezas visuales del Resumen de FLOTA — dirección v3 del 12-ago-2026
+ * (DESIGN.md, destilada de las 8 referencias de Desktop/DASHBOARD): cifras
+ * en tinta sobre blanco, el naranja como acento, cero degradados de relleno.
+ *
+ * Aquí vivieron `DEGRADADO_MARCA` y `KpiDegradado` (dirección del
+ * 7-ago-2026). Se retiraron completos: los KPI ahora son `StatCard` del kit
+ * compartido (`admin/ui/kit.tsx`) — el camino inverso al que este archivo
+ * anunciaba ("si algún día se decide llevar este lenguaje a todo el
+ * producto, eso se sube al kit"): lo que subió al kit fue el lenguaje
+ * limpio, no el degradado. La foto del camión (`public/hero-camion.webp`,
+ * con su empalme de 12000px documentado en git) queda en `public/` fuera
+ * de uso por si alguna pieza de marketing la quiere.
  */
 
-/** Compartido entre `page.tsx` (server) y `actividad.tsx` (client) — vive
- *  aquí, no en `page.tsx`, porque ese archivo importa consultas a la base
- *  (`supabaseAdmin`, `analytics.ts`); un componente cliente que lo
- *  importara arrastraría ese código al bundle del navegador. Este archivo
- *  no importa nada server-only, así que es seguro cruzarlo hacia el
- *  cliente. */
+/** Compartido entre `inicio-contenido.tsx` (server) y `actividad.tsx`
+ *  (client) — vive aquí, no en la página, porque ese archivo importa
+ *  consultas a la base (`supabaseAdmin`); un componente cliente que lo
+ *  importara arrastraría ese código al bundle del navegador. */
 export function TituloSeccion({ children }: { children: ReactNode }) {
   return (
-    <h2 className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--muted)' }}>
+    <h2 className="etiqueta-mono text-[11px] font-medium uppercase" style={{ color: 'var(--muted)' }}>
       {children}
     </h2>
   );
 }
 
-// ── Hero de saludo ───────────────────────────────────────────────────────
+// ── Encabezado de página ─────────────────────────────────────────────────
 
-/** El degradado de marca sube hasta el encabezado, no solo los KPIs de abajo
- *  — así se ve la dirección visual elegida el 7-ago incluso con la flota en
- *  cero (`estado === 'vacio'`): esto vive AFUERA de esa rama en `page.tsx` a
- *  propósito, para que se pinte en los tres estados (vacío, parcial, con
- *  datos). El tagline es una frase de bienvenida, no una cifra del negocio
- *  — no le aplica la regla de "nunca inventar" de `CLAUDE.md`. */
-/** Naranja de marca puro (`--g4` → `--marca`, la rampa de `admin/charts.tsx`),
- *  no `--ink` → `--marca`: eso se leía café oscuro, no el naranja vivo de la
- *  dirección elegida. Mismo degradado en el hero y en cada KpiDegradado —
- *  una sola fuente, para que un cambio de tono no se desincronice entre los
- *  dos. */
-export const DEGRADADO_MARCA = 'linear-gradient(135deg, var(--g3) 0%, var(--marca) 100%)';
-
-/**
- * EL MISMO NARANJA, PERO PARA LO QUE LLEVA TINTA BLANCA ENCIMA.
- *
- * AUDITORÍA 17 (pase 5), MEDIO. `DEGRADADO_MARCA` arranca en `--g3` (#f2913f),
- * que da 2.36:1 contra blanco: las tres tarjetas de KPI que abren el demo
- * pintaban su etiqueta a 2.09:1 y su cifra a 2.57:1 (AA pide 4.5:1 y 3:1), y
- * el item activo del sidebar a 2.57:1. Ni en el extremo más oscuro del
- * degradado viejo la etiqueta llegaba al umbral.
- *
- * Que había dos tratamientos peleando ya estaba a la vista en este archivo: el
- * hero usa este degradado con tinta OSCURA (#1a1207, 7.85:1) 45 líneas más
- * arriba. Así que se separan: quien escribe en oscuro se queda con la rampa
- * clara (`DEGRADADO_MARCA`, el hero), y quien escribe en blanco usa ésta, que
- * va de `--marca` a `--marca-oscura` y pasa 4.5:1 en TODO su recorrido.
- *
- * No es un color nuevo de marca: son las dos paradas oscuras de la misma rampa
- * naranja. El guardarraíl vive en `contraste_tinta_componente.test.ts`, que
- * muestrea el degradado cada 5% en vez de mirar solo los extremos —
- * `contraste.test.ts` no podía cazarlo porque mide tokens contra `--surface`,
- * nunca una tinta sobre un color de componente.
- */
-export const DEGRADADO_MARCA_TINTA_BLANCA = 'linear-gradient(135deg, var(--marca) 0%, var(--marca-oscura) 100%)';
-
-/** Foto de `public/hero-camion.webp` (12000×596, ~20:1) — el banner entero
- *  DEBE ser la foto, sin ningún parche de degradado a la vista (dirección
- *  del 8-ago-2026, tras dos intentos previos): `cover` con un contenedor
- *  ~10:1 recortaba el camión (no cabe en la franja visible, sin importar el
- *  recorte del archivo — es geometría, no elección de encuadre) y `contain`
- *  dejaba un rectángulo de degradado de sobra a la izquierda, que se leía
- *  como una caja pegada junto a la foto en vez de una sola imagen.
- *
- *  La solución: PROLONGAR la foto misma. El camión real (2626×596, recorte
- *  de `sips`/`sharp` sin el margen blanco del PNG original) vive intacto en
- *  el extremo derecho de un lienzo de 12000px; lo que lo precede es una
- *  franja de la propia neblina/cielo del lado izquierdo de la foto,
- *  desenfocada y estirada para extender el mismo degradado atardecer — no
- *  un color inventado, es la imagen continuándose a sí misma. El empalme
- *  (`hero-camion-build.md` si algún día vuelve a tocarse: `sharp`,
- *  `.blur(60)` + `.resize({fit:'fill'})` sobre una tira de 500px, con los
- *  últimos 320px del bloque del camión desvanecidos en alfa para fundirse
- *  encima) queda invisible a cualquier ancho de pantalla razonable.
- *
- *  12000px de ancho da margen para contenedores de hasta ~20:1
- *  (`ancho_contenedor/alto_contenedor`) sin que el recorte de `cover` llegue
- *  a tocar el bloque del camión — el contenedor real mide ~10:1
- *  (`getBoundingClientRect()`, 1148×116), así que hay margen de sobra
- *  incluso en monitores anchos. `right center` ancla el camión al lado
- *  derecho: lo que se recorta con pantallas angostas es SIEMPRE la niebla
- *  sintética de la izquierda, nunca el camión. */
-export function HeroSaludo({ saludo, nombre, tagline }: { saludo: string; nombre: string; tagline: string }) {
+/** La barra superior de la referencia FlowAI: breadcrumb de página a la
+ *  izquierda, lo contextual (badge de superadmin, filtros) a la derecha,
+ *  separada del contenido por un hairline. SIN buscador ni campana: no hay
+ *  búsqueda ni notificaciones reales en /dashboard, y un control que no
+ *  hace nada es un rótulo que miente. Se agregan cuando existan. */
+export function BarraPagina({ icono, titulo, derecha }: { icono?: ReactNode; titulo: string; derecha?: ReactNode }) {
   return (
-    <div
-      className="mx-5 mt-3 rounded-2xl px-5 py-8 flex items-center gap-4 overflow-hidden shrink-0"
-      style={{ background: `url('/hero-camion.webp') right center / cover no-repeat, ${DEGRADADO_MARCA}` }}
-    >
-      <div className="min-w-0">
-        <h1 className="text-xl tracking-tight truncate" style={{ fontFamily: 'var(--font-display), var(--font-sans)', fontWeight: 600, color: '#1a1207' }}>
-          {saludo}, {nombre} 👋
-        </h1>
-        <p className="text-sm mt-1 truncate" style={{ color: '#1a1207', opacity: 0.85 }}>{tagline}</p>
+    <div className="px-5 h-11 flex items-center justify-between gap-3 border-b shrink-0" style={{ borderColor: 'var(--line)', background: 'var(--surface)' }}>
+      <div className="flex items-center gap-2 text-[13px] font-medium min-w-0">
+        {icono}
+        <span className="truncate">{titulo}</span>
       </div>
+      {derecha}
     </div>
   );
 }
 
-// ── KpiDegradado ─────────────────────────────────────────────────────────
-
-/** El % contra el periodo anterior — NO siempre "subió = verde". Gastar
- *  más no es bueno para un jefe de flota, aunque el número sea más grande
- *  que el mes pasado; `bueno` lo decide cada llamador según qué significa
- *  esa métrica (ver `page.tsx`), no esta tarjeta. Sin `tendencia` (rango
- *  'todo', o sin periodo anterior legible) no se pinta nada — un "0.0%"
- *  inventado se leería como "sin cambio", que es una afirmación distinta
- *  de "no se pudo comparar". */
-export function KpiDegradado({
-  icono, etiqueta, valor, formato = 'numero', tendencia, flechas,
-}: {
-  icono: ReactNode;
-  etiqueta: string;
-  /** `null` = no hay con qué medir, y se pinta '—'.
-   *
-   *  AUDITORÍA 17 (pase 2), ALTO. Esta firma era `number` a secas, así que el
-   *  único llamador que sí tiene un dato opcional (`KpiPeriodo`, con
-   *  `costoPorViaje`) lo aplanaba a cero y pintaba "$0.00" — exactamente lo
-   *  que `analytics.ts:58-61` prohíbe por escrito: *"$0/viaje se leería como
-   *  que salió gratis, no como que no hay con qué medir"*. Un cero MEDIDO se
-   *  sigue pintando como cero; lo que cambia es que ahora se pueden
-   *  distinguir. Mismo criterio que `cifra-grande.tsx:57-60`. */
-  valor: number | null;
-  formato?: FormatoPreset;
-  tendencia?: { pct: number; bueno: boolean } | null;
-  /** Controles de paginación de periodo (`KpiPeriodo`, cliente) — viven
-   *  AQUÍ, no en el llamador, porque el círculo del ícono ya fija el ancho
-   *  de esa columna; duplicar el layout en cada sitio que necesite flechas
-   *  se hubiera desincronizado con el primer cambio de padding. */
-  flechas?: ReactNode;
-}) {
-  const fmt = resolverFormato(formato);
+/** El chip de fecha de la referencia ("27 April, 2026") — la fecha REAL del
+ *  servidor, formateada por `lib/formato` como todo lo demás. */
+export function ChipFecha({ icono, children }: { icono?: ReactNode; children: ReactNode }) {
   return (
-    <div
-      className="rounded-2xl p-4 text-white flex items-center justify-between gap-3 min-w-0 h-full"
-      style={{ background: DEGRADADO_MARCA_TINTA_BLANCA }}
-    >
+    <span className="hairline inline-flex items-center gap-1.5 text-[13px] font-medium px-3 h-8 rounded-lg shrink-0 bg-white">
+      {icono}
+      {children}
+    </span>
+  );
+}
+
+/** El saludo, limpio (patrón FlowAI: "Welcome Back, Jane!" — sin emoji,
+ *  como la referencia). Se pinta en los tres estados (vacío, parcial, con
+ *  datos): el tagline es una frase de bienvenida, no una cifra del negocio
+ *  — no le aplica la regla de "nunca inventar". `derecha` es el slot del
+ *  chip de fecha / CTA cuando exista una acción real. */
+export function HeroSaludo({ saludo, nombre, tagline, derecha }: { saludo: string; nombre: string; tagline: string; derecha?: ReactNode }) {
+  return (
+    <div className="px-5 pt-3.5 pb-0.5 shrink-0 min-w-0 flex items-start justify-between gap-3">
       <div className="min-w-0">
-        {/* SIN `opacity-85`: blanco al 85% sobre el extremo claro de este
-            degradado mide 4.17:1, por debajo del 4.5:1 que AA pide para
-            12px. La jerarquía entre etiqueta y cifra ya la dan el tamaño y
-            el peso; bajarle opacidad a la única línea que dice QUÉ es la
-            cifra era el detalle que la volvía ilegible en la sala. */}
-        <div className="text-xs font-medium truncate">{etiqueta}</div>
-        <div className="text-xl font-semibold tracking-tight tabular mt-1 truncate">{valor === null ? '—' : fmt(valor)}</div>
-        {tendencia && (
-          // Tintes más claros que los de antes (#bbf7d0 daba 4.27:1 y #fecaca
-          // 3.58:1 sobre este naranja): 4.72:1 y 4.73:1. Siguen siendo verde y
-          // rojo, y el signo ↑/↓ dice lo mismo sin depender del matiz.
-          <div className="text-[11px] font-semibold mt-1 tabular" style={{ color: tendencia.bueno ? '#dcfce7' : '#fef2f2' }}>
-            {tendencia.pct >= 0 ? '↑' : '↓'} {Math.abs(tendencia.pct)}% vs periodo anterior
-          </div>
-        )}
+        <h1 className="font-display text-[20px] font-semibold truncate">
+          {saludo}, {nombre}
+        </h1>
+        <p className="text-[13px] mt-1 truncate" style={{ color: 'var(--muted)' }}>{tagline}</p>
       </div>
-      <div className="flex flex-col items-center gap-1.5 shrink-0">
-        {/* Círculo BLANCO opaco, no translúcido — el ícono va del color de
-            marca, no blanco sobre blanco. */}
-        <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: '#ffffff', color: 'var(--marca)' }}>
-          {icono}
-        </div>
-        {flechas}
+      {derecha}
+    </div>
+  );
+}
+
+// ── Viajes recientes (la tabla protagonista de la referencia) ────────────
+
+/** Lo que `getViajes` ya trae — copia estructural para no importar tipos de
+ *  `analytics.ts` (ese módulo carga `supabaseAdmin`; los TIPOS cruzarían
+ *  bien, pero la dependencia invita a importar funciones después). */
+export interface FilaViaje {
+  id: string; folio: string; origen: string | null; destino: string | null;
+  estatus: string; anticipo: number; operadorNombre: string | null;
+  fechaInicio: string | null;
+  /** El id de la LIQUIDACIÓN del viaje (si ya cerró) — `/dashboard/[id]` se
+   *  abre con ese id, no con el del viaje. Lo resuelve el servidor cruzando
+   *  `getLiquidaciones` por folio; sin él, la fila no linkea. */
+  liqId?: string | null;
+}
+
+/** `viaje.estatus` solo admite estos tres (constraint `viaje_estatus_dominio`).
+ *  Un valor fuera del dominio se pinta crudo en neutro — visible, no roto. */
+const PILL_ESTATUS: Record<string, { estado: Estado; etiqueta: string }> = {
+  liquidado: { estado: 'ok', etiqueta: 'Liquidado' },
+  en_cuadre: { estado: 'warn', etiqueta: 'En cuadre' },
+  abierto: { estado: 'neutral', etiqueta: 'Abierto' },
+};
+
+/**
+ * La tabla de la referencia FlowAI ("Active Workflows"), con los viajes
+ * REALES de la flota: folio + ruta, operador, anticipo, estatus como pill y
+ * fecha de inicio. "Ver" solo en los liquidados — `/dashboard/[id]` es el
+ * detalle de la LIQUIDACIÓN (pantalla de dinero), un viaje abierto no tiene
+ * a dónde llevar todavía; un link a un 404 es peor que no ponerlo. Sin
+ * "Ver todo": la página de Viajes se rehará a su tiempo, y un link muerto
+ * anuncia una página que no existe.
+ */
+export function TablaViajes({ viajes, sufijo = '' }: { viajes: FilaViaje[]; sufijo?: string }) {
+  if (viajes.length === 0) {
+    return (
+      <div className="min-h-[72px] w-full flex items-center justify-center">
+        <p className="text-sm text-center" style={{ color: 'var(--muted)' }}>
+          Aún no hay viajes registrados. En cuanto la flota abra su primer viaje, aparece aquí.
+        </p>
       </div>
+    );
+  }
+  const TH = 'etiqueta-mono text-left text-[10px] font-medium uppercase px-3 py-1.5';
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="sticky top-0 z-10" style={{ background: 'var(--canvas)' }}>
+            <th className={`${TH} rounded-l-lg`} style={{ color: 'var(--muted)' }}>Viaje</th>
+            <th className={TH} style={{ color: 'var(--muted)' }}>Operador</th>
+            <th className={`${TH} text-right`} style={{ color: 'var(--muted)' }}>Anticipo</th>
+            <th className={TH} style={{ color: 'var(--muted)' }}>Estatus</th>
+            <th className={TH} style={{ color: 'var(--muted)' }}>Inicio</th>
+            <th className={`${TH} rounded-r-lg text-right`} style={{ color: 'var(--muted)' }}>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          {viajes.map((v) => {
+            const pill = PILL_ESTATUS[v.estatus] ?? { estado: 'neutral' as Estado, etiqueta: v.estatus };
+            const ruta = v.origen && v.destino ? `${v.origen} → ${v.destino}` : v.origen ?? v.destino;
+            return (
+              <tr key={v.id} className="border-b transition-colors hover:bg-[var(--canvas)]" style={{ borderColor: 'var(--line2)' }}>
+                <td className="px-3 py-2 min-w-0">
+                  <div className="text-sm font-medium">{v.folio}</div>
+                  {/* Sin origen/destino capturados no se inventa una ruta:
+                      un guion dice "falta el dato", no "viaje sin ruta". */}
+                  <div className="text-xs mt-0.5 truncate max-w-[260px]" style={{ color: 'var(--muted)' }}>{ruta ?? '—'}</div>
+                </td>
+                <td className="px-3 py-2 text-sm whitespace-nowrap">{v.operadorNombre ?? <span style={{ color: 'var(--faint)' }}>Sin asignar</span>}</td>
+                <td className="cifra-mono px-3 py-2 text-[13px] text-right whitespace-nowrap">{mxn(v.anticipo)}</td>
+                <td className="px-3 py-2"><StatusPill estado={pill.estado}>{pill.etiqueta}</StatusPill></td>
+                <td className="px-3 py-2 text-[13px] whitespace-nowrap" style={{ color: 'var(--muted)' }}>{fechaMx(v.fechaInicio)}</td>
+                <td className="px-3 py-2 text-right">
+                  {v.liqId ? (
+                    <Link href={`/dashboard/${v.liqId}${sufijo}`} className="text-[13px] font-medium hover:opacity-70 transition-opacity">
+                      Ver
+                    </Link>
+                  ) : (
+                    <span className="text-[13px]" style={{ color: 'var(--faint)' }}>—</span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }
 
 // ── Motor fiscal (el moat) ───────────────────────────────────────────────
 
-/** Lo que ningún TMS genérico calcula: mismo motor que
- *  `/dashboard/contador/deducciones` (`getGastosFiscales` +
- *  `resumirPerdidas`, no una copia). Si el motor no pudo leer, se dice — no
- *  se esconde la tarjeta ni se enseña un cero que parezca "sin riesgo".
+/** Lo que ningún TMS genérico calcula: mismo motor que el panel fiscal
+ *  (`getGastosFiscales` + `resumirPerdidas`, no una copia). Si el motor no
+ *  pudo leer, se dice — no se esconde la tarjeta ni se enseña un cero que
+ *  parezca "sin riesgo".
  *
  *  El diésel del estímulo NO va aquí en pesos — va en LITROS, y la tarjeta
- *  vive en `page.tsx` (`docs/conocimiento/guion-demo.md` +
+ *  vive en `inicio-contenido.tsx` (`docs/conocimiento/guion-demo.md` +
  *  `guion_demo.test.ts`): el IEPS en pesos se quitó del panel el 25-jul
  *  porque sumaba el trasladado del CFDI, que no es el estímulo — el
  *  estímulo es cuota vigente (la publica el DOF cada semana) × litros, y

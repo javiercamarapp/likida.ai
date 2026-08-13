@@ -1,5 +1,3 @@
-import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
 import { Send, UserCog, CircleSlash } from 'lucide-react';
 import { saludo, fechaLarga, ahoraMs } from '@/lib/saludo';
 import { getViajes, type ViajeRow } from '@/lib/likida/analytics';
@@ -7,15 +5,11 @@ import {
   getTableroOperacion, getViajesSinAsignar, getCargaOperadores, getIncidencias,
   type TableroOperacion, type ViajeSinAsignar, type CargaOperador, type IncidenciaRow,
 } from '@/lib/likida/operacion';
-import { listOperadores, reasignarOperador } from '@/lib/likida/repo';
-import { requireSessionTenant } from '@/lib/auth/guard';
-import { puedeAsignar } from '@/lib/auth/permisos';
-import { resolverTenantPedido } from '@/lib/auth/tenant-api';
-import { supabaseAdmin } from '@/lib/supabase/admin';
 import { EstadoVacio, StatusPill } from '../admin/ui/kit';
-import { TableroCifras, TablaCarga, TablaSinAsignar } from './tablero-operacion';
+import { TableroCifras, TablaCarga } from './tablero-operacion';
 import AvanceCierre from './avance-cierre';
 import { AvisoSinFlota } from './sin-flota';
+import { fechaMx } from './formato';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // LA CASA DEL ENCARGADO.
@@ -35,80 +29,25 @@ async function safe<T>(fn: () => Promise<T>): Promise<T | null> {
   try { return await fn(); } catch { return null; }
 }
 
-/**
- * A qué tenant escribe la Server Action de asignar, y quién puede.
- *
- * Vive a nivel de MÓDULO, no dentro del componente: una función anidada
- * capturada por el closure de un `'use server'` cuenta como valor a serializar
- * hacia el cliente. Mismo patrón que `combustible-casetas/page.tsx`.
- *
- * El permiso se REVALIDA aquí: un server action es un endpoint POST alcanzable
- * por su cuenta, así que el `puedeAsignar` del render decide si el `<select>`
- * se DIBUJA, nunca si se puede EJECUTAR.
- */
-async function tenantDelAction(sufijo: string, tenantPedido?: string): Promise<string> {
-  const s = await requireSessionTenant('/dashboard');
-  if (!puedeAsignar(s.rol)) redirect(`/dashboard${sufijo}`);
-  if (s.rol === 'superadmin' && tenantPedido) {
-    return await resolverTenantPedido(supabaseAdmin(), s.tenantId, tenantPedido);
-  }
-  return s.tenantId;
-}
-
 export async function InicioOperacion({
-  tenantId, tenantNombre, nombre, tenantExiste = true, rol = 'encargado', sufijo = '', tenantPedido,
+  tenantId, tenantNombre, nombre, tenantExiste = true,
 }: {
   tenantId: string;
   tenantNombre: string | null;
   nombre: string | null;
-  /** Rol EFECTIVO — decide si se pinta el selector de chofer. La escritura lo
-   *  vuelve a comprobar por su cuenta (ver `tenantDelAction`). */
-  rol?: string;
-  /** El `?tenant=`/`?vista=`/`?rol=` que hay que conservar al volver del POST. */
-  sufijo?: string;
-  /** El `?tenant=` crudo, para que un superadmin que previsualiza una flota
-   *  real escriba EN ESA flota y no en la demo. */
-  tenantPedido?: string;
   /** `false` cuando el uuid al que apunta la página no tiene fila en `tenant`
    *  — ver `sin-flota.tsx`. Aquí importa más que en el Resumen del dueño: sin
    *  flota, "Todo lo que está en curso ya trae chofer" y "0 viajes activos"
    *  se leen como una mañana tranquila, no como una base vacía. */
   tenantExiste?: boolean;
 }) {
-  const puede = puedeAsignar(rol);
-  const [tablero, sinAsignar, carga, incidencias, viajes, operadores] = await Promise.all([
+  const [tablero, sinAsignar, carga, incidencias, viajes] = await Promise.all([
     safe<TableroOperacion>(() => getTableroOperacion(tenantId)),
     safe<ViajeSinAsignar[]>(() => getViajesSinAsignar(tenantId)),
     safe<CargaOperador[]>(() => getCargaOperadores(tenantId)),
     safe<IncidenciaRow[]>(() => getIncidencias(tenantId)),
     safe<ViajeRow[]>(() => getViajes(tenantId)),
-    // Solo si este rol puede asignar: pedir la lista para no ofrecerla es una
-    // consulta de más en la pantalla que más se abre.
-    puede ? safe<Array<{ id: string; nombre: string }>>(() => listOperadores(tenantId)) : null,
   ]);
-
-  /**
-   * Reparte un viaje a un chofer. AUDITORÍA 17 (pase 5), ALTO — hasta hoy esta
-   * pantalla anunciaba "3 viajes sin chofer" y no tenía con qué; la única vía
-   * (`/dashboard/despacho`) se borró y el expediente se le niega a este rol
-   * por área.
-   *
-   * Resuelve el tenant OTRA VEZ desde la sesión en vez de confiar en el
-   * `tenantId` que cerró el closure: un action es un endpoint con su propia
-   * petición, y el valor capturado viene del render, no de quien hizo clic.
-   */
-  async function accionAsignar(formData: FormData) {
-    'use server';
-    const t = await tenantDelAction(sufijo, tenantPedido);
-    const viajeId = String(formData.get('viajeId') ?? '');
-    const operadorId = String(formData.get('operadorId') ?? '');
-    if (!viajeId || !operadorId) redirect(`/dashboard${sufijo}`);
-    // `reasignarOperador` comprueba que el operador sea de ESTA flota antes de
-    // escribir (auditoría 10, ALTO): el `<select>` es una restricción de la UI.
-    await reasignarOperador(t, viajeId, operadorId);
-    revalidatePath('/dashboard');
-    redirect(`/dashboard${sufijo}`);
-  }
 
   // Lo urgente arriba, y SOLO si hay fuego real. Una banda de alertas que
   // siempre dice algo entrena a ignorarla.
@@ -206,9 +145,17 @@ export async function InicioOperacion({
               </EstadoVacio>
             </div>
           ) : (
-            // LA LISTA ES ACCIONABLE, no un anuncio. La banda de arriba dice
-            // "Atender · N viajes sin chofer"; aquí es donde se atiende.
-            <TablaSinAsignar viajes={sinAsignar} operadores={puede ? (operadores ?? []) : []} accion={accionAsignar} />
+            <ul className="pb-3">
+              {sinAsignar.map((v) => (
+                <li key={v.id} className="px-5 py-2 border-t flex items-center gap-3 text-sm" style={{ borderColor: 'var(--line)' }}>
+                  <span className="font-medium">{v.folio ?? '—'}</span>
+                  <span className="truncate" style={{ color: 'var(--muted)' }}>
+                    {v.origen && v.destino ? `${v.origen} → ${v.destino}` : (v.origen ?? v.destino ?? 'sin ruta')}
+                  </span>
+                  <span className="ml-auto shrink-0 text-[12px]" style={{ color: 'var(--muted)' }}>{fechaMx(v.fechaInicio)}</span>
+                </li>
+              ))}
+            </ul>
           )}
         </section>
 
