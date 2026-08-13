@@ -37,19 +37,59 @@ const GROUPS = {
   supabase: ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY'],
 } as const;
 
+/**
+ * Los grupos CONDICIONALES: no se exigen siempre, se exigen en cuanto otra
+ * variable ya prometió que la integración está encendida.
+ *
+ * AUDITORÍA 17, MEDIO reincidente. QStash es opcional a propósito —sin token,
+ * `cron/facturar` factura por el camino síncrono de siempre—, pero la MEDIA
+ * configuración es un fallo callado y caro: el productor
+ * (`cron/facturar/route.ts:308`) encola en cuanto existe
+ * `UPSTASH_QSTASH_TOKEN`, y el consumidor (`cola/route.ts:22-28`) devuelve
+ * **503** si le falta cualquiera de las dos signing keys. Los 8 tickets salen
+ * del cron, QStash reintenta dos veces contra el 503, el lote muere en la cola
+ * de Upstash — y el cron ya contestó `{corrio:true, encolado:true}`. Verde, y
+ * nada se facturó.
+ *
+ * Meterlas en `GROUPS` habría sido peor que no meterlas: una instancia que a
+ * propósito no usa QStash gritaría tres faltantes en cada arranque, y un aviso
+ * que siempre está encendido es un aviso que nadie lee.
+ *
+ * `QSTASH_URL` NO entra: su ausencia tiene un default correcto en el cliente
+ * (`baseUrl: … ?? undefined`), así que no es media configuración.
+ */
+const CONDICIONALES = {
+  qstash: {
+    si: 'UPSTASH_QSTASH_TOKEN',
+    exige: ['QSTASH_CURRENT_SIGNING_KEY', 'QSTASH_NEXT_SIGNING_KEY'],
+  },
+} as const;
+
+/** Los grupos SIEMPRE obligatorios — los únicos que `envHealth()` publica. */
 export type EnvGroup = keyof typeof GROUPS;
+/** Grupo del inventario de arranque: los obligatorios más los condicionales. */
+export type GrupoConfig = EnvGroup | keyof typeof CONDICIONALES;
 
 const GRUPOS = Object.keys(GROUPS) as EnvGroup[];
+const GRUPOS_COND = Object.keys(CONDICIONALES) as Array<keyof typeof CONDICIONALES>;
 
 /**
  * Qué variable falta de cada grupo. Objeto vacío = todo puesto.
  *
  * Devuelve NOMBRES, nunca valores: lo consume el log de arranque de producción.
  */
-export function faltantes(): Partial<Record<EnvGroup, string[]>> {
-  const out: Partial<Record<EnvGroup, string[]>> = {};
+export function faltantes(): Partial<Record<GrupoConfig, string[]>> {
+  const out: Partial<Record<GrupoConfig, string[]>> = {};
   for (const g of GRUPOS) {
     const sinPoner = GROUPS[g].filter((k) => !process.env[k]);
+    if (sinPoner.length) out[g] = sinPoner;
+  }
+  for (const g of GRUPOS_COND) {
+    const { si, exige } = CONDICIONALES[g];
+    // Sin el disparador, la integración está apagada y no falta nada. Con él,
+    // lo que no esté puesto es una promesa a medias.
+    if (!process.env[si]) continue;
+    const sinPoner = exige.filter((k) => !process.env[k]);
     if (sinPoner.length) out[g] = sinPoner;
   }
   return out;

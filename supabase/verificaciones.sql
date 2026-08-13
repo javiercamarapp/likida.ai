@@ -3121,3 +3121,272 @@ begin
   raise exception E'UPSERT_STRIPE_0089  primer-insert=%  tras-reintento=%  monto=%  sin-stripe-id=%   (esperado 1 / 1 / 2320 / 2)',
     v_ins, v_tras_upsert, v_monto, v_nulos;
 end $$;
+
+-- ── 65. El ROL y el VERBO entran a las 19 tablas de negocio (mig. 0090) ────
+-- AUDITORÍA 17, los dos ALTO de seguridad que llevaban CINCO pases abiertos.
+-- Hasta la 0089, `tenant_data` era `for all using (tenant_id = any(
+-- get_user_tenant_ids()) or is_superadmin())` en las 19: acotaba el TENANT y
+-- no miraba ni el rol ni el verbo. Con la anon key —pública por diseño— y una
+-- sesión de la flota, medido contra un Postgres 16 con las 89 migraciones
+-- aplicadas (12-ago-2026):
+--
+--   enc-ve-gasto=1  enc-ve-liq=1  enc-escribe-liq=t
+--   cont-inserta-gasto=t  cont-borra-gasto=1  cont-update-operador=t
+--   bitacora-firmada-por-otro=t
+--
+-- Este bloque es lo único que puede demostrar que ya no. Un test con Supabase
+-- mockeado probaría el mock; el panel entero consulta con service_role, que
+-- BYPASEA RLS, así que ninguna pantalla toca este camino ni al fallar.
+--
+-- Las tres mitades que se comprueban juntas, porque de nada sirve una sin las
+-- otras dos:
+--   1. el ENCARGADO deja de ver el dinero (`ve_finanzas()`, espeja
+--      AREAS_POR_ROL.dinero de lib/auth/visibilidad.ts);
+--   2. el CONTADOR deja de ESCRIBIR — y sigue LEYENDO su dinero, que es lo que
+--      distingue este arreglo de un candado de más;
+--   3. el service_role —el pipeline y el panel, o sea el producto entero—
+--      escribe exactamente como antes. Una revocación que rompa esto es tan
+--      cara como el hueco que cierra.
+--
+-- El gasto de escritura se prueba sobre un viaje SIN liquidación a propósito:
+-- sobre uno liquidado rebotaría el trigger `gasto_no_tras_liquidar` (0036) y
+-- el bloque diría "cerrado" sin haber tocado RLS.
+do $$
+declare
+  v_t uuid; v_op uuid; v_op2 uuid; v_liq_via uuid; v_libre uuid;
+  u_enc uuid := gen_random_uuid(); u_cont uuid := gen_random_uuid(); u_adm uuid := gen_random_uuid();
+  enc_gasto int; enc_liq int; enc_viaje int; enc_escribe_liq boolean := false;
+  cont_gasto int; cont_inserta boolean := false; cont_borra int := -1; cont_update_op boolean := false;
+  bitacora_falsa boolean := false;
+  adm_escribe_viaje boolean := false;
+  svc_inserta boolean := false; svc_bitacora boolean := false;
+begin
+  insert into tenant (nombre) values ('ZZZ VERIF 0090') returning id into v_t;
+  insert into operador (tenant_id, nombre, telefono) values (v_t, 'Chofer 0090', '520000009100') returning id into v_op;
+  -- Dos choferes porque `uq_viaje_abierto_por_operador` no admite dos viajes
+  -- abiertos del mismo: el liquidado y el libre tienen que ser de distintos.
+  insert into operador (tenant_id, nombre, telefono) values (v_t, 'Chofer 0090 bis', '520000009101') returning id into v_op2;
+  insert into viaje (tenant_id, operador_id) values (v_t, v_op) returning id into v_liq_via;
+  insert into viaje (tenant_id, operador_id) values (v_t, v_op2) returning id into v_libre;
+  insert into gasto (tenant_id, viaje_id, concepto, monto) values (v_t, v_liq_via, 'diesel', 100);
+  insert into liquidacion (tenant_id, viaje_id) values (v_t, v_liq_via);
+  insert into app_user (id, tenant_id, email, rol) values
+    (u_enc,  v_t, 'zzz-verif-0090-enc@likida.test',  'encargado'),
+    (u_cont, v_t, 'zzz-verif-0090-cont@likida.test', 'contador'),
+    (u_adm,  v_t, 'zzz-verif-0090-adm@likida.test',  'flota_admin');
+
+  -- ── 1. El jefe de tráfico y el dinero ───────────────────────────────────
+  set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', u_enc)::text, true);
+  select count(*) into enc_gasto from gasto       where tenant_id = v_t;
+  select count(*) into enc_liq   from liquidacion where tenant_id = v_t;
+  -- Y la contraprueba: la OPERACIÓN sigue siendo suya. Un encargado que no ve
+  -- sus viajes no está protegido, está fuera del producto.
+  select count(*) into enc_viaje from viaje       where tenant_id = v_t;
+  begin
+    update liquidacion set diferencia = 999 where tenant_id = v_t;
+    enc_escribe_liq := found;
+  exception when others then enc_escribe_liq := false;
+  end;
+  reset role;
+
+  -- ── 2. El contador: lee su dinero, no escribe nada ──────────────────────
+  set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', u_cont)::text, true);
+  select count(*) into cont_gasto from gasto where tenant_id = v_t;
+  begin
+    insert into gasto (tenant_id, viaje_id, concepto, monto) values (v_t, v_libre, 'caseta', 7);
+    cont_inserta := true;
+  exception when others then cont_inserta := false;
+  end;
+  begin
+    delete from gasto where tenant_id = v_t;
+    get diagnostics cont_borra = row_count;
+  exception when others then cont_borra := -1;
+  end;
+  -- El teléfono del operador es su IDENTIDAD de WhatsApp: moverlo es robarla.
+  -- UN solo operador, no `where tenant_id`: los dos a la vez chocan con el
+  -- único global de la 0059 y el bloque se leería verde sin haber tocado RLS.
+  begin
+    update operador set telefono = '520000009999' where id = v_op;
+    cont_update_op := found;
+  exception when others then cont_update_op := false;
+  end;
+  -- Y la bitácora firmada con el correo del dueño (0053 dijo "solo la service
+  -- role escribe" y acto seguido abrió el INSERT a todo el tenant).
+  begin
+    insert into bitacora_auditoria (tenant_id, actor_id, actor_email, accion)
+      values (v_t, u_adm, 'zzz-verif-0090-adm@likida.test', 'politica.cambio_que_nunca_ocurrio');
+    bitacora_falsa := true;
+  exception when others then bitacora_falsa := false;
+  end;
+  reset role;
+
+  -- ── 3. El dueño tampoco escribe por PostgREST (doctrina de la 0078) ─────
+  set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', u_adm)::text, true);
+  begin
+    update viaje set estatus = 'en_cuadre' where tenant_id = v_t;
+    adm_escribe_viaje := found;
+  exception when others then adm_escribe_viaje := false;
+  end;
+  reset role;
+
+  -- ── 4. El producto entero sigue escribiendo ─────────────────────────────
+  set local role service_role;
+  begin
+    insert into gasto (tenant_id, viaje_id, concepto, monto) values (v_t, v_libre, 'caseta', 42);
+    svc_inserta := true;
+  exception when others then svc_inserta := false;
+  end;
+  begin
+    insert into bitacora_auditoria (tenant_id, actor_id, accion) values (v_t, u_adm, 'liquidacion.emitida');
+    svc_bitacora := true;
+  exception when others then svc_bitacora := false;
+  end;
+  reset role;
+
+  delete from tenant where id = v_t;   -- cascade limpia el resto
+  raise exception E'RLS_0090  enc-ve-gasto=%  enc-ve-liq=%  enc-ve-viaje=%  enc-escribe-liq=%  cont-ve-gasto=%  cont-inserta=%  cont-borra=%  cont-mueve-telefono=%  bitacora-firmada-por-otro=%  admin-escribe-viaje=%  service-role-inserta=%  service-role-bitacora=%   (esperado 0 / 0 / 2 / f / 1 / f / 0 / f / f / f / t / t)',
+    enc_gasto, enc_liq, enc_viaje, enc_escribe_liq, cont_gasto, cont_inserta, cont_borra, cont_update_op,
+    bitacora_falsa, adm_escribe_viaje, svc_inserta, svc_bitacora;
+end $$;
+
+-- ── 66. El mutex del viaje no lo llama nadie de fuera (mig. 0091) ─────────
+-- La 0012 revocó las tres RPC internas `from public` y su comentario decía que
+-- bastaba. La 0013 midió lo contrario contra la base real y lo escribió
+-- (`0013:52-55`): Supabase concede EXECUTE a anon/authenticated de forma
+-- EXPLÍCITA por default privileges. De las tres, solo `intake_delta` recibió
+-- después la forma completa (`0031:83`).
+--
+-- Medido antes de la 0091, con las 89 migraciones aplicadas sobre un Postgres
+-- 16 con los default privileges de Supabase reproducidos:
+--
+--   try_lock_viaje  anon=t  authenticated=t
+--   unlock_viaje    anon=t  authenticated=t
+--   intake_delta    anon=f  authenticated=f
+--
+-- Los bloques 16 y 18 ya miraban `anon` y por eso salían ROJOS en dos
+-- renglones — se leerían como "se cayó la RLS de viaje_lock" en vez de "faltó
+-- una palabra en la 0012". Este bloque agrega lo que ninguno de los dos
+-- miraba: `authenticated`, que es un usuario REAL de una flota, no un
+-- anónimo. Y comprueba en el mismo aliento que el pipeline sí puede — una
+-- revocación de más deja el procesamiento de mensajes sin mutex.
+do $$
+declare
+  anon_lock boolean; anon_unlock boolean;
+  auth_lock boolean; auth_unlock boolean;
+  auth_intake boolean;
+  svc_lock boolean; svc_unlock boolean;
+  publico text;
+begin
+  anon_lock   := has_function_privilege('anon',          'public.try_lock_viaje(uuid,integer)', 'execute');
+  anon_unlock := has_function_privilege('anon',          'public.unlock_viaje(uuid)',           'execute');
+  auth_lock   := has_function_privilege('authenticated', 'public.try_lock_viaje(uuid,integer)', 'execute');
+  auth_unlock := has_function_privilege('authenticated', 'public.unlock_viaje(uuid)',           'execute');
+  auth_intake := has_function_privilege('authenticated', 'public.intake_delta(uuid,integer)',   'execute');
+  svc_lock    := has_function_privilege('service_role',  'public.try_lock_viaje(uuid,integer)', 'execute');
+  svc_unlock  := has_function_privilege('service_role',  'public.unlock_viaje(uuid)',           'execute');
+
+  -- Y que no quede un `=X/*` (PUBLIC) en la ACL, que es de donde volvería a
+  -- heredar cualquier rol nuevo que Supabase agregue mañana.
+  select coalesce(string_agg(p.proname, ', ' order by p.proname), '—') into publico
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public'
+     and p.proname in ('try_lock_viaje', 'unlock_viaje', 'intake_delta')
+     and array_to_string(coalesce(p.proacl, '{}'::aclitem[]), ',') like '=X/%';
+
+  raise exception E'RPC_MUTEX_0091  anon-lock=%  anon-unlock=%  auth-lock=%  auth-unlock=%  auth-intake=%  service-lock=%  service-unlock=%  con-grant-a-PUBLIC=%   (esperado f/f/f/f/f/t/t/—)',
+    anon_lock, anon_unlock, auth_lock, auth_unlock, auth_intake, svc_lock, svc_unlock, publico;
+end $$;
+
+-- ── 67. config_tenant_valida conserva su search_path (mig. 0092) ──────────
+-- Tercera vez que se pierde por la misma vía. La 0035 se lo fijó; la 0082, la
+-- 0083 y la 0085 la redefinieron con `CREATE OR REPLACE … AS $function$` sin
+-- repetir la cláusula, y `CREATE OR REPLACE` reemplaza `proconfig` ENTERO.
+-- Medido antes de la 0092: `proconfig` vacío, mientras sus vecinas de la 0035
+-- (`try_lock_viaje`, `telefono_normalizado`) sí lo conservaban.
+--
+-- Es la función del CHECK `tenant_config_valida`, o sea la que valida TODOS
+-- los topes de dinero de una flota en cada insert/update de `tenant`. No es
+-- `security definer`, así que el riesgo es acotado — lo que no es acotado es
+-- que se pierda en silencio tres veces seguidas.
+--
+-- Se comprueba lo del catálogo Y que la función siga validando: un
+-- `alter function` que rompiera el cuerpo pasaría el primer chequeo.
+do $$
+declare
+  cfg text[]; tiene_pg_temp boolean; sin_search_path text;
+  acepta_buena boolean := false; rechaza_mala boolean := false; v_t uuid;
+begin
+  select proconfig into cfg from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public' and p.proname = 'config_tenant_valida';
+  tiene_pg_temp := array_to_string(coalesce(cfg, '{}'::text[]), ',') like '%pg_temp%';
+
+  -- Regresión de la familia entera: ninguna de las que la 0035/0074 fijaron
+  -- puede haber vuelto a quedarse sin cláusula.
+  select coalesce(string_agg(p.proname, ', ' order by p.proname), '—') into sin_search_path
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public'
+     and p.proname in ('config_tenant_valida','confirmar_aviso_privacidad','enriquecer_gasto_codigo',
+                       'guardar_liquidacion_tx','intake_delta','liberar_aviso_privacidad',
+                       'marcar_aviso_privacidad','telefono_normalizado','try_lock_viaje','unlock_viaje',
+                       'is_superadmin','get_user_tenant_ids','ve_finanzas','administra_flota',
+                       'gasto_no_tras_liquidar')
+     and p.proconfig is null;
+
+  -- El cuerpo sigue vivo: un override legítimo entra…
+  insert into tenant (nombre) values ('ZZZ VERIF 0092') returning id into v_t;
+  begin
+    update tenant set config = '{"estimulos":{"viaticosTopeFiscalDiarioMxn": 900}}'::jsonb where id = v_t;
+    acepta_buena := true;
+  exception when others then acepta_buena := false;
+  end;
+  -- …y `politica` como texto sigue rebotando (la forma del bloque 7 que
+  -- revienta el cuadre con "pol.filter is not a function").
+  begin
+    update tenant set config = '{"politica": "si"}'::jsonb where id = v_t;
+    rechaza_mala := false;
+  exception when others then rechaza_mala := true;
+  end;
+
+  delete from tenant where id = v_t;
+  raise exception E'SEARCH_PATH_0092  config=%  nombra-pg_temp=%  funciones-sin-search_path=%  acepta-config-buena=%  rechaza-politica-texto=%   (esperado {search_path=public, pg_temp} / t / — / t / t)',
+    cfg, tiene_pg_temp, sin_search_path, acepta_buena, rechaza_mala;
+end $$;
+
+-- ── 68. El bucket público `avatares` no acepta un SVG (mig. 0093) ─────────
+-- `admin/mi-perfil/page.tsx:47-52` arma la ruta con la extensión que trae el
+-- archivo y sube con `contentType: archivo.type || undefined`, hacia el ÚNICO
+-- bucket público del proyecto (0046: `public: true` + `avatares_lectura_
+-- publica for select to public`). Sin lista de tipos, `x.svg` declarado
+-- `image/svg+xml` queda servido como tal en una URL pública.
+--
+-- HONESTIDAD SOBRE LO QUE ESTE BLOQUE PRUEBA Y LO QUE NO: `allowed_mime_types`
+-- lo aplica el servicio de Storage en el PUT, no Postgres. Desde SQL solo se
+-- puede leer la DECLARACIÓN, y eso es lo que se lee aquí — que el bucket la
+-- tiene, que es raster, y que `image/svg+xml` NO está. La prueba de que el PUT
+-- rebota es un `curl` contra el endpoint de storage, no un `do $$`. Lo que
+-- este bloque impide es que la declaración se pierda en un redeploy o se
+-- amplíe sin que nadie lo note — que es como se perdió tres veces el
+-- search_path del bloque 67.
+do $$
+declare
+  v_public boolean; v_tipos text[]; v_svg boolean; v_privados text;
+begin
+  select public, allowed_mime_types into v_public, v_tipos
+    from storage.buckets where id = 'avatares';
+
+  -- Sin lista, Storage acepta CUALQUIER tipo: eso admite SVG igual que si
+  -- estuviera escrito. Un `= any(null)` daría null y el bloque se leería verde
+  -- justo en el estado que existe para detectar.
+  v_svg := (v_tipos is null) or coalesce('image/svg+xml' = any(v_tipos), false);
+
+  -- Y de paso: los otros dos buckets siguen privados. Un `comprobantes`
+  -- público sería un expediente fiscal indexable, no una foto de perfil.
+  select coalesce(string_agg(id || '=' || public::text, ', ' order by id), '—') into v_privados
+    from storage.buckets where id in ('liquidaciones', 'comprobantes');
+
+  raise exception E'AVATARES_0093  publico=%  tipos=%  admite-svg=%  otros-buckets=%   (esperado t / solo image/* raster / f / liquidaciones=false, comprobantes=false)',
+    v_public, v_tipos, v_svg, v_privados;
+end $$;

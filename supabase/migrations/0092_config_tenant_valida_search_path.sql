@@ -1,0 +1,49 @@
+-- ═══════════════════════════════════════════════════════════════════════════
+-- 0092 — `config_tenant_valida` recupera su `search_path`. Tercera vez.
+--
+-- AUDITORÍA 17 pase 5, BAJO reincidente. La 0035 se lo fijó
+-- (`0035:27`, `set search_path = public, pg_catalog`). Después, TRES
+-- migraciones la redefinieron con `CREATE OR REPLACE FUNCTION … LANGUAGE
+-- plpgsql IMMUTABLE AS $function$` y ninguna repitió la cláusula: la 0082, la
+-- 0083 y la 0085. En Postgres, `CREATE OR REPLACE` reemplaza `proconfig`
+-- ENTERO, así que cada una de las tres borró el ajuste sin decir nada.
+--
+-- Medido, no deducido — 89 migraciones aplicadas sobre un Postgres 16
+-- (12-ago-2026), `select proname, proconfig from pg_proc`:
+--
+--   try_lock_viaje        {"search_path=public, pg_catalog"}
+--   telefono_normalizado  {"search_path=public, pg_catalog"}
+--   ve_finanzas           {"search_path=public, pg_temp"}
+--   config_tenant_valida  (vacío)                              ← ésta
+--
+-- QUÉ FUNCIÓN ES: la del CHECK `tenant_config_valida`, o sea la que valida
+-- TODOS los topes de dinero de una flota en cada insert/update de `tenant`.
+-- El riesgo directo es bajo y hay que decirlo así: es `IMMUTABLE`, `language
+-- plpgsql` y NO es `security definer`, así que corre con los permisos de quien
+-- dispara el UPDATE, no con los del dueño. Lo que la deja abierta es que
+-- `pg_temp` se antepone de forma implícita cuando no está nombrado: un rol con
+-- sesión puede crear objetos temporales que le ganen la resolución de nombre a
+-- los de `public` DENTRO de la función que decide si una política de gastos es
+-- válida.
+--
+-- Se fija con `alter function`, no con `create or replace`: cambia el atributo
+-- sin poder tocar por accidente el cuerpo — la lección literal de la 0074.
+-- Y se nombra `pg_temp` al final (forma de la 0074/0048), que es más estricta
+-- que el `public, pg_catalog` de la 0035: `pg_catalog` al final permitiría que
+-- algo de `public` le gane el nombre a un builtin.
+--
+-- ── PARA QUIEN ESCRIBA LA CUARTA REDEFINICIÓN ──────────────────────────────
+-- Si vuelves a tocar esta función con `CREATE OR REPLACE`, escribe la cláusula
+-- DENTRO de la definición:
+--
+--   CREATE OR REPLACE FUNCTION public.config_tenant_valida(p_config jsonb)
+--    RETURNS boolean LANGUAGE plpgsql IMMUTABLE
+--    SET search_path = public, pg_temp
+--   AS $function$ … $function$;
+--
+-- Un `alter function` en la migración siguiente también sirve; lo que no sirve
+-- es suponer que el de la 0035 —o el de esta— sigue puesto. El bloque 67 de
+-- `verificaciones.sql` lo comprueba contra el catálogo.
+-- ═══════════════════════════════════════════════════════════════════════════
+
+alter function public.config_tenant_valida(p_config jsonb) set search_path = public, pg_temp;

@@ -104,8 +104,13 @@ function withSecurityHeaders(res: NextResponse): NextResponse {
  * `/chofer` y `/mis-viajes` salieron el 7-ago-2026: el chofer ya no tiene
  * cuenta ni panel propio, solo WhatsApp — ver `visibilidad.ts` (`PANEL_PROPIO`
  * vacío) y `guard.ts` (`requireOperador` retirada).
+ *
+ * `/cuenta` entró el 12-ago-2026 (auditoría 17, BAJO reincidente): su
+ * `page.tsx` lee `tenant.nombre` con `supabaseAdmin()` —service_role, que
+ * bypasea RLS— y era la única página con datos del tenant sostenida por una
+ * sola puerta, la suya. Justo el caso que el párrafo de arriba describe.
  */
-export const RUTAS_CON_SESION = ['/dashboard', '/admin'] as const;
+export const RUTAS_CON_SESION = ['/dashboard', '/admin', '/cuenta'] as const;
 
 export async function proxy(req: NextRequest) {
   let res = NextResponse.next({ request: req });
@@ -144,6 +149,45 @@ export async function proxy(req: NextRequest) {
       res.cookies.getAll().forEach((c) => redirectRes.cookies.set(c));
       return withSecurityHeaders(redirectRes);
     }
+
+    // ── /admin: la segunda capa del ROL, no solo de la sesión ──────────────
+    //
+    // AUDITORÍA 17, MEDIO reincidente (5º pase). Las 20 `page.tsx` bajo
+    // `src/app/admin/` no traen guarda propia de lectura: `requireSuperadmin()`
+    // vive exclusivamente en `admin/layout.tsx`. Hasta aquí, la autorización
+    // por rol de la consola de negocio de Likida —qué tenants existen, cuánto
+    // gasta en IA, el MRR— colgaba de que ese layout se renderizara.
+    //
+    // Se pregunta con el cliente de SESIÓN (anon key), no con el service-role:
+    // la policy `app_user_self` deja a cada quien leer su propia fila, así que
+    // esta comprobación se apoya en RLS en vez de saltársela.
+    //
+    // NIEGA SOLO ANTE UN "NO" DEFINITIVO, y es a propósito. Si la consulta se
+    // cae, `data` viene null y aquí NO se rebota: `getSessionTenant()`
+    // (session.ts:64-89) reintenta una vez antes de rendirse justamente porque
+    // un `fetch failed` de tres segundos no es "este usuario no es
+    // superadmin", y cortar aquí echaría a Javier de su consola donde hoy ese
+    // reintento lo salva. El reparto queda: el proxy corta cuando la base
+    // contesta un rol que no es superadmin —el caso del atacante, que tiene
+    // sesión válida y fila legible—, y `requireSuperadmin` (con su reintento)
+    // sigue negando todo lo demás: sin fila, sin poder leerla, sin sesión.
+    // Ninguna de las dos afloja a la otra; antes de esto el proxy no miraba el
+    // rol en absoluto.
+    if (path.startsWith('/admin')) {
+      const { data: fila } = await supabase
+        .from('app_user').select('rol').eq('id', user.id).maybeSingle();
+      if (fila && fila.rol !== 'superadmin') {
+        const url = req.nextUrl.clone();
+        // El mismo destino que `requireSuperadmin` (guard.ts:48): dos capas que
+        // rebotan a sitios distintos es como nace un bucle entre ellas.
+        url.pathname = '/dashboard';
+        url.search = '';
+        const redirectRes = NextResponse.redirect(url);
+        res.cookies.getAll().forEach((c) => redirectRes.cookies.set(c));
+        return withSecurityHeaders(redirectRes);
+      }
+    }
+
     res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   }
 

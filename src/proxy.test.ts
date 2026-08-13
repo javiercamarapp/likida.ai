@@ -74,14 +74,19 @@ describe('proxy · gate de /dashboard sin sesión', () => {
 // LA LISTA NO SE PUEDE QUEDAR ATRÁS OTRA VEZ.
 // ═══════════════════════════════════════════════════════════════════════════
 describe('toda sección con puerta propia está nombrada en el matcher', () => {
-  it('las dos secciones del producto exigen sesión en esta capa', () => {
+  it('las tres secciones del producto exigen sesión en esta capa', () => {
     // /chofer y /mis-viajes salieron el 7-ago-2026 (el chofer ya no tiene
     // cuenta, solo WhatsApp). Si mañana nace /taller o /cliente con su
     // `requireX` en el layout, esta prueba no lo va a atrapar sola — pero la
     // lista es UN string y está a la vista, que es lo que /chofer no tuvo al
     // principio: su ausencia solo constaba en un comentario en su layout.
+    //
+    // `/cuenta` entró el 12-ago-2026 (auditoría 17, BAJO reincidente): lee
+    // `tenant.nombre` con service_role y dependía solo de su propia guarda.
+    // Lo que sí atrapa a la página nueva que nadie agregue es el barrido de
+    // `src/app` en `proxy_cuenta.test.ts`, que mide la lista contra el árbol.
     expect([...RUTAS_CON_SESION].sort()).toEqual(
-      ['/admin', '/dashboard'].sort(),
+      ['/admin', '/cuenta', '/dashboard'].sort(),
     );
   });
 

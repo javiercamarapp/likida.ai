@@ -21,6 +21,7 @@ import { redirect } from 'next/navigation';
 import { requireSessionTenant } from './guard';
 import { puedeVerRuta, inicioDe, rolEfectivo } from './visibilidad';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { logger } from '@/lib/logger';
 import type { SessionTenant } from './session';
 
 export interface TenantEfectivo extends SessionTenant {
@@ -118,7 +119,26 @@ export async function resolverTenantEfectivo(
   let tenantNombre: string | null = null;
   let tenantExiste = true;
   if (sesionReal.rol === 'superadmin' && sp?.tenant) {
-    const { data: t } = await supabaseAdmin().from('tenant').select('id, nombre').eq('id', sp.tenant).maybeSingle();
+    // EL `error` SE MIRA, y no es ceremonia: supabase-js reporta el fallo POR
+    // VALOR, así que "no pude preguntar" y "ese uuid no existe" son los dos
+    // `data: null`. Sin distinguirlos, un bache de red al abrir "Ver
+    // dashboard" de una flota real cae al tenant de la sesión Y deja
+    // `tenantNombre` en null, que es justo lo que apaga el badge "viendo como
+    // superadmin" (`[id]/page.tsx:170-174`): la flota cambia debajo y la
+    // pantalla no lo dice.
+    //
+    // Se LANZA, como `resolverTenantPedido` (tenant-api.ts:92-98) y por su
+    // misma razón: aquí no hay un status que devolver —esto lo consume una
+    // página, no una ruta de API—, y de las tres funciones que resuelven
+    // `?tenant=` ésta era la única que no lo hacía. Un uuid inexistente, en
+    // cambio, sigue cayendo en silencio a la sesión (abajo): un enlace viejo
+    // no puede convertirse en una pantalla rota.
+    const { data: t, error } = await supabaseAdmin()
+      .from('tenant').select('id, nombre').eq('id', sp.tenant).maybeSingle();
+    if (error) {
+      logger.error('tenant.efectivo_pedido', { err: error.message, pedido: sp.tenant });
+      throw new Error('No se pudo verificar la flota pedida. Intenta de nuevo.');
+    }
     if (t) {
       tenantId = t.id as string;
       tenantNombre = t.nombre as string;
