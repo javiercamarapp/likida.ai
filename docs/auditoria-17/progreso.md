@@ -56,6 +56,20 @@ La skill de la rama (`baa5b59`, `a3e3b5a`) dice **"todo lo reproducible, sin
 tope de vueltas"**. El encargo de ESTA corrida dice **"Tope: 3 vueltas"** y que
 manda sobre los defaults de la skill. Se sigue el encargo: 3 vueltas.
 
+## Compuerta de arranque, medida (no citada de memoria)
+
+```
+npx tsc --noEmit -p .   → 0 errores
+npx vitest run          → 293 archivos · 3,298 verdes · 15 ROJOS · 1 saltada
+npm run lint            → 18 problemas: 1 ERROR, 17 warnings     (p5: 0 errores, 17 warnings)
+```
+
+El **error de lint es nuevo y viene de master**:
+`src/app/dashboard/chat.tsx:362` — *"Cannot call impure function during render"*
+(`Date.now()` dentro de `preguntarAnalista`, declarada en el cuerpo del
+componente). Cinco pases seguidos con 0 errores y el chat estrenó el primero
+→ ficha **R6-9**.
+
 ## Arreglos
 
 (se llena conforme avanzan)
