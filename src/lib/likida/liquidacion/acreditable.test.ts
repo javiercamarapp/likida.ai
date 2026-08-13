@@ -65,10 +65,15 @@ describe('filasAcreditables — el peaje deja de afirmarse solo', () => {
     expect(peaje.label).toContain('sujeto a elegibilidad');
   });
 
-  it('el IVA sí se sostiene entero: es la única cifra en verde', () => {
+  // AUDITORÍA 17 pase 5, M8: esto decía «el IVA sí se sostiene entero: es la
+  // única cifra en verde». Ya no. `normas/liva-5.yaml` transcribe la fr. I y la
+  // fr. II y se corta ahí, y su `riesgo_actual` declara por escrito que no sabe
+  // si el artículo exige más — así que el renglón más caro del bloque pasó a
+  // `condicionado` con su pie. Detalle en `iva_condicionado.test.ts`.
+  it('ningún renglón del bloque se afirma entero: los tres van condicionados', () => {
     const r = filasAcreditables(liq({ ivaAcreditable: 689.66, peajeAcreditable: 500, litrosDieselAcreditables: 200 }))!;
-    const buenas = r.filas.filter((f) => f.tono === 'bueno').map((f) => f.label);
-    expect(buenas).toEqual(['IVA acreditable (LIVA art. 5)']);
+    expect(r.filas.map((f) => f.tono)).toEqual(['condicionado', 'condicionado', 'condicionado']);
+    expect(r.filas.every((f) => f.pies.length > 0)).toBe(true);
   });
 
   it('los litros de diésel siguen entregándose en LITROS, no en pesos', () => {

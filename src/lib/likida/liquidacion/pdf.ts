@@ -334,7 +334,17 @@ export async function generarLiquidacionPDF(
   const acreditable = filasAcreditables(liq);
   if (acreditable) {
     y -= 10;
-    asegurar(90);
+    // El alto se MIDE, no se estima. Estaba fijo en 90pt y los renglones traen
+    // ahora sus pies completos —el del IVA (LIVA 5) y el desglose de litros por
+    // fecha de compra— así que un bloque de tres renglones pasa de 90pt con
+    // facilidad y se escribía encima del descargo del CFF 52. El bloque entero
+    // cabe o se va completo a la hoja siguiente: partirlo separa una cifra de la
+    // condición que la matiza, que es justo lo que estos pies existen para
+    // evitar.
+    const altoAcreditable = 22
+      + acreditable.filas.reduce((s, f) => s + 16 + f.pies.reduce((p, pie) => p + envolver(pie, 135).length * 9, 0), 0)
+      + 2 + acreditable.piesGenerales.reduce((s, pie) => s + envolver(pie, 135).length * 9, 0) + 5;
+    asegurar(altoAcreditable);
     text('ACREDITABLE / RECUPERABLE', M, y, 8, bold, MUTED);
     y -= 6;
     rule(y);

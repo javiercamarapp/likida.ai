@@ -1420,12 +1420,17 @@ describe('RFA 2026 regla 2.9 — la matriz del 15% de combustible en efectivo', 
   // El escenario de la regla: combustible CON factura (cfdiUuid) pagado en
   // efectivo — sin CFDI, el gasto cae a por_confirmar por la regla del ticket,
   // y la facilidad del 15% no aplica (no hay comprobante que ampare).
-  const g15 = (p: Partial<Gasto>): Gasto => g({ concepto: 'diesel', monto: 1000, formaPago: '01', cfdiUuid: `u-${Math.random()}`, ...p });
+  // AUDITORÍA 17 pase 5 (M3): estos fixtures no traían FECHA, y el motor daba
+  // por bueno el sin-fecha contra un denominador que se consulta por rango de
+  // fechas. Ahora sin fecha no se mide (`combustible_sin_fecha_15.test.ts`), así
+  // que la matriz del 15% se prueba con comprobantes fechados en el ejercicio,
+  // que es el único caso en el que la regla puede afirmar algo.
+  const g15 = (p: Partial<Gasto>): Gasto => g({ concepto: 'diesel', monto: 1000, formaPago: '01', fecha: '2026-08-06', cfdiUuid: `u-${Math.random()}`, ...p });
 
   it('elegible + dentro del 15% → deducible, con el contador del ejercicio', () => {
     const r = cuadrarViaje({
       viajeId: 'v15a', anticipo: 3000, politica,
-      facilidad15: true, totalCombustibleEjercicio: 10000, efectivoPrevEjercicio: 500,
+      anioEjercicio: '2026', facilidad15: true, totalCombustibleEjercicio: 10000, efectivoPrevEjercicio: 500,
       gastos: [g15({ id: 'g15a', monto: 1000 })],
     });
     const d = r.diferencias.find((x) => x.tipo === 'combustible_efectivo_dentro15')!;
@@ -1440,7 +1445,7 @@ describe('RFA 2026 regla 2.9 — la matriz del 15% de combustible en efectivo', 
   it('elegible + excede el 15% → solo el excedente NO se deduce (proporcional)', () => {
     const r = cuadrarViaje({
       viajeId: 'v15b', anticipo: 3000, politica,
-      facilidad15: true, totalCombustibleEjercicio: 10000, efectivoPrevEjercicio: 1400,
+      anioEjercicio: '2026', facilidad15: true, totalCombustibleEjercicio: 10000, efectivoPrevEjercicio: 1400,
       gastos: [g15({ id: 'g15b', monto: 1000 })],
     });
     // acumulado = 1400 + 1000 = 2400 > 1500 → de ESTE comprobante caben 100
@@ -1458,7 +1463,7 @@ describe('RFA 2026 regla 2.9 — la matriz del 15% de combustible en efectivo', 
   it('el excedente es POR COMPROBANTE — la suma de la columna cuadra (auditoría 14)', () => {
     const r = cuadrarViaje({
       viajeId: 'v15f', anticipo: 5000, politica,
-      facilidad15: true, totalCombustibleEjercicio: 10000, efectivoPrevEjercicio: 0,
+      anioEjercicio: '2026', facilidad15: true, totalCombustibleEjercicio: 10000, efectivoPrevEjercicio: 0,
       gastos: [
         g15({ id: 'g1', monto: 1000 }),
         g15({ id: 'g2', monto: 1000 }),
@@ -1476,7 +1481,7 @@ describe('RFA 2026 regla 2.9 — la matriz del 15% de combustible en efectivo', 
   it('el excedente del 15% y la flota no elegible NO salen en estatus cuadrada', () => {
     const excede = cuadrarViaje({
       viajeId: 'v15g', anticipo: 3000, politica,
-      facilidad15: true, totalCombustibleEjercicio: 10000, efectivoPrevEjercicio: 2000,
+      anioEjercicio: '2026', facilidad15: true, totalCombustibleEjercicio: 10000, efectivoPrevEjercicio: 2000,
       gastos: [g15({ id: 'g15g', monto: 1000 })],
     });
     expect(excede.estatus).toBe('revisar');
@@ -1510,14 +1515,22 @@ describe('RFA 2026 regla 2.9 — la matriz del 15% de combustible en efectivo', 
     expect(d.nota).toContain('declare su dedicación');
   });
 
-  it('el efectivo dentro del 15% NO acredita IVA ni IEPS (la facilidad salva UN beneficio)', () => {
+  // AUDITORÍA 17 pase 5 (A4): el título decía «NO acredita IVA ni IEPS». Lo del
+  // IEPS es la ficha (`rfa-2026-2.9.yaml`, `limite_importante`: «NO habilita el
+  // acreditamiento del IEPS»); lo del IVA nunca estuvo en ninguna norma, y LIVA
+  // 5-I ata el acreditamiento a la deducibilidad para ISR — que la facilidad
+  // concede. Aquí el IVA sale 0 por otra razón, la de siempre: sin XML no se
+  // acredita nada. El caso con XML vive en `iva_combustible_efectivo_15.test.ts`.
+  it('el efectivo dentro del 15% NO acredita IEPS (la facilidad salva UN beneficio)', () => {
     const r = cuadrarViaje({
       viajeId: 'v15e', anticipo: 3000, politica,
-      facilidad15: true, totalCombustibleEjercicio: 10000, efectivoPrevEjercicio: 0,
+      anioEjercicio: '2026', facilidad15: true, totalCombustibleEjercicio: 10000, efectivoPrevEjercicio: 0,
       gastos: [g15({ id: 'g15e', monto: 1000, ivaTraslado: 160 })],
     });
-    expect(r.ivaAcreditable ?? 0).toBe(0);
     expect(r.litrosDieselAcreditables ?? 0).toBe(0);
+    expect(r.iepsAcreditable ?? 0).toBe(0);
+    // Sin `xmlVerificado` el bloque de acreditamiento ni siquiera entra.
+    expect(r.ivaAcreditable ?? 0).toBe(0);
   });
 });
 

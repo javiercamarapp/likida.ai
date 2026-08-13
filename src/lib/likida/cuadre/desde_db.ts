@@ -83,8 +83,16 @@ export async function cuadrarDesdeDB(tenantId: string, viajeId: string): Promise
   // el motor; sumarlos doblaría el contador). AUDITORÍA 16, ALTO (datos): solo
   // los del MISMO ejercicio — un gasto de otro año (o sin fecha) no está en el
   // contador y restarlo fabricaba un previo negativo.
+  //
+  // AUDITORÍA 17 pase 5, MEDIO (M3): el `?? anioEjercicio` daba por bueno el
+  // gasto SIN FECHA y lo restaba. `getAcumuladoCombustible` consulta por rango
+  // (`.gte('fecha', …).lte('fecha', …)`), así que un gasto con `fecha = null`
+  // NUNCA está en ese acumulado — restarlo fabricaba un previo más chico de lo
+  // real y, con él, un tope del 15% más grande para el resto del ejercicio.
+  // Solo se resta lo que la consulta sí pudo haber contado: lo fechado en el
+  // ejercicio.
   const efectivoDeEsteViaje = gastos
-    .filter((g) => (g.fecha?.slice(0, 4) ?? anioEjercicio) === anioEjercicio
+    .filter((g) => g.fecha?.slice(0, 4) === anioEjercicio
       && g.formaPago === '01' && (g.concepto === 'diesel' || clavesCombustible.includes(g.claveProdServ ?? '')))
     .reduce((s, g) => s + Number(g.monto ?? 0), 0);
   const efectivoPrevEjercicio = Math.max(0, totalesEjercicio.efectivo - efectivoDeEsteViaje);

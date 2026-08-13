@@ -318,50 +318,66 @@ export function cuadrarViaje(input: CuadreInput): Omit<Liquidacion, 'id' | 'crea
         // que no se midió". Ese gasto va a revisión con nota honesta; la
         // facilidad solo aplica con la base medida.
         const anioComprobante = g.fecha ? g.fecha.slice(0, 4) : null;
-        const mismoEjercicio = !anioComprobante || anioComprobante === input.anioEjercicio;
+        // AUDITORÍA 17 pase 5, MEDIO (M3): esto decía `!anioComprobante || …`,
+        // o sea que un comprobante SIN FECHA contaba como del ejercicio. El
+        // denominador no opina lo mismo: `repo.ts` lo arma con
+        // `.gte('fecha', …).lte('fecha', …)`, y un gasto con `fecha = null` no
+        // entra en esa consulta. El numerador lo sumaba y el rótulo afirmaba
+        // "el ejercicio lleva X de Y" con una X que no cabe en Y. Sin fecha no
+        // se mide: mismo trato que el comprobante de otro ejercicio.
+        const mismoEjercicio = anioComprobante !== null && anioComprobante === input.anioEjercicio;
         const total = input.totalCombustibleEjercicio ?? 0;
         if (!mismoEjercicio || !(total > 0)) {
           const motivo = !(total > 0)
             ? 'no se pudo calcular el total de combustible del ejercicio (el contador no respondió) — la facilidad del 15% (RFA 2026 regla 2.9) no se evaluó'
-            : `este comprobante es de ${anioComprobante} y la facilidad se mide contra el ejercicio ${input.anioEjercicio} — se revisa aparte`;
+            : anioComprobante === null
+              ? 'este comprobante no trae fecha y la facilidad del 15% (RFA 2026 regla 2.9) se mide contra el ejercicio, que se consulta por rango de fechas — se revisa aparte'
+              : `este comprobante es de ${anioComprobante} y la facilidad se mide contra el ejercicio ${input.anioEjercicio} — se revisa aparte`;
           diferencias.push({
             tipo: 'combustible_efectivo', concepto: g.concepto, monto: 0,
             nota: `${etiqueta} pagado en EFECTIVO — ${motivo}. No se afirma deducible ni no deducible; no acredita IEPS.`,
             gastoId: g.id,
           });
-          continue;
-        }
-        // Contador del ejercicio: previo (otras liquidaciones) + este viaje.
-        // AUDITORÍA 14, MEDIO: el EXCEDENTE se reporta POR COMPROBANTE, no
-        // acumulativo — antes, cada gasto posterior al cruce colgaba TODO el
-        // excedente acumulado (`excedente = acumulado - tope`), la suma de la
-        // columna no cuadraba con totalNoDeducible, y un ticket de $1,000
-        // imprimía "el excedente de $1,500 NO se deduce". Misma disciplina que
-        // viatico_excede_fiscal: el monto de la diferencia es SOLO lo que de
-        // verdad resta de totalDeducible, y la frontera se cruza UNA vez.
-        const previoSinEste = (input.efectivoPrevEjercicio ?? 0) + efectivoAcumuladoEjercicio;
-        efectivoAcumuladoEjercicio += g.monto;
-        const acumulado = (input.efectivoPrevEjercicio ?? 0) + efectivoAcumuladoEjercicio;
-        const tope = 0.15 * total;
-        // Lo que queda del tope para ESTE comprobante (previo sin este ya
-        // consumió lo suyo); si ya se cruzó, queda 0.
-        const cupoRestante = Math.max(0, tope - previoSinEste);
-        const dentro = Math.min(g.monto, cupoRestante);
-        const excedenteDeEste = Math.max(0, g.monto - dentro);
-        if (g.monto > 0) proporcionDeducible.set(g.id, dentro / g.monto);
-        if (excedenteDeEste === 0) {
-          const pct = total > 0 ? Math.round((acumulado / total) * 100) : 0;
-          diferencias.push({
-            tipo: 'combustible_efectivo_dentro15', concepto: g.concepto, monto: 0,
-            nota: `${etiqueta} pagado en EFECTIVO — deducible por la facilidad del 15% (RFA 2026 regla 2.9): el ejercicio lleva ${mxn(acumulado)} de ${mxn(total)} de combustible en efectivo (${pct}% del total, tope 15%). No acredita IEPS.`,
-            gastoId: g.id,
-          });
+          // AUDITORÍA 17 pase 5, BAJO (B3): aquí había un `continue` que se
+          // llevaba TODO lo que este bucle revisa después —monto discrepante,
+          // "no es comprobante fiscal", texto inyectado, fecha sospechosa,
+          // folio de baja confianza, política, RFC del receptor, CFDI
+          // cancelado, EFOS, complemento—. El fail-cerrado del 15% apagaba, de
+          // paso, el resto de la revisión del mismo comprobante. Ahora las
+          // otras ramas del 15% no continúan y ésta tampoco: sigue de largo.
         } else {
-          diferencias.push({
-            tipo: 'efectivo_sobre_15', concepto: g.concepto, monto: excedenteDeEste,
-            nota: `${etiqueta} pagado en EFECTIVO — el ejercicio lleva ${mxn(acumulado)} de combustible en efectivo contra un tope de ${mxn(tope)} (15% de ${mxn(total)}); el excedente de ${mxn(excedenteDeEste)} de ESTE comprobante NO se deduce (RFA 2026 regla 2.9). No acredita IEPS.`,
-            gastoId: g.id,
-          });
+          // Contador del ejercicio: previo (otras liquidaciones) + este viaje.
+          // AUDITORÍA 14, MEDIO: el EXCEDENTE se reporta POR COMPROBANTE, no
+          // acumulativo — antes, cada gasto posterior al cruce colgaba TODO el
+          // excedente acumulado (`excedente = acumulado - tope`), la suma de la
+          // columna no cuadraba con totalNoDeducible, y un ticket de $1,000
+          // imprimía "el excedente de $1,500 NO se deduce". Misma disciplina que
+          // viatico_excede_fiscal: el monto de la diferencia es SOLO lo que de
+          // verdad resta de totalDeducible, y la frontera se cruza UNA vez.
+          const previoSinEste = (input.efectivoPrevEjercicio ?? 0) + efectivoAcumuladoEjercicio;
+          efectivoAcumuladoEjercicio += g.monto;
+          const acumulado = (input.efectivoPrevEjercicio ?? 0) + efectivoAcumuladoEjercicio;
+          const tope = 0.15 * total;
+          // Lo que queda del tope para ESTE comprobante (previo sin este ya
+          // consumió lo suyo); si ya se cruzó, queda 0.
+          const cupoRestante = Math.max(0, tope - previoSinEste);
+          const dentro = Math.min(g.monto, cupoRestante);
+          const excedenteDeEste = Math.max(0, g.monto - dentro);
+          if (g.monto > 0) proporcionDeducible.set(g.id, dentro / g.monto);
+          if (excedenteDeEste === 0) {
+            const pct = total > 0 ? Math.round((acumulado / total) * 100) : 0;
+            diferencias.push({
+              tipo: 'combustible_efectivo_dentro15', concepto: g.concepto, monto: 0,
+              nota: `${etiqueta} pagado en EFECTIVO — deducible por la facilidad del 15% (RFA 2026 regla 2.9): el ejercicio lleva ${mxn(acumulado)} de ${mxn(total)} de combustible en efectivo (${pct}% del total, tope 15%). No acredita IEPS.`,
+              gastoId: g.id,
+            });
+          } else {
+            diferencias.push({
+              tipo: 'efectivo_sobre_15', concepto: g.concepto, monto: excedenteDeEste,
+              nota: `${etiqueta} pagado en EFECTIVO — el ejercicio lleva ${mxn(acumulado)} de combustible en efectivo contra un tope de ${mxn(tope)} (15% de ${mxn(total)}); el excedente de ${mxn(excedenteDeEste)} de ESTE comprobante NO se deduce (RFA 2026 regla 2.9). No acredita IEPS.`,
+              gastoId: g.id,
+            });
+          }
         }
       } else if (elegible === false) {
         diferencias.push({
@@ -876,21 +892,38 @@ export function cuadrarViaje(input: CuadreInput): Omit<Liquidacion, 'id' | 'crea
     // tarjeta. Con hospedaje presente esta condición no aplica —ya no es
     // "únicamente" transporte— y es exactamente lo que ya cubre H1 arriba.
     //
+    // AUDITORÍA 17 pase 5, MEDIO (M9): el `'04'` solo vale si viene del XML.
+    // El esquema del OCR (`intake/ocr.ts`) tiene TRES estados —efectivo,
+    // tarjeta, otro— y mapea CUALQUIER tarjeta a `'04'`, débito incluido: no
+    // puede distinguir lo que la ley distingue. Darlo por bueno era afirmar el
+    // único requisito de LISR 28-V que depende del medio de pago sin haberlo
+    // visto, y en silencio: el aviso desaparecía justo en los casos en que la
+    // ley lo pide. Con el XML jalado, `forma_pago` es el `c_FormaPago` del
+    // CFDI, que sí separa `04` (crédito) de `28` (débito).
+    //
     // Mismo criterio de severidad que H1 y la misma razón: no vemos toda la
     // contabilidad de la flota (el hospedaje podría existir fuera de esta
     // liquidación), así que se manda a revisión, no se declara no deducible.
     const hayHospedaje = vivos.some((g) => g.concepto === 'hospedaje');
     const hayTransporte = vivos.some((g) => g.concepto === 'transporte');
     if (!hayHospedaje && hayTransporte) {
-      const comidasSinTarjeta = vivos.filter((g) => g.concepto === 'alimentacion' && g.formaPago !== '04');
+      const conTarjetaDeCredito = (g: Gasto) => g.formaPago === '04' && g.xmlVerificado === true;
+      const comidasSinTarjeta = vivos.filter((g) => g.concepto === 'alimentacion' && !conTarjetaDeCredito(g));
       if (comidasSinTarjeta.length) {
         const total = comidasSinTarjeta.reduce((s, g) => s + g.monto, 0);
         const sujeto = comidasSinTarjeta.length === 1
           ? `Alimentación de ${mxn(total)}`
           : `${mxn(total)} en ${comidasSinTarjeta.length} comprobantes de alimentación`;
+        // Decir POR QUÉ no cuenta: "el ticket dice tarjeta" y "el ticket dice
+        // efectivo" mandan a hacer cosas distintas. Con el `04` leído del ticket
+        // lo que falta es el XML; sin él, el dato no existe.
+        const soloDelTicket = comidasSinTarjeta.some((g) => g.formaPago === '04' && !g.xmlVerificado);
+        const porQue = soloDelTicket
+          ? ' El ticket dice "tarjeta", pero eso no distingue crédito de débito: se confirma con el XML del CFDI.'
+          : '';
         diferencias.push({
           tipo: 'alimentacion_transporte_sin_tarjeta_credito', concepto: 'alimentacion', monto: 0,
-          nota: `${sujeto} amparada SOLO por transporte (sin hospedaje en el viaje): LISR 28-V exige que, en ese caso, el pago sea con tarjeta de crédito de quien viaja. Sin esa condición la deducción no procede — confírmalo con tu contador.`,
+          nota: `${sujeto} amparada SOLO por transporte (sin hospedaje en el viaje): LISR 28-V exige que, en ese caso, el pago sea con tarjeta de crédito de quien viaja. Sin esa condición la deducción no procede — confírmalo con tu contador.${porQue}`,
           gastoId: comidasSinTarjeta.length === 1 ? comidasSinTarjeta[0].id : undefined,
         });
       }
@@ -984,9 +1017,22 @@ export function cuadrarViaje(input: CuadreInput): Omit<Liquidacion, 'id' | 'crea
       const ancla = delDia[delDia.length - 1];
       const cuantos = delDia.length > 1 ? ` (${delDia.length} comprobantes del día)` : '';
       const cuando = dia.startsWith('sin-fecha') ? 'sin fecha' : dia;
+      // AUDITORÍA 17 pase 5, BAJO (B1): el renglón decía "Alimentación" también
+      // cuando el día lo formaba el concepto GENÉRICO `viaticos`, que puede ser
+      // una noche de hotel. `lisr-28-V.yaml:21-25` topa la ALIMENTACIÓN, y la
+      // propia ficha remata: «Solo alimentación; el hospedaje nacional no tiene
+      // tope». El tope se conserva sobre el genérico —quitarlo dejaría escapar
+      // una alimentación real, y esa es la dirección cara—, pero deja de
+      // afirmarse como un hecho: se rotula por lo que el comprobante dice y se
+      // declara el supuesto, con la salida para recuperar la deducción.
+      const hayGenerico = delDia.some((x) => x.concepto === 'viaticos');
+      const sujeto = hayGenerico ? 'Viáticos' : 'Alimentación';
+      const supuesto = hayGenerico
+        ? ' Estos comprobantes traen el concepto genérico "viáticos", y el tope de LISR 28-V es solo de ALIMENTACIÓN: el hospedaje nacional no lleva tope. Se aplica por criterio conservador — si es hospedaje, reclasifícalo y la deducción se recupera.'
+        : '';
       const nota = montoNoDeducible > 0
-        ? `Alimentación del ${cuando}: ${mxn(total)}${cuantos} excede el tope fiscal de ${mxn(topeAlimentacion)} por día (LISR 28-V) — el excedente de ${mxn(montoNoDeducible)} no es deducible.`
-        : `Alimentación del ${cuando}: ${mxn(total)}${cuantos} excede el tope fiscal de ${mxn(topeAlimentacion)} por día (LISR 28-V). Hoy nada de esto es "no deducible" todavía: lo que falta por timbrar sigue por confirmar — el excedente se calcula cuando llegue la factura.`;
+        ? `${sujeto} del ${cuando}: ${mxn(total)}${cuantos} excede el tope fiscal de ${mxn(topeAlimentacion)} por día (LISR 28-V) — el excedente de ${mxn(montoNoDeducible)} no es deducible.${supuesto}`
+        : `${sujeto} del ${cuando}: ${mxn(total)}${cuantos} excede el tope fiscal de ${mxn(topeAlimentacion)} por día (LISR 28-V). Hoy nada de esto es "no deducible" todavía: lo que falta por timbrar sigue por confirmar — el excedente se calcula cuando llegue la factura.${supuesto}`;
       diferencias.push({
         tipo: 'viatico_excede_fiscal', concepto: ancla.concepto,
         esperado: topeAlimentacion, real: round2(total), monto: montoNoDeducible,
@@ -1010,7 +1056,32 @@ export function cuadrarViaje(input: CuadreInput): Omit<Liquidacion, 'id' | 'crea
   // SÍ es deducible hasta el 15% (RFA 2026 regla 2.9), pero NO acredita IEPS —
   // la facilidad salva un beneficio, no los dos. Sacarlo de aquí acreditaría un
   // IEPS que la facilidad no concede.
-  const SIN_ACREDITAMIENTO: TipoDiferencia[] = ['medio_pago_no_acreditado', 'rfc_receptor', 'rfc_receptor_no_verificable', 'cfdi_cancelado', 'cfdi_efos', 'cfdi_no_encontrado', 'complemento_hidrocarburos', 'combustible_efectivo', 'combustible_efectivo_dentro15', 'efectivo_sobre_15', 'efectivo_no_elegible', 'efectivo_sobre_tope', 'monto_invalido', 'cfdi_pendiente'];
+  const SIN_ACREDITAMIENTO: TipoDiferencia[] = ['medio_pago_no_acreditado', 'rfc_receptor', 'rfc_receptor_no_verificable', 'cfdi_cancelado', 'cfdi_efos', 'cfdi_no_encontrado', 'complemento_hidrocarburos', 'combustible_efectivo', 'efectivo_no_elegible', 'efectivo_sobre_tope', 'monto_invalido', 'cfdi_pendiente'];
+  /**
+   * AUDITORÍA 17 pase 5, ALTO (A4) — EL IVA NO ES EL IEPS.
+   *
+   * Estos dos vivían en `SIN_ACREDITAMIENTO`, y el `continue` de abajo se
+   * llevaba el gasto ENTERO: la misma hoja imprimía "Deducible para ISR
+   * $5,800.00" y se callaba los $800 de IVA que ese comprobante trae
+   * desglosados. La ficha que justifica la lista dice exactamente qué excluye
+   * (`rfa-2026-2.9.yaml`, `limite_importante`): «Conserva la DEDUCCIÓN para
+   * ISR. NO habilita el acreditamiento **del IEPS**». El IVA tiene su propio
+   * requisito, `liva-5.yaml` fr. I, y lo ata a la deducibilidad para ISR: «se
+   * consideran estrictamente indispensables las erogaciones… que sean
+   * DEDUCIBLES para los fines del impuesto sobre la renta», y en las
+   * parcialmente deducibles, «EN LA PROPORCIÓN en la que dichas erogaciones
+   * sean deducibles».
+   *
+   * Así que el efectivo amparado por la facilidad SÍ acredita IVA —entero
+   * dentro del 15%, y en proporción cuando el comprobante cruza el tope, que es
+   * lo que `proporcionDeducible` ya guardó— pero NO entra al bloque del
+   * estímulo de diésel de más abajo: la facilidad salva un beneficio, no dos.
+   *
+   * El efectivo NO elegible y el que la flota no declaró siguen en
+   * `SIN_ACREDITAMIENTO`: ahí la erogación no es deducible para ISR (o no se
+   * sabe), y sin deducción no hay acreditamiento que sostener.
+   */
+  const SIN_IEPS_CON_IVA: TipoDiferencia[] = ['combustible_efectivo_dentro15', 'efectivo_sobre_15'];
   // AUDITORÍA 12, ALTO (fiscal, reincidente de la 11): `cfdi_pendiente` entra
   // aquí y en POR_CONFIRMAR — con el SAT caído o en timeout, "no se pudo
   // verificar" es el MISMO tercer estado que el motor ya aplica a EFOS, al RFC
@@ -1029,6 +1100,8 @@ export function cuadrarViaje(input: CuadreInput): Omit<Liquidacion, 'id' | 'crea
   for (const g of input.gastos) {
     if (duplicados.has(g.id)) continue;
     if (diferencias.some((d) => d.gastoId === g.id && SIN_ACREDITAMIENTO.includes(d.tipo))) continue;
+    // Acredita IVA (en su proporción) pero no llega al bloque del estímulo.
+    const soloIva = diferencias.some((d) => d.gastoId === g.id && SIN_IEPS_CON_IVA.includes(d.tipo));
     // El acreditamiento exige un CFDI VERIFICADO (XML): un ticket de gasolinera
     // sin factura NO es deducible ni acreditable hasta timbrarse. Además, así el
     // IVA/IEPS son SIEMPRE los importes LEÍDOS del XML (nunca recomputados con una
@@ -1052,6 +1125,10 @@ export function cuadrarViaje(input: CuadreInput): Omit<Liquidacion, 'id' | 'crea
     const proporcion = Math.max(0, Math.min(1, proporcionDeducible.get(g.id) ?? 1));
 
     if ((g.ivaTraslado ?? 0) > 0) ivaAcreditable += (g.ivaTraslado as number) * proporcion;
+    // AUDITORÍA 17 pase 5 (A4): el combustible en efectivo amparado por la RFA
+    // 2.9 llega hasta aquí —acredita su IVA— y se detiene. Lo que sigue es el
+    // estímulo del LIF 20-A, y ese la facilidad NO lo concede.
+    if (soloIva) continue;
     // Peaje (1.6): 50% del SubTotal (sin IVA) de casetas.
     if (g.concepto === 'caseta' && (g.subTotal ?? 0) > 0) peajeAcreditable += (g.subTotal as number) * peajeFactor;
     // IEPS de DIÉSEL (7): el estímulo (LIF 2026 art. 20, ap. A) es SOLO diésel — NO

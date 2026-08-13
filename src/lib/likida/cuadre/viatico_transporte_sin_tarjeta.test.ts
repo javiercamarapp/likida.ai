@@ -59,9 +59,13 @@ describe('transporte sin hospedaje exige tarjeta de crédito (LISR 28-V, 3er pá
     expect(sinTarjeta(gastos)).toHaveLength(1);
   });
 
-  it('CON tarjeta de crédito (04): no avisa — la condición de la ley se cumple', () => {
+  // AUDITORÍA 17 pase 5, M9: este caso corría SIN `xmlVerificado`, y así el
+  // `'04'` podía venir del OCR — que mapea toda tarjeta a esa clave, débito
+  // incluido. El `04` que cumple la condición es el del `c_FormaPago` del CFDI.
+  // Detalle en `tarjeta_credito_solo_del_xml.test.ts`.
+  it('CON tarjeta de crédito (04) confirmada por el XML: no avisa — la condición de la ley se cumple', () => {
     const r = cuadrar([
-      g({ concepto: 'alimentacion', monto: 700, formaPago: '04' }),
+      g({ concepto: 'alimentacion', monto: 700, formaPago: '04', xmlVerificado: true, cfdiUuid: 'u1' }),
       g({ concepto: 'transporte', monto: 450, formaPago: '01' }),
     ]);
     expect(r.diferencias.some((x) => x.tipo === 'alimentacion_transporte_sin_tarjeta_credito')).toBe(false);
