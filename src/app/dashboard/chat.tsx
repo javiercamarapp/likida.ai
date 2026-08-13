@@ -48,6 +48,26 @@ const FASES_PENSANDO: Array<[number, string]> = [
   [30000, 'Esto está tardando más de lo normal…'],
 ];
 
+/** Arranca el reloj que va cambiando el rótulo de "Pensando…" mientras el
+ *  analista trabaja, y devuelve su id para poder apagarlo.
+ *
+ *  AUDITORÍA 17 (pase 6), R6-9 — vivía DENTRO del componente, y ahí su
+ *  `Date.now()` es una llamada impura en el cuerpo de render: ESLint la
+ *  marcaba con "Cannot call impure function during render", el único error
+ *  del repo. No era cosmético — `ci.yml` corre `Lint` primero y salta
+ *  `Tests`, `Pruebas de tiempo` y `Build` cuando falla, así que desde el
+ *  12-ago ninguna corrida de `master` había compilado ni probado nada.
+ *  A nivel de módulo no hay render que contaminar y el comportamiento es
+ *  idéntico: mismo reloj de pared, mismos umbrales. */
+function arrancarRelojFases(alCambiar: (fase: string) => void): ReturnType<typeof setInterval> {
+  const inicio = Date.now();
+  return setInterval(() => {
+    const t = Date.now() - inicio;
+    const fase = [...FASES_PENSANDO].reverse().find(([desde]) => t >= desde);
+    if (fase) alCambiar(fase[1]);
+  }, 700);
+}
+
 /** Los bloques del agente analista (/api/dashboard/chat) → la Respuesta que
  *  esta interfaz ya sabe pintar. El agente manda números crudos; aquí se
  *  formatean con lib/formato — UNA sola fuente de formato, como siempre. */
@@ -359,12 +379,7 @@ export default function ChatFlota({
     setOcupado(true);
     setFasePensando('Pensando…');
     setHistorial((h) => [...h, { q, r: { texto: 'Pensando…', pendiente: true } }]);
-    const inicio = Date.now();
-    const relojFases = setInterval(() => {
-      const t = Date.now() - inicio;
-      const fase = [...FASES_PENSANDO].reverse().find(([desde]) => t >= desde);
-      if (fase) setFasePensando(fase[1]);
-    }, 700);
+    const relojFases = arrancarRelojFases(setFasePensando);
     try {
       const previos = historial.flatMap((h) => [
         { rol: 'usuario' as const, texto: h.q },
