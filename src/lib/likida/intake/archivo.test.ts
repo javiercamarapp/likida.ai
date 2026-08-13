@@ -48,6 +48,43 @@ describe('leerArchivoUniversal — el lector del chat', () => {
     expect(r.meta).toContainEqual(['Páginas leídas', 1]);
   }, 20_000);
 
+  // ═══════════════════════════════════════════════════════════════════════
+  // AUDITORÍA 17 (pase 6), CRÍTICO fiscal N1 — LAS PRIMERAS PÁGINAS QUE NUNCA
+  // SE LEEN.
+  //
+  // `archivo.ts:59` pedía `getText({ last: MAX_PAGINAS_PDF })` con el
+  // comentario "«last» acota páginas". Acota, sí: por el FINAL. El README de
+  // pdf-parse lo dice con todas sus letras (líneas 198-199):
+  //
+  //     - Use `first` to render the first N pages
+  //     - Use `last` to render the last N pages
+  //
+  // Un estado de cuenta de TAG de 30 páginas entraba SIN las páginas 1 a 5 —
+  // la portada, que es donde vive el total del periodo—, el globo del chat
+  // decía "Páginas leídas: 25" sin denominador, y el extracto no llevaba
+  // ninguna marca de que faltara nada. El contralor pregunta por su gasto de
+  // casetas y el agente contesta con lo que sobró.
+  //
+  // El oráculo es la página 1: si el lector arranca por el principio, su
+  // texto está; si arranca por el final, no.
+  // ═══════════════════════════════════════════════════════════════════════
+  it('EL BUG: un PDF más largo que el tope se lee desde la PRIMERA página, no desde la última', async () => {
+    const doc = await PDFDocument.create();
+    const fuente = await doc.embedFont(StandardFonts.Helvetica);
+    // 30 páginas > MAX_PAGINAS_PDF (25). Cada una se identifica sola.
+    for (let i = 1; i <= 30; i++) {
+      doc.addPage().drawText(`PAGINA-${i} del estado de cuenta`, { x: 40, y: 700, size: 12, font: fuente });
+    }
+    const buf = Buffer.from(await doc.save());
+    const r = await leerArchivoUniversal('estado-tag-30.pdf', buf);
+
+    // La portada y las cuatro que le siguen: son las que se perdían.
+    expect(r.extracto).toContain('PAGINA-1 ');
+    expect(r.extracto).toContain('PAGINA-5 ');
+    // CONTROL: el tope sigue vigente — no se lee el PDF entero.
+    expect(r.extracto).not.toContain('PAGINA-30 ');
+  }, 30_000);
+
   it('lo que no conoce lo rechaza con nombre, no lo finge', async () => {
     await expect(leerArchivoUniversal('video.mp4', Buffer.from('x'))).rejects.toBeInstanceOf(ArchivoNoSoportado);
   });
