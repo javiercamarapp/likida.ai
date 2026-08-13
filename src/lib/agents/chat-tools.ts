@@ -28,7 +28,18 @@ const SIN_PARAMS = { type: 'object', properties: {}, additionalProperties: false
 const PARAM_MODO = {
   type: 'object',
   properties: {
-    modo: { type: 'string', enum: ['semanal', 'mensual', 'historico'], description: 'Ventana: últimos 7 días, últimos 30, o todo el histórico.' },
+    // AUDITORÍA 17 (pase 6), CRÍTICO — aquí decía "últimos 7 días, últimos
+    // 30, o todo el histórico", y es FALSO en los tres. Las cuatro tools que
+    // usan este enum indexan las funciones `*Series` de `analytics.ts`, que
+    // se construyen con `SEMANAS_POR_MODO = { semanal: 5, mensual: 13,
+    // historico: 52 }` — 35, 91 y 364 días. Con `prompts.ts:50` ordenándole
+    // al modelo declarar la ventana, un gasto de cinco semanas salía al
+    // contralor rotulado "los últimos 7 días". La guardia de cifras no lo
+    // podía ver: verifica la procedencia del dígito, nunca su rótulo.
+    // Los KPI del panel SÍ son 7/30 días reales (`analytics.ts:175-177`) —
+    // la mentira era de las series, no de las tarjetas.
+    // El arnés que ata los dos lados: `ventanas_del_chat.test.ts`.
+    modo: { type: 'string', enum: ['semanal', 'mensual', 'historico'], description: 'Ventana de la serie: semanal = últimas 5 semanas, mensual = últimas 13 semanas (~1 trimestre), historico = últimas 52 semanas (~1 año). Declara SIEMPRE la ventana en semanas, nunca en días.' },
   },
   required: ['modo'],
   additionalProperties: false,
