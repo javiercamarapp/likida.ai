@@ -79,7 +79,7 @@ huérfanas la v3, y una de esas cuatro es el arreglo del pase 5.
 
 ### CSS muerto que ningún recuento anterior miró
 
-`src/app/globals.css:236-277` — 42 líneas: la transición de `.columna-centro` y
+`src/app/globals.css:239-277` — 39 líneas: la transición de `.columna-centro` y
 las dos reglas `:root[data-asistente="expandido"]`, con su comentario
 "AUDITORÍA 17 (pase 5), ALTO" y su referencia a `ANCHO_MIN_ASISTENTE`.
 `grep -rn "columna-centro\|data-asistente" src/` devuelve **solo `globals.css`**:
@@ -181,7 +181,7 @@ el ejercicio 2026, 51,900 L desde 2024. El contralor pulsa el chip enlatado
 *"¿Cuánto diésel es elegible para el estímulo?"* (`chat.tsx:21`).
 
 1. Camino feliz: el endpoint responde y el bloque dice **18,400.00 L, ejercicio 2026**.
-2. El endpoint devuelve 502 —`route.ts:107` lo devuelve ante **cualquier**
+2. El endpoint devuelve 502 —`route.ts:111` lo devuelve ante **cualquier**
    excepción de `ejecutarAnalista`, y hay tres realistas: el `AbortController`
    de 40s (`analista.ts:310`), `LoopGuardError` con `maxToolRounds: 5`
    (`openrouter.ts:775`) y `TruncatedError` con `maxTokens: 900`— entonces
@@ -419,7 +419,7 @@ chat-tools.ts:154  return { modo: …, moneda: 'MXN', categorias: s.categorias, 
 
 **Escenario con valores.** El contralor sube al chat la foto de un ticket de
 caseta de $412 por el clip de "leer comprobante". La tabla que le regresa
-`chat.tsx:294-300` dice:
+`chat.tsx:286-300` dice:
 
 ```
 Concepto    caseta
@@ -490,7 +490,7 @@ detectar que un fichero citado por nombre no existe.
 
 ---
 
-### [MEDIO] Código muerto de la v3: 8 módulos sin importador (1,474 líneas), 84 símbolos sin llamador y 42 líneas de CSS que ningún elemento lleva
+### [MEDIO] Código muerto de la v3: 8 módulos sin importador (1,474 líneas), 84 símbolos sin llamador y 39 líneas de CSS que ningún elemento lleva
 
 Los números y las tablas están arriba, en «Recuento pedido». Lo que lo convierte
 en hallazgo y no en inventario es el conjunto **`rail-marca.ts` + `globals.css`**,
@@ -500,11 +500,11 @@ porque es un cadáver **partido en dos lenguajes**:
   que corre **verde**. Sus 4 exports (`RUTA_SIN_RAIL`, `ANCHO_MIN_ASISTENTE`,
   `estaExpandido`, `marcaAsistente`) documentan el comportamiento de `rail.tsx`,
   borrado por la v3.
-* `src/app/globals.css:236-277` (42 L) — la otra mitad de la misma regla, con la
+* `src/app/globals.css:239-277` (39 L) — la otra mitad de la misma regla, con la
   transición y las dos reglas `:root[data-asistente="expandido"] .columna-centro`.
 
 **Escenario con valores.** Un desarrollador —o un agente reparador— arranca el
-próximo pase, corre `npx vitest run`, ve `rail_marca.test.ts` en verde con sus 8
+próximo pase, corre `npx vitest run`, ve `rail_marca.test.ts` en verde con sus 6
 asserts, y lee en `globals.css:261-262` *"el breakpoint es el mismo `xl` de
 Tailwind, y `ANCHO_MIN_ASISTENTE` (rail-marca.ts) lo cruza con el componente en
 una prueba"*. Concluye, razonablemente, que el asistente de rail existe y está
@@ -514,7 +514,7 @@ componente que la prueba dice cubrir se borró hace un día.
 **Consecuencia.** Es la forma más cara de deuda para un equipo de **una
 persona**: no líneas de más, sino **líneas que mienten sobre lo que el sistema
 hace**, con una prueba verde detrás. `permiso_cre.ts` (163 L) tiene el mismo
-perfil, con 30 asserts de un módulo de facturación que nada llama.
+perfil, con 27 asserts de un módulo de facturación que nada llama.
 
 **Causa raíz probable.** El borrado de la v3 quitó consumidores sin barrer
 proveedores, y ninguna herramienta de la compuerta (`tsc`, `eslint`, `vitest`)
@@ -679,7 +679,7 @@ salida parcial: `pendientes` (`:173-179`) lleva el conteo a la campana de
 ### [BAJO · REINCIDENTE, 4ª ronda] `RUTA_DE_DIFERENCIA` sigue mandando 12 veredictos "al panel", y el panel donde se veían sigue sin existir
 
 `src/lib/likida/cierre_aviso.ts:104-148`. **Verificado hoy: los 12 `'panel'`
-intactos**, incluido `:145` `combustible_efectivo_dentro15: 'panel', // dentro
+intactos**, incluido `:148` `combustible_efectivo_dentro15: 'panel', // dentro
 del 15% y elegible: informativo, el contador vive en el panel` — y el panel del
 contador se borró entero en `003c88a`.
 
