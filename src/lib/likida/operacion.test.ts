@@ -308,8 +308,35 @@ describe('getPods — se parte de los VIAJES, no de la tabla pod', () => {
 });
 
 describe('escrituras', () => {
+  // ═══════════════════════════════════════════════════════════════════════
+  // AUDITORÍA 17 (pase 6), CRÍTICO de modelo de datos — EL CAMINO POR DEFECTO
+  // DE LA PANTALLA DEL DEMO.
+  //
+  // `viaje.operador_id` es `not null` (`0001_init.sql:49`), y "Nuevo viaje"
+  // ofrece "Sin asignar todavía" como opción POR DEFECTO
+  // (`forma-viaje.tsx:74-75`, `defaultValue=""`). `crearViaje` traducía esa
+  // cadena vacía a NULL (`operacion.ts:566`, `v.operadorId || null`) y la
+  // guarda de tenant de arriba solo corre si `operadorId` es truthy, así que
+  // el vacío pasaba de largo hasta el insert: Postgres `23502`, y el usuario
+  // leía "Revisa los datos e inténtalo de nuevo" sin nada que revisar.
+  //
+  // La prueba de abajo lo dejaba pasar VERDE porque el mock no tiene el
+  // constraint: llamaba `crearViaje` SIN operador y celebraba el insert. Es
+  // el modo de falla que el auditor de pruebas describe —"pasa verde contra
+  // un mock"—, reproducido aquí mismo. Ahora la ausencia se ataja antes, con
+  // nombre, y la prueba de contrato pasa el operador como cualquier llamador
+  // real tendría que hacerlo.
+  // ═══════════════════════════════════════════════════════════════════════
+  it('EL BUG: sin operador NO llega al insert — falla con nombre, no con 23502', async () => {
+    await expect(
+      crearViaje('t-1', { folio: 'VJ-9', origen: 'GDL', destino: 'MTY', anticipo: 5000 }),
+    ).rejects.toThrow(/operador/i);
+    expect(escrituras.find((e) => e.tabla === 'viaje')).toBeUndefined();
+  });
+
   it('crearViaje acota por tenant y nace abierto', async () => {
-    await crearViaje('t-1', { folio: 'VJ-9', origen: 'GDL', destino: 'MTY', anticipo: 5000 });
+    TABLAS = { operador: [{ id: 'o-1' }] };
+    await crearViaje('t-1', { folio: 'VJ-9', origen: 'GDL', destino: 'MTY', anticipo: 5000, operadorId: 'o-1' });
     const w = escrituras.find((e) => e.tabla === 'viaje')!;
     expect(w.op).toBe('insert');
     expect(w.valores).toMatchObject({ tenant_id: 't-1', folio: 'VJ-9', estatus: 'abierto', anticipo: 5000 });
@@ -331,7 +358,8 @@ describe('escrituras', () => {
 
   it('un insert que falla lanza en vez de devolver un id inventado', async () => {
     FALLAN = { viaje: 'folio duplicado' };
-    await expect(crearViaje('t-1', { folio: 'VJ-9' })).rejects.toThrow('folio duplicado');
+    TABLAS = { operador: [{ id: 'o-1' }] };
+    await expect(crearViaje('t-1', { folio: 'VJ-9', operadorId: 'o-1' })).rejects.toThrow('folio duplicado');
   });
 
   // AUDITORÍA 10, ALTO: `operadorId` se escribía tal cual en el INSERT, sin
@@ -369,15 +397,15 @@ describe('escrituras', () => {
   // económico, placas, marca y modelo de esa unidad vía el join de
   // /dashboard/despacho.
   it('crearViaje ACEPTA un unidadId que sí pertenece al tenant', async () => {
-    TABLAS = { unidad: [{ id: 'u-1' }] };
-    await crearViaje('t-1', { folio: 'VJ-12', unidadId: 'u-1' });
+    TABLAS = { unidad: [{ id: 'u-1' }], operador: [{ id: 'o-1' }] };
+    await crearViaje('t-1', { folio: 'VJ-12', unidadId: 'u-1', operadorId: 'o-1' });
     const w = escrituras.find((e) => e.tabla === 'viaje')!;
     expect(w.valores).toMatchObject({ tenant_id: 't-1', unidad_id: 'u-1' });
   });
 
   it('AUDITORÍA 10: crearViaje RECHAZA un unidadId de OTRA flota, y no inserta el viaje', async () => {
-    TABLAS = { unidad: [] };
-    await expect(crearViaje('t-1', { folio: 'VJ-13', unidadId: 'u-de-otra-flota' })).rejects.toThrow(
+    TABLAS = { unidad: [], operador: [{ id: 'o-1' }] };
+    await expect(crearViaje('t-1', { folio: 'VJ-13', unidadId: 'u-de-otra-flota', operadorId: 'o-1' })).rejects.toThrow(
       'crearViaje: la unidad no pertenece a esta flota',
     );
     expect(escrituras.find((e) => e.tabla === 'viaje')).toBeUndefined();

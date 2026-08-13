@@ -552,6 +552,21 @@ export async function crearViaje(tenantId: string, v: NuevoViaje): Promise<strin
   }
 
   // Mismo candado, para `unidadId` (auditoría 10, MEDIO) — ver `unidadPropia`.
+  // AUDITORÍA 17 (pase 6), CRÍTICO — `viaje.operador_id` es `not null`
+  // (`0001_init.sql:49`) y la pantalla "Nuevo viaje" ofrece "Sin asignar
+  // todavía" como opción POR DEFECTO (`forma-viaje.tsx:74-75`,
+  // `defaultValue=""`). El `|| null` de abajo convertía la cadena vacía en
+  // NULL, Postgres devolvía `23502` y el usuario leía "Revisa los datos e
+  // inténtalo de nuevo" sin nada señalado que revisar — en la pantalla del
+  // demo, por el camino que la forma elige sola.
+  //
+  // Se falla aquí, con nombre. Dejar que un viaje NAZCA sin operador es otra
+  // cosa: pide una migración que quite el `not null` y decidir qué hace el
+  // resto del motor con un viaje huérfano. Eso es decisión de producto y
+  // queda PROPUESTO, no lo decide una auditoría de madrugada.
+  if (!v.operadorId) {
+    throw new Error('crearViaje: falta el operador — `viaje.operador_id` es not null');
+  }
   if (v.unidadId && !(await unidadPropia(tenantId, v.unidadId))) {
     throw new Error('crearViaje: la unidad no pertenece a esta flota');
   }

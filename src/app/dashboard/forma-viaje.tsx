@@ -71,8 +71,17 @@ export function FormaViaje({ action, operadores }: {
         </div>
         <div>
           <label htmlFor="operadorId" className={ETIQUETA}>Operador</label>
-          <select id="operadorId" name="operadorId" className={CAMPO} style={{ background: 'var(--surface)' }} defaultValue="">
-            <option value="">Sin asignar todavía</option>
+          {/* AUDITORÍA 17 (pase 6), CRÍTICO — "Sin asignar todavía" era la
+              opción POR DEFECTO y `viaje.operador_id` es `not null`
+              (`0001_init.sql:49`): el camino que la forma elegía sola
+              reventaba con `23502` y el usuario leía "Revisa los datos" sin
+              nada señalado. `required` + un placeholder deshabilitado hacen
+              que el navegador lo ataje antes de enviar, y `crearViaje` lo
+              vuelve a atajar en el servidor por si alguien postea directo.
+              Que un viaje pueda NACER sin operador es otra discusión: pide
+              migración y queda PROPUESTA. */}
+          <select id="operadorId" name="operadorId" required className={CAMPO} style={{ background: 'var(--surface)' }} defaultValue="">
+            <option value="" disabled>Elige un operador</option>
             {operadores.map((o) => (
               <option key={o.id} value={o.id}>{o.nombre}</option>
             ))}
