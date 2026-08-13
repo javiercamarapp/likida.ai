@@ -1,6 +1,6 @@
 ---
 name: auditoria-diaria
-description: Corre la auditoría diaria del repo con un agente experto por rubro — frontend, backend, agéntico, tool calling, seguridad, fiscal, legal, arquitectura, pruebas, operabilidad, rendimiento y modelo de datos —, verifica cada hallazgo contra el código antes de anotarlo, lo pinta en un tablero que se mira, arregla TODO lo reproducible —crítico, alto, medio y bajo, sin tope de vueltas— con prueba que lo reproduzca, commit atómico y push, y recalifica los 12 rubros contra la auditoría anterior. Úsala en la revisión de la mañana, al pedir "audita el repo", "qué se rompió", "califica el código", "encuentra errores y arréglalos", al cerrar una fase, antes de un demo o un deploy, y cuando corra desatendida por cron o /loop.
+description: Corre la auditoría diaria del repo con un agente experto por rubro — frontend, backend, agéntico, tool calling, seguridad, fiscal, legal, arquitectura, pruebas, operabilidad, rendimiento y modelo de datos —, verifica cada hallazgo contra el código antes de anotarlo, lo pinta en un tablero que se mira, y despacha una flota de agentes reparadores que arreglan TODO lo reproducible —crítico, alto, medio y bajo, sin tope de vueltas— con prueba que lo reproduzca, commit atómico y push, y recalifica los 12 rubros contra la auditoría anterior. Úsala en la revisión de la mañana, al pedir "audita el repo", "qué se rompió", "califica el código", "encuentra errores y arréglalos", al cerrar una fase, antes de un demo o un deploy, y cuando corra desatendida por cron o /loop.
 ---
 
 # Auditoría diaria
@@ -10,7 +10,7 @@ Una nota que solo sube es una nota que nadie está midiendo. La auditoría 2 de 
 ## CRITICAL
 
 - **Un hallazgo sin `archivo:línea` y sin escenario de falla concreto no es un hallazgo, es una opinión.** Se descarta sin discusión. El escenario tiene que ser "entra esto → sale esto mal", no "podría fallar".
-- **Ningún auditor toca código.** Los 12 encuentran y califican; el orquestador arregla. Un auditor que arregla deja de buscar, y además 12 agentes escribiendo sobre el mismo repo se pisan.
+- **Ningún auditor toca código, y ningún reparador audita.** Son dos flotas: los 12 auditores encuentran y califican; los reparadores de la fase 4 cierran. Un auditor que arregla deja de buscar; un reparador que audita defiende su hallazgo en vez de matarlo cuando resulta falso. El orquestador no arregla a mano lo que puede despachar — pero **sí** es el único que corre la suite completa, commitea y pushea.
 - **El orquestador verifica cada hallazgo abriendo el archivo antes de anotarlo.** En la auditoría 2 uno resultó falso. Los falsos se anotan como falsos en el reporte — es lo que mantiene honestos a los auditores de mañana y lo que impide que la nota se mueva por ruido.
 - **Árbol sucio, autofix apagado.** Si `git status` no está limpio al arrancar, la auditoría corre igual pero no se arregla nada: no se pueden hacer commits atómicos encima del trabajo a medias de alguien más, y el diario lo dice en una línea.
 - **No se arregla lo que no se pudo reproducir.** Primero la prueba que falla, luego el arreglo, luego la prueba que pasa. Sin reproducción, el hallazgo baja a *propuesto* y espera. Arreglar a ciegas es cómo se introducen los bugs que la auditoría de mañana va a encontrar.
@@ -26,7 +26,19 @@ Una nota que solo sube es una nota que nadie está midiendo. La auditoría 2 de 
 
 **3 · Tablero.** `docs/auditoria-N/tablero.html`, autocontenido, con los 12 rubros, la flecha contra la ronda anterior, la serie histórica y los hallazgos por severidad. Se abre y **se mira** — un tablero que nunca se renderizó no es evidencia de nada. Detalle en `references/tablero.md`.
 
-**4 · Arreglo de TODO lo reproducible — sin tope de vueltas.** Uno a la vez, en serie, cada uno: prueba que reproduce → arreglo → prueba verde → suite completa → commit atómico citando el ID del hallazgo → **push**. Se sigue hasta que no quede un solo hallazgo reproducible sin arreglar, en orden CRÍTICO → ALTO → MEDIO → BAJO. Si un arreglo rompe algo, se revierte ese commit y el hallazgo vuelve a *pendiente* con la razón: el bucle retiene lo que mejora y devuelve lo que no.
+**4 · Una FLOTA DE REPARADORES EXPERTOS arregla TODO lo reproducible — sin tope de vueltas.** El orquestador **no** arregla a mano lo que puede despachar: manda un agente reparador por rubro, con contexto fresco, y cada uno trae de vuelta los arreglos de SU rubro. Crítico, alto, medio y bajo — todos. Detalle del despacho, la partición y el prompt: `references/reparador-prompt.md`.
+
+**El reparador NUNCA es el auditor.** Son dos flotas distintas y esa separación es la misma de la fase 1, por la misma razón: quien encuentra deja de buscar en cuanto empieza a diseñar la solución, y quien arregla defiende su propio hallazgo en vez de matarlo cuando resulta falso.
+
+**Cómo se despachan sin pisarse — esta es la parte que se rompe si se hace mal.** Doce agentes escribiendo sobre un solo árbol de trabajo, con una sola suite y un solo índice de git, se corrompen entre ellos. Tres reglas, y las tres se verifican **antes** de lanzar:
+
+1. **Partición por archivo, no por rubro.** El orquestador junta los `archivo:línea` de los hallazgos de cada rubro y comprueba que los conjuntos sean **disjuntos**. Los rubros que comparten un archivo van en **oleadas distintas**, nunca a la vez. Arquitectura y pruebas casi siempre tocan lo de todos: por default van en la última oleada, solos.
+2. **Ningún reparador commitea, ni pushea, ni corre la suite completa.** Corre las pruebas de los archivos que tocó, y nada más. La suite completa, el commit atómico y el push los hace el **orquestador**, en serie, hallazgo por hallazgo — es la única forma de saber cuál arreglo rompió qué.
+3. **Cada reparador reporta un diario:** hallazgo, archivos tocados, prueba que lo reproduce, y si la prueba muere al revertir el arreglo. Si no muere, el arreglo no probó nada y se revierte.
+
+El orden dentro de cada oleada es CRÍTICO → ALTO → MEDIO → BAJO. Después de cada arreglo: suite completa → si verde, commit y **push**; si roja, se revierte ese commit y el hallazgo vuelve a *pendiente* con la razón. El bucle retiene lo que mejora y devuelve lo que no.
+
+**Se sigue lanzando oleadas hasta que no quede un hallazgo reproducible.** Si una oleada vuelve con hallazgos nuevos —pasa, arreglar destapa cosas— entran a la cola y se despachan igual.
 
 **No hay cuota que cumplir ni "ya fueron suficientes".** Un medio y un bajo también se arreglan; lo único que los pone al final es el orden, no una excusa para dejarlos. Cerrar la ronda con hallazgos reproducibles sin tocar es incumplir la fase, y la síntesis tiene que decirlo con esas palabras en vez de llamarlos "propuestos".
 
@@ -59,6 +71,7 @@ No hay que pedirlas; el disparador es la situación:
 | Se va a declarar algo arreglado | `evidencia` |
 | Un auditor dice que algo está mal y probablemente no lo está | `revisar-sin-ceder` |
 | Hay que lanzar los 12 en paralelo sin que se pisen | `workflow-mapper` |
+| Toca despachar la flota de reparadores de la fase 4 | `references/reparador-prompt.md` |
 | La ronda va a durar más que el contexto | `plan-en-disco` |
 | Corre desatendida | `goal-writer` + `bucle-trinquete` |
 | Toca pintar el tablero | `dataviz` |
