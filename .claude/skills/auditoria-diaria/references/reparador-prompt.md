@@ -105,6 +105,19 @@ línea del reporte.
 
 ---
 
+## El commit atómico: lo que se aprendió en la primera oleada real (12-ago-2026)
+
+La regla del repo es **un arreglo, un commit**. La primera oleada de reparadores **no la pudo cumplir**, y la razón hay que dejarla escrita porque se va a repetir:
+
+Un reparador arregla 21 hallazgos y toca `page.tsx` en cuatro de ellos y `sidebar-nav.tsx` en tres. Cuando entrega, esas ediciones ya están **entretejidas en el mismo archivo**. Separarlas después en commits atómicos no es difícil: es imposible sin deshacer y rehacer su trabajo. Se commiteó por rubro —tres commits, con los hallazgos enumerados en el cuerpo— y eso **pierde la propiedad que el commit atómico existe para dar**: poder revertir un arreglo sin arrastrar a los otros veinte.
+
+Dos formas de recuperarla, y hay que elegir una **antes** de despachar:
+
+1. **El reparador entrega una serie de parches, no un árbol.** Después de cada hallazgo hace `git diff > /tmp/<ID>.patch` y **revierte su propio cambio** antes de empezar el siguiente. Entrega los parches numerados; el orquestador los aplica en orden, uno por commit, con la suite entre cada uno. Cuesta más al agente y conserva la atomicidad.
+2. **Un solo hallazgo por agente.** Más agentes, más baratos, cada uno con un árbol trivial de separar. Es lo natural cuando el rubro trae pocos hallazgos grandes.
+
+Lo que **no** vale es despachar 21 hallazgos a un agente y prometer commits atómicos: la promesa se rompe al entregar, y se descubre cuando ya no se puede arreglar. Si se elige commitear por rubro a propósito, se dice en el commit y en la síntesis — no se deja creer que son atómicos.
+
 ## Después de cada oleada — esto lo hace el orquestador, no el agente
 
 1. `git status --short` y comprobar que **nadie salió de su partición**. Si alguien salió, se revisa ese diff a mano antes de nada.

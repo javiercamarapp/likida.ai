@@ -260,3 +260,40 @@ CRÍTICOS que no son de código:
 La ronda cierra **PARCIAL** a propósito: bajo la política nueva, dejar
 hallazgos reproducibles vivos es trabajo pendiente de la corrida, no del
 código, y así se dice.
+
+## Oleada 1 de la flota de reparadores (12-ago-2026, madrugada del 13)
+
+Política nueva aplicada por primera vez (`baa5b59`): tres reparadores expertos, contexto fresco, particiones **disjuntas por archivo**, ninguno commitea ni corre la suite completa.
+
+| Reparador | Partición | Cerrados |
+|---|---|---|
+| fiscal | `lib/likida/cuadre`, `liquidacion`, `normas` | **7** (`94530da`) |
+| seguridad | `lib/auth`, `env.ts`, `proxy.ts`, `supabase/` | **8** (`4eea33f`) |
+| frontend | `app/dashboard`, `app/admin`, `globals.css` | **21** (`6f6b390`) |
+
+**36 hallazgos cerrados**, todos con prueba que muere al revertir el arreglo — medido por cada agente, no leído.
+
+Los tres respetaron su partición y lo demostraron anotando archivo por archivo cuál era suyo. Una desviación declarada en la primera línea, y correcta: el de seguridad tocó `src/proxy.ts` porque `src/middleware.ts` **no existe** —Next 16 renombró la convención— y el propio reporte del auditor citaba `proxy.ts` como la ubicación del defecto.
+
+### Compuerta tras la oleada
+```
+npx tsc --noEmit -p .   → 0 errores
+npx vitest run          → 292 archivos · 3,314 verdes · 1 saltada   (arranque: 261 / 3,134)
+npm run lint            → 0 errores · 17 warnings                    (igual que el arranque)
+```
++31 archivos de prueba y +180 pruebas. **Cero regresiones**, ningún arreglo revertido.
+
+### Lo que salió mal en el proceso, y hay que decirlo
+
+**No se cumplió "un arreglo, un commit".** Se commiteó por rubro —tres commits— y no por hallazgo. La razón: un reparador que arregla 21 cosas toca `page.tsx` en cuatro de ellas; cuando entrega, las ediciones ya están entretejidas y separarlas exigiría deshacer su trabajo. Se pierde justo la propiedad que el commit atómico da: revertir uno sin arrastrar a los otros veinte. Queda escrito en `references/reparador-prompt.md` con las dos formas de recuperarla (serie de parches, o un hallazgo por agente), y **hay que elegir una antes de despachar la oleada 2**.
+
+### Cola para la oleada 2 — reportada por los propios reparadores
+
+- **[fiscal]** El PPD se cerró por valor, no por clase: la regla sigue siendo lista negra (`01`, `99`) en vez de lista blanca de los cuatro medios de LISR 27-III. `12`, `17`, `23` y `30` todavía salen "Deducible para ISR".
+- **[fiscal, bloqueados por partición]** 7 hallazgos en `lib/likida/fiscal.ts`, `analytics.ts`, `tools.ts:109`, `intake/ocr.ts:43,360` (el enum necesita un tercer estado crédito/débito), `periodo/aviso.ts:32-33`.
+- **[seguridad, bloqueados]** `sharp` 0.34.5 (exige `package.json`; el arreglo es un major ya marcado breaking), el rótulo falso de RLS en `usuarios/page.tsx:126`, `accionResponder` de ARCO, las dos guardas de QStash en `api/cron/facturar`.
+- **[seguridad, nuevo]** Los bloques **26, 28 y 30** de `verificaciones.sql` ya estaban rotos antes de la oleada: insertan `app_user.rol='operador'`, que la 0086 eliminó del dominio.
+- **[frontend, nuevos]** Las píldoras de región miden 4.25–4.35:1 sobre su fondo REAL (`color-mix 12%`), no contra `--surface` · **C12 no queda cerrado del todo**: el link nuevo vive en `/dashboard` y `puedeVerRuta('contador','/dashboard')` es false, así que el contador sigue sin ruta al expediente · `estado.ts` solo vigila 4 de las ~13 consultas del Resumen · `admin/sidebar-nav.tsx` sin indicador visual de página activa · quedan otros `?? 0` en el panel.
+
+### Sin aplicar a producción
+`0090`–`0093` (las dos puertas de RLS entre ellas). Hasta que se corran contra Supabase, esos dos ALTO siguen abiertos en la base real. La `0089` sí se aplicó y se verificó funcionalmente el 13-ago.

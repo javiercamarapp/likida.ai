@@ -1,4 +1,10 @@
-PARCIAL (pase 5, ronda de CONTINUACIÓN sobre el PR #9): 5 hallazgos arreglados y pusheados; quedan ~24 ALTO, ~39 MEDIO y ~16 BAJO sin arreglar, y 3 CRÍTICOS que no son de código (C12, C4, C6). El siguiente de la pila es el contraste de los KPI del Resumen.
+PARCIAL (pase 5, ronda de CONTINUACIÓN sobre el PR #9): **41 hallazgos arreglados** y pusheados — 5 por el orquestador y 36 por la primera oleada de la flota de reparadores. Compuerta final: tsc 0 · 292 archivos · 3,314 verdes · lint 0 errores. Cero regresiones, ningún arreglo revertido.
+
+Quedan vivos: 3 CRÍTICOS que no son de código (C12 parcialmente cerrado, C4, C6) y la cola de la oleada 2 que los propios reparadores reportaron —bloqueados por partición, más 6 hallazgos nuevos que destapó arreglar—. Está enumerada en `progreso.md`.
+
+A media ronda Javier cambió la política dos veces: primero *se arregla todo lo reproducible, sin tope de vueltas* (`a3e3b5a`), y luego *que después de auditar se despachen agentes expertos a solucionar los hallazgos* (`baa5b59`). Las dos quedaron en la skill y las dos se aplicaron a esta misma ronda.
+
+Se incumplió **un arreglo, un commit**: se commiteó por rubro. La razón y las dos formas de recuperarlo quedan escritas en `references/reparador-prompt.md`.
 
 A media ronda Javier cambió la política: se arregla TODO lo reproducible, sin tope de vueltas (skill actualizada en `a3e3b5a`). Se arreglaron 2 más bajo la política nueva y la ronda cierra PARCIAL a propósito — bajo esa regla, dejar hallazgos reproducibles vivos es trabajo pendiente de la CORRIDA, no del código.
 
