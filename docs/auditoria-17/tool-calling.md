@@ -39,7 +39,7 @@ la ruta Monterrey→CDMX entre el 5-jul y el 8-ago, de los cuales $61,900.00 cae
 en los últimos 7 días:
 
 1. El contralor escribe *"¿en qué ruta se me fue el gasto esta semana?"*. No
-   matchea ninguna palabra del paracaídas local (`chat.tsx:73-141`), así que va
+   matchea ninguna palabra del paracaídas local (`chat.tsx:72-144`), así que va
    al agente (`chat.tsx:353` manda **toda** pregunta al API).
 2. El modelo llama `top_rutas` con `{modo:'semanal'}` — la descripción le dice
    que eso son los últimos 7 días.
@@ -146,7 +146,7 @@ determinística de `:382-399` —la que existe justo para esto, "datos reales si
 narración le sirven más al contralor que una disculpa"— vive **dentro** del
 `try` y nunca se alcanza; (c) el contralor espera ~40 s viendo "Esto está
 tardando más de lo normal…" (`chat.tsx:48`) y recibe el paracaídas de keywords,
-que para esa pregunta contesta *"Todavía no sé responder eso"* (`chat.tsx:141`);
+que para esa pregunta contesta *"Todavía no sé responder eso"* (`chat.tsx:144`);
 (d) los ~27,400 tokens de entrada y 630 de salida **no se escriben en
 `llm_costo`**, porque `registrarCosto` solo corre en el camino feliz
 (`route.ts:102-107`).
@@ -255,12 +255,12 @@ las cuatro tools de `modo` piden el wrapper `*Series`, que calcula **los tres
 modos en paralelo** y descarta dos (`analytics.ts:434-440`).
 
 Escenario, un solo turno de "¿por qué subió mi gasto?" con
-`maxToolRounds: 5` (`analista.ts:319`):
+`maxToolRounds: 5` (`analista.ts:321`):
 
 - Ronda 0: `serie_gasto{semanal}` → 3 barridos de `gasto` (5, 13 y 52 semanas) +
   `top_rutas{semanal}` → 3 barridos de `gasto` (uno **sin cota**, `:1036`) y
   **3 barridos completos de `viaje`** (`getTopRutasPorGasto` nunca acota `viaje`,
-  `:987`).
+  `:988`).
 - Ronda 1: el modelo repite `serie_gasto{semanal}` para citar un número que ya
   tenía → **otros 3 barridos**, porque no hay caché que lo pare.
 - Si además cae el reintento correctivo (`analista.ts:351`), todo se repite
@@ -390,10 +390,10 @@ de arquitectura llama "una advertencia que vuelve a ocurrir".
   `ctx` se arma en `analista.ts:277` con `opts.tenantId`, que sale de
   `getSessionTenant()` (`route.ts:42,48`); los once handlers usan `ctx.tenantId`
   y ninguno lee un id de `args`. Verifiqué las ocho funciones de analytics que
-  cuelgan de ahí: `getKpis` (`:186`), `detectarAnomalias` (`:271`), `getViajes`
+  cuelgan de ahí: `getKpis` (`:189`), `detectarAnomalias` (`:272`), `getViajes`
   (`:806`), `getLiquidaciones` (`:1554`), `getAcreditables` (`:542`),
-  `getGastoPorSemana` (`:390`), `getLiquidadoPorSemana` (`:472`),
-  `getTopRutasPorGasto` (`:982,988`) — **todas** llevan `.eq('tenant_id',
+  `getGastoPorSemana` (`:389`), `getLiquidadoPorSemana` (`:465`),
+  `getTopRutasPorGasto` (`:981,988`) — **todas** llevan `.eq('tenant_id',
   tenantId)`. El `?tenant=` de `route.ts:56-60` lo honra solo `superadmin` y
   solo si la fila existe. **No hay camino por el que el modelo elija flota.**
 - **Ninguna tool nueva muta.** `grep isMutation src/` → un solo `true`, en
@@ -423,7 +423,7 @@ de arquitectura llama "una advertencia que vuelve a ocurrir".
   instrucción incrustada se convierta en consulta.
 - **La guardia de cifras hace lo que promete, dentro de su alcance.**
   `extraerNumeros` normaliza el formato es-MX antes de comparar
-  (`analista.ts:128`), `esDerivada` se topa a 600 elementos (`:151`), y
+  (`analista.ts:128`), `esDerivada` se topa a 600 elementos (`:153`), y
   `validarBloques` recorta y descarta con log en vez de tumbar la entrega entera
   (`:50-112`). Probado en `analista_guardia.test.ts`. Su límite —verifica
   procedencia, no rótulo— es lo que deja pasar el CRÍTICO de arriba, y eso es un
