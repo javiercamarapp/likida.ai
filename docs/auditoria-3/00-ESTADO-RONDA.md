@@ -112,3 +112,17 @@ Del orquestador, además: TC-A1 (8066054+366b66d), los 2 comentarios stale de AG
    archivo chocan con `uq_viaje_abierto_por_operador` → lote falla con reporte.
 3. Los textos de /seguridad citan "más de 3,000 pruebas" — VERIFICAR contra el
    conteo real de la suite en la integración; si no aguanta, corregir el texto.
+
+## CIERRE FINAL (14-ago, ~08:35) — TODO TERMINADO Y EN PRODUCCIÓN
+- 31/31 críticos+altos cerrados + BE-A2 (306047d) + 2 laterales del importador (17dd02b).
+- Las 8 fases del plan construidas; F7 completa (Conexiones, /seguridad, Rentabilidad
+  y cobranza, diseños de intake-correo y API); F8 = docs/comercial/f8-encendidos.md
+  (3 interruptores de Javier: primer cliente, pricing D6, mandar propuesta Innovativos).
+- Deploy d68c9b0 [deploy] → Ready en Vercel, VERIFICADO MIRANDO app.likida.ai/seguridad.
+  Las env vars LIKIDA_* ya estaban en producción (Javier, 2 días antes).
+- Suite al cierre: 3,236 passed | 1 skipped · tsc/eslint/build limpios · todo pusheado.
+- Gaps vs Handle (orden de valor): sección Pruebas del agente, reglas de re-contacto
+  en Cobranza, vigencias con pills, marca en el PDF, personalización del chat,
+  intake-correo/API (diseñados). Quedan 43 medios + 29 bajos propuestos en esta carpeta.
+- BLOQUEADO: cruzar CONOCIMIENTO/Plaud — Desktop sigue con TCC (Operation not
+  permitted); Javier debe dar Acceso total al disco a la Terminal o mover las carpetas.
