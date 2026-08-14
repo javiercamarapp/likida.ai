@@ -130,6 +130,20 @@ npm run lint      → 0 errores, 25 warnings (no-unused-vars en tests)
 npm run build     → NO SE CORRE en la nube (sin credenciales)
 ```
 
+**El CI de GitHub sale ROJO, y no por esta rama.** El job `verificar` corre además
+`test:coverage` con umbrales globales, y esos umbrales llevan rotos desde antes:
+
+| | `master` (815d8cb) | esta rama | umbral |
+|---|---|---|---|
+| Statements / Lines | 59.37% | **59.80%** | 67% |
+| Branches | 83.30% | **83.33%** | 84% |
+| Functions | 77.91% | 77.72% | 79% |
+
+Medido corriendo `npm run test:coverage` en las dos puntas. El diff de esta ronda
+sube tres de las cuatro métricas. El hueco de ~7 puntos lo abrieron los seis
+agentes, el chat y el mapa que entraron esta semana sin arnés — es el mismo
+hallazgo que `pruebas.md` califica con un 5. Anotado en el hilo del PR.
+
 ## INFRA (no son hallazgos del código)
 
 - El contenedor llegó con `node_modules/` **vacío**. La primera corrida de la
