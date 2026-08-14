@@ -1,5 +1,26 @@
 # MAPA — auditoría 3 (14-ago-2026)
 
+## PASE 2 — continuación en la nube (14-ago, tarde)
+
+La ronda 3 arrancó en local de madrugada y **murió antes de escribir los 12
+reportes**: en `docs/auditoria-3/` solo quedaron `MAPA.md` y
+`00-ESTADO-RONDA.md`. Los 6 CRÍTICOS **sí** se arreglaron y **sí** están en
+`master` (commits `c8bd2ac`, `444492a`, `b31460c`, `54e0648`, `bb7e228`,
+`bc3c6c3`) más el alto TC-A1 (`8066054`, `366b66d`). Los **25 ALTOS siguen
+abiertos** — los 8 fixers en paralelo que anuncia `00-ESTADO-RONDA.md` nunca
+dejaron commit.
+
+Por eso este pase relanza **los 12 rubros**: sus archivos no existen, y un
+rubro sin archivo es un rubro sin auditar. La lista de altos heredados vive en
+`00-ESTADO-RONDA.md` líneas 50-64 — **verifícalos primero contra el código de
+hoy y márcalos REINCIDENTE si siguen vivos.**
+
+Diferencias de correr en la nube:
+- La compuerta es `npm test` + `npx tsc --noEmit` + `npm run lint`. **NO** hay
+  `npm run build`: no existen credenciales de Supabase/OpenRouter/Facturapi.
+- Los arreglos van a la rama `claude/auditoria-3` y salen como PR, nunca a
+  `master`.
+
 ## Línea base REAL de esta ronda (corrida hoy, antes de auditar)
 
 - `npx vitest run` → **261 archivos, 3,161 pruebas verdes, 1 skipped**
