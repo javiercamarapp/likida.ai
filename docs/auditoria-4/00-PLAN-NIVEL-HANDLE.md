@@ -360,3 +360,57 @@ teoría — y este repo ya sabe que los mocks pasan mientras producción falla.
   (`if (arranco) throw e` propagaba por encima). Ahora en `finally`.
 - **CLAUDE.md decía que nadie escribe `cliente`/`unidad`/`tarifa`** y mandaba a
   construir un escritor que ya existe.
+
+---
+
+## CIERRE DE LA RONDA · 14-ago-2026 (noche)
+
+El plan de arriba se ejecutó COMPLETO el mismo día, en tres olas
+(`44e624c..` — ver `git log --oneline` desde ahí). Estado final:
+
+**Cerrado, probado y desplegado** (verificado con `GET /api/health` en
+producción devolviendo el sha del último commit):
+
+- **BLOQUE A entero** (A1–A8). La captura de `factura_emitida` y
+  `pago_recibido`, Carta Porte (clasificador que nunca adivina + los 37
+  campos por responsable + validador + `/dashboard/carta-porte`), la
+  unidad ligada por las tres vías, alta/edición de unidades, la pantalla
+  de llaves de API, el ingreso en WhatsApp/Excel, y el `409 conflicto`.
+- **BLOQUE B entero** (B1–B8). Peajes ejecutable con barrido,
+  `escalado` y `cola_atorada` (facturas) emitidos con sus pares en
+  CON_EMISOR, bitácora de corridas (0102) con ficha en 4 agentes,
+  estrategia editable donde hay perilla real (horas de escalación y
+  umbral OCR — cobranza ya tenía la suya; peajes/facturas no llevan
+  perillas falsas y el código documenta por qué), «Mándate una prueba»
+  en la pestaña de avisos, el piso de una hora que sobrevive al
+  parpadeo, y el fallo de plataforma que ya no acusa al cliente.
+- **BLOQUE C entero** (C1–C3). Buzón generable/rotable, cofre con
+  captura de credenciales, purga de `correo_procesado` (0101).
+- **BLOQUE D: D1–D5 + D7, y D4 de pilón.** Alertas con ALERTA_EMAIL,
+  fingerprint con código estable, salud-sistema medido, `/api/health`,
+  teléfono del dueño en el alta, `modoEfectivo` en el reporte del cron.
+  **D6 también:** el dueño invita a su contralor desde el panel.
+- **BLOQUE E entero** (E1–E5). Oposición 26-II ejecutable (0100),
+  legales al día, fichas auditadas con test que exige rutas existentes,
+  motores de IVA unificados (`tope_alimentacion.ts`), y la retención
+  prometida con sus purgas reales (0104) y el texto corregido al CFF 30.
+- **BLOQUE F: F1, F2, F4, F5, F6.** F1 resultó FALSA ALARMA con
+  evidencia: 0067–0069 nunca existieron (la numeración saltó); lo real
+  es que los archivos 0078–0085 no están en el ledger de Supabase
+  aunque sus objetos sí viven en producción (verificación 81).
+
+**Sigue vivo:**
+
+- **F3** — un solo portal de autofactura (CAPUFE); sus dos selectores de
+  emisión solo se prueban con un ticket real. No es cerrable sin operar.
+- **La corrida real de punta a punta** — la base sigue en cero; nada de
+  esta ronda ha tocado datos reales y las pruebas verdes no lo
+  desmienten. Sigue siendo obligatoria antes del primer cliente de pago.
+- **Lo que NO es código** (sección de arriba) — intacto, más dos nuevas:
+  `ALERTA_EMAIL` y `LIKIDA_COFRE_LLAVE` en Vercel, y el §14 de /terminos
+  (indemnización unidireccional) como decisión legal.
+
+Migraciones: hasta la **0104**, aplicadas y verificadas (bloques 76–82 de
+`supabase/verificaciones.sql`, cada uno con su corrida real anotada).
+Suite al cierre: **4,205 pruebas verdes en 313 archivos**, tsc limpio,
+eslint 0 errores, cobertura 79.99/85.50/85.93/79.99 sobre 78/84/84/78.
