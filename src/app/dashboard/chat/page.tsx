@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 import { resolverTenantEfectivo } from '@/lib/auth/tenant-efectivo';
 import { puedeVerArea } from '@/lib/auth/visibilidad';
-import { getKpis, getAcreditables, type DashboardKpis, type Acreditables } from '@/lib/likida/analytics';
 import ChatFlota from '../chat';
 
 export const dynamic = 'force-dynamic';
@@ -13,10 +12,12 @@ export const dynamic = 'force-dynamic';
  * de Likida". La composición hero ya vivía en `ChatFlota` (variante 'hero',
  * sobrevivió al borrado porque el componente lo usa también el rail).
  *
- * REGLA DE SEGURIDAD HEREDADA (inventario §12, corregida en su momento):
- * `getKpis`/`getAcreditables` se piden DESPUÉS de `puedeVerArea(rol,
- * 'dinero')` — antes de ese chequeo, un encargado podía leer cifras de
- * dinero por esta pantalla aunque el resto del panel se las negara.
+ * REGLA DE SEGURIDAD HEREDADA (inventario §12): el `puedeVerArea(rol,
+ * 'dinero')` se queda — sin él, un encargado entraba a la caja del analista,
+ * que sí lee cifras de dinero con sus tools. Lo que ya NO se pide aquí es
+ * `getKpis`/`getAcreditables`: existían solo para alimentar el heurístico
+ * local que AUD3 · FE-C1 retiró, y una consulta de dinero que nadie pinta es
+ * superficie sin dueño.
  */
 export default async function PaginaChat({
   searchParams,
@@ -24,19 +25,14 @@ export default async function PaginaChat({
   searchParams: Promise<{ vista?: string; tenant?: string; rol?: string }>;
 }) {
   const sp = await searchParams;
-  const { tenantId, rol } = await resolverTenantEfectivo('/dashboard/chat', sp);
+  const { rol } = await resolverTenantEfectivo('/dashboard/chat', sp);
 
   if (!puedeVerArea(rol, 'dinero')) redirect('/dashboard');
-
-  const [kpis, acred] = await Promise.all([
-    getKpis(tenantId).catch((): DashboardKpis | null => null),
-    getAcreditables(tenantId).catch((): Acreditables | null => null),
-  ]);
 
   return (
     <main className="h-full">
       <div className="rounded-2xl min-h-full hairline flex flex-col" style={{ background: 'var(--g1)' }}>
-        <div className="flex-1 flex flex-col"><ChatFlota kpis={kpis} acred={acred} variante="hero" /></div>
+        <div className="flex-1 flex flex-col"><ChatFlota variante="hero" /></div>
       </div>
     </main>
   );

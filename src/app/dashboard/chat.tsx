@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Send, ArrowUp, Search, Paperclip, Camera, FileImage, X, FileText, History, PencilLine, PanelRightClose, Check } from 'lucide-react';
-import type { DashboardKpis, Acreditables } from '@/lib/likida/analytics';
 import { mxn, litros, numero, fechaCorta } from '@/lib/formato';
 import { useSearchParams } from 'next/navigation';
 import { Logo, LogoIcono } from '../logo';
@@ -10,11 +9,13 @@ import { CampoPixeles } from './pixeles';
 import { Dona, AreaChartSimple } from '../admin/charts';
 
 /**
- * Mismo criterio que admin/chat.tsx: coincidencia de palabras clave contra
- * datos YA calculados en el servidor (`kpis`/`acred`), nunca lenguaje
- * natural a SQL con permisos de servicio. Aquí pesa MÁS que en admin —
- * un tenant real, no solo Javier, podría escribir cualquier cosa en esta
- * caja.
+ * Quien contesta es el analista del servidor (`/api/dashboard/chat`), con
+ * tools de SOLO LECTURA ya filtradas al tenant — nunca lenguaje natural a SQL
+ * con permisos de servicio. Aquí pesa MÁS que en admin: un tenant real, no
+ * solo Javier, puede escribir cualquier cosa en esta caja.
+ *
+ * Y si el analista no contesta, esta pantalla NO contesta por él: ver
+ * `respuestaDelTurno` (AUD3 · FE-C1).
  */
 const PREGUNTAS = [
   '¿Cuánto llevo comprobado?',
@@ -89,78 +90,31 @@ function respuestaDeBloques(bloques: Array<Record<string, unknown>>): Respuesta 
   return { texto: textos.join(' ') || 'Listo.', visuales: visuales.length > 0 ? visuales : undefined };
 }
 
-function responder(pregunta: string, kpis: DashboardKpis | null, acred: Acreditables | null): Respuesta {
-  const q = pregunta.toLowerCase();
-  const sinLiq = { texto: 'Todavía no hay liquidaciones para calcular esto.' };
-  if (q.includes('comprobad') || q.includes('monto')) {
-    if (!kpis) return sinLiq;
-    return {
-      texto: `Llevas ${mxn(kpis.montoComprobado)} comprobados en ${kpis.viajesLiquidados} viaje${kpis.viajesLiquidados === 1 ? '' : 's'}.`,
-      visual: {
-        tipo: 'tabla',
-        filas: [
-          ['Monto comprobado', mxn(kpis.montoComprobado)],
-          ['Viajes liquidados', numero(kpis.viajesLiquidados)],
-          ['Con diferencias', numero(kpis.conDiferencias)],
-          ['Por revisar', numero(kpis.porRevisar)],
-          ['Dinero observado', mxn(kpis.diferenciaDetectada)],
-        ],
-      },
-    };
+/** El turno que NO trajo bloques del agente no se contesta: se declara.
+ *
+ *  AUDITORÍA 3 · FE-C1. Aquí vivía `responder()`, un heurístico de palabras
+ *  clave sobre los KPIs ya cargados en la página. El endpoint transmite NDJSON
+ *  y cuando el analista truena manda `{t:'error'}` DENTRO de un stream con
+ *  HTTP 200: `resp.ok` era true, `d.bloques` no existía, y el cliente caía al
+ *  heurístico. Preguntabas "¿cuánto le debo a Pedro este mes?" y la pantalla
+ *  contestaba con el comprobado histórico de toda la flota, con cara de
+ *  respuesta, sin decir que el análisis había fallado.
+ *
+ *  Nunca inventar una cifra, y fallar cerrado y decirlo. Si el agente no
+ *  contestó, no hay respuesta — hay un aviso. */
+export function respuestaDelTurno(
+  ok: boolean,
+  d: Record<string, unknown> | null,
+): Respuesta {
+  if (ok && d && Array.isArray(d.bloques)) {
+    return respuestaDeBloques(d.bloques as Array<Record<string, unknown>>);
   }
-  if (q.includes('diferencia') || q.includes('revisar')) {
-    if (!kpis) return sinLiq;
-    const limpias = Math.max(0, kpis.viajesLiquidados - kpis.conDiferencias - kpis.porRevisar);
-    return {
-      texto: `${kpis.conDiferencias + kpis.porRevisar} liquidaciones tienen diferencia o están por revisar, de ${kpis.viajesLiquidados} en total.`,
-      visual: kpis.viajesLiquidados > 0
-        ? { tipo: 'dona', segmentos: [
-            { etiqueta: 'Sin diferencias', valor: limpias },
-            { etiqueta: 'Con diferencias', valor: kpis.conDiferencias },
-            { etiqueta: 'Por revisar', valor: kpis.porRevisar },
-          ] }
-        : undefined,
-    };
-  }
-  if (q.includes('diesel') || q.includes('diésel') || q.includes('litro')) {
-    if (!acred) return { texto: 'Todavía no hay datos de diésel este periodo.' };
-    return {
-      texto: `${litros(acred.litrosDiesel)} elegibles para el estímulo este periodo.`,
-      visual: { tipo: 'cifra', valor: litros(acred.litrosDiesel), nota: 'LIF 2026, Art. 20-A — el estímulo en pesos lo fija la cuota DOF de cada semana.' },
-    };
-  }
-  if (q.includes('tasa') || q.includes('cuadre') || q.includes('cuadra')) {
-    if (!kpis) return sinLiq;
-    const limpias = Math.max(0, kpis.viajesLiquidados - kpis.conDiferencias - kpis.porRevisar);
-    return {
-      texto: `Tu tasa de cuadre es ${kpis.tasaCuadre}% — liquidaciones sin diferencias sobre el total.`,
-      visual: kpis.viajesLiquidados > 0
-        ? { tipo: 'dona', segmentos: [
-            { etiqueta: 'Sin diferencias', valor: limpias },
-            { etiqueta: 'Con diferencias o por revisar', valor: kpis.conDiferencias + kpis.porRevisar },
-          ] }
-        : undefined,
-    };
-  }
-  if (q.includes('iva') || q.includes('peaje') || q.includes('caseta') || q.includes('acreditable')) {
-    if (!acred) return { texto: 'Todavía no hay datos de acreditables este periodo.' };
-    return {
-      texto: q.includes('iva')
-        ? `${mxn(acred.iva)} de IVA acreditable este periodo (LIVA, Art. 5).`
-        : q.includes('peaje') || q.includes('caseta')
-          ? `${mxn(acred.peaje)} de peaje acreditable (50%) este periodo — sujeto a elegibilidad.`
-          : 'Esto es lo que llevas de acreditables este periodo:',
-      visual: {
-        tipo: 'tabla',
-        filas: [
-          ['IVA acreditable', mxn(acred.iva)],
-          ['Peaje acreditable (50%)', mxn(acred.peaje)],
-          ['Diésel elegible', litros(acred.litrosDiesel)],
-        ],
-      },
-    };
-  }
-  return { texto: 'Todavía no sé responder eso — pregúntame sobre lo comprobado, diferencias, diésel, IVA, peaje o tu tasa de cuadre.' };
+  const detalle = d && typeof d.error === 'string' && d.error.trim() ? d.error.trim() : null;
+  return {
+    texto: detalle
+      ? `No pude responder eso — el análisis se detuvo: ${detalle}. No te doy una cifra a medias: vuelve a preguntar o revísalo en la pantalla que corresponda.`
+      : 'No pude responder eso — el análisis no terminó. No te doy una cifra a medias: vuelve a preguntar o revísalo en la pantalla que corresponda.',
+  };
 }
 
 /** La pieza visual de una respuesta — tabla chica, dona o cifra grande,
@@ -202,10 +156,8 @@ function VisualRespuesta({ v }: { v: Visual }) {
 }
 
 export default function ChatFlota({
-  kpis, acred, compacto = false, variante = 'panel',
+  compacto = false, variante = 'panel',
 }: {
-  kpis: DashboardKpis | null;
-  acred: Acreditables | null;
   compacto?: boolean;
   /**
    * `panel` — la caja de siempre. La usa el rail del Asistente, que es angosto
@@ -520,9 +472,7 @@ export default function ChatFlota({
       } else {
         d = await resp.json().catch(() => null);
       }
-      const r: Respuesta = resp.ok && d && Array.isArray(d.bloques)
-        ? respuestaDeBloques(d.bloques as Array<Record<string, unknown>>)
-        : responder(q, kpis, acred);
+      const r: Respuesta = respuestaDelTurno(resp.ok, d);
       // El servidor guardó el intercambio (0088) y dice en qué conversación:
       // se ancla para los turnos siguientes y la lista del panel se actualiza
       // localmente (la verdad completa se relee al reabrir la página).
@@ -538,7 +488,7 @@ export default function ChatFlota({
       }
       setHistorial((h) => [...h.slice(0, -1), { q, r }]);
     } catch {
-      setHistorial((h) => [...h.slice(0, -1), { q, r: responder(q, kpis, acred) }]);
+      setHistorial((h) => [...h.slice(0, -1), { q, r: respuestaDelTurno(false, null) }]);
     } finally {
       clearInterval(relojFases);
       setPasosVivos([]);
