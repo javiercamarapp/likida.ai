@@ -2,13 +2,8 @@
 FASE 0 (baseline): saltada (AUDIT_SOLO)
 FASE 1 (auditores): saltada (AUDIT_SOLO)
 FASE 2 (verificación): saltada
-FASE 4 (fixers/fixes) saltada — AUDIT_AUTOFIX=1 aplica con repro, AUDIT_FIX=1 planea
+FASE 4* (fixes APLICADOS)…
+  0 aplicados · 6 falsos · 5 rechazados → docs/auditoria-11/fixes-aplicadas.md
 RUTINAS EXPERTAS: saltadas (AUDIT_SOLO=rutinas)
 FASE 3 (tablero): saltada
-FASE 5 (síntesis con Grok)…
-  docs/auditoria-11/00-SINTESIS.md
-Ronda 11: $0.3794 de $6 tope
-    deepseek/deepseek-v4-flash-0731          $0.0602
-    google/gemini-3.7-flash                  $0.0809
-    deepseek/deepseek-v4-pro-0813            $0.0598
-    x-ai/grok-4.6                            $0.1785
+FASE 5 (síntesis): saltada
