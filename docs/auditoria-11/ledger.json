@@ -1306,6 +1306,24 @@
       "tokIn": 18339,
       "tokOut": 2346,
       "cost": 0.050562
+    },
+    {
+      "t": "2026-08-15T23:31:48.787Z",
+      "ronda": 11,
+      "quien": "sintesis",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 18339,
+      "tokOut": 2665,
+      "cost": 0.052476
+    },
+    {
+      "t": "2026-08-15T23:34:43.723Z",
+      "ronda": 11,
+      "quien": "sintesis",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 18432,
+      "tokOut": 6471,
+      "cost": 0.075498
     }
   ]
 }
