@@ -1,479 +1,396 @@
-# Modelo de datos y esquema — auditoría 3
+# Modelo de datos y esquema — auditoría 3 (pase 3)
 
-**Nota: 5/10** (antes 6). Razón del movimiento: **mirada más profunda** sobre la
-divergencia esquema↔código (no solo "¿la base acepta basura?" sino también "¿la
-base acepta lo que el código escribe?") + **deuda que cobró factura**: las cuatro
-tablas nuevas de la semana (0088–0091) traen bloque de verificación con corrida
-real —eso subió—, pero volvieron a un estándar de restricciones más laxo que el
-de la 0049, y el patrón de FK compuesta de la 0028/0073 se saltó por tercera vez.
+**Nota: 6/10** (antes 5). Razón del movimiento: se atacó y subió · mirada más
+profunda. Sube porque las migraciones nuevas (0098, 0105–0111) son de las
+mejores del repo —dominios cerrados, equivalencias «⇔» con dientes, RLS
+deny-all deliberado, `revoke` en cada `security definer`, y la 0109 existe
+porque la verificación 85 atrapó media firma que la 0107 dejaba pasar— y
+porque el camino del importador de DAT-C1 sí se cerró (`17dd02b`). No sube más
+porque aparecieron **dos casos donde la base es MÁS ESTRICTA que el código**
+—el espejo exacto del «tipo más estricto que la columna», y más caro, porque
+falla en producción y no en `tsc`— y porque la disciplina de FK compuesta que
+la 0028 estableció NO se extendió a las tablas de dinero que estrenaron
+escritor esta semana.
 
-**El riesgo mayor, hoy:** `viaje.operador_id` es `NOT NULL` desde la 0001 y
-NADIE lo relajó, pero tres caminos escritos esta semana —el importador CSV/Excel
-del Kit PoC, `crearViaje` del Despacho y el panel "sin asignar"— están construidos
-sobre la suposición contraria. El importador se cae entero en cuanto un renglón no
-trae operador, y lo hace con un mensaje que culpa al archivo.
+El riesgo mayor del rubro hoy: **hay dos pantallas del panel cuyo guardado la
+base rechaza SIEMPRE** (la estrategia de agentes) o **rechaza en un caso que la
+propia aplicación documenta como válido** (un tope de política en 0). Ninguna
+prueba lo puede ver: el escritor toca Supabase y las suites lo mockean.
 
 ## Hallazgos
 
-### [CRÍTICO] `viaje.operador_id` es NOT NULL y tres caminos del producto escriben NULL
-
-`supabase/migrations/0001_init.sql:49` —
-`operador_id uuid not null references operador(id) on delete restrict`. Verificado
-contra las 91 migraciones: ninguna hace `alter column operador_id drop not null`
-(grep `operador_id` sobre `supabase/migrations/*.sql` solo devuelve la 0001, la
-0040 y dos `alter function`).
-
-El INSERT que el código emite y la base **rechaza**:
-
-```sql
--- lo que arma src/lib/likida/importar_viajes.ts:215
-insert into viaje (tenant_id, folio, origen, destino, fecha_inicio, anticipo, operador_id, estatus)
-values ('<flota A>', 'V-1042', 'Mérida', 'CDMX', '2026-08-05', 8000, NULL, 'abierto');
--- ERROR 23502: null value in column "operador_id" of relation "viaje"
---              violates not-null constraint
-```
-
-Los tres escritores:
-
-| dónde | línea | qué escribe |
-|---|---|---|
-| importador CSV/Excel (Kit PoC) | `src/lib/likida/importar_viajes.ts:215` | `operador_id: f.operadorNombre ? map.get(...) ?? null : null` — `null` **siempre** que el archivo no traiga columna de operador, y `null` cuando el nombre no empata exacto o es ambiguo (`operadoresSinAmarrar`) |
-| Despacho → "Crear viaje" | `src/lib/likida/operacion.ts:566` (`operador_id: v.operadorId \|\| null`), llamado desde `src/app/dashboard/despacho/page.tsx:94` con `texto('operadorId', 64)`, que devuelve `null` si el `<select>` viene vacío | `null` |
-| Despacho → panel "Sin asignar" | `src/lib/likida/operacion.ts:126` — `.is('operador_id', null)` | consulta que **jamás** puede devolver una fila |
-
-Consecuencia, en orden de daño:
-
-1. El importador va en lotes de 100 (`importar_viajes.ts:205`). Un solo renglón sin
-   operador tumba el lote completo con 23502 y devuelve
-   *"Se crearon 0 y el lote que empieza en la fila 1 falló — revisa y vuelve a
-   subir el archivo"*. El archivo está bien; el esquema es el que no admite lo que
-   el código promete.
-2. La misma pantalla imprime, al lado, *"Sin amarrar a un operador (quedaron sin
-   asignar): Juan Pérez"* (`src/app/dashboard/viajes/importar.tsx:62`). **Ese
-   rótulo es falso**: no quedaron sin asignar, no se crearon. Regla del repo
-   "un rótulo tiene que ser verdad".
-3. `ViajeSinAsignar` / `getViajesSinAsignar` / la sección "Sin asignar" de
-   `/dashboard/despacho` son una feature que renderiza vacío para siempre.
-
-Ninguna prueba lo ve: `importar_viajes.test.ts` mockea Supabase, así que prueba el
-mock. Causa raíz probable: la 0047/0048 hicieron `unidad_id` y `cliente_id`
-nullables "a propósito" y se dio por hecho que `operador_id` también lo era; la
-0001 lo puso `not null` cuando el único alta de viajes era la consola.
-
-### [ALTO] `factura_proveedor` (0091) no guarda `tipo_comprobante`: una nota de crédito entra a la cola como factura
-
-`supabase/migrations/0091_factura_proveedor.sql:18-42` — la tabla tiene
-`cfdi_uuid, emisor_rfc, receptor_rfc, fecha, sub_total, iva, total, descripcion,
-conceptos, estado`, y **no** una columna para `@TipoDeComprobante`. El parser sí lo
-lee (`src/lib/likida/intake/cfdi_xml.ts:282`, `tipoComprobante: I|E|P|N|T`) y
-`guardarFacturaProveedor` lo tira: `src/lib/likida/proveedores.ts:83-97` no lo
-inserta, y `src/app/dashboard/agentes/proveedores/page.tsx:64` solo valida
-`xml?.uuid && typeof xml.total === 'number'`.
-
-```sql
--- el XML de una NOTA DE CRÉDITO del taller (TipoDeComprobante="E", Total=4640.00)
-insert into factura_proveedor (tenant_id, cfdi_uuid, emisor_rfc, total, estado, xml_crudo)
-values ('<flota>', 'a1b2…', 'TAL010101AAA', 4640.00, 'pendiente', '<cfdi:Comprobante TipoDeComprobante="E" …/>');
--- ACEPTADO. La fila es indistinguible de una factura de ingreso de $4,640.
-```
-
-Consecuencia: la bandeja se la presenta al humano como una factura por pagar; al
-aprobarla, `aFilaExportProveedor` (`proveedores.ts:169-183`) la emite al layout del
-ERP con `total: 4640` positivo y sin ninguna columna que diga que es un egreso.
-Un abono se importa como cargo. `gasto` sí guarda `tipo_comprobante` desde la 0006;
-el ciclo nuevo no heredó la columna. Causa raíz probable: la 0091 se escribió
-mirando el ciclo de aprobación, no el catálogo `c_TipoDeComprobante`.
-
-### [ALTO] `chat_conversacion` (0088) y `cobranza_contacto` (0089) apuntan a `tenant` SIN `on delete cascade`: borrar una flota revienta
-
-`supabase/migrations/0088_chat_conversaciones.sql:20-21`:
-
-```sql
-  tenant_id uuid not null references public.tenant(id),      -- sin ON DELETE
-  user_id   uuid not null references public.app_user(id),    -- sin ON DELETE
-```
-
-`supabase/migrations/0089_agente_cobranza.sql:47`:
-`tenant_id uuid not null references public.tenant(id),` — también sin acción. Y en
-la MISMA migración, `agente_cobranza_config.tenant_id` (línea 25) **sí** lleva
-`on delete cascade`, igual que `factura_proveedor.tenant_id` (0091:20). O sea: no
-es criterio, es olvido.
-
-```sql
-delete from tenant where id = '<flota que ya usó el chat>';
--- ERROR 23503: update or delete on table "tenant" violates foreign key constraint
---              "chat_conversacion_tenant_id_fkey" on table "chat_conversacion"
-
-delete from app_user where id = '<contador que chateó una vez>';
--- ERROR 23503: … "chat_conversacion_user_id_fkey" on table "chat_conversacion"
-```
-
-Consecuencia: la 0071 existe *exactamente* para que `delete from tenant` sea
-viable (midió 4,696 ms → 900 ms con 34,000 filas hijas) y su encabezado razona
-sobre "las ~20 FK contra `tenant` del esquema" dándolas por `cascade`. Desde la
-0088 ya no lo son: dar de baja una flota, o ejercer la supresión de un usuario del
-lado ARCO (`solicitud_arco`, 0053), falla con un 23503 crudo. En
-`cobranza_contacto` el resultado además es **no determinista**: el `cascade` de
-`viaje` puede vaciarla antes de que corra el chequeo NO ACTION, o no, según el
-orden de disparo de los triggers RI.
-
-### [ALTO] `viaje` no tiene `unique (tenant_id, folio)` y el importador promete que sí
-
-`supabase/migrations/*.sql` — los únicos `unique` sobre folio son
-`factura_folio_unico` (0049:69) y `cotizacion_folio_unico` (0051:105). `viaje` no
-tiene ninguno.
-
-`src/lib/likida/importar_viajes.ts:174-181` lee TODOS los folios existentes, arma
-un `Set` y filtra; `:161` lo declara así: *"Folios que YA existían en la flota —
-el mismo archivo dos veces no duplica"*. Es un read-then-write sin candado.
-
-```sql
--- dos subidas del mismo archivo (doble clic, reintento tras timeout, dos personas)
-insert into viaje (tenant_id, folio, anticipo, operador_id, estatus)
-values ('<A>','V-1042', 15000, '<op>', 'abierto');
-insert into viaje (tenant_id, folio, anticipo, operador_id, estatus)
-values ('<A>','V-1042', 15000, '<op>', 'abierto');   -- ACEPTADO
-```
-
-Consecuencia: dos viajes gemelos. Los comprobantes del chofer se cuelgan de uno
-solo (`getOpenViaje` ordena `created_at desc`) — es *literalmente* el escenario que
-la 0029 documentó y cerró con un índice parcial: el gemelo queda con $15,000 de
-anticipo y cero comprobantes, y al cerrarlo la liquidación acusa al operador de un
-dinero que sí comprobó. Además el anticipo se cuenta dos veces en los KPI. Nota:
-la 0029 (`uq_viaje_abierto_por_operador`) tapa el caso cuando los dos gemelos
-llevan el MISMO operador; no tapa los que se importan sin amarrar ni con operadores
-distintos. Causa raíz probable: cuando se escribió la 0029 nadie insertaba viajes
-desde `src/`; el importador llegó después y trajo su propia garantía en memoria.
-
-### [MEDIO] La 0070 cerró los negativos de `gasto`/`viaje` y saltó `liquidacion` entera
-
-`supabase/migrations/0070_montos_no_negativos.sql:1-11` enumera lo que "el esquema
-YA protegía" (`pago_recibido`, `tarifa`, `factura_emitida`, `cotizacion`,
-`viaje.intake_pendientes`) y agrega `gasto.monto >= 0` y `viaje.anticipo >= 0`.
-`liquidacion` no aparece en ninguna de las dos listas. Lo único que tiene es el
-anti-`NaN` de la 0025 (`liquidacion_montos_no_nan`, 0025:129-130), y ese solo cubre
-tres de las siete columnas de dinero.
-
-```sql
-select guardar_liquidacion_tx('<tenant>', '<viaje>', -50000, 12000, -62000, 'revisar', …);
--- o directo:
-update liquidacion set total_comprobado = -50000, litros_diesel_acreditables = -300,
-                       ieps_acreditable = -900 where id = '…';   -- ACEPTADO
-```
-
-Consecuencia: `total_comprobado`, `ieps_acreditable`, `iva_acreditable`,
-`peaje_acreditable` y `litros_diesel_acreditables` admiten negativos. `diferencia`
-sí puede ser negativa legítimamente (a favor del operador); las otras cinco no
-tienen lectura válida bajo cero. Salen al PDF y a `analytics.ts` (`:631` suma las
-cuatro de acreditamiento para el panel fiscal) sin que nada las frene. Hoy la
-aplicación no las produce —los gastos son `>= 0`— pero un script, la consola o la
-propia RPC (que recibe los totales como parámetros, 0013:26-31) sí. Causa raíz
-probable: la 0070 auditó "las dos columnas que entran a la resta del cuadre" y no
-las columnas donde la resta se GUARDA.
-
-### [MEDIO] `factura_proveedor` sin las coherencias que la 0049 sí exigió a `factura_emitida`
-
-`supabase/migrations/0091_factura_proveedor.sql:30-42` vs
-`supabase/migrations/0049_cobranza_factura_emitida_pago.sql:47-58`. La 0049 puso
-`factura_importes_positivos`, `factura_total_cuadra` (`abs(total-(subtotal+iva)) <= 0.01`)
-y `factura_borrador_sin_uuid`. La 0091 no puso ninguna de las tres.
-
-```sql
-insert into factura_proveedor
-  (tenant_id, cfdi_uuid, sub_total, iva, total, conceptos, estado, decidido_por, decidido_en, xml_crudo)
-values
-  ('<flota>', 'aaaa…', 100.00, 16.00, -8000.00, 0, 'aprobada', NULL, NULL, '<x/>');
--- ACEPTADO: total negativo, total ≠ sub_total+iva, 0 conceptos,
--- y una factura APROBADA sin quién la aprobó ni cuándo.
-```
-
-Consecuencia: el layout al ERP (`aFilaExportProveedor`) emite `aprobada_por: ''` y
-`aprobada_en: ''` para una fila marcada `aprobada`. La 0091 se escribió justo bajo
-LFPDPPP 26-II ("el agente prepara y marca, la persona decide") y la base no puede
-demostrar que hubo persona. El repo ya tiene el patrón exacto en cuatro sitios
-(`factura_saas_pagada_coherente` 0052, `comprobante_huerfano_cierre_coherente`
-0073:70-72, `incidencia_cierre_coherente` y `ticket_cierre_coherente` 0051). Causa
-raíz probable: tabla nueva escrita sin releer las coherencias de su tabla espejo.
-
-### [MEDIO] `agente_cobranza_config.tiers`/`dias_semana` son jsonb sin esquema, y el fallback es FAIL-OPEN
-
-`supabase/migrations/0089_agente_cobranza.sql:29,33`:
-`tiers jsonb not null default '[3, 7, 14]'` y
-`dias_semana jsonb not null default '[1,2,3,4,5,6]'`. Sin CHECK: ni "es array", ni
-"son enteros", ni rango. `hora_inicio`/`hora_fin`/`instrucciones`/`firma` sí lo
-tienen — la validación se detuvo justo antes de las dos columnas que no son
-escalares. El repo ya resolvió este mismo problema con el trigger
-`config_tenant_valida` para `tenant.config` (0026:325-336, redefinido en 0082/0083/0085).
-
-```sql
-update agente_cobranza_config
-   set activo = false,           -- la flota APAGÓ el agente
-       tiers  = '[]'::jsonb      -- y alguien/algo dejó el jsonb ilegible
- where tenant_id = '<flota>';
--- ACEPTADO
-```
-
-Consecuencia (leída en `src/lib/likida/agentes/cobranza.ts:41-56`): `validarConfigCobranza`
-devuelve `{error}` porque `tiers.length === 0`, y `leerConfigCobranza` **cae a
-`CONFIG_COBRANZA_DEFAULT`**, que trae `activo: true`
-(`agentes/cobranza_pura.ts:30-38`). El agente que la flota apagó vuelve a
-encenderse solo y empieza a mandar WhatsApp a los choferes con los tiers [3,7,14].
-Eso es fallar ABIERTO, y el repo se define por lo contrario. (Con
-`tiers = '{"a":1}'` el `.map` sobre un objeto lanza `TypeError` y la página del
-agente cae con el error boundary — ahí sí falla cerrado, por accidente.)
-
-### [MEDIO] Tercera reincidencia del patrón de FK compuesta: `cobranza_contacto` no ancla su tenant al del viaje
-
-`supabase/migrations/0089_agente_cobranza.sql:46-48` — `tenant_id` y `viaje_id`
-son dos FK simples e independientes. La 0028 declaró CRÍTICA esta clase de defecto
-y creó `viaje_id_tenant_key` (`unique (id, tenant_id)`) precisamente para poder
-apuntarle; la 0073 la aplicó a `comprobante_huerfano` porque *"nació DESPUÉS de la
-0028 y se saltó el patrón"*. La 0089 nació después de las dos y volvió a saltárselo.
-
-```sql
-insert into cobranza_contacto (tenant_id, viaje_id, tier, enviado)
-values ('<flota A>', '<viaje de la flota B>', 3, true);   -- ACEPTADO
-```
-
-Consecuencia: la fila es invisible para B (`bitacoraCobranza` filtra por
-`tenant_id`, `cobranza.ts:348-352`) y **consume el candado** `unique(viaje_id, tier)`
-del viaje de B — el agente de B nunca contactará a ese chofer en ese tier y no
-habrá rastro de por qué. El claim anti-doble-envío se puede envenenar desde otra
-flota. Causa raíz probable: la migración se escribió copiando la forma de
-`comprobante_huerfano` (0040), no la de su corrección (0073).
-
-### [MEDIO] `uq_gasto_cfdi_uuid` es sensible a mayúsculas y hay dos escritores con normalización distinta
-
-`supabase/migrations/0065_cfdi_de_varias_casetas.sql:69` —
-`create unique index uq_gasto_cfdi_uuid on public.gasto (tenant_id, cfdi_uuid, cfdi_orden) where cfdi_uuid is not null`,
-sobre el texto crudo. No hay ningún `lower(cfdi_uuid)` ni CHECK de forma en las 91
-migraciones (grep confirmado).
-
-Los dos escritores no coinciden:
-- OCR: `src/lib/likida/intake/ocr.ts:291` — `data.cfdi_uuid.toLowerCase()`.
-- XML: `src/lib/likida/intake/cfdi_xml.ts:291` — `uuidRaw.toLowerCase()`.
-- **Portal de autofacturación**: `src/lib/likida/facturacion/adaptadores/playwright_base.ts:389`
-  devuelve `bruto.trim()` — el texto tal cual lo pinta el portal, y el folio fiscal
-  se publica en MAYÚSCULAS por convención del SAT. De ahí va sin tocar a
-  `escribirUuid` (`al_vuelo.ts:518`).
-
-```sql
--- el gasto que autofacturó el portal
-update gasto set cfdi_uuid = '9A1B2C3D-4E5F-6789-ABCD-EF0123456789', cfdi_orden = 1 where id = 'g1';
--- el mismo CFDI que después llega por XML/foto
-insert into gasto (tenant_id, viaje_id, concepto, monto, cfdi_uuid, cfdi_orden)
-values ('<A>','<v>','caseta', 187.00, '9a1b2c3d-4e5f-6789-abcd-ef0123456789', 1);
--- ACEPTADO: el índice único no las ve como la misma llave.
-```
-
-Consecuencia: el comprobante existe dos veces en la base. El motor lo salva —
-`copiasDeComprobante` (`cuadre/engine.ts:155`) y `duplicados.ts:86,101` sí
-minusculizan— así que el PDF de hoy no cobra doble; pero la garantía queda
-delegada al motor, y `escribirUuid` (`al_vuelo.ts:505-531`) **razona sobre el 23505
-de ese índice** para decidir si un CFDI ya se emitió: con la caja distinta el
-choque nunca llega y el mensaje de "ya se emitió" no se dispara. Causa raíz
-probable: la normalización se puso en los dos caminos de intake y no en el tercero,
-que nació dos meses después.
-
-### [BAJO] `llm_costo` acepta lo que su propio consolidado rechaza
-
-`supabase/migrations/0003_costos.sql:14-16` — `tokens_in`, `tokens_out`,
-`costo_usd` sin CHECK. `supabase/migrations/0072_purga_y_consolidado_ia.sql:70-72`
-— `llm_costo_mensual_no_negativo check (llamadas >= 0 and tokens_in >= 0 and tokens_out >= 0 and costo_usd >= 0 and viajes >= 0)`.
-
-```sql
-insert into llm_costo (tenant_id, fase, modelo, tokens_in, costo_usd)
-values ('<A>', 'ocr', 'x', -5000, -0.42);   -- ACEPTADO en el origen
-```
-
-Consecuencia: `consolidar_llm_costo_mensual` (0072:95-112) inserta `sum(costo_usd)`
-en la tabla que sí tiene el CHECK → `check_violation` → `mantenimiento_de_datos`
-aborta y la purga de `wa_mensaje_procesado` del mismo cron no corre. El origen
-acepta lo que el destino rechaza. Causa raíz probable: la 0072 endureció la tabla
-derivada sin volver sobre la fuente.
-
-### [BAJO] `gasto.ocr_confianza numeric(4,3)` sin CHECK 0..1
-
-`supabase/migrations/0001_init.sql:63`. El tipo del dominio dice `0–1`
-(`src/types/likida.ts:46`) y `numeric(4,3)` admite de `-9.999` a `9.999`.
-
-```sql
-update gasto set ocr_confianza = 9.999 where id = '…';   -- ACEPTADO
-```
-
-Consecuencia: el umbral `ocr_baja_confianza` nunca se dispara sobre esa fila, y
-`0064_resumen_por_tenant.sql:196,227` usa `ocr_confianza is not null` como *"la
-prueba de que algo pasó por el Agente OCR"* — una prueba que la base no acota.
-
-### [BAJO] Los hitos de la 0090 no tienen orden ni coherencia entre sí
-
-`supabase/migrations/0090_hitos_viaje.sql:20-23` — tres `timestamptz` sueltos, sin
-CHECK. El propio encabezado (`:16-17`) promete que *"la espera en patio se vuelve
-medible: descarga_en - llegada_en"*.
-
-Camino real por WhatsApp (`hitos_viaje.ts:92-111` sella cada columna
-independiente, sin mirar las otras): el chofer manda "estoy descargando" a las
-11:00 (nunca mandó "llegué") y a las 14:00 manda "ya llegué" →
-`descarga_en < llegada_en`, y la espera en patio sale **negativa**. Hoy solo se
-pinta como bitácora cronológica (`analytics.ts:900-925`), así que el daño es que
-la bitácora se lee al revés; el día que alguien reste las dos columnas, la cifra
-saldrá negativa sin que nada la frene.
-
-### [BAJO] `comprobante_huerfano.gasto` es jsonb sin esquema con un cast ciego a `Gasto`
-
-`supabase/migrations/0040_comprobante_huerfano.sql:38` — `gasto jsonb not null`,
-sin validación. `src/lib/likida/repo.ts:322` y `:394` — `r.gasto as Gasto`, que es
-exactamente el patrón que la 0025 documentó como *"lo lee de vuelta con un cast
-ciego"*. `update comprobante_huerfano set gasto = '{"concepto":"peaje","monto":"mil"}'`
-pasa; `getHuerfanosDeFlota` devuelve `monto: NaN` a la bandeja de la oficina.
-Atenuante real: al adjuntar, `addGasto` sí choca contra `gasto_concepto_dominio`
-y `gasto_monto_no_negativo`, así que la basura no entra al camino del dinero — se
-queda en la pantalla.
-
-### [BAJO] `/dashboard/usuarios` declara cinco roles "que la base admite"; el CHECK admite cuatro
-
-`src/app/dashboard/usuarios/page.tsx:8-18` — *"Los cinco roles que la base admite
-(`app_user.rol`, check constraint)"*, y lista `operador` con el texto *"usa
-WhatsApp y /mis-viajes"*. La 0086 (`0086_retirar_rol_operador.sql:96-98`) dejó el
-dominio en `('superadmin','flota_admin','contador','encargado')` y borró
-`/mis-viajes` el 7-ago. El tipo de TS sí está bien (`RolAppUser`,
-`src/lib/auth/provisionar.ts:16`); la pantalla que lo explica, no. Es un rótulo
-que no es verdad sobre el esquema.
-
-### [BAJO] Las cuatro migraciones nuevas no declaran su reversión
-
-0088, 0089, 0090 y 0091 no tienen la línea `Reversible: …` que la 0025:70, la
-0028:59, la 0029:49 y la 0073 sí traen. Las cuatro *son* triviales de revertir
-(`drop table`, `drop column`); lo que se perdió es la convención de decirlo. La
-0090 es la que más lo necesitaría: revertirla borra tres columnas con datos de
-producción, y ese `drop column` no es reversible.
-
-## Invariantes del código vs. la base
-
-| Invariante que el código asume | Dónde lo asume | ¿La base lo impone? |
-|---|---|---|
-| Un viaje puede existir **sin operador** | `operacion.ts:126,566`, `importar_viajes.ts:215` | ❌ **al revés**: 0001:49 `not null` — el código no puede escribirlo (CRÍTICO) |
-| Un operador tiene un solo viaje abierto | `conv.ts` `getOpenViaje` | ✅ 0029 `uq_viaje_abierto_por_operador` (parcial) |
-| Un viaje tiene una sola liquidación | `guardar_liquidacion_tx` | ✅ 0005:13 `liquidacion_viaje_uidx` |
-| Un CFDI = un gasto por (uuid, orden) | `al_vuelo.ts:505-531` lee el 23505 | ⚠️ 0065:69 — existe, pero **case-sensitive** y hay dos cajas (MEDIO) |
-| El folio de viaje es único en la flota | `importar_viajes.ts:174-181` (read-then-write) | ❌ no existe unique (ALTO) |
-| `gasto.concepto` ∈ los 9 de `ConceptoGasto` | `types/likida.ts:20-25` | ✅ 0025 `gasto_concepto_dominio` |
-| `viaje.estatus` ∈ 3 valores | `types`, `conv.ts` | ✅ 0025 `viaje_estatus_dominio` |
-| `app_user.rol` ∈ 4 valores | `provisionar.ts:16` | ✅ 0086 (la pantalla de usuarios dice 5 — BAJO) |
-| `gasto.monto >= 0`, `viaje.anticipo >= 0` | motor de cuadre | ✅ 0070 |
-| Los totales de `liquidacion` no son negativos | PDF, `analytics.ts:631` | ❌ solo anti-NaN (MEDIO) |
-| Un gasto no entra tras liquidar | `engine`, bandeja | ✅ triggers 0036/0037/0042 |
-| Un huérfano cerrado tiene resolución | `resolverHuerfanos` | ✅ 0073 `comprobante_huerfano_cierre_coherente` |
-| Una factura de proveedor decidida tiene decisor | `proveedores.ts:143-164` | ❌ sin coherencia (MEDIO) |
-| Una factura de proveedor es de INGRESO | cola de aprobación + export ERP | ❌ ni siquiera se guarda el tipo (ALTO) |
-| Un tier se contacta una sola vez por viaje | `cobranza.ts` (claim = insert) | ✅ 0089:57 `unique(viaje_id, tier)` — pero envenenable entre flotas (MEDIO) |
-| `tiers`/`dias_semana` son arrays de enteros en rango | `cobranza_pura.ts:43-68` | ❌ jsonb libre, y el fallback es fail-open (MEDIO) |
-| Toda fila hija cuelga del MISMO tenant que su padre | `getGastos`, KPIs | ⚠️ 4 pares en 0028 + 1 en 0073; falta `cobranza_contacto` (MEDIO) |
-| `ocr_confianza` ∈ [0,1] | `types/likida.ts:46`, `0064:227` | ❌ `numeric(4,3)` a secas (BAJO) |
-| `llegada_en <= descarga_en <= regreso_en` | 0090:16-17 (promesa del encabezado) | ❌ (BAJO) |
-| `llm_costo` no tiene importes negativos | `costos.ts`, panel de IA | ❌ (el consolidado sí — BAJO) |
-| Borrar una flota borra todo lo suyo | 0071 (medido) | ❌ roto por 0088; frágil por 0089 (ALTO) |
-| Una conversación es de un usuario de ese tenant | `conversaciones.ts:45-59,63-93` | ❌ solo la app (ver nota abajo) |
-
-Nota sobre `chat_conversacion`: la FK compuesta contra `app_user (id, tenant_id)`
-**no se puede** poner hoy — `app_user.tenant_id` es NULLABLE (0001:17, `null =
-superadmin`), y una FK compuesta MATCH SIMPLE no comprueba nada cuando una columna
-es NULL. Es la misma razón que la 0028:51 dio para dejar fuera `wa_conversacion`.
-El anclaje doble en `conversaciones.ts` es correcto y está bien argumentado; lo
-anoto como límite conocido, no como hallazgo.
-
-## Embeds ambiguos
-
-Pares con **dos** relaciones (FK simple de la 0001/0040 + FK compuesta de la
-0028/0073). Son **cinco**, los mismos que rompieron el 14-ago:
-
-| par | constraints | embeds en el código | ¿alias? |
+### [CRÍTICO] `tenant.config.agentes` no existe para la base: la estrategia de los agentes NUNCA se puede guardar
+
+`supabase/migrations/0085_fix_config_tenant_valida_tipo.sql:25-27` ×
+`src/lib/likida/config.ts:64` × `src/lib/likida/agentes/estrategia.ts:79-85`
+
+`config_tenant_valida` (última definición: 0085, y el CHECK
+`tenant_config_valida` de `0026_tenant_config_esquema.sql:336` la invoca en
+CADA update de `tenant`) trae una lista blanca de exactamente diez llaves:
+`empresa, politica, tabulador, unidades, catalogoCuentas, salida,
+hidrocarburos, estimulos, validacion, facilidadCombustibleEfectivo`. La llave
+`agentes` **no está**, y `LikidaConfig` (config.ts:64) sí la tiene desde B4
+(`28eec66`).
+
+Escenario: el dueño de la flota abre `/dashboard/agentes/conductores`, teclea
+`8` horas de escalación y guarda.
+`guardarEstrategiaAgente` arma `fusionarConfig(actual, { agentes: {conductores:{horasEscalacion:8}} })`
+(estrategia.ts:79) y hace `update tenant set config = …`. El CHECK evalúa
+`config_tenant_valida` y **lanza**:
+`tenant.config trae la llave "agentes", que CuadraConfig no conoce. Las válidas son: empresa, politica, …`
+(0085:53-55). supabase-js lo entrega por valor → `errUpd` →
+`throw new Error` (estrategia.ts:85) → la página lo traduce a un mensaje
+genérico (`conductores/page.tsx:66`). Lo mismo con el umbral de confianza en
+`/dashboard/agentes/liquidacion` (`liquidacion/page.tsx:91`).
+
+Consecuencia: dos perillas anunciadas como editables ("estrategia editable
+donde hay una perilla que un motor de verdad lee") **nunca guardan nada**.
+El motor sigue corriendo con los defaults de `DEMO_CONFIG` (5 h, 0.85) y el
+dueño ve un error opaco cada vez. En un demo, es un botón que falla en vivo.
+Ninguna prueba lo detecta: `estrategia.test.ts:5-7` dice explícitamente "el
+escritor toca Supabase y no se prueba contra un mock", y `verificaciones.sql`
+no tiene un solo bloque que compare `llaves_ok` contra `LikidaConfig`.
+
+Causa raíz probable: la lista blanca de la 0085 es una copia manual del tipo de
+TypeScript y nada la ata a él; el commit que agregó `agentes` al tipo no tocó
+la base.
+
+### [ALTO] Un tope de política en `0` es válido para la aplicación y prohibido por la base — y tira TODA la política capturada
+
+`supabase/migrations/0085_fix_config_tenant_valida_tipo.sql:116-117` ×
+`src/lib/likida/administracion.ts:267-271` × `administracion.ts:385-388`
+
+La base: `if jsonb_exists(e,'topeMonto') and (e ->> 'topeMonto')::numeric <= 0 then raise exception … 'tiene que ser mayor que cero'`.
+La aplicación, en el mismo repo y con comentario propio:
+`if (!Number.isFinite(p.topeMonto) || p.topeMonto < 0) throw …` y acto seguido
+*"Un tope de 0 es una decisión válida (no se permite el concepto), pero se
+distingue de «sin tope», que es `undefined`"*. `armarPolitica` (administracion.ts:385)
+acepta `0` con la misma regla `n < 0`.
+
+Escenario: el dueño abre `/dashboard/politicas`, quiere prohibir el concepto
+`alimentacion` y teclea `0` en su tope (que es exactamente lo que el comentario
+del repo dice que significa), ajusta de paso `diesel` a `12000` y guarda.
+`armarPolitica` pasa, `guardarPolitica` pasa, el `update tenant` **rebota** con
+`tenant.config->politica: el topeMonto de "alimentacion" es 0 y tiene que ser
+mayor que cero`. `mensajeParaPantalla` lo convierte en un error de pantalla y
+**se pierde también el `12000` de diesel**: el formulario escribe la política
+completa de una vez (`politicas/page.tsx:94-100`).
+
+Consecuencia: la pantalla de política —el corazón configurable del motor de
+cuadre— tiene un valor que el producto documenta como legítimo y que nunca se
+puede guardar, y el intento se lleva por delante el resto de la captura.
+
+Causa raíz probable: dos definiciones del mismo dominio (`>= 0` en TS, `> 0` en
+plpgsql) escritas en momentos distintos, sin una prueba que las cruce.
+
+### [ALTO] `pago_recibido` no tiene FK compuesta con `tenant_id`: un abono de la flota A liquida la factura de la flota B
+
+`supabase/migrations/0049_cobranza_factura_emitida_pago.sql:96` ×
+`0049:143-145` (la policy) × `0028_fks_con_tenant.sql:93-96` (el patrón que no
+se extendió) × `src/lib/likida/comercial.ts:199` (el lector)
+
+`pago_recibido.factura_id uuid not null references public.factura_emitida(id) on delete cascade`
+— apunta a `(id)`, no a `(id, tenant_id)`. La policy `tenant_finanzas` sólo
+comprueba `tenant_id = any(get_user_tenant_ids()) and ve_finanzas()` sobre la
+fila que se inserta, y la verificación de una FK ignora la RLS. Es
+literalmente el escenario que la 0028 describe y cierra para `gasto` y
+`liquidacion` — sobre una tabla que **estrenó escritor esta semana**.
+
+Escenario, con valores: un `flota_admin` de la flota A (tiene su propio JWT: el
+login es Supabase Auth y la anon key es pública por diseño) hace
+`POST /rest/v1/pago_recibido` con
+`{"tenant_id":"<A>","factura_id":"<uuid de una factura de B>","monto":240000,"fecha":"2026-08-15"}`.
+El `WITH CHECK` pasa (el tenant que escribe es el suyo), la FK pasa (la factura
+existe), `pago_monto_positivo` pasa. Queda una fila con
+`pago_recibido.tenant_id = A` colgada de una factura de B.
+
+Consecuencia para B: `getCobranza(B)` lee la vista `factura_saldo`
+(comercial.ts:199) con `supabaseAdmin()` —service role, **RLS por encima**— y
+la vista suma `pago_recibido` por `p.factura_id = f.id` **sin condición de
+tenant** (0049:128). La factura de B aparece con `pagado = 240,000`,
+`saldo = 0` y `vencida = false`. El contralor de B deja de cobrar un adeudo
+real de $240,000 y nada en su pantalla dice que ese abono no es suyo.
+(La `security_invoker` de la 0054 protege la lectura por PostgREST, no la del
+panel, que va por service role.)
+
+Causa raíz probable: la 0028 cerró las cuatro relaciones "del camino del
+dinero" que existían en julio; `factura_emitida`, `pago_recibido` y
+`factura_viaje` nacieron en la 0049 y nadie repitió el ejercicio.
+
+### [ALTO] `pago_recibido` no tiene llave natural: el doble clic registra dos abonos y la cartera dice cobrado lo que no se cobró
+
+`supabase/migrations/0049_cobranza_factura_emitida_pago.sql:93-109` ×
+`src/lib/likida/facturacion_escritura.ts:384-416`
+
+`registrarPago` LEE la suma de pagos, decide con `evaluarAbono` y DESPUÉS
+inserta. Entre la lectura y el insert no hay candado, y la tabla no tiene un
+solo índice único: `pago_factura_idx` y `pago_tenant_fecha_idx` son ambos no
+únicos, y no hay unique sobre `(factura_id, referencia)` ni sobre
+`(factura_id, fecha, monto)`.
+
+Escenario, con valores: factura de $116,000 emitida. El contador teclea un
+abono de $58,000 y hace doble clic (o el navegador reintenta el server action
+tras un timeout). Las dos invocaciones leen `pagado = 0`, las dos pasan
+`evaluarAbono` (58,000 ≤ 116,000), las dos insertan. Quedan dos filas de
+$58,000: `factura_saldo.pagado = 116,000`, `saldo = 0`, `vencida = false`.
+La factura se cae de la cartera vencida con $58,000 reales sin cobrar. Con el
+abono completo el resultado es peor: `pagado = 232,000`, `saldo = -116,000` —
+un saldo negativo impreso en la pantalla que el contralor cruza contra su
+estado de cuenta.
+
+Consecuencia: el sobrepago que el propio módulo declara que rechaza a
+propósito ("Un pago que rebasa el saldo también: los pagos parciales son la
+norma, los sobrepagos son casi siempre un dedazo") no lo impide nada más que
+un LEE-DECIDE-ESCRIBE sin candado.
+
+Causa raíz probable: la regla anti-sobrepago vive sólo en la aplicación; la
+base no tiene ni unicidad de abono ni forma de expresar "la suma no rebasa el
+total".
+
+### [ALTO] `viaje.operador_id` es NOT NULL y "Por asignar" promete lo contrario — la mitad viva de DAT-C1 · REINCIDENTE
+
+`supabase/migrations/0001_init.sql:49` × `src/lib/likida/operacion.ts:126` ×
+`src/lib/likida/operacion.ts:634` × `src/app/dashboard/despacho/vista.tsx:77`
+
+Lo que SÍ murió con `17dd02b`: `importar_viajes.ts` ahora salta la fila sin
+operador amarrable (`importar_viajes.ts:314-320, 418`), `/v1/viajes` exige
+`operadorId` (`api/v1/viajes/route.ts:192-195`) y `/dashboard/despacho` lo
+exige antes de llamar (`despacho/page.tsx:99-101`). Lo que sigue vivo:
+
+1. `crearViaje` conserva `operador_id: v.operadorId || null` (operacion.ts:634)
+   sobre un `NuevoViaje.operadorId?: string | null` (operacion.ts:507). El tipo
+   dice "opcional, admite null"; la columna dice NOT NULL. La única protección
+   son tres guards escritos a mano, uno por llamador — el cuarto llamador que
+   se escriba (el propio módulo ya tiene `crear_viaje_wa.ts` y `despacho_wa.ts`
+   apuntando aquí) se estrella con 23502.
+2. `getViajesSinAsignar` (operacion.ts:122-138) consulta
+   `.is('operador_id', null)`: **no puede devolver una sola fila jamás**, y su
+   resultado se pinta en Despacho con la leyenda *"Nada sin repartir. **Los
+   viajes que crees sin operador caen aquí.**"* (vista.tsx:77). Es una promesa
+   que el esquema hace imposible, y un cero permanente presentado como
+   medición.
+
+Es exactamente el bug que el propio repo ya diagnosticó y arregló para el otro
+contador del mismo tablero: `operacion.ts:432-441` documenta que `porAsignar`
+"no podía ser distinto de 0 nunca" y por eso pasó a medir `sinUnidad`. La
+consulta gemela se quedó.
+
+Consecuencia: el jefe de tráfico abre Despacho, lee que los viajes sin operador
+caen ahí, y nunca cae ninguno — no porque no los haya, sino porque no pueden
+existir. Y la promesa del tipo (`operadorId?`) invita al siguiente escritor al
+23502 que ya tumbó un lote entero.
+
+Causa raíz probable: la decisión de negocio ("¿un viaje puede nacer sin
+chofer?") está tomada en la base (no) y no en el código, que sigue modelándola
+como sí.
+
+### [MEDIO] `factura_proveedor` acepta importes negativos y sale así al ERP
+
+`supabase/migrations/0091_factura_proveedor.sql:30-34` ×
+`0108_factura_proveedor_flujo.sql:48-63` × `src/lib/likida/proveedores.ts:83-84,138`
+
+`sub_total`, `iva` y `total numeric(12,2) not null` no tienen candado de signo
+—ni de NaN—, y la 0108 agregó cinco constraints nuevas sin agregar éste, aun
+teniendo enfrente a su hermana `factura_emitida`, que sí lo trae
+(`factura_importes_positivos`, 0049:49-50). El filtro de entrada es
+`cfdiIngresable` (proveedores.ts:83-84): `Boolean(xml.uuid) && typeof xml.total === 'number'`.
+El parser hace `parseFloat` (`intake/cfdi_xml.ts:192-196`), así que
+`Total="-5000.00"` entra como `-5000` sin objeción.
+
+Escenario: alguien sube por el panel (o manda al buzón `f-<token>@mail.likida.ai`)
+un XML con `Total="-18500.00"`. La fila entra a la bandeja con
+`total = -18500.00`. Un humano la aprueba porque la pantalla enseña el
+concepto y el emisor, no el signo. `marcarExportadas` (proveedores.ts:452-461)
+la marca y el CSV del escalón 2 la lleva a SAP B1/CONTPAQi con un importe
+negativo en la columna de la cuenta por pagar.
+
+Consecuencia: una cifra negativa en el asiento contable del cliente, generada
+por un archivo que nadie validó contra el SAT antes de aprobar. El contralor
+lo descubre en la conciliación del mes.
+
+Causa raíz probable: la 0091 se escribió antes de la 0070 (que puso los
+candados de signo en `gasto.monto` y `viaje.anticipo`) y nadie volvió a pasar
+por ella cuando la 0108 la amplió.
+
+### [MEDIO] `desglose_peaje_linea.monto` acepta negativos y el parser los produce
+
+`supabase/migrations/0106_desglose_peaje.sql:68` ×
+`src/lib/likida/intake/desglose_peaje.ts:185-190`
+
+`monto numeric(12,2) not null` sin candado de signo, y `montoDeCelda` valida
+con `/^-?\d+(\.\d+)?$/` — el `-?` es explícito.
+
+Escenario: el corte de IAVE trae, como traen todos, sus renglones de ajuste:
+`15/07/2026 · Reverso caseta Tepotzotlán · -189.00`. Entra como una línea más
+con `monto = -189.00`. El cruce (`desglose_peaje.ts:425-500`) la compara contra
+`gasto.monto`, que desde la 0070 es `>= 0`: no hay ningún candidato a menos de
+un centavo ni a menos de un peso, así que cae en `sin_contraparte`.
+
+Consecuencia: el `pctCuadra` del desglose baja por líneas que NO son cruces sin
+comprobante sino créditos del proveedor, y alguien de la oficina va a buscar el
+ticket de una caseta que nunca se pagó. (Refutado el daño fiscal: la bitácora
+RMF 9.1.8 sólo exporta líneas `cuadra`, `desglose_peaje.ts:993-996`, y una
+negativa no puede cuadrar contra un `gasto >= 0`.)
+
+Causa raíz probable: `esFilaDeTotal` cubre los pies de página, pero nadie
+decidió qué significa un renglón de ajuste; el esquema no obliga a decidirlo.
+
+### [MEDIO] Ocho de las veinte migraciones nuevas no se pueden volver a aplicar
+
+`0089_agente_cobranza.sql:24,45` · `0090_hitos_viaje.sql:20` ·
+`0091_factura_proveedor.sql:18` · `0092_viaje_folio_unico.sql:22-23` ·
+`0099_carta_porte_transportista.sql` (los dos `add constraint`) ·
+`0100_oposicion_decision_automatizada.sql` · `0107_talacha_autorizada.sql:38-67` ·
+`0108_factura_proveedor_flujo.sql:38-83` · `0109_firma_sin_medias_tintas.sql:19-20`
+
+`create table public.X` sin `if not exists` (0089, 0091), `add column` sin
+`if not exists` (0090, 0107 ×6, 0108 ×4), `add constraint` sin su
+`drop constraint if exists` (0092, 0099, 0107 ×2, 0108 ×5) y
+`drop constraint` sin `if exists` (0108:80, 0109:20).
+
+Escenario: alguien reconstruye el esquema aplicando `supabase/migrations/*` en
+orden sobre una base que ya trae parte —el caso normal de un entorno de
+pruebas, o de un `apply` que se cortó a la mitad—. Aborta en 0089 con
+`42P07: relation "agente_cobranza_config" already exists`, y si se salta esa,
+en 0092 con `42710`, y en 0107 con `42701: column "monto_estimado" already
+exists`.
+
+Consecuencia: el equipo que mantiene esto no puede reproducir el esquema desde
+cero de forma repetible — y esa incapacidad ya cobró factura una vez, escrita
+en el propio repo (`0065_cfdi_de_varias_casetas.sql:70-77`: "el repo no podía
+reproducir el esquema desde cero"). El patrón idempotente EXISTE y está bien
+hecho en 0025, 0028, 0082-0085, 0093-0098, 0103, 0105, 0106, 0110, 0111; se
+omitió en las otras ocho.
+
+Causa raíz probable: no hay compuerta que corra la carpeta dos veces.
+
+### [BAJO] `incidencia.monto_estimado` es el único `numeric` sin precisión ni candado de signo del esquema
+
+`supabase/migrations/0107_talacha_autorizada.sql:39`
+
+`add column monto_estimado numeric` — sin `(12,2)` como todas sus hermanas de
+dinero, y sin `>= 0`. Hoy el único escritor es
+`talacha_wa.ts:84-100` (`extraerMonto`), que filtra `n > 0` y limita a diez
+dígitos, así que no hay camino vivo que meta basura; `crearIncidencia`
+(operacion.ts:1032) sí escribe `monto_estimado` desde un `NuevaIncidencia` sin
+validación de rango, pero ninguna pantalla lo alimenta todavía.
+
+Consecuencia: el día que la talacha se capture desde el panel, el monto que
+`escalaciones.ts:265` imprime al superadmin (`mxn(t.montoEstimado)`) puede ser
+`-3500` o `0.005`, y el redondeo silencioso que `numeric(12,2)` haría en las
+demás columnas aquí no ocurre.
+
+### [BAJO] Dos FKs a `tenant` sin `on delete` bloquean el borrado de una flota
+
+`supabase/migrations/0089_agente_cobranza.sql:46` (`cobranza_contacto.tenant_id
+uuid not null references public.tenant(id)`, sin acción) ·
+`0105_zona_vendedores.sql:80` (`prospecto.tenant_id uuid references
+public.tenant(id)`, sin acción) · REINCIDENTE (la 0089 venía del pase 2)
+
+Todas las demás tablas del esquema traen `on delete cascade` sobre `tenant_id`.
+Estas dos quedan en `NO ACTION`: un `delete from tenant where id = '<X>'` —el
+camino natural para dar de baja una flota de prueba desde la consola de
+Supabase— rebota con `23503` en cuanto exista un intento de cobranza o un
+prospecto cerrado apuntando a ella. En `prospecto` es defendible (el comentario
+de `vendedor_id` argumenta que borrar cartera debe doler, aunque el argumento
+no se escribió para `tenant_id`); en `cobranza_contacto` es un olvido.
+
+## Invariantes del código que la base NO impone
+
+| Invariante | Dónde lo asume el código | ¿Hay constraint? | Riesgo |
 |---|---|---|---|
-| `gasto → viaje` | `gasto_viaje_id_fkey` + `gasto_viaje_tenant_fkey` (0028:93) | ninguno | — |
-| `liquidacion → viaje` | `liquidacion_viaje_id_fkey` + `liquidacion_viaje_tenant_fkey` (0028:94) | `repo.ts:214`, `analytics.ts:1302,1747`, `fiscal.ts:929`, `api/export/liquidaciones/route.ts:67` | ✅ todos `viaje:viaje_id(...)` |
-| `codigo_pendiente → viaje` | `codigo_pendiente_viaje_id_fkey` + `..._viaje_tenant_fkey` (0028:95) | ninguno | — |
-| `viaje → operador` | `viaje_operador_id_fkey` + `viaje_operador_tenant_fkey` (0028:96) | `analytics.ts:238,912,951,1302`, `escalar_viaje.ts:90`, `avisar_cierre.ts:59`, `fiscal.ts:769,929`, `agentes/cobranza.ts:107,348`, `api/export/liquidaciones/route.ts:67` | ✅ todos `operador:operador_id(...)` |
-| `comprobante_huerfano → operador` | `comprobante_huerfano_operador_id_fkey` (0040:31) + `..._operador_tenant_fkey` (0073:30) | `repo.ts:384`, `repo.ts:1057` (`solicitud_arco`, otro par) | ✅ `operador:operador_id(...)` |
-
-**No queda ningún embed sin desambiguar sobre un par ambiguo.** Barrí las 190
-llamadas a `.select(...)` de `src/` (excluyendo tests) extrayendo cada token
-`nombre(` del string. Los tres únicos embeds sin alias son:
-
-- `src/lib/saas/suscripcion.ts:117` → `plan(nombre)`
-- `src/lib/saas/transferencia.ts:133` → `plan(precio_mensual, moneda, nombre, precio_iva_incluido)`
-- `src/lib/saas/transferencia.ts:350` → `tenant(nombre)`
-
-y los tres son seguros: `suscripcion → plan` es una sola FK
-(`plan_clave text not null references public.plan(clave)`, 0052:54) y
-`factura_saas → tenant` también (0052:87). No hay FK compuesta hacia `plan` ni
-hacia `tenant` en ningún lado.
-
-Riesgo que sí queda: **la próxima FK compuesta rompe embeds a distancia y en
-silencio.** No hay prueba ni bloque de `verificaciones.sql` que ate "pares con dos
-relaciones" ↔ "embeds con alias"; el único guardián hoy es que alguien abra la
-página.
+| Un pago pertenece a una factura de SU MISMA flota | `facturacion_escritura.ts:385-387` (`.eq('tenant_id')` antes de insertar) | **No** — `pago_recibido.factura_id → factura_emitida(id)` (0049:96) | ALTO: la vista `factura_saldo` (0049:128) suma sin tenant y el panel la lee con service role |
+| Una factura pertenece a un cliente de su misma flota | `facturacion_escritura.ts:256-262` | **No** — `factura_emitida.cliente_id → cliente(id)` (0049:31); `cliente` ni siquiera tiene el `unique (id, tenant_id)` que haría posible la FK compuesta | MEDIO |
+| Los viajes que ampara una factura son de su misma flota | `facturacion_escritura.ts:267-276` | **No** — `factura_viaje` no tiene `tenant_id` y su policy sólo mira el de la factura (0049:150-158) | MEDIO: infla `viajesPorFactura` en `libro_viaje.ts:657-665` y reparte el ingreso entre viajes ajenos |
+| La suma de abonos no rebasa el total de la factura | `facturacion_escritura.ts:396-404` (`evaluarAbono`) | **No** | ALTO: ver hallazgo |
+| Un abono no se registra dos veces | ninguna parte — no hay dedup | **No** (ni unique ni idempotencia) | ALTO |
+| `tenant.config` sólo trae llaves de `LikidaConfig` | `config.ts` (el tipo) | Sí, pero **desincronizada**: 0085:25-27 tiene 10 llaves, el tipo tiene 11 | CRÍTICO: ver hallazgo |
+| Un tope de política de 0 es válido | `administracion.ts:267-271` (documentado) | Sí, y **contradictorio**: 0085:116 exige `> 0` | ALTO |
+| Un viaje siempre tiene operador | `despacho/page.tsx:99`, `api/v1/viajes/route.ts:192`, `importar_viajes.ts:314` — tres guards de aplicación | Sí en la base (0001:49 NOT NULL), **no en el tipo** (`NuevoViaje.operadorId?`, operacion.ts:507) | ALTO: 23502 al cuarto llamador |
+| Una línea de desglose y su desglose son de la misma flota | `desglose_peaje.ts:551-559` (mismo `tenantId` en ambos inserts) | **No** — `desglose_id → desglose_peaje(id)` sin tenant (0106:58) | BAJO (tabla deny-all: sólo alcanzable por service role) |
+| Una línea de desglose y su viaje son de la misma flota | `desglose_peaje.ts:685-690` (`.eq('tenant_id')` al buscar candidatos) | **No** — `viaje_id → viaje(id)` (0106:73) | BAJO (mismo motivo) |
+| Un importe de factura de proveedor es positivo | ninguna parte | **No** (0091:30-34) | MEDIO: ver hallazgo |
+| Un importe de línea de peaje es positivo | ninguna parte; el parser lo permite explícitamente (`-?` en el regex) | **No** (0106:68) | MEDIO |
+| `factura_proveedor.origen` está siempre poblado en filas nuevas | `proveedores.ts:113-119` (parámetro obligatorio) | Parcial: el CHECK sólo restringe el dominio, `NULL` pasa | BAJO |
+| `prospecto.tenant_id` se llena al cerrar el trato | **nadie lo escribe** — `cambiarEstadoProspecto` (vendedores.ts:501-506) sólo toca `estado`, `cerrado_en`, `updated_at` | Sí (`prospecto_tenant_solo_cerrado`, 0105:95-96) pero sin escritor | BAJO: la comisión que el `comment on table` promete no tiene de dónde salir |
 
 ## Lo que revisé y está bien
 
-- **Los cuatro bloques nuevos de `verificaciones.sql`** (63–66, líneas 3052–3190):
-  los cuatro traen corrida real fechada con los valores esperados al lado, y
-  prueban lo que solo la base puede probar (CHECK del rol del chat, deny-all,
-  cascade de mensajes, el claim `unique(viaje,tier)`, la ventana `hora_fin > hora_inicio`,
-  el dedup `unique(tenant_id, cfdi_uuid)` de proveedores y su dominio de estado).
-  `migraciones_verificadas.test.ts` obliga a que ninguna migración quede sin
-  decisión, y las 91 la tienen.
-- **RLS**: las 48 tablas creadas llevan `enable row level security`. Comparé la
-  lista de `create table` contra la de `enable row level security` — no falta
-  ninguna. Las cuatro nuevas van deny-all (RLS on, cero policies), que es el
-  criterio correcto para tablas que solo toca el service role, y el bloque 63/64/66
-  lo demuestra con `set local role authenticated`.
-- **0086** reescribió las 22 policies una por una, sin `CASCADE`, contra
-  `pg_policies` en vivo; el dominio de rol quedó consistente con `RolAppUser`.
-- **0049** sigue siendo el mejor ejemplo del repo: `factura_total_cuadra`,
-  `factura_borrador_sin_uuid`, `factura_vence_despues`, `pago_monto_positivo`,
-  `factura_cfdi_unico` parcial. Es el estándar contra el que mido la 0091.
-- **0075** validó las dos `NOT VALID` permanentes y le puso FK a `viaje_lock`.
-- **Unicidades críticas del camino del dinero**: `liquidacion_viaje_uidx` (0005),
-  `uq_viaje_abierto_por_operador` (0029), `uq_gasto_img_hash` por tenant (0027),
-  `wa_conversacion_tenant_tel_uidx` (0005, que respalda el `onConflict` de
-  `despacho_wa.ts:80`), `pod_viaje_unico` (0047), `suscripcion_una_viva` (0052),
-  `factura_cfdi_unico`/`factura_folio_unico` (0049). Todas existen y todas tienen
-  consumidor.
-- **`chat/conversaciones.ts`** ancla `tenant_id` Y `user_id` en las cinco
-  consultas, incluido el `update` de `updated_at`; un `conversacionId` ajeno abre
-  una conversación nueva en vez de escribir en la del otro. Fallar cerrado, bien
-  hecho.
-- **0091** guarda `receptor_es_flota` calculado al ingerir en vez de recalcularlo,
-  y admite `null` cuando no se pudo comparar. Es exactamente la regla de no
-  inventar, aplicada a una bandera booleana.
-- **`decidirFacturaProveedor`** usa `.eq('estado','pendiente')` como candado
-  anti-carrera y lo dice en el mensaje al segundo clic.
-- El rescate de claims huérfanos de `cobranza.ts:199-215` (borrar la fila
-  `enviado=false, detalle IS NULL` de hace más de una hora) es un uso correcto del
-  `unique` como recurso reclamable.
+- **0098 (idempotencia durable).** La llave primaria `(tenant_id, ruta, llave)`
+  con el tenant PRIMERO y el porqué escrito (0098:36-47); `status in (200,201)`
+  para no replayar errores (0098:105-106); `huella ~ '^[0-9a-f]{64}$'`;
+  `length(llave) between 8 and 200` que **coincide** con
+  `LARGO_MIN_LLAVE/LARGO_MAX_LLAVE` del código (`_escritura.ts:369-370`); RLS
+  encendida sin políticas a propósito y explicado (0098:113-122); y el
+  `revoke … from public` que la propia migración documenta como la corrección
+  del único RPC alcanzable por `anon` (0098:159-173). La verificación 75 lo
+  vigila (`verificaciones.sql:3663`).
+- **0109.** Corrige la 0107 de la única forma que sirve: `(decidida) = (hay
+  quién)` y `(decidida) = (hay cuándo)` por separado, porque
+  `false = false` dejaba pasar media firma (0109:5-16). Y llegó porque la
+  verificación 85 falló en su primera corrida real — el bucle de compuerta
+  funciona.
+- **0110.** `interruptor_id_dominio` contra el catálogo REAL de agentes
+  (0110:69-76), `apagado ⇒ motivo no vacío` (0110:79-81), sin filas sembradas
+  (sin fila = encendido), y `impersonacion_dia` con PK `(actor, tenant, día)`
+  que es el dedup, no un contador.
+- **0105.** `prospecto_estado_dominio`, `prospecto_cerrado_coherente` en los DOS
+  sentidos, `prospecto_tenant_solo_cerrado`, `empresa` no vacía (0105:86-99). Y
+  el `alter column tenant_id drop not null` de `agente_corrida` viene con el
+  análisis de qué le pasa a la policy `tenant_lee` con NULL (0105:126-129).
+- **0106.** `desglose_peaje_linea_unica (desglose_id, indice)` es la llave
+  natural que hace idempotente el re-cruce; `estatus` con dominio de tres
+  cubetas; `diferencia` con el `NULL ≠ 0` escrito en el `comment on column`
+  (0106:90-91); `periodo_hasta >= periodo_desde`.
+- **0111.** Los dos índices que faltaban, con la lista de consultas que los
+  piden citada por `archivo:línea` y con la lista de lo que se DESCARTÓ y por
+  qué (0111:60-72). Y dice por qué no va `CONCURRENTLY` y por qué se aplica
+  antes de la firma del cliente.
+- **0054.** `alter view factura_saldo set (security_invoker = true)` cierra la
+  fuga entre inquilinos por PostgREST, con la medición (`via-tabla=1
+  via-vista=2`) en el comentario. Es el único `view` del esquema y está
+  cubierto.
+- **0070.** `gasto.monto >= 0` y `viaje.anticipo >= 0` con el razonamiento de
+  por qué uno no es `> 0`. El camino del cuadre está protegido.
+- **0092.** `unique (tenant_id, folio)` con `NULLS DISTINCT` para que los
+  viajes despachados por WhatsApp (folio NULL) no choquen. Y el código lo usa
+  como árbitro real de la carrera (`_escritura.ts:764-773`), no como
+  decoración.
+- **RLS.** Crucé las 60 tablas del esquema contra los `enable row level
+  security` (incluidos los dos bucles `do $$` de `0001:110-113` y
+  `0047:157-164`): **no queda una sola tabla sin RLS**.
+- **Dominios de `types/likida.ts` vs la base.** `ConceptoGasto` (9 valores) =
+  `gasto_concepto_dominio` (0025:87-88); `EstadoSat` = `gasto_estado_sat_dominio`
+  (0025:93-94) = `factura_proveedor_sat_dominio` (0108:53-54);
+  `EstatusLiquidacion` = `liquidacion_estatus_dominio`. Ningún tipo más
+  estricto que su columna en este archivo.
+- **Unicidades del dinero.** `liquidacion_viaje_uidx` (0005:9),
+  `uq_gasto_cfdi_uuid (tenant_id, cfdi_uuid, cfdi_orden)` (0065:73-74) que
+  admite el reparto CAPUFE sin permitir el duplicado, `factura_cfdi_unico` y
+  `factura_folio_unico` parciales (0049:66-70), `tenant_api_key_hash_unico`,
+  `cobranza_contacto unique (viaje_id, tier)`.
+- **`tenant_api_key.prefijo` sin unique**: refutado como hallazgo — la
+  resolución va por `hash` (que sí es único y con CHECK de forma); el prefijo
+  es sólo la pista de pantalla.
+- **`incidencia_autorizacion_pendiente_idx` parcial** (0107:72-74): correcto,
+  la población grande son las informativas con `autorizacion NULL`.
 
 ## Lo que NO alcancé a revisar
 
-- **Las funciones `SECURITY DEFINER`** por dentro: `guardar_liquidacion_tx` (0013,
-  0021, 0022), `enriquecer_gasto_atomico` (0017), `intake_delta` (0031),
-  `sumar_combustible_ejercicio` (0084), `config_tenant_valida` (0026/0082/0083/0085),
-  `try_lock_viaje` (0005). Leí sus encabezados y sus `grant/revoke`, no su cuerpo
-  línea por línea. `config_tenant_valida` es 17 KB de esquema jsonb en tres
-  versiones y merece un pase entero para ella sola.
-- **Los triggers de "no tocar tras liquidar"** (0036, 0037, 0042): confirmé que
-  existen y qué prometen; no verifiqué que cubran todas las columnas que hoy se
-  escriben sobre un gasto (`cfdi_orden` y `autofactura_bloqueo*` son de la 0065,
-  posteriores).
-- **`tenant.config`** como dominio: la política viva de gastos vive ahí y la
-  valida un trigger. No comprobé que el esquema del trigger empate con lo que
-  `getConfig()`/`config.ts` leen hoy.
-- **El grafo completo de `on delete`** de las ~48 tablas. Encontré las tres
-  desviaciones de 0088/0089 comparando contra la 0071; no recorrí las ~45 FK
-  restantes contra `tenant` una por una.
-- **Las tablas vacías a propósito** (`cliente`, `unidad`, `tarifa`,
-  `factura_emitida`, `posicion`, `geocerca`, `cotizacion`): leí sus CHECK y me
-  parecen sólidos, pero no crucé cada uno contra el código que las va a escribir,
-  porque ese código todavía no existe.
-- **`0026`/`0082`/`0083`/`0085`** (la facilidad del 15% de RFA 2026 en la config
-  del tenant): 65 KB entre las cuatro. Es donde vive el dominio de una regla
-  fiscal de dinero y no me dio el tiempo.
+- **`guardar_liquidacion_tx`** y las funciones de 0013/0021/0022 — no abrí su
+  cuerpo en este pase. Es la única escritura transaccional del esquema y la que
+  más invariantes concentra.
+- **Los triggers** (0036 y el de `intake_delta`): sé que existen por los
+  comentarios de `administracion.ts:405-409` y `0025:117-119`, no leí sus
+  definiciones.
+- **`bitacora_auditoria` (0053)** y su promesa de append-only: no verifiqué que
+  no exista policy ni grant de `update`/`delete`.
+- **Las tablas del SaaS** (`plan`, `suscripcion`, `factura_saas`,
+  `envio_mensaje`, `campania`, `solicitud_arco`, `invitacion`): sólo confirmé
+  que tienen RLS, no revisé sus dominios ni sus unicidades.
+- **`storage`**: las políticas de bucket (`gasto.imagen_url`,
+  `incidencia.evidencia_path`, `pod`) viven fuera de `supabase/migrations/` y no
+  las vi.
+- **La base viva.** No hay instancia accesible: todo lo anterior sale de leer
+  el SQL y el código. Los conteos de filas que las migraciones citan
+  ("comprobado contra producción el 14-ago-2026") no los pude reverificar.

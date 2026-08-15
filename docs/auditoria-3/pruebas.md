@@ -1,453 +1,501 @@
-# Pruebas — auditoría 3
+# Pruebas — auditoría 3 (pase 3)
 
-**Nota: 5/10** (antes 6). Razón del movimiento: **deuda que cobró factura + mirada
-más profunda**. La suite creció y el CI mejoró de verdad (`branches: ['**']`:
-ahora corre en cada push de cada rama, que antes no pasaba). Pero los tres ALTOS
-heredados del pase 1 siguen los tres vivos —los 8 fixers en paralelo no dejaron
-commit— y, sobre todo, esta ronda **cerré a mano el chequeo que define el rubro** y
-uno de los seis CRÍTICOS de la ronda está anclado por una prueba que **probé
-empíricamente que sigue verde con la función revertida**. Un CRÍTICO marcado
-CERRADO sobre una prueba que no prueba nada es peor que un CRÍTICO abierto: el
-abierto todavía está en la lista.
+**Nota: 6/10** (antes 5). Razón del movimiento: **se atacó y subió**. La puerta
+de cobertura de CI, que el pase 2 encontró en ROJO, hoy sale **verde** (exit 0)
+y con un umbral más duro; el workflow corre en todas las ramas y recuperó las
+pruebas de tiempo que la instrumentación se saltaba. Pero el hallazgo heredado
+PR-C1 se **confirma**, y la medición por archivo destapa zonas de dinero al
+**0.0%** que ninguna mutación mía puso en rojo.
 
-**El riesgo mayor, hoy:** `54e0648` (REND-C1) está en `00-ESTADO-RONDA.md` como
-"6/6 CERRADOS ✅" y su ancla es decoración demostrada — la concurrencia de
-`enLotes` se puede revertir a serial y las tres pruebas del archivo pasan.
+**El riesgo mayor del rubro hoy:** el arnés protege el *cálculo* del dinero
+(cuadre, libro del viaje, fiscal, `/v1` de escritura: rompí cuatro cosas ahí y
+tres se pusieron rojas) y **no protege la puerta ni la salida** del dinero — las
+cuatro rutas de export, las tres rutas de datos de `/v1` y el módulo del lado
+del ingreso están medidos en 0.0–0.5% de sentencias.
+
+---
+
+## Contexto de la corrida
+
+- **Corrí `npm run test:coverage` UNA vez** (la excepción autorizada). Salida:
+  `329 archivos · 4,500 pruebas verdes · 3 saltadas · exit 0`.
+- **Cobertura hoy vs. umbral de `vitest.config.ts`:**
+
+  | | medido | umbral | |
+  |---|---|---|---|
+  | Statements | **79.04%** (21,966/27,790) | 78 | ✅ |
+  | Branches | **85.11%** (7,812/9,178) | 84 | ✅ |
+  | Functions | **85.81%** (1,125/1,311) | 84 | ✅ |
+  | Lines | **79.04%** | 78 | ✅ |
+
+  **Atribución:** el rojo del pase 2 (59.80% contra umbral 67) **está cerrado**,
+  y no por bajar la vara: `vitest.config.ts` excluyó la categoría
+  `src/app/**/*.tsx` del denominador y **subió** el umbral de 67 a 78. El
+  comentario del config documenta la medición que lo justifica (70 vistas .tsx
+  = 3.59%, el resto = 79.51%). Es un cambio honesto y declarado, no un aflojón.
+  Ver el BAJO-2 para lo que sí cuesta.
+- Rompí **8 funciones** a propósito, corrí sus pruebas sueltas, y **revertí
+  todas** con `git checkout --`. El árbol quedó como lo encontré: `git status`
+  al cierre solo muestra los reportes de los otros once auditores y la
+  desviación preexistente de `package*.json` (el `xlsx` del MAPA).
 
 ---
 
 ## Hallazgos
 
-### [CRÍTICO] La prueba de `enLotes` (REND-C1) es decoración: pasa con la función revertida a serial
+### [ALTO] REINCIDENTE · PR-C1 confirmado: la prueba de `enLotes` es decoración en la dirección que importa
+`src/lib/likida/lotes.test.ts:13`
 
-`src/lib/likida/lotes.test.ts:5` · `it('nunca corren más de N a la vez, y el orden
-de salida es el de entrada')` — y las otras dos del archivo.
+La única assertion de concurrencia es **de un solo lado**:
+`expect(pico).toBeLessThanOrEqual(3)`. Un lote serial tiene `pico = 1`, que
+cumple `≤ 3`.
 
-**Escenario (ejecutado, no supuesto).** Reimplementé `enLotes` como el bucle
-serial que REND-C1 vino a eliminar (`for (const item of items) { try {
-salida.push({ok: await fn(item)}) } catch ... }`) y corrí las siete aserciones del
-archivo tal cual:
+Escenario (corrido, no razonado). Reemplacé el cuerpo de `enLotes`
+(`src/lib/likida/lotes.ts:20-32`) por el bucle serial que REND-C1 existe para
+eliminar:
 
 ```
-VERDE expect(pico).toBeLessThanOrEqual(3)  → pico real = 1
-VERDE orden de salida
-VERDE r[0] === {ok:1}   VERDE r[1].error.message === boom   VERDE r[2] === {ok:3}
-VERDE vacío → vacío     VERDE tamaño 0 lanza «≥ 1»
+for (const item of items) {
+  try { salida.push({ ok: await fn(item) }); }
+  catch (error) { salida.push({ error }); }
+}
 ```
 
-Las tres `it(...)` verdes. La causa es la forma de la aserción: `pico` se compara
-solo contra un **techo** (`toBeLessThanOrEqual(3)`), nunca contra un **piso**. Un
-lote serial da `pico = 1`, que cumple el techo. El orden de salida y el
-best-effort por elemento también los cumple la versión serial —son propiedades
-que la versión rota ya tenía—. La única propiedad que `enLotes` existe para
-garantizar, que corran N a la vez, no tiene una sola aserción.
+Salida real:
 
-**Consecuencia.** El commit dice textual «enLotes es helper compartido con prueba
-propia (pico de concurrencia acotado…)» y sobre esa frase el orquestador marcó
-REND-C1 cerrado. Si alguien simplifica `enLotes` a un `for await` —la
-simplificación más natural que existe, y la que un `/simplify` propondría— el
-consolidado vuelve a los ~300 s contra `maxDuration=120`, muere a la mitad y deja
-gastos sellados sin su fila de línea (el modo de corrupción original), con la
-suite verde y el CI verde.
+```
+ ✓ src/lib/likida/lotes.test.ts (3 tests) 42ms
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+```
 
-**Causa raíz probable.** Se probó el contrato defensivo del helper (techo, orden,
-best-effort) y no la propiedad de rendimiento que motivó escribirlo.
+**Las tres `it` verdes contra el bug original.** Comprobé además la dirección
+contraria para ser preciso: con `Promise.all` sobre todo el arreglo (paralelismo
+sin techo) la primera `it` **sí** falla (`Tests 1 failed | 2 passed`). O sea que
+la prueba vigila "demasiada concurrencia" y es ciega a "ninguna", que es
+exactamente la regresión que ancla.
 
----
+Consecuencia: `enLotes` sostiene tres escrituras de dinero —
+`intake/consolidado.ts:337` (el cruce del consolidado) y
+`intake/desglose_peaje.ts:564` y `:711` (las líneas de peaje) —. El commit
+`54e0648` cita esta prueba como ancla del crítico REND-C1: "1,000 líneas ≈ 300s
+contra `maxDuration=120s`, y morir a la mitad corrompía la conciliación". Si
+alguien revierte a serial, la suite sigue verde, el cron muere a los 120s con la
+conciliación de peajes a medio aplicar, y el contralor cruza contra su ERP un
+desglose incompleto que nadie declaró incompleto.
 
-### [ALTO] Los tres embeds `viaje↔operador` siguen sin ancla — 15 `select` de producción cuelgan de un alias que ninguna prueba mira (REINCIDENTE)
+Causa raíz probable: la assertion mide un techo (`≤ N`) donde el invariante es
+un piso (`== min(N, pendientes)`); nada obliga a que el paralelismo ocurra.
 
-`src/lib/likida/escalar_viaje.test.ts:143` (`const args = (metodo) => …`) y
-`:150` (`it('pide solo los abiertos, sin aceptar, sin escalar y ya avisados')`) ·
-sitios: `escalar_viaje.ts:90`, `avisar_cierre.ts:59`, `agentes/cobranza.ts:107` y
-`:348`.
-
-**Escenario.** El arnés de `escalar_viaje` registra **todos** los métodos de la
-cadena en `filtros` —incluido `select`, en la línea 78— y luego solo consulta
-`args('eq')`, `args('is')`, `args('not')`, `args('lte')` y `args('limit')`.
-`args('select …')` no se consulta nunca. Cambia
-`operador:operador_id(nombre, telefono)` → `operador(nombre, telefono)` en
-`escalar_viaje.ts:90` y las seis `it(...)` del `describe('viajesSinAceptar')`
-siguen verdes: el mock devuelve `lectura` sin mirar la cadena, y quien rechaza el
-embed ambiguo es PostgREST, que en la suite no existe. Verifiqué que **ninguna**
-prueba del repo menciona `operador:operador_id` ni `viaje:viaje_id`
-(`grep -rn … --include=*.test.ts` → 0 resultados) y que no existe archivo de
-embeds. Hay **15** `select` de producción sobre los pares con doble FK de la 0075.
-
-**Consecuencia.** Es literalmente el bug que ya se pagó dos veces el 14-ago:
-página de Cobranza con error boundary, cron de escalación cayendo en silencio
-~216 corridas, aviso de cierre roto. La tercera vez costará lo mismo y la suite
-volverá a decir que todo está bien.
-
-**Causa raíz probable.** El arnés valida los filtros (donde vive el error de
-negocio) y no la proyección (donde vive el error de esquema). REINCIDENTE: PR-A1
-del pase 1, sin tocar.
+*(Bajo la etiqueta de severidad: lo dejo en ALTO y no en CRÍTICO como venía
+heredado, porque la función **hoy es correcta** — no hay dinero mal ahora mismo.
+Lo que existe es una regresión silenciosa habilitada.)*
 
 ---
 
-### [ALTO] Rename a medias `CUADRA_COBERTURA` → `LIKIDA_COBERTURA`: el skip está muerto y su propio centinela no lo detecta (REINCIDENTE)
+### [ALTO] El lado del ingreso (`comercial.ts`) mueve cuatro pantallas de dinero con 0.5% de sentencias cubiertas
+`src/lib/likida/comercial.ts:92`, `:96`, `:157`, `:232`
 
-`vitest.config.ts:35` (`env: { CUADRA_COBERTURA: CON_COBERTURA ? '1' : '' }`) ·
-`src/lib/likida/normas/fundamento.test.ts:148` y
-`src/lib/likida/duplicados.test.ts:151`
-(`it.skipIf(process.env.LIKIDA_COBERTURA === '1')`) ·
-`src/lib/likida/pruebas_en_ci.test.ts:43` y `:51` ·
-`.github/workflows/ci.yml:60,73`.
+Medido: **200 sentencias, 0.5% ejecutadas.** El único test que lo nombra
+(`facturacion_clientes.test.ts:2`) importa **solo un tipo**
+(`import type { FacturaRow }`), no una función. Alimenta
+`/dashboard/clientes`, `/dashboard/rentabilidad`, `/dashboard/soporte` y
+`facturacion_clientes.ts`.
 
-**Escenario.** Lo único que exporta la bandera es `vitest.config.ts:35`, y exporta
-`CUADRA_COBERTURA`. Nada en el repo asigna `LIKIDA_COBERTURA` (verificado por
-grep en todo el árbol). Entonces `process.env.LIKIDA_COBERTURA === '1'` es
-**siempre falso** y las dos pruebas de tiempo **corren instrumentadas** en el paso
-`npm run test:coverage` de CI — exactamente el modo que su autor declaró inválido
-(«el umbral mediría la instrumentación y no el algoritmo»). Para `duplicados` el
-cociente instrumentado es ~9 contra un umbral de 20: el margen se reduce a menos
-de la mitad, en la prueba que el propio archivo documenta que **ya se cayó dos
-veces** por ruido (10.8 y 8.2 el 28-jul). Es una intermitencia latente en el
-camino del dinero (el deduplicador de CFDI).
+Escenario (corrido). Rompí **tres** agregaciones de dinero a la vez:
 
-Y lo que lo hace ALTO en vez de MEDIO: `pruebas_en_ci.test.ts:51` existe
-precisamente como centinela —«hay pruebas que se saltan (si no, esta red sobra y
-hay que borrarla)»— y **no lo detecta**, porque busca la cadena
-`skipIf(...LIKIDA_COBERTURA)` en el texto, no que la bandera se salte de verdad.
-Encuentra 2 archivos, `expect(saltadas.length).toBeGreaterThan(0)` pasa, y el
-centinela escrito para avisar que la red murió certifica que está viva. Los
-comentarios de `ci.yml:60` y `:73` siguen citando el nombre muerto.
+| línea | original | roto |
+|---|---|---|
+| `:157` | `contribucion: round2(ingreso - costoComprobado)` | `ingreso + costoComprobado` |
+| `:232` | `porCobrar: round2(vivas.reduce(...))` | `porCobrar: 0` |
+| `:96` | `round2((filas[0].ingreso / ingresoTotal) * 100)` | `* 1000` |
 
-**Consecuencia.** Dos guardias de ReDoS/crecimiento no lineal corriendo en el
-modo en que sus umbrales no significan nada, y el paso «Pruebas de tiempo (sin
-cobertura)» de CI es trabajo duplicado que ya no recupera nada.
+Salidas reales, dos corridas:
 
-**Causa raíz probable.** El rename de marca tocó los consumidores y no el
-productor, y el centinela vigila el nombre en vez del efecto. REINCIDENTE: PR-A2.
+```
+npx vitest run comercial clientes facturacion rentabilidad cobranza
+ Test Files  23 passed (23)
+      Tests  418 passed (418)
 
----
+npx vitest run src/app/dashboard src/lib/likida/analytics
+ Test Files  28 passed (28)
+      Tests  231 passed (231)
+```
 
-### [ALTO] REND-C2: de las tres piezas del arreglo, solo una está anclada — y el `DELETE` sobre la bitácora es la que no
+**649 pruebas verdes** con la contribución de signo invertido, el "por cobrar"
+clavado en cero y la concentración de cartera diez veces más alta.
 
-`src/lib/likida/agentes/cobranza.ts:208-212` (el rescate de claims huérfanos) y
-`:299-315` (`PLAZO_COBRANZA_GLOBAL_MS` / `ejecutarCobranzaGlobal`) ·
-`src/lib/likida/agentes/cobranza_reloj.test.ts` (tres `it`, todas sobre
-`ejecutarCobranza`).
+Consecuencia: un viaje de $30,000 de ingreso con $22,000 comprobado dejaría de
+mostrar $8,000 de contribución y mostraría **$52,000**; `/dashboard/rentabilidad`
+le enseñaría al contralor un margen de 173%. El "por cobrar" en $0 le dice a la
+flota que no tiene cartera vencida. Es la regla que CLAUDE.md pone primero
+—"nunca inventar una cifra"— sin una sola prueba que la sostenga en este archivo.
 
-**Escenario.** El commit `bb7e228` declara tres piezas. La prueba cubre la (1). La
-(3) es un `DELETE` real sobre `cobranza_contacto` acotado por cuatro filtros
-(`tenant_id`, `enviado=false`, `detalle is null`, `created_at < ahora−1h`). El
-mock de `cobranza_reloj.test.ts:27` declara `delete: chain, is: chain, lt: chain`
-—los tres son no-ops encadenables— y ninguna aserción los mira. Quita
-`.is('detalle', null)` de la línea 211: el `DELETE` empieza a borrar las filas
-legítimas de sin-teléfono y de envío rechazado, que la página enseña como
-bitácora, y el tier se reintenta cada hora contra el mismo chofer. Suite verde.
-Quita `.lt('created_at', …)` de la 212: se borran claims puestos **segundos**
-antes por una corrida solapada y dos crons mandan el mismo mensaje al mismo
-chofer. Suite verde. Quita `.eq('tenant_id', tenantId)`: se borra la bitácora de
-todas las flotas. Suite verde.
-
-La pieza (2) tampoco tiene arnés: `ejecutarCobranzaGlobal` solo aparece
-**mockeada** en `api/cron/escalar/route.test.ts`; el reparto de los 90 s entre
-flotas y el corte limpio entre tenants nunca se ejecutan en la suite.
-
-**Consecuencia.** El único `DELETE` del camino del dinero que este repo hace sin
-intervención humana, sobre la tabla que es el registro de a quién se le cobró y
-cuándo, sin una sola aserción sobre sus filtros.
-
-**Causa raíz probable.** La prueba se escribió contra el síntoma que motivó el
-hallazgo (el reloj) y no contra las dos piezas que el mismo commit agregó.
+Causa raíz probable: el archivo entero es I/O + agregación en la misma función,
+así que no hay nada puro que probar sin un doble de Supabase, y nadie lo escribió.
 
 ---
 
-### [ALTO] `proveedores.ts` (0091): el candado anti-carrera de la aprobación y el filtro por tenant no tienen una sola prueba
+### [ALTO] Las cuatro rutas de export de dinero están al 0.0% — incluida la puerta que cerró un IDOR
+`src/app/api/export/liquidaciones/route.ts:47`
+(gemelas: `export/pdf/[id]/route.ts:63`, `export/facturas-proveedor/route.ts:42`,
+`export/bitacora-peaje/route.ts:30`)
 
-`src/lib/likida/proveedores.ts:71` (`guardarFacturaProveedor`), `:110`
-(`listarFacturasProveedor`), `:143` (`decidirFacturaProveedor`) ·
-`src/lib/likida/proveedores.test.ts` cubre solo los tres helpers puros
-(`leerDescripcionPrimerConcepto`, `compararReceptor`, `aFilaExportProveedor`).
+Medido: **0.0% de sentencias en las cuatro** (42, 106, 59 y 37 sentencias).
+Ningún test del repo importa ninguna de las cuatro rutas.
 
-**Escenario.** `decidirFacturaProveedor` acota su `UPDATE` con
-`.eq('id')`, `.eq('tenant_id', tenantId)` y `.eq('estado', 'pendiente')`. El
-último es, según su propio docstring, «el candado anti-carrera: dos personas
-decidiendo la misma factura — el segundo clic se entera, no pisa al primero».
-Bórralo: el segundo clic sobrescribe `estado`, `decidido_por` y `decidido_en`,
-la pantalla contesta OK, y la factura queda aprobada a nombre de quien la
-rechazó. Borra `.eq('tenant_id')`: la flota A aprueba facturas de la flota B con
-solo tener el UUID. En los dos casos la suite queda verde y `verificaciones.sql`
-bloque 66 tampoco lo ve — ese bloque comprueba dedup, dominio de estado y RLS,
-no el candado ni el acotamiento.
+Escenario (corrido). Neutralicé la puerta de dinero de `export/liquidaciones`
+— la que el propio archivo documenta como el arreglo de la contradicción del
+`encargado` ("`/dashboard/analitica` le escondía la gráfica con 'tu rol no ve
+cifras de dinero' y tres pulgadas más abajo le pintaba el botón que se las daba
+enteras en CSV"):
 
-`guardarFacturaProveedor` escribe `sub_total`, `iva` y `total` de un CFDI de
-proveedor; `listarFacturasProveedor` es lo que alimenta el CSV importable a SAP
-B1 / CONTPAQi. Ninguna de las dos tiene prueba.
+```diff
+- if (!puedeVerArea(t.rol, 'dinero')) {
++ if (false) {
+```
 
-**Consecuencia.** El único agente de esta ronda cuyo entregable es un archivo que
-entra a la contabilidad del cliente, con su decisión humana sin arnés.
+Salida real:
 
-**Causa raíz probable.** Se probó lo que era fácil de probar (funciones puras) y
-se dejó fuera lo que necesitaba un mock de Supabase — el patrón inverso al que
-`repo_escritura.test.ts` sí aplica bien para `addGasto` y `saveLiquidacion`.
+```
+npx vitest run src/lib/auth src/lib/likida/export.test.ts src/app/api
+ Test Files  27 passed (27)
+      Tests  473 passed (473)
+```
 
----
+Consecuencia: un `encargado` (jefe de tráfico) baja el CSV con folio, operador,
+**anticipo, comprobado y diferencia por viaje** de toda la flota. `puedeExportar`
+y `puedeVerArea` tienen sus propias pruebas unitarias
+(`lib/auth/permisos.test.ts`, 6 pruebas, verdes) — lo que nadie prueba es que la
+ruta **se las pregunte**. Esas mismas cuatro rutas cargan otros dos arreglos
+históricos sin ancla: el IDOR del operador bajando el PDF de un compañero, y el
+`.limit(5000)` que recortaba el CSV en silencio (auditoría 12) hoy resuelto con
+`traerTodo` + `LecturaIncompleta`.
 
-### [ALTO] `c8bd2ac` (BE-C1) ancla el cinturón pero no el filtro, contra lo que afirma su commit
-
-`src/lib/likida/agentes/cobranza.ts:116` (`.not('avisado_en', 'is', null)`) y
-`:142` (`if (!v.avisado_en) continue;`) ·
-`src/lib/likida/agentes/cobranza_cola.test.ts:45`.
-
-**Escenario.** El commit dice: «Doble candado: el filtro en la consulta Y el
-cinturón en el bucle, con prueba que alimenta la fila con forma de import
-saltándose el filtro — **quitar cualquiera de los dos la pone roja**». La segunda
-mitad es falsa. El mock de `cobranza_cola.test.ts:29` declara `not: chain` (no-op)
-y devuelve las dos filas siempre. Por construcción, la prueba **no puede ver** el
-filtro de la consulta: quitar `cobranza.ts:116` no cambia una sola aserción. Solo
-el cinturón de la 142 está anclado.
-
-**Consecuencia dos.** El filtro es el que gobierna `vigilados`
-(`cobranza.ts:137`, `vigilados: viajes.length`, calculado **antes** del cinturón)
-y ese número se pinta como KPI «Viajes vigilados» en
-`agentes/cobranza/vista.tsx:63`. Revertido el filtro, el panel cuenta viajes
-importados que el agente nunca va a contactar: un rótulo que deja de ser verdad,
-en la pantalla de un agente que persigue choferes. La prueba asserta
-`paraContactar` y `sinTelefono` y **no** `vigilados`.
-
-**Causa raíz probable.** Un mock que encadena todos los métodos sin registrarlos
-no puede distinguir «el filtro está» de «el filtro no está»; el commit asumió que
-sí.
+Causa raíz probable: la matriz de permisos se prueba como función pura y su
+aplicación en el borde no tiene arnés de ruta en ninguna de las cuatro.
 
 ---
 
-### [MEDIO] `importarViajes` — la escritura que originó BE-C1 no tiene arnés
+### [ALTO] El precio de Stripe se divide entre 100 sin una sola prueba que lo mire
+`src/lib/saas/stripe.ts:164`
 
-`src/lib/likida/importar_viajes.ts:170` · `importar_viajes.test.ts` cubre solo
-`leerCifraImportada`, `leerFechaImportada` e `interpretarFilasViajes`.
+El propio comentario de dos líneas arriba dice: *"`unit_amount` viene en la
+unidad mínima (centavos). Dividir mal es un error…"*. Medido: `stripe.ts` al
+**22.3%** (175 sentencias); `leerPrecio` no está entre las cubiertas.
 
-**Escenario.** La función lee los folios existentes, descarta los repetidos
-(`nuevas = filas.filter(f => !existentes.has(f.folio))`), resuelve operadores por
-nombre exacto e inserta en lotes de 100 con `anticipo: f.anticipo ?? 0`. Quita el
-filtro de dedup: subir el mismo export del TMS dos veces crea 2× viajes con 2×
-anticipo, y todo lo que suma anticipo en el panel (KPIs, rentabilidad, cuadre)
-duplica. Suite verde. Rompe el corte de lotes (`i += 100` → `i += 1000`): el
-timeout a mitad de un lote de 1,000 deja mitad y mitad sin decir cuál mitad, que
-es el modo de falla que el comentario dice estar evitando. Suite verde.
+Escenario (corrido). Borré la división:
 
-**Consecuencia.** El camino por el que entra el histórico de un prospecto —cientos
-de viajes con su dinero— sin una aserción sobre lo que escribe.
+```diff
+- montoMensual: (p.unit_amount ?? 0) / 100,
++ montoMensual: (p.unit_amount ?? 0),
+```
 
-**Causa raíz probable.** Mismo patrón que proveedores: parsers probados, escritura
-no.
+Salida real:
 
----
+```
+npx vitest run stripe suscripcion facturacion saas
+ Test Files  1 failed | 25 passed (26)
+      Tests  1 failed | 420 passed (421)
+```
 
-### [MEDIO] El header de `cobranza.test.ts` cita un arnés manual que no existe (REINCIDENTE)
+El único rojo fue de **otra** mutación que corrí en el mismo pase
+(`facturacion_escritura`, ver abajo). Para el `/100`: **cero pruebas rojas**.
 
-`src/lib/likida/agentes/cobranza.test.ts:7-9`: «Solo el motor PURO: claims,
-envíos y bitácora se prueban con la verificación 64 de la base **y el arnés
-manual** — un mock de Supabase probaría el mock.»
+Consecuencia: `guardarPriceDePlan` (`lib/saas/suscripcion.ts:243→262`) escribe
+`tenant.precio_mensual` con ese valor y `/admin/costos-facturacion` lo imprime
+con `mxn()`. Un plan de $999 MXN se guardaría y se enseñaría como **$99,900.00
+al mes**, leído "de Stripe" — que es la frase exacta que la pantalla usa para
+darle autoridad. Es la cifra que Javier le va a cotizar al primer cliente.
 
-**Escenario.** `ls pruebas-manuales/` da 21 archivos y `grep -rln "cobranza"
-pruebas-manuales/` da **cero**. Existen `e2e-fase2/3/3b/4/5`; la Fase 1 —que es
-Cobranza (commit `3ace888`)— no tiene arnés. La verificación 64 sí existe y es
-buena, pero cubre el `unique(viaje,tier)`, el CHECK de ventana, el deny-all y el
-cascade: no cubre claims, envíos ni bitácora en el sentido del código TS.
-
-**Consecuencia.** Es el mecanismo por el que una zona sin arnés se rate como
-"cubierta por otro camino". Al pase 1 le costó exactamente eso: BE-C1 (CRÍTICO)
-vivía en `colaCobranza`, que este header declaraba probada en otro lado.
-
-**Causa raíz probable.** Se escribió la intención («habrá un arnés manual») como
-si fuera un hecho. REINCIDENTE: PR-A3.
+Causa raíz probable: `leerPrecio` es la única función del módulo que hace
+aritmética y es también la única que se probaría contra un `fetch` doble; no se
+escribió.
 
 ---
 
-### [MEDIO] Las dos rutas de `/api/export` no tienen prueba de sus dos puertas, y la regresión que previenen está documentada
+### [ALTO] El guardia de sobrepago está probado; su llamada, no
+`src/lib/likida/facturacion_escritura.ts:404`
 
-`src/app/api/export/facturas-proveedor/route.ts:26,31` y
-`src/app/api/export/liquidaciones/route.ts` · sin `*.test.ts` en
-`src/app/api/export/`.
+`evaluarAbono` (`:177`) tiene su prueba y es sólida — cuando le rompí la
+condición de sobrepago (`if (monto > saldo + 0.005)` → `if (false)`), la suite
+se puso roja de inmediato:
 
-**Escenario.** El docstring de la ruta nueva dice textual: «la lección
-documentada del IDOR: se acota el tenant y se olvida el rol». Hay dos puertas —
-`puedeVerArea(rol,'dinero')` y `puedeExportar(rol)`. `permisos.test.ts` prueba
-los **predicados** en aislamiento; nada prueba que las **rutas** los llamen. Borra
-las líneas 26-33 de `facturas-proveedor/route.ts` y un rol sin área de dinero se
-baja el CSV de facturas de proveedor con todos sus importes. Suite verde:
-`dinero_por_area.test.ts` es un escaneo de fuente sobre `src/app/dashboard/**`
-(`page.tsx` + `vista.tsx`), no alcanza `src/app/api/**`.
+```
+× evaluarAbono … > el sobrepago se rechaza CON el saldo exacto en el mensaje
+```
 
-**Consecuencia.** La regresión que la ruta cita como lección aprendida puede
-volver sin que nada la detecte.
+Pero el **call site** dentro de `registrarPago` no tiene arnés. Escenario
+(corrido). Comenté la línea 404:
 
-**Causa raíz probable.** El escaneo estructural que sí existe se acotó al panel;
-las rutas de API quedaron fuera de su radio.
+```diff
+- if (abono.rechazo) throw new DatoInvalido(abono.rechazo);
++ // if (abono.rechazo) throw new DatoInvalido(abono.rechazo);
+```
 
----
+Salida real:
 
-### [BAJO] Los guardianes de `formato.ts` fallan ABIERTO: si el `grep` no encuentra nada, pasan
+```
+npx vitest run facturacion clientes rentabilidad
+ Test Files  19 passed (19)
+      Tests  389 passed (389)
+```
 
-`src/lib/formato.test.ts:191` y `:216` — ambos terminan en `|| true`.
+Consecuencia: con esa línea fuera, un pago de $50,000 contra una factura de
+$12,000 se inserta en `pago_recibido` sin rechazo; la factura queda con saldo
+**−$38,000**, `getCobranza` (`comercial.ts:232-233`) resta ese negativo del "por
+cobrar" de toda la cartera, y el contralor ve una cartera $38,000 menor que la
+real. También aplica a los otros tres estatus (cancelada, borrador, pagada) que
+el mismo `if` bloquea. El propio `facturacion_escritura.test.ts:11` lo declara:
+*"Las escrituras (`crearFactura`, `registrarPago`) no se prueban contra un mock
+de Supabase"*.
 
-**Escenario.** `execSync("grep -rl … src/ … || true")` corre en el módulo. Si el
-comando falla por cualquier razón (CWD distinto, `grep` de BSD que no soporta
-`\|`/`\s` en el patrón de `round2`, `src/` inexistente), el `|| true` traga el
-exit code, `archivos` queda `[]`, `fuera` queda `[]` y la aserción
-`toEqual([])` pasa **en verde**. No hay control positivo: nada exige que el grep
-haya encontrado al menos `src/lib/formato.ts`, que sí contiene el literal.
-Comprobé que hoy sí encuentra (8 y 3 archivos respectivamente, todas las
-ocurrencias fuera de `formato.ts` en comentarios, correcto), pero el guardián no
-puede distinguir «no hay violaciones» de «no pude buscar».
-
-**Consecuencia.** La red que protege la regla más citada de CLAUDE.md —una cifra
-fiscal, un solo formateador— se desarma en silencio. Contrasta con
-`pruebas_en_ci.test.ts:51`, que sí tiene centinela de población (aunque el suyo
-esté engañado, ver el ALTO de arriba).
-
-**Causa raíz probable.** `|| true` puesto para tolerar «cero coincidencias»
-también tolera «el comando no corrió».
+Causa raíz probable: la decisión —defendible— de no probar contra un doble de
+Supabase deja sin cubrir el cableado, que es donde vive este modo de falla.
 
 ---
 
-### [BAJO] `8066054` se commiteó con su prueba en rojo y nada lo atrapó
+### [MEDIO] Las tres rutas de datos de `/v1` que no son POST están al 0.0%
+`src/app/api/v1/viajes/[id]/contribucion/route.ts:73`,
+`src/app/api/v1/clientes/route.ts`, `src/app/api/v1/viajes/[id]/route.ts`
 
-`src/app/api/dashboard/chat/costo_parcial.test.ts` · commits `8066054` → `366b66d`.
+Medido: 108, 45 y 89 sentencias, **0.0% las tres**. El contraste importa y hay
+que decirlo: `_escritura.test.ts` (802 líneas, ~50 `it`) y `_comun.test.ts` sí
+ejercen los `POST` de viajes y unidades de punta a punta —tenant desde la
+credencial, idempotencia en tres capas, el 409 del hallazgo A8—, y
+`openapi/route.test.ts:104` exige que *cada método HTTP exportado por una ruta
+v1 esté documentado*. Lo que nadie ejerce son estos tres handlers.
 
-**Escenario.** El propio mensaje de `366b66d` lo confiesa: «El commit anterior
-entró con la prueba roja (**la cadena de grep tapó el exit code**): `validarMensajes`
-exige rol `'usuario'` (no `'user'`) y `acotada()` exige `abortSignal` en el
-builder — el arnés caía al 400/tope y el catch nunca corría». O sea: el arreglo
-de TC-A1 se dio por cerrado durante un commit entero sobre una prueba que ni
-siquiera ejercitaba el `catch` que verificaba. El mismo patrón de `|| true` /
-`| grep` que desarma los guardianes de `formato.test.ts`.
+Escenario: `abrir(req, 'dinero')` en `contribucion/route.ts:73` es lo único que
+separa a un jefe de tráfico del margen por viaje; el propio encabezado del
+archivo declara que es *"la única de las rutas de viaje que la lleva"*. Cambiar
+ese literal a `'operacion'` no pone roja ninguna prueba —el mismo experimento que
+sí corrí sobre `export/liquidaciones`, con 473 verdes—, y una llave de tablero
+pegada en el Grafana de la flota empezaría a devolver ingreso, comprobado y
+margen de cada viaje.
 
-**Consecuencia.** Es la mecánica que produce los otros hallazgos de este reporte:
-si el exit code se pierde, «prueba escrita» y «prueba que pasa» dejan de ser lo
-mismo, y el reporte de cierre no distingue.
+Consecuencia: el área de una ruta pública es un literal de una sola palabra sin
+red; el modo de falla es que se publique y nadie lo note hasta que un
+integrador lo vea.
 
-**Causa raíz probable.** Verificar la suite con la salida canalizada a `grep` en
-vez de con el código de salida.
-
----
-
-## Los 8 arreglos de esta ronda y su ancla
-
-| commit | hallazgo | prueba que lo cubre | ¿fallaría al revertir el arreglo? |
-|---|---|---|---|
-| `c8bd2ac` | BE-C1 · cobranza persigue viajes que Likida nunca avisó | `agentes/cobranza_cola.test.ts` · `it('la fila con forma de import (avisado_en null) no entra a NINGUNA cubeta')` | **PARCIAL.** Sí al quitar el cinturón (`cobranza.ts:142`). **No** al quitar el filtro (`cobranza.ts:116`): el mock declara `not: chain` y devuelve las dos filas igual. El commit afirma que ambos la ponen roja; es falso. Y `vigilados` no se assertea. |
-| `444492a` | OP-C1 · cron responde 200 con el motor reventado | `api/cron/escalar/route.test.ts` · `it('si la ESCALACIÓN revienta: 500…')` + `it('si la COBRANZA revienta: 500 también')` | **Sí.** Volver `status: huboFallo ? 500 : 200` a `200` pone rojas dos `it`. Además fija que el segundo motor corre aunque truene el primero. Ancla limpia. Único hueco: la rama `sin CRON_SECRET → 500` no se ejercita (el env se pone antes del import). |
-| `b31460c` | ARQ-C1 · `diferencias: 0` hardcodeado | `analytics_stats_operador.test.ts` · `it('cada operador trae sus liquidaciones con diferencia real; el redondeo no cuenta')` | **Sí.** Restaurar `diferencias: 0` la pone roja (espera 1 y 1). Cubre el borde de centavos (0.005 no cuenta). Ancla limpia. Hueco menor: el mock ignora `.eq('tenant_id')`, así que una fuga entre flotas en la consulta nueva sería invisible. |
-| `54e0648` | REND-C1 · consolidado serial sin presupuesto | `lotes.test.ts` · las tres `it` | **NO — decoración probada.** Reimplementé `enLotes` como bucle serial y las 7 aserciones dan VERDE (`pico = 1` cumple `toBeLessThanOrEqual(3)`). Además nada ancla el **sitio de llamada**: revertir `consolidado.ts:259-276` al `for` original deja `lotes.test.ts` intacta. |
-| `bb7e228` | REND-C2 · cobranza sin reloj + claims huérfanos | `agentes/cobranza_reloj.test.ts` · 3 `it` | **PARCIAL (1 de 3 piezas).** Pieza 1 (el reloj corta antes del claim): **sí**, quitar el `break` de `cobranza.ts:243` rompe las dos primeras. Pieza 2 (`PLAZO_COBRANZA_GLOBAL_MS` / corte entre tenants): **no**, `ejecutarCobranzaGlobal` solo existe mockeada. Pieza 3 (el `DELETE` de rescate, `cobranza.ts:208-212`): **no**, `delete/is/lt` son no-ops en el mock y ninguna aserción los mira. |
-| `bc3c6c3` | LEG-C1 · visión externa antes del gate de privacidad | `processor_aviso_huerfano.test.ts` · `it('SIN aviso posible (flota sin datos): NI visión NI huérfano — cero tratamiento')` | **Sí.** Bajar el gate por debajo de `if (!viajeId)` hace que la rama huérfana llame `extraerComprobante` y `guardarHuerfano` con `getOpenViaje → null`, y las dos aserciones `not.toHaveBeenCalled()` se ponen rojas. Ejercita `ponerAvisoADisposicion` **real**, no mockeada. La mejor ancla de la ronda. Hueco: solo cubre `type: 'image'`; el XML, el ticket 1:1 y el texto al agente —que el commit dice haber puesto detrás del gate— no se prueban. |
-| `8066054` | TC-A1 · el turno del chat que truena no se cobra | `api/dashboard/chat/costo_parcial.test.ts` · 2 `it` | **Sí, pero solo desde `366b66d`.** Entró en rojo (ver hallazgo BAJO). |
-| `366b66d` | TC-A1 · corrección del arnés | mismo archivo | **Sí.** Quitar el bloque `if (err instanceof PartialExecutionError && …)` de `chat/route.ts` pone roja la primera; quitar la guardia `tokensIn>0 \|\| tokensOut>0` pone roja la segunda. Los dos lados fijados. |
-
-**Resumen:** 4 anclan de verdad · 2 anclan a medias · 1 no ancla · 1 es la
-corrección de otra.
+Causa raíz probable: el arnés de `/v1` se construyó alrededor de los helpers
+compartidos y no de los handlers que no escriben.
 
 ---
 
-## Pruebas que serían decoración
+### [MEDIO] `correo/enviar.ts` — el único camino de salida de correo, al 4.8%
+`src/lib/correo/enviar.ts:63`
 
-Con la función que dicen proteger rota, éstas siguen verdes:
+Medido: 63 sentencias, **4.8%**. Está mockeado en tres pruebas
+(`observability/alerta.test.ts:20`, `agentes/notificaciones_parpadeo.test.ts:125`,
+`agentes/notificaciones_corrida.test.ts:50`) y ejercido en ninguna. El resto de
+`src/lib/correo/` sí está bien probado (7 fuentes, 5 archivos de prueba, y la
+plantilla y el webhook de entrada aguantaron mis mutaciones — ver abajo).
 
-1. **`lotes.test.ts`** — las tres `it`, con `enLotes` revertido a serial.
-   **Demostrado ejecutando**, no razonado.
-2. **`escalar_viaje.test.ts`** — las seis `it` de `describe('viajesSinAceptar')`
-   con el embed devuelto a `operador(nombre, telefono)`. El arnés registra el
-   `select` en `filtros` (línea 78) y nunca lo consulta.
-3. **`cobranza_cola.test.ts:45`** — con `cobranza.ts:116`
-   (`.not('avisado_en','is',null)`) borrado.
-4. **`cobranza_reloj.test.ts`** — las tres, con cualquiera de los cuatro filtros
-   del `DELETE` de `cobranza.ts:208-212` borrado, incluido `.eq('tenant_id')`.
-5. **`pruebas_en_ci.test.ts:51`** (`it('hay pruebas que se saltan…')`) — el
-   centinela pasa hoy mismo, con la bandera que vigila muerta desde el rename.
-6. **`formato.test.ts:191,216`** — las dos, si el `grep` no corre.
-7. **`proveedores.test.ts`** completo — es correcto para lo que prueba, pero
-   `decidirFacturaProveedor` sin `.eq('estado','pendiente')` ni
-   `.eq('tenant_id')` no lo ve nadie.
+Escenario: `destinatarioValido()` y la rama `sin_configurar` deciden si una
+alerta sale o se traga en silencio. El módulo declara explícitamente que *"no
+tira excepción, devuelve un resultado"* — o sea que cualquier regresión ahí es
+callada por diseño y no hay prueba que la vea. Un cambio en el regex de
+`destinatarioValido` (`:59`) que rechazara direcciones con `+` dejaría sin
+alertas a cualquier flota que use `contralor+likida@…`, sin un solo log de error.
 
-Patrón común en 3, 4 y 2: **el mock encadenable universal**
-(`select/eq/in/not/is/lt/limit/order` todos devolviendo `b`). Es cómodo y hace la
-prueba legible, pero por construcción no puede distinguir «el filtro está» de «el
-filtro no está». Donde el arnés sí registra y assertea los argumentos
-(`escalar_viaje.test.ts` con `eq/is/not/lte`, `repo_escritura.test.ts`), las
-pruebas anclan bien.
+Consecuencia: el canal por el que se enteran de que un agente se atoró es el
+menos probado de la superficie de correo nueva.
+
+Causa raíz probable: mockear el emisor es lo correcto para probar a los
+llamadores, pero deja al emisor mismo sin nadie que lo ejerza.
+
+---
+
+### [MEDIO] La cola de timbrado (`cron/facturar/cola`) al 0.0%, junto a un padre que sí está probado
+`src/app/api/cron/facturar/cola/route.ts`
+
+Medido: 54 sentencias, **0.0%**. `cron/facturar/route.ts` sí tiene
+`route.test.ts`; su hermano de cola no. `verificaciones.sql:1938` documenta que
+*"la cola de facturación se bloqueaba a sí misma: el cron elegía los 8 más…"* —
+o sea que esta cola ya tiene un modo de falla pagado en producción, verificado
+del lado de Postgres y sin ancla del lado de TypeScript.
+
+Consecuencia: la reclamación de trabajos de la cola de timbrado puede volver a
+morderse la cola y la suite no lo notaría; el síntoma sería CFDIs que no se
+timbran sin que nadie lo declare.
+
+Causa raíz probable: la ruta se añadió después del test de su padre y no heredó
+arnés.
+
+---
+
+### [MEDIO] `admin/corridas-cruzadas.ts` y `admin/bitacora.ts` al 0.0% — la observabilidad de Javier
+`src/lib/admin/corridas-cruzadas.ts` (71 sentencias, 0.0%),
+`src/lib/admin/bitacora.ts` (28 sentencias, 0.0%)
+
+Los consume `/admin/observabilidad/page.tsx:10-11` y
+`/admin/corridas/[id]/page.tsx:4`. `src/lib/observability/` sí está bien cubierto
+(3 fuentes, 5 archivos de prueba, y `alerta.test.ts` es real). El hueco está en
+la capa de `/admin` que **lee** esas corridas.
+
+Escenario: `trazaDeCorrida` cruza tenants a propósito. Un filtro perdido ahí
+mezclaría corridas de dos flotas en la misma traza que Javier mira para decidir
+si un agente está sano — y la consola de un superadmin es justo donde ese error
+es invisible, porque cruzar tenants ahí es lo esperado.
+
+Consecuencia: la pantalla con la que se opera el producto no tiene red; se
+degrada y se nota tarde.
+
+Causa raíz probable: `src/app/admin/**` quedó fuera del foco de la ronda de
+cobertura, y estos dos son `lib/` que solo consume `admin/`.
+
+---
+
+### [BAJO] Una assertion de tiempo con 4,000 ms de holgura sobre un presupuesto de 1,500 ms
+`src/lib/likida/repo_tope.test.ts:75` y `:87` (gemela en `config_tope.test.ts:61`)
+
+El archivo es bueno —levanta un servidor mudo local, sin red ni gasto, y
+restaura el env en `afterAll` (arreglo de auditoría 8)—. Lo flojo es la
+assertion: con `LIKIDA_TOPE_CONSULTA_MS = '1500'` (`:48`), la comprobación es
+`expect(ms).toBeLessThan(TOPE_CONSULTA_MS + 4_000)`, o sea `ms < 5500`.
+
+Escenario: si alguien subiera el tope efectivo de 1,500 ms a 5,000 ms —una
+regresión de 3.3× sobre el presupuesto que el archivo entero existe para
+defender— la prueba **seguiría verde**. Y el archivo cuesta 6.0 s de reloj real
+en cada corrida (medido: `repo_tope.test.ts (4 tests) 6036ms`).
+
+Consecuencia: deuda. El presupuesto de 120 s del cron se erosiona sin que la
+puerta lo diga, y la suite paga seis segundos por una medición con margen de
+error del 267%.
+
+Causa raíz probable: la holgura se dimensionó para no flakear en un runner
+cargado, y quedó más ancha que la señal que mide.
+
+---
+
+### [BAJO] La puerta de cobertura ya no ve la pantalla, y el número global no lo dice
+`vitest.config.ts` (exclude `src/app/**/*.tsx`, umbral 78/78/84/84)
+
+El cambio es correcto y está documentado con su medición (el config explica que
+el número mezclado *"no medía protección, medía cuánta pantalla se había escrito
+esa semana"*, y subió el umbral de 67 a 78 para endurecer lo que sí se puede
+probar en nodo). Es la razón por la que la puerta hoy sale verde.
+
+Escenario: el efecto lateral es que **79.04%** ya no habla de ~6,269 líneas de
+vista que estaban al 3.59%. Un lector que vea "79%" en el log de CI concluirá
+que cuatro de cada cinco líneas del producto están ejercidas, y para
+`src/app/**/*.tsx` la cifra real sigue cerca de cero. El propio config dice que
+el camino a cubrirlas *"necesita jsdom + testing-library, sesión dedicada
+post-demo"* — o sea que la deuda está rastreada, no cerrada.
+
+Consecuencia: deuda de interpretación. El riesgo es que la puerta verde se lea
+como "la pantalla está cubierta" en la próxima ronda.
+
+Causa raíz probable: la métrica cambió de denominador y el reporte de CI imprime
+un solo número.
+
+---
+
+## Pruebas que resultaron decoración
+
+Rompí **8 funciones** de verdad. Estas son las que la suite **no** atrapó:
+
+| # | Qué rompí | `archivo:línea` | Corrida | Resultado |
+|---|---|---|---|---|
+| 1 | `enLotes` → bucle serial | `lib/likida/lotes.ts:20-32` | `vitest run src/lib/likida/lotes.test.ts` | **3 passed (3)** — decoración |
+| 2 | `contribucion` con signo invertido + `porCobrar: 0` + concentración ×10 | `lib/likida/comercial.ts:157,232,96` | `vitest run comercial clientes facturacion rentabilidad cobranza` | **418 passed (418)** |
+| 2b | (las mismas tres) | ídem | `vitest run src/app/dashboard src/lib/likida/analytics` | **231 passed (231)** |
+| 3 | puerta de dinero del CSV de liquidaciones anulada | `api/export/liquidaciones/route.ts:47` | `vitest run src/lib/auth src/lib/likida/export.test.ts src/app/api` | **473 passed (473)** |
+| 4 | `montoMensual` sin dividir entre 100 | `lib/saas/stripe.ts:164` | `vitest run stripe suscripcion facturacion saas` | **verde para esta mutación** |
+| 5 | rechazo de sobrepago no aplicado en `registrarPago` | `lib/likida/facturacion_escritura.ts:404` | `vitest run facturacion clientes rentabilidad` | **389 passed (389)** |
+
+Y estas **sí** se pusieron rojas — el arnés funciona donde existe:
+
+| # | Qué rompí | Quién lo atrapó |
+|---|---|---|
+| 6 | `proporcionTimbrado` calculada sobre `total` en vez de `totalTimbrado` (reintroduce el CRÍTICO de auditoría 8) | `cuadre/engine.test.ts:1274` — `Expected 700, Received 194.44`. 2 fallos. |
+| 7 | `margenPct` devolviendo `0` en vez de `null` (rompe "null no es cero") | `libro_viaje.test.ts` — **5 fallos** |
+| 8 | tope de tamaño de adjunto del correo entrante anulado (×2 chequeos) | `api/correo/entrante/route.test.ts` — **2 fallos** |
+| 8b | condición de sobrepago de `evaluarAbono` a `false` | `facturacion_escritura.test.ts` — 1 fallo, con el mensaje exacto |
+| 8c | `enLotes` → `Promise.all` sin techo | `lotes.test.ts:13` — 1 fallo (la dirección que **sí** vigila) |
 
 ---
 
 ## Lo que revisé y está bien
 
-- **El CI es fuerte y mejoró esta ronda.** `.github/workflows/ci.yml` corre en
-  `branches: ['**']` + `pull_request`, con `concurrency` que cancela lo viejo:
-  typecheck, lint, tests **con umbral de cobertura**, el paso sin instrumentar, y
-  build. Cinco puertas, sin secretos, en cada push. El comentario que explica por
-  qué dejó de ser `[master, main]` es exacto y el problema que describe (ramas
-  `claude/*` sin correr nada) es real.
-- **El trinquete de cobertura es una puerta, no un número** (`vitest.config.ts:88`,
-  líneas 67 / ramas 84 / funciones 79) y su comentario dice honestamente lo que la
-  métrica **no** prueba («100% de líneas con cero `expect` sigue siendo cero
-  protección»). El `exclude` de `.claude/**` y el razonamiento del worktree
-  duplicado están medidos, no supuestos.
-- **El motor puro del dinero está hondo.** `src/lib/likida/cuadre/` son 26 archivos
-  de prueba; `engine.test.ts` solo lleva 234 `expect`. Cubre bordes de verdad
-  (tolerancia, estímulo de diésel, medio de pago, plazo/jerarquía, RFC no
-  verificable, receptor faltante, flete que no ampara, inyección).
-- **`repo_escritura.test.ts`** es el modelo de cómo se prueba una escritura de
-  dinero: `addGasto` con «un 0 NO se guarda como NULL», «un `false` NO se guarda
-  como NULL», «lo ausente sí va como NULL», y `saveLiquidacion` exigiendo que
-  cierre **por la RPC transaccional** con los doce parámetros en su lugar y que un
-  error de la RPC lance. Si el resto del repo se pareciera a este archivo, el rubro
-  estaría en 8.
-- **Las redes estructurales son inusualmente buenas**, y varias existen porque un
-  hallazgo se repitió tres rondas: `migraciones_verificadas.test.ts` (obliga a que
-  cada migración tome una decisión explícita —bloque o exención con razón—; las
-  exenciones están argumentadas una por una y las 0089/0090/0091 tienen bloque),
-  `dinero_por_area.test.ts` (lee `page.tsx` **y** `vista.tsx` como una superficie,
-  precisamente porque mover una columna de un archivo al otro apagaba el
-  despertador), `politica_un_origen.test.ts`, `copias_un_origen.test.ts`,
-  `marca.test.ts`.
-- **`supabase/verificaciones.sql`** (3,190 líneas, 66 bloques). Los tres nuevos
-  (64 · cobranza 0089, 65 · hitos 0090, 66 · proveedores 0091) traen **corrida real
-  anotada con fecha y valores esperados**, y el patrón `raise exception` para
-  revertir los datos de prueba. Es el sitio correcto para lo que un mock no puede
-  demostrar y está usado como tal.
-- **`pruebas-manuales/` está bien aislado**: `vitest.config.ts` propio, sufijo
-  `.prueba.ts` fuera del include de la suite, y el header de `ci.yml` explica por
-  qué CI no necesita secretos. No corrí ninguno.
-- **`arnes_ticket_real.test.ts`** — el caso que en la auditoría 5 tenía cero
-  `expect` hoy tiene verificadores de forma que valen para cualquier ticket
-  (monto finito y positivo, concepto en catálogo, las tres cubetas **parten** el
-  comprobado sin perder ni inventar pesos) más un caso de oro congelado que corre
-  gratis en CI. La parte que gasta dinero se salta por `TICKET_PATH`, no por
-  fixtures en disco. Es el «1 skipped» de la línea base.
-- **Aserciones flojas: 95 de 5,427** (`toBeDefined/toBeTruthy/not.toThrow/
-  toBeGreaterThan(0)`), ~1.8%. No es un problema sistémico.
-- **Ningún `it.skip` / `describe.skip` / `it.todo` muerto** en las 268 suites.
-- Los tres embeds del pase 1 están **arreglados en el código** y verifiqué que no
-  queda ni un `select` sin alias sobre los pares con doble FK
-  (`grep -oE "\.select\('[^']*(operador\(|viaje\()[^']*'"` → 0). Lo que falta es la
-  prueba, no el arreglo.
+- **CI corre en cada push de cada rama.** `.github/workflows/ci.yml:24-26`
+  (`branches: ['**']`) con `concurrency` que cancela lo viejo. Cinco pasos:
+  typecheck, lint, `test:coverage`, las pruebas de tiempo sin instrumentar, y
+  build. La razón del cambio está escrita: las ramas `claude/*` no corrían nada.
+- **La red que impide que una prueba se pierda bajo `--coverage`.**
+  `src/lib/likida/pruebas_en_ci.test.ts` — cinco `it` que verifican que cada
+  archivo con `skipIf(LIKIDA_COBERTURA)` esté cubierto por el paso
+  `npx vitest run fundamento duplicados` (`:59`), que `vitest.config.ts` exporte
+  **la misma** bandera que los `skipIf` leen (`:78`, el bug PR-A2 del rename del
+  12-ago), y que el paso de umbral siga existiendo (`:90`). Se autoprotege con
+  `expect(saltadas.length).toBeGreaterThan(0)` (`:53`) para no pasar por vacía.
+- **`supabase/verificaciones.sql` está al día**, contra lo que su encabezado
+  sugiere. La cabecera dice "última corrida 31-jul-2026", pero el cuerpo tiene
+  corridas reales contra el proyecto fechadas **14-ago-2026** en al menos ocho
+  bloques (`:3143`, `:3157`, `:3194`, `:3252`, `:3332`, `:3407`, `:3501`,
+  `:3566`, `:3635`, `:3676`, `:3701`, `:3740`). 4,319 líneas.
+- **`src/lib/likida/migraciones_verificadas.test.ts`** obliga a que cada una de
+  las 108 migraciones tome una decisión explícita: bloque en `verificaciones.sql`
+  o exención **con razón escrita**. Lee los TÍTULOS de bloque, no el archivo
+  entero (`:39`), justamente para no dar falsos verdes cuando un bloque
+  *menciona* otra migración en su prosa.
+- **El arnés de `/v1` de escritura es de los mejores del repo.**
+  `src/app/api/v1/_escritura.test.ts` (802 líneas): el tenant sale de la
+  credencial y no del cuerpo (`:204-246`), escribir exige área `administracion`
+  y una llave de tablero no puede (`:263`), la idempotencia en tres capas
+  incluyendo el caso del timeout cruzando instancias (`:332`) y el recuerdo
+  durable purgado (`:357`), el 409 del hallazgo A8 (`:432`), la carrera de dos
+  peticiones simultáneas (`:505`), y un bloque entero de "NUNCA inventar una
+  cifra" que distingue ausente de cero teclado (`:641-682`).
+- **`openapi/route.test.ts:104`** cruza el spec contra las rutas reales: cada
+  método HTTP exportado tiene que estar documentado. Es la clase de red que
+  impide que el contrato público se quede atrás del código.
+- **El motor de dinero aguanta mutación.** `cuadre/` + `fiscal.test.ts`: 430
+  pruebas, y el CRÍTICO de auditoría 8 (el ticket sin timbrar diluyendo la
+  deducción de una comida amparada) tiene su ancla exacta con el valor del bug
+  en el comentario (`cuadre/engine.test.ts:1272-1275`).
+- **`libro_viaje.ts`** — la regla "null no es cero" está anclada con cinco
+  pruebas; es la única de las cuatro reglas duras de CLAUDE.md que resistió mi
+  mutación de forma contundente.
+- **Correo y observabilidad llegaron CON arnés.** `src/lib/correo/` 7 fuentes /
+  5 pruebas, `src/lib/observability/` 3 fuentes / 5 pruebas, y el tope de
+  adjuntos del webhook de entrada se puso rojo al primer intento.
+- **Agentes:** `src/lib/likida/agentes/` tiene 9 archivos de prueba para 5
+  fuentes. `cobranza_pura.ts` aparece sin arnés en un inventario ingenuo, pero
+  `cobranza.ts` lo re-exporta y sus tests lo ejercen — no es hallazgo.
+- **Carta Porte** (superficie nueva de master): `carta_porte.ts` y
+  `carta_porte_datos.ts` tienen sus dos archivos de prueba. Los `.tsx` de
+  `dashboard/carta-porte/` no, pero eso es la categoría excluida a propósito.
+- **`erp.ts`/`gps.ts`/`peaje.ts` (1,363 líneas)** parecen sin arnés y no lo
+  están: son catálogos de datos que `conectores/registro.ts` concatena, y
+  `registro.test.ts` (533 líneas) los ejerce. No es hallazgo.
+- **`pruebas-manuales/`** — 20 arneses `*.prueba.ts` fuera del `include` de
+  vitest, más su propio `vitest.config.ts`. No los corrí. La separación está bien
+  hecha: `ci.yml:1-5` documenta que la suite de CI es offline y sin secretos por
+  eso mismo.
 
 ---
 
 ## Lo que NO alcancé a revisar
 
-- **No corrí la suite** (línea base ya corrida, 11 auditores en paralelo). Todos
-  los «seguiría verde» de este reporte son por lectura del mock y de la aserción,
-  salvo `lotes.test.ts`, que sí **ejecuté** contra una reimplementación serial.
-- Leí en profundidad ~18 de los **268** archivos de prueba. La muestra fue
-  dirigida: los 8 commits de la ronda, los tres ALTOS heredados, y los módulos
-  nuevos de F1-F6. Zonas grandes sin abrir: `src/app/admin/**`,
-  `facturacion/adaptadores/**` (playwright/CAPUFE), `llm/**`, `saas/**`,
-  `intake/**`, y los ~90 archivos de `processor_*` / `conv_*` / `aviso_*`.
-- **`analista.ts` y `chat-tools.ts` no tienen `*.test.ts` propio.** No alcancé a
-  verificar si están cubiertos indirectamente (`tools_cableado.test.ts`,
-  `tools_camino_real.test.ts`, `chat/validacion.test.ts`) o si es un hueco real —
-  es el agente de solo-lectura que contesta preguntas sobre dinero, así que
-  merece una pasada dedicada.
-- **No verifiqué el umbral de cobertura contra la realidad.** No corrí
-  `npm run test:coverage`, así que no sé cuánto margen hay sobre 67/67/84/79 ni
-  qué módulos nuevos de esta ronda entraron sin línea ejecutada.
-- **No revisé si `--coverage` tumba alguna de las dos pruebas de tiempo hoy.** El
-  razonamiento del ALTO de `LIKIDA_COBERTURA` es por lectura (nada asigna la
-  variable) y por los números que el propio repo documenta (~9 contra umbral 20);
-  no lo medí.
-- **Los 25 ALTOS heredados de otros rubros** no los verifiqué salvo los tres
-  míos.
+- **`processor.ts` (2,476 líneas)** al 50.5% junto con `repo.ts`: hay 19
+  archivos `processor_*.test.ts`, pero no medí *cuáles* de sus ramas quedan
+  fuera. Es el corazón del producto y merece una pasada de mutación dirigida
+  propia.
+- **`intake/desglose_peaje.ts` (640 sentencias, 46.2%)** y
+  **`clientes.ts` (474, 40.7%)** — dos módulos grandes a medio cubrir que no
+  muté por tiempo. `desglose_peaje` es además uno de los tres consumidores de
+  `enLotes`.
+- **`facturacion/adaptadores/pagina_playwright.test.ts`** — el único archivo con
+  assertions de reloj de pared largas (`:433`, `:554-558`, `:764`, `:813`, con
+  logs de 7,079 ms). No verifiqué si son intermitentes bajo carga; es el
+  candidato número uno a flakear en un runner de GitHub.
+- **`src/app/**/*.tsx`** — la categoría excluida de la medición. `.test.tsx`
+  existen (`avance-cierre`, `tablero-operacion`) y siguen corriendo, pero no
+  auditté cuántas vistas quedan sin ninguna.
+- **No corrí `verificaciones.sql`** contra la base (no hay credenciales en este
+  entorno). Verifiqué su frescura por fechas de corrida escritas en el archivo,
+  no ejecutándolo.
+- **No corrí `npm run build`** (el MAPA lo prohíbe en la nube), así que no
+  verifiqué el quinto paso del CI.

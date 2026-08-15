@@ -1,335 +1,375 @@
-# Tool calling — auditoría 3
+# Tool calling — auditoría 3 (pase 3)
 
-**Nota: 7/10** (antes 7). Razón del movimiento: **se atacó y subió, y una mirada
-más profunda encontró la misma fuga una llamada más allá**. TC-A1 está vivo,
-anclado y bien puesto (`route.ts:137-146`), y el motor (`openrouter.ts`) sigue
-siendo la pieza mejor probada del repo en su rubro: loop-guard que corta antes
-de pagar, llave de caché por efecto, costo por ronda al precio de esa ronda,
-truncamiento distinguido de terminado, y todo con prueba que reproduce. Lo que
-impide subir a 8: el arreglo de TC-A1 se puso en el borde HTTP, y el borde solo
-ve el error del ÚLTIMO ciclo — `ejecutarAnalista` hace **dos**, y el costo del
-primero se tira cuando truena el segundo. Y las 11 tools nuevas del chat
-entraron sin una sola prueba propia y fuera de la rejilla de caché de lectura,
-por nombre.
+**Nota: 7/10** (antes 7). Razón del movimiento: mirada más profunda · el alto
+reincidente murió, dos nuevos nacieron al lado. La regla estructural
+(`properties: {}` / enums cerrados, tenant y viaje resueltos en servidor)
+**aguantó las once tools nuevas de esta semana**: las catorce están barridas
+abajo, una por una, y ninguna deja que el modelo elija de qué flota ni sobre
+qué fila. Lo que no creció con la superficie fueron las pruebas del
+orquestador: `ejecutarAnalista` **no se ejecuta en una sola prueba** — solo se
+mockea (`src/app/api/dashboard/chat/costo_parcial.test.ts:24`) — y ahí están
+los dos altos.
 
-**El riesgo mayor, hoy:** el tope diario de $1/tenant del chat sigue siendo
-ciego a un camino que se paga y no se registra — el reintento correctivo —, y
-ese camino es repetible a voluntad con la misma pregunta.
+**El riesgo mayor del rubro hoy:** el chat del panel pierde dinero de vista y
+tira respuestas ya pagadas por el camino de excepción — el turno que revienta
+(reintento correctivo o loop-guard) es exactamente el que más gasta, y es el
+único que no se contabiliza entero ni llega a la red determinística.
 
 ## Hallazgos
 
-### [ALTO] TC-A1 REINCIDENTE por la puerta de al lado: el costo del primer turno se pierde cuando truena el reintento correctivo
+### [ALTO] El reintento correctivo del analista tira el costo del PRIMER ciclo cuando truena
+`src/lib/agents/analista.ts:353-382` (la llamada en `:356`) × `src/lib/llm/openrouter.ts:839-842`
 
-`src/lib/agents/analista.ts:315-382` (un `try … finally` sin `catch`; el
-segundo `generateWithTools` en la l.356) · `src/app/api/dashboard/chat/route.ts:137-146`
+Escenario: el contralor pregunta "¿cuánto voy a gastar el mes que entra?".
+Ciclo 1 (`analista.ts:316`) corre 3 rondas — `kpis_flota`, `serie_gasto`,
+`entregar_respuesta` — con ~9,000 tokens de entrada acumulados y ~800 de
+salida: **$0.0041**. La guardia de cifras tumba un monto y entra el reintento
+(`:356`). El reintento vuelve a llamar tools y revienta su `maxToolRounds: 4`
+→ `generateWithTools` tira `LoopGuardError`, que `openrouter.ts:841` envuelve
+en `PartialExecutionError` **con los tokens de ESA invocación y nada más**
+(`tokIn`, `tokOut`, `costo` son locales de la segunda llamada): **$0.0018**.
+`ejecutarAnalista` no tiene `catch` — su `try` solo lleva `finally`
+(`:417-420`) — así que la excepción sube tal cual y `res.cost` de $0.0041
+**nunca existió para nadie**. La ruta (`src/app/api/dashboard/chat/route.ts:151-159`)
+hace lo correcto con lo que le llega y registra $0.0018.
 
-**Escenario.** Un contralor pregunta algo cuya respuesta la guardia de cifras
-tumba — camino previsto y contado (`logger.warn('chat.reintento_correctivo')`,
-analista.ts:355; el comentario de la l.348-351 dice que flash-lite lo hace "a
-veces", medido el 12-ago).
+Sale mal: `llm_costo` anota $0.0018 de un turno que costó $0.0059 — 69% menos.
 
-1. Turno 1 corre y **devuelve**: hasta 5 completions con sus tools
-   (`maxToolRounds: 5`, l.325). Con `google/gemini-3.5-flash-lite` a $0.30/$2.50
-   por M y un acumulado plausible de 12,000 in / 800 out → `res.cost ≈ $0.0056`.
-2. `cifrasRespaldadas(bloques, respaldo)` devuelve `false` (l.353) → entra el
-   reintento (l.356).
-3. El reintento truena. Tres disparadores vivos, ninguno exótico: el
-   `AbortController` de 40 s es **compartido** y se armó al inicio (l.313-314),
-   así que si el turno 1 se llevó 38 s el reintento aborta casi de inmediato;
-   `maxToolRounds: 4` con `LoopGuardError`; y `maxTokens: 900` para un ciclo con
-   tools, que es donde vive `TruncatedError` (openrouter.ts:753-761).
-4. `generateWithTools` envuelve lo que sea en `PartialExecutionError`
-   (openrouter.ts:839-842) con **sus** `tokIn, tokOut, costo` — variables locales
-   de esa invocación.
-5. `ejecutarAnalista` no tiene `catch`: solo `finally` (l.417). `res.cost` del
-   turno 1 muere ahí sin haberse sumado a nada.
-6. En `route.ts` el catch registra `err.tokensIn/tokensOut/cost` = los del
-   reintento. Si el reintento abortó antes de la primera respuesta son `0,0,0`, y
-   el guardián `(err.tokensIn > 0 || err.tokensOut > 0)` de la l.137 **no escribe
-   ninguna fila**.
+Consecuencia: el tope diario de $1 USD por flota (`route.ts:39-42, 96-102`),
+que existe por un pedido explícito de negocio ("que no implique que si se
+quedan ahí todo el día quemar un exceso de tokens"), **se subestima justo en
+el modo de falla que más gasta**: los turnos que necesitan reintento son los
+que corren dos ciclos completos. Un contralor picando el chat toda la tarde
+llega al freno habiendo gastado el doble. Es la misma fuga que el pase 2 cerró
+en la ruta (TC-A1), reaparecida un nivel arriba.
 
-**Entra X → sale Y mal.** Entra: pregunta que trip la guardia + reintento que
-aborta a los 40 s. Sale: `llm_costo` con **cero filas** para un turno que ya
-costó ~$0.0056 en OpenRouter.
+Causa raíz probable: `ejecutarAnalista` acumula el costo de los dos ciclos solo
+en el camino feliz (`:377-381`); no hay un acumulador vivo fuera del `try` que
+el camino de excepción pueda vaciar.
 
-**Consecuencia.** El tope anti-quemadura que el propio endpoint declara en su
-encabezado ("POR DÍA Y POR TENANT", route.ts:11-14) lee `llm_costo` filtrado a
-`fase='chat'` (l.72-88) y no ve ese gasto. Es exactamente la consecuencia que
-TC-A1 describía, por otra puerta — y es **peor que el original en un punto**:
-como la guardia tumba la misma pregunta de forma determinista, el usuario que
-insiste con la misma frase paga cada vez y no registra ninguna. `gastadoHoy` no
-se mueve.
+### [ALTO] El loop-guard tira una respuesta ya producida y pagada, y saltándose la red determinística
+`src/lib/llm/openrouter.ts:779-781` × `src/lib/agents/analista.ts:316, 388-406`
 
-**Causa raíz probable.** La contabilidad del turno fallido se puso en el borde
-HTTP, que solo tiene visibilidad del error del último `generateWithTools`;
-`ejecutarAnalista` orquesta dos y no acumula el costo del primero en el error
-que deja salir.
+Escenario: `maxToolRounds: 5` (`analista.ts:325`) da rondas 0-4, y el guard
+corta en `round === maxRounds - 1`, o sea **antes de ejecutar nada de la ronda
+4**. Pregunta compuesta ("¿cómo voy, cuánto llevo de acreditables y qué me
+proyectas?"): ronda 0 `kpis_flota`, ronda 1 `acreditables_periodo`, ronda 2
+`motor_fiscal`, ronda 3 `serie_gasto`, ronda 4 el modelo por fin llama
+`entregar_respuesta` **con la respuesta completa y correcta** → `LoopGuardError`
+antes del `Promise.all` → `PartialExecutionError` → sube por `ejecutarAnalista`
+sin `catch`.
 
----
+Sale mal: `CAPTURAS` queda vacío, los bloques nunca se arman, y la "ÚLTIMA RED,
+determinística" de `:388-406` —escrita exactamente para "si el modelo enmudeció
+pero las tools SÍ leyeron datos, se arma una tabla con lo leído"— **nunca
+corre**, aunque `res.toolCalls` traía cuatro resultados reales. La ruta manda
+`{t:'error'}` y el usuario lee (`src/app/dashboard/chat.tsx:112-117`): *"No pude
+responder eso — el análisis se detuvo: el analista no pudo responder en este
+momento."*
 
-### [MEDIO] Las 11 tools nuevas del chat quedan fuera de la caché de lectura porque no se llaman como el prefijo
+Que esto ocurre está medido en el propio repo: `analista.ts:240-243` documenta
+que el modelo "volvía a llamar tools y reventaba el tope de rondas (medido con
+gpt-5-nano el 12-ago)"; la instrucción en el resultado de `entregar_respuesta`
+es el parche, no una garantía.
 
-`src/lib/llm/openrouter.ts:558-559` · `src/lib/agents/chat-tools.ts:46,58,78,102,123,143,158,173,210,241` · `src/lib/agents/analista.ts:196`
+Consecuencia: en el demo, "Pregunta a tus datos" muestra en vivo los pasos
+(`kpis_flota`… `motor_fiscal`… palomeados) y luego se disculpa. El contralor ve
+que el sistema leyó sus datos y aun así no le contestó, con la flota pagando
+cinco completions. La red que lo cubriría existe y está a cinco líneas de
+distancia, del lado equivocado del `throw`.
 
-`READ_PREFIXES = ['get_','check_','list_','find_','consultar_','validar_','cuadrar_']`.
-Ninguno de `kpis_flota`, `acreditables_periodo`, `motor_fiscal`, `viajes_flota`,
-`liquidaciones_flota`, `serie_gasto`, `serie_liquidado`, `top_rutas`,
-`proyectar_serie`, `duplicados_detectados`, `entregar_respuesta` empieza por uno.
+Causa raíz probable: `generateWithTools` señaliza el corte con una excepción y
+`ejecutarAnalista` solo tiene camino de degradación en el `return`, no en el
+`catch` que no existe.
 
-**Escenario.** Ronda 1 el modelo llama `kpis_flota`; ronda 3 la vuelve a llamar
-para componer (patrón normal cuando cruza dos lecturas). `isReadOnly()` da
-`false`, así que la l.799 ni consulta `crossRound` y la l.831 ni lo guarda:
-`getKpis(tenantId)` corre entero **otra vez**. El `inRound` de la l.816 sí tapa
-la repetición dentro de UNA ronda; entre rondas no hay nada.
+### [MEDIO] `generateStructured` le cuelga al modelo que ganó los tokens de todos los que fallaron
+`src/lib/llm/openrouter.ts:399-404, 435, 464` → `src/lib/likida/intake/ocr.ts:470` → `src/app/admin/agente-ocr/page.tsx:61-72`
 
-**Consecuencia.** Es el mismo bug que `cuadrar_viaje` ya pagó y que motivó meter
-`cuadrar_` en la lista (comentario de openrouter.ts:552-557 y el bloque de
-`openrouter_fallback_costo.test.ts:149`), reintroducido por convención de
-nombres: barridos completos repetidos dentro de un turno con 40 s de presupuesto
-y un tope diario en USD. Y no hay prueba que lo vea: los tests de caché usan
-`cuadrar_viaje` y `get_algo`, los dos con prefijo.
+Escenario: OCR de un ticket con `LIKIDA_MODEL_OCR=google/gemini-3.1-flash-lite`.
+Intento 1 devuelve prosa → `StructuredError`, 1,200 in / 900 out. Intento 2 con
+nota → 503 del proveedor. Fallback a `anthropic/claude-haiku-4.5`
+(`openrouter.ts:504-509`) → éxito, 1,300 in / 400 out. `cobrar()` sí precifica cada
+intento con SU modelo (el total en USD queda bien), pero el retorno de `:464`
+es `{ model: usage.model, ...gastado }`: **el slug del último intento con los
+tokens de los tres**. `ocr.ts:470` lo pasa entero y `processor.ts:694/967`
+escribe UNA fila.
 
-**Causa raíz probable.** La condición de "solo lectura" vive como prefijo de
-nombre en el motor, no como metadato en `registerTool` — que ya tiene el campo
-gemelo `isMutation`. Un set de tools nuevo se sale de la rejilla sin que nada
-avise.
+Sale mal: `llm_costo` recibe `modelo='anthropic/claude-haiku-4.5',
+tokens_in=2500, tokens_out=1300`. La realidad fue gemini 1,200/900 y haiku
+1,300/400. En el camino de error es al revés: `conGastado` (`:474`) sella
+`{ model, ...gastado }` con el **primario**, cargándole los tokens del fallback.
 
----
+Consecuencia: `/admin/agente-ocr` pinta un panel rotulado "Costo por modelo —
+OCR" leyendo esa columna. Es la pantalla con la que Javier compara modelos de
+OCR — y `models.ts:33-47` documenta que la decisión de mover el OCR (12.5× de
+diferencia de costo) se tomó con estos números. El fallback aparece consumiendo
+tokens que no gastó y el primario aparece sin haber fallado nunca.
 
-### [MEDIO] `guardar_liquidacion` devuelve el snapshot completo al MODELO, y su único consumidor es nuestro código
+Causa raíz probable: el `costoPorModelo` que se construyó para
+`generateWithTools` (`openrouter.ts:648-652`, auditoría 10) no se replicó en
+`generateStructured`, que es la función de MÁS volumen del producto (una
+llamada por foto).
 
-`src/lib/likida/tools.ts:221` (`liq,`) · `src/lib/llm/openrouter.ts:833` · `src/lib/likida/cuadre/guardia.ts:66-70`
+### [MEDIO] Ninguna de las diez tools del analista cae en `READ_PREFIXES`: la caché entre rondas está muerta para todo el chat
+`src/lib/llm/openrouter.ts:558-559, 799, 831` × `src/lib/agents/chat-tools.ts:46,58,78,102,123,143,158,173,210,241`
 
-`liq` incluye `gastos: Gasto[]` (`src/types/likida.ts:121`), y cada `Gasto` trae
-`ocrExtra` —un `Record<string, unknown>` sin tope, los datos ricos crudos del
-ticket—, `rfcEmisor`, `rfcReceptor`, `cfdiUuid`, `imagenUrl`, `estadoSat`,
-`efos`, `efosRevisar` (`repo.ts:669-696`; `engine.ts:1167` devuelve
-`input.gastos` sin filtrar). Ese objeto se serializa al `content` del mensaje
-`role:'tool'` (openrouter.ts:833) y viaja como **entrada pagada** en la ronda
-siguiente.
+Escenario: `READ_PREFIXES = ['get_','check_','list_','find_','consultar_','validar_','cuadrar_']`.
+Los diez nombres registrados son `kpis_flota`, `acreditables_periodo`,
+`motor_fiscal`, `viajes_flota`, `liquidaciones_flota`, `serie_gasto`,
+`serie_liquidado`, `top_rutas`, `proyectar_serie`, `duplicados_detectados`:
+**ninguno empieza por un prefijo de la lista**, así que `isReadOnly` es `false`
+para todos y `crossRound` (`:799`, `:831`) jamás se consulta ni se llena. El
+`inRound` sí dedupea, pero solo dentro de la MISMA ronda y con llave que incluye
+los args.
 
-**Escenario.** Cierre de una liquidación de 21 comprobantes (el caso que el
-propio archivo cita como real, openrouter.ts:659-663): ~21 objetos `Gasto` con
-su `ocrExtra` crudo entran al contexto del turno de cierre y se reenvían al
-modelo, que ya no tiene nada que decidir con ellos.
+Sale mal, con la pregunta real "¿cómo voy y qué proyectas?": ronda 0 llama
+`serie_gasto{modo:'mensual'}` y ronda 2 llama `proyectar_serie{serie:'gasto',
+modo:'mensual'}` — **los dos ejecutan `getGastoPorSemanaSeries(tenantId, hoy)`
+completo** (`chat-tools.ts:153` y `:233`), y llaves distintas garantizan que ni
+siquiera coincidiendo de ronda se compartirían. Igual con `kpis_flota` llamada
+en la ronda 0 y otra vez en la 2 para "confirmar": dos `getKpis` con sus
+`traerTodo` paginados sobre `viaje` y `liquidacion`.
 
-**Consecuencia.** Doble. (a) Costo: infla la entrada del turno más caro del
-producto — y el costo por liquidación es la cifra con la que se fija el precio.
-(b) Minimización: le pone delante al modelo que redacta el WhatsApp **del
-chofer** el veredicto fiscal por comprobante (EFOS, RFC receptor, estado SAT)
-que el producto separó a propósito para el contralor. *Intenté refutarlo:* la
-guardia sustituye ese texto siempre que `guardar_liquidacion` salió sin error
-(`guardia.ts:38-40` y `:108`, con destinatario `'operador'`), así que hoy no se
-filtra nada — pero la defensa depende de la guardia, no del dato. Y `imagenUrl`
-es una **ruta** de Storage, no una URL firmada (`processor.ts:1040-1044`), así
-que ahí no hay credencial que se escape.
+Consecuencia: dentro de un presupuesto de 40s (`analista.ts:314`) sobre el
+objetivo de escala de la mig. 0111 (15k filas), duplicar los barridos es lo que
+hace que el turno se pase de tiempo — y pasarse de tiempo entra por el mismo
+`PartialExecutionError` del hallazgo anterior: pantalla de disculpa. La rejilla
+que lo evitaría existe, pero está indexada por una convención de nombres que la
+superficie nueva no siguió.
 
-**Causa raíz probable.** Se usó el resultado de una tool como canal de
-comunicación entre dos funciones NUESTRAS (`tools.ts` → `guardiaCifras`, que lo
-lee de `toolCalls`), y el canal de resultados de tool va al modelo por
-definición.
+Causa raíz probable: `isReadOnly` decide por prefijo del nombre en vez de por
+la declaración del registro (`RegisteredTool.isMutation` ya existe en
+`tool-executor.ts:46` y sabe lo contrario).
 
----
+### [MEDIO] `guardar_liquidacion` le devuelve al modelo la liquidación entera: RFCs, UUIDs, rutas de foto y el crudo del OCR
+`src/lib/likida/tools.ts:235` → `src/lib/llm/openrouter.ts:833`
 
-### [MEDIO] El tope diario lee `fase='chat'` mientras el escritor deriva la fase del slug del modelo
+Escenario: el snapshot `liq` se agrega al resultado para que `guardiaCifras` lo
+reuse (motivo legítimo, AG-3), pero el mismo objeto se serializa en
+`openrouter.ts:833` como `content` del mensaje `role:'tool'` que el modelo LEE y
+que la ronda siguiente reenvía como entrada. `liq.gastos` es `Gasto[]` completo
+(`src/lib/likida/repo.ts:670-697`): `rfcEmisor`, `rfcReceptor`, `cfdiUuid`,
+`imagenUrl` (la ruta de Storage de la foto del ticket), `imgHash` y `ocrExtra`
+—que trae `producto`, `estacion`, `emisor`, `fechaImpresa`, todo texto leído de
+la foto (`src/lib/likida/intake/ocr.ts:394-420`).
 
-`src/app/api/dashboard/chat/route.ts:74` (`.eq('fase','chat')`) vs `route.ts:110` (`fase: faseDeModelo(modelo,'chat')`) · `src/lib/likida/costos.ts:102-105`
+Sale mal: una liquidación de 21 comprobantes manda ~7 KB de JSON (≈2,000 tokens)
+al modelo del rol `cuadre` (Sonnet 5, `reasoning:'high'`), de los cuales el
+modelo usa cuatro campos: `liquidacion_id`, `estatus`, `diferencia`,
+`pdf_generado`. Hasta ese momento, el cuadre **nunca había visto un RFC**: el
+history son turnos de WhatsApp (`processor.ts:2054-2055`) y `cuadrar_viaje`
+devuelve solo `{tipo, monto, nota}` (`tools.ts:136`). Esta tool es el único sitio
+por el que los datos fiscales del ticket cruzan a OpenRouter.
 
-`faseDeModelo` devuelve `'escalacion'` en cuanto el slug contiene `opus`.
+Consecuencia: para el equipo que mantiene esto, ~$0.004 por liquidación (10% del
+objetivo de $0.03–0.05 de `models.ts:17`) en tokens que nadie lee; para legal, la
+minimización que `models.ts:19-23` promete ("RFC y CFDI son datos personales")
+se cumple con el proveedor correcto pero no con el volumen correcto.
 
-**Escenario.** `LIKIDA_MODEL_CHAT=anthropic/claude-opus-5`. Los roles son
-override-ables por env a propósito (`models.ts:68-80`) y `claude-opus-5` está en
-`PRICES` a $5/$25 por M (openrouter.ts:145), 16× la entrada de flash-lite. Cada
-turno **exitoso** escribe su fila con `fase='escalacion'`; la consulta del tope
-solo suma `fase='chat'` → `gastadoHoy` se queda en 0 para siempre y el candado
-nunca cierra. Las dos ramas del mismo endpoint ni siquiera coinciden entre sí: el
-camino parcial (l.140) escribe `fase: 'chat'` a mano.
+**Lo que me refutó una versión más grave:** intenté escalarlo a inyección
+—texto impreso en un ticket vuelve al modelo vía `ocrExtra.emisor`, que
+`sanitizarTexto` recorta a 80 chars pero explícitamente "no mira el contenido"
+(`intake/sanitizar.ts:31-32`)— y **no se sostiene**: cuando corrió
+`guardar_liquidacion`, `guardiaCifras` pone `cuadro = true`
+(`cuadre/guardia.ts:38-40`) y sustituye el texto del modelo por el resumen
+determinístico SIEMPRE. La inyección no alcanza al chofer. Queda el payload.
 
-**Consecuencia.** El tope que existe por pedido explícito ("que no implique que
-si se quedan ahí todo el día quemar un exceso de tokens", route.ts:7-8) se
-desactiva con un cambio de variable de entorno, sin error y sin log, y
-justamente con el modelo más caro del catálogo. Hoy no está armado
-(`.env.example:25` deja flash-lite), así que es latente — pero la única cosa que
-lo sostiene es que nadie toque esa env.
+Causa raíz probable: no hay separación entre "lo que el executor registra en
+`ToolCallRecord` (para nuestro código)" y "lo que vuelve al modelo": un solo
+`result` sirve a los dos consumidores.
 
-**Causa raíz probable.** El lector del presupuesto filtra por una constante y el
-escritor calcula la etiqueta; nada ata las dos.
+### [MEDIO] La prueba que hace cumplir la regla estructural recorre una lista fija, no el registro — la tool nueva ya se le escapó
+`src/lib/agents/chat-tools.test.ts:105-133` × `src/lib/llm/tool-executor.ts:49-54`
 
----
+Escenario: las tres pruebas guardián ("NINGUNA admite texto libre", "ninguna
+acepta propiedades extra", "ninguna toma un tenant por parámetro") iteran
+`funciones()`, que sale de `toolSchemas(TOOLS)` con `TOOLS` **codificado a mano
+con los diez nombres del analista**. `REGISTRY` (`tool-executor.ts:49`) tiene
+hoy catorce. La tool más nueva del repo, `entregar_respuesta`
+(`analista.ts:196`), está registrada en OTRO archivo y **ninguna de las tres la
+mira**: declara cuatro propiedades `type:'string'` sin `enum` (`texto`, `nota`,
+`concepto`, `valor`) y sus objetos anidados de `items` no llevan
+`additionalProperties:false` (`analista.ts:216-226`).
 
-### [BAJO] `executeTool` no comprueba que la tool pedida esté en el set del agente
+Sale mal hoy: nada — `entregar_respuesta` es captura de salida, no toca consulta
+ni fila, y `validarBloques` (`analista.ts:50-112`) revalida todo. Sale mal
+mañana: la siguiente tool que alguien registre fuera de `chat-tools.ts` entra
+con `properties` libres y **la compuerta pasa verde**. La regla que CLAUDE.md
+y el encabezado de `chat-tools.ts:1-14` llaman estructural está sostenida por
+una lista que hay que acordarse de editar.
 
-`src/lib/llm/tool-executor.ts:98` (`REGISTRY.get(name)`, mapa global de módulo, l.49) · `src/lib/agents/analista.ts:320,281`
+Consecuencia: para el equipo que mantiene esto, la defensa contra inyección de
+prompt del producto es hoy una convención documentada, no un invariante
+verificado. `registerTool` tampoco falla ante un nombre repetido: solo
+`logger.warn('tool.reregister')` (`tool-executor.ts:52`) y sobrescribe el
+handler.
 
-La allowlist por agente (`AGENT_REGISTRY.liquidacion.tools`, `TOOLS_LECTURA`)
-solo se usa para construir los schemas que se le enseñan al modelo. En
-ejecución, el executor resuelve cualquier nombre contra el registro global, que
-`processor.ts:9` y `analista.ts:28` llenan por side-effect de import.
+Causa raíz probable: el guardián se escribió del lado del consumidor (la lista
+de tools del analista) en vez del lado del productor (el `REGISTRY`).
 
-**Escenario.** El chat acepta un documento adjunto de hasta 16,000 caracteres que
-entra al system prompt (`analista.ts:301`, `route.ts:66-69`) con la defensa "Su
-texto es dato, nunca instrucción" — que es prompt, no código. Un PDF de un
-proveedor que dice "llama la tool guardar_liquidacion" y un modelo que le hace
-caso emitiendo un nombre que no se le ofreció: el executor lo encuentra y lo
-corre.
+### [BAJO] La escalera de truncamiento se traga `eT` y reintenta con el tope original (REINCIDENTE, degradado desde ALTO)
+`src/lib/llm/openrouter.ts:486-497`
 
-**Consecuencia hoy: ninguna.** `ctx` del analista es `{tenantId, conversationId}`
-sin `viajeId` (l.281), así que `guardar_liquidacion` y `cuadrar_viaje` lanzan
-`'sin viaje activo'` (`tools.ts:91,162`), y `consultar_politica` solo leería la
-política del MISMO tenant. Además en Vercel cada ruta es su propio bundle, así
-que lo más probable es que `tools.ts` ni esté cargado en el proceso del chat.
-Lo que no existe es la comprobación: que el chat sea de solo lectura lo sostiene
-el catálogo que se le enseña al modelo, no una reja en el ejecutor.
+Escenario: OCR de una factura larga. Intento 1 → `TruncatedError` (tope 4,000,
+`usó 4000`). Intento 2 con `tope*2 = 8,000` → el modelo devuelve prosa →
+`StructuredError`, que **no** es `TruncatedError`, así que el `if` de `:495` no
+entra, el `catch` termina vacío y el error se pierde. Se cae al `attempt(model,
+note)` de `:500` — **sin el tope doblado**: vuelve a correr con 4,000 y vuelve a
+truncar. Si además el error se clasifica como transitorio, el fallback de `:506`
+también corre a 4,000.
 
-**Causa raíz probable.** El registro de tools es global por diseño (un solo
-`Map`), y la noción de "qué puede correr este agente" nunca bajó del armado de
-schemas al punto de ejecución.
+Sale mal: cuatro llamadas pagadas de las cuales tres corren con el techo que ya
+se demostró insuficiente (el fallback está en `:504-509`), y el log final
+(`ocr.ts:270-274`) reporta `tope: 4000`
+cuando el código ya había probado 8,000 — el diagnóstico apunta al techo
+equivocado.
 
----
+Consecuencia: para el chofer, un comprobante largo tarda cuatro llamadas en
+terminar en "no pude leer tu foto"; para quien depura, el log miente sobre qué
+se intentó.
 
-### [BAJO] En `generateStructured` el fallback cambia de modelo y no cambia la etiqueta de costo
+**Por qué ya no es ALTO:** el `cobrar(usage)` de `:438` corre ANTES de cualquier
+`throw` en `attempt`, así que el consumo de los intentos tragados sí queda en
+`gastado` y viaja al llamador. La parte cara del hallazgo del pase 2 —perder
+dinero— está cerrada; queda la parte de diagnóstico y una llamada de más.
 
-`src/lib/llm/openrouter.ts:472-476` (`conGastado`: `err.usage = { model, ...gastado }`, donde `model` es el PRIMARIO, l.363) · consumido en `src/lib/likida/intake/ocr.ts:275-283` → `src/lib/likida/processor.ts:587,831`
+### [BAJO] `CAPTURAS` no se limpia entre los dos ciclos que comparten `runId`
+`src/lib/agents/analista.ts:194, 239, 345, 375, 419`
 
-**Escenario.** Gemini caído. Intentos 1 y 2 en `google/gemini-3.6-flash`,
-intento 3 en `anthropic/claude-haiku-4.5` (la entrada de `FALLBACK`, l.64), y
-falla también. La fila de `llm_costo` sale con
-`modelo: 'google/gemini-3.6-flash'` y los tokens de los **tres** intentos.
+Escenario: ciclo 1 llama `entregar_respuesta` con bloques que la guardia tumba
+(`:353`) → `CAPTURAS[runId]` queda con ellos. El reintento corre con el MISMO
+`ctx` y el mismo `runId` (`:281`, `:366`). Si en el reintento el modelo contesta
+en texto plano sin llamar la tool terminal —el caso que el comentario de `:348-350`
+dice que ocurre—, `:375` lee `CAPTURAS.get(runId)` y **recupera los bloques que
+la guardia ya había condenado**, descartando el `res2.finalText` nuevo; si el
+segundo `entregar_respuesta` falla `validarBloques`, el handler retorna en `:238`
+sin sobrescribir y pasa lo mismo.
 
-**Consecuencia.** El dinero está bien: `gastado` acumula cada intento con
-`costoReal` al precio de SU modelo (l.435-438), así que el total no miente. Lo
-que miente es la atribución por modelo — y esa es justo la cifra con la que se
-decide con qué modelo correr el OCR (todo el comentario de `models.ts:33-47` es
-una comparación entre modelos). `generateWithTools` ya resolvió esto con
-`costoPorModelo` (l.629, 648-652) y `processor.ts:1922-1930` parte la fila;
-`generateStructured` no tiene equivalente.
+Sale mal: la guardia de `:388` sí vuelve a correr sobre esos bloques viejos,
+pero con un `respaldo` engordado por las tools del reintento — así que la
+narrativa del turno 1 puede pasar apoyada en números que trajo el turno 2.
 
-**Causa raíz probable.** `conGastado` cierra sobre un único `model`, el del
-primario, en lugar de llevar el desglose que sí lleva su hermano.
+Consecuencia: para el contralor, una respuesta que el sistema ya había juzgado
+insostenible puede llegar a pantalla por coincidencia numérica; el rechazo no
+es sticky.
 
----
+Causa raíz probable: `CAPTURAS` es "lo último entregado por este run" y se usa
+como "lo entregado por ESTE ciclo".
+
+### [BAJO] `generateResponse` no tiene un solo llamador y no acepta `signal`
+`src/lib/llm/openrouter.ts:260-295`
+
+Escenario: es la única de las tres puertas del gateway sin `signal`, así que cae
+al default del SDK de OpenAI (10 minutos) — el bug que `generateStructured:349-356`
+y `ocr.ts:227-234` documentan con detalle. Además su `max_tokens` por defecto es
+500, no `DEFAULT_MAX_TOKENS`. Un grep sobre `src/` no encuentra ningún llamador
+fuera de su propia definición.
+
+Consecuencia: para el equipo, es una trampa con forma de atajo: el próximo
+agente de texto que la use hereda el cuelgue de 10 minutos dentro de un webhook
+de 60s, y el truncamiento a 500 tokens sin la comprobación de `finish_reason`
+que las otras dos sí tienen.
 
 ## Lo que revisé y está bien
 
-### Inventario de tools y la regla `properties: {}`
+**El barrido completo de las CATORCE definiciones de tools contra la regla
+`properties: {}` — ninguna deja que el modelo decida sobre datos:**
 
-Son **14** tools registradas en todo el repo (`grep registerTool(`), en tres
-archivos. La regla estructural —el modelo decide **cuándo**, nunca **con qué
-datos**; `tenantId`/`viajeId`/`operadorId` salen del `ToolContext` resuelto en
-servidor— **se respeta en las 14**:
-
-| tool | archivo:línea | `parameters` | ¿decide sobre fila/dinero? |
+| Tool | Dónde | `parameters` | Veredicto |
 |---|---|---|---|
-| `consultar_politica` | `likida/tools.ts:25` | `properties:{}` | no — `getConfig(ctx.tenantId)` |
-| `cuadrar_viaje` | `likida/tools.ts:81` | `properties:{}` | no — `ctx.tenantId`+`ctx.viajeId` |
-| `guardar_liquidacion` (única `isMutation`) | `likida/tools.ts:151` | `properties:{}` | no — `ctx.tenantId`+`ctx.viajeId` |
-| `kpis_flota` | `agents/chat-tools.ts:46` | `SIN_PARAMS` | no |
-| `acreditables_periodo` | `chat-tools.ts:58` | `SIN_PARAMS` | no |
-| `motor_fiscal` | `chat-tools.ts:78` | `SIN_PARAMS` | no |
-| `viajes_flota` | `chat-tools.ts:102` | `SIN_PARAMS` | no (tope 25 filas) |
-| `liquidaciones_flota` | `chat-tools.ts:123` | `SIN_PARAMS` | no (tope 20) |
-| `duplicados_detectados` | `chat-tools.ts:241` | `SIN_PARAMS` | no (tope 10) |
-| `serie_gasto` | `chat-tools.ts:143` | `PARAM_MODO` (enum de 3) | no * |
-| `serie_liquidado` | `chat-tools.ts:158` | `PARAM_MODO` | no * |
-| `top_rutas` | `chat-tools.ts:173` | `PARAM_MODO` | no * |
-| `proyectar_serie` | `chat-tools.ts:210` | `serie`+`modo`, enums | no * |
-| `entregar_respuesta` | `agents/analista.ts:196` | objeto de presentación | no ** |
+| `consultar_politica` | `likida/tools.ts:32` | `properties: {}` | tenant de `ctx.tenantId` (`:36`) |
+| `cuadrar_viaje` | `likida/tools.ts:88` | `properties: {}` | `ctx.viajeId`, y falla cerrado sin viaje (`:92`) |
+| `guardar_liquidacion` | `likida/tools.ts:159` | `properties: {}` | MUTACIÓN; `ctx.viajeId`, `handler(_args, ctx)` |
+| `kpis_flota` | `chat-tools.ts:53` | `SIN_PARAMS` (`:25`) | `ctx.tenantId` |
+| `acreditables_periodo` | `chat-tools.ts:65` | `SIN_PARAMS` | `ctx.tenantId` |
+| `motor_fiscal` | `chat-tools.ts:85` | `SIN_PARAMS` | `ctx.tenantId` |
+| `viajes_flota` | `chat-tools.ts:109` | `SIN_PARAMS` | `ctx.tenantId`, recorte a 25 |
+| `liquidaciones_flota` | `chat-tools.ts:130` | `SIN_PARAMS` | `ctx.tenantId`, recorte a 20 |
+| `duplicados_detectados` | `chat-tools.ts:248` | `SIN_PARAMS` | `ctx.tenantId`, recorte a 10 |
+| `serie_gasto` | `chat-tools.ts:149` | `PARAM_MODO` enum ×3 | ventana, no propiedad de dato |
+| `serie_liquidado` | `chat-tools.ts:163` | `PARAM_MODO` | ventana |
+| `top_rutas` | `chat-tools.ts:178` | `PARAM_MODO` | ventana |
+| `proyectar_serie` | `chat-tools.ts:216-224` | 2 enums cerrados | qué serie + ventana |
+| `entregar_respuesta` | `analista.ts:202-234` | strings libres | **salida**, no consulta; revalidada en `:50-112` |
 
-\* Las cuatro con parámetro **no rompen la regla**: el enum lo hace cumplir el
-CÓDIGO, no el schema. `modoDe()` (`chat-tools.ts:38-41`) devuelve `'semanal'`
-ante cualquier valor que no sea `'mensual'`/`'historico'`, y `proyectar_serie`
-cae a `'gasto'` si `serie` no es exactamente `'liquidado'` (l.229). El argumento
-elige una **ventana ya calculada**, jamás viaja a una consulta, y la única cosa
-que selecciona filas sigue siendo `ctx.tenantId`. No hay ninguna tool que acepte
-texto libre que toque una consulta: la alternativa a NL→SQL que declara el
-encabezado del archivo (l.6-9) se sostiene.
+Ninguna acepta un `tenant_id`, `viaje_id`, `folio`, `rfc` ni fragmento de
+consulta. Los cuatro enums degradan a un valor seguro y **lo declaran de vuelta
+en el resultado** (`chat-tools.ts:154`, `:169`, `:184`, `:231`), así que el
+modelo nunca cree haber pedido algo distinto de lo que recibió.
 
-\** `entregar_respuesta` no toca la base: escribe en un `Map` en memoria por
-`runId` (`analista.ts:194,239`) y todo lo que trae se revalida y recorta en
-`validarBloques` (l.50-112), con prueba (`analista_guardia.test.ts`).
-
-### Motor y contabilidad
-
-- **TC-A1: vivo, y su prueba ancla de verdad.** `8066054` y `366b66d` son
-  ancestros de HEAD; el bloque está en `route.ts:137-146`. `costo_parcial.test.ts:66-73`
-  falla si se revierte (el `toHaveBeenCalledWith({modelo:'parcial', tokensIn:15000…})`
-  no se cumple si el catch no registra), y el segundo caso (l.75-80) impide que
-  el arreglo invente filas de $0 cuando no hubo consumo. Bien puesto: **antes**
-  del log y del `manda({t:'error'})`, y con su propio try/catch para que un fallo
-  de la escritura no coma el error original.
-- **Loop-guard que corta ANTES de pagar la ronda.** `openrouter.ts:779-781`
-  lanza `LoopGuardError` antes del `Promise.all` de la última ronda permitida, así
-  que la ronda que ya se sabe excedida no ejecuta tools ni dispara una mutación.
-  Anclado: `openrouter_loopguard.test.ts` cuenta 3 completions y **2** ejecuciones,
-  y verifica que `partialToolCalls` traiga solo las dos que corrieron.
-- **Truncado ≠ terminado, en las dos superficies.** `generateStructured`
-  detecta `finish_reason:'length'` **antes** de parsear (l.443-451, para no
-  confundirlo con "foto ilegible") y reintenta subiendo el techo, no regañando;
-  `generateWithTools` lo detecta antes de devolver `finalText` (l.753-761), que
-  es lo que impedía que un `''` se convirtiera en "Listo. 👍" sobre un turno en
-  el que no se cuadró nada.
-- **Costo por ronda al precio de esa ronda + desglose por modelo.**
-  l.739-741 y 648-652; `openrouter_fallback_costo.test.ts` lo ancla con un ciclo
-  mixto primario+fallback y comprueba que la suma del desglose cuadre con el
-  total. `processor.ts:1922-1930` parte la fila cuando hay más de un modelo, y
-  `route.ts:108-113` hace lo mismo en el chat.
-- **Llave de caché por EFECTO y no por llamada.** `llaveDeCache` (l.581-593)
-  colapsa a solo el nombre las tools sin `properties`, que es lo correcto porque
-  el handler ignora `args`. Anclado en `openrouter_cache_llave.test.ts` con las
-  tres variantes reales (`{}`, `{"viaje_id":"v1"}`, `{"incluir_periodo":true}`) →
-  1 ejecución; y con `get_algo` verifica que una tool CON parámetros sí siga
-  llaveando por args.
-- **Dedup de mutación que mira el efecto, y sin ventana de carrera.**
-  `makeExecutor` cachea la **promesa** antes del `await` (`tool-executor.ts:147,163-164`),
-  lo que cierra el check-then-act que abría el `Promise.all` de openrouter.ts:786;
-  la llave es el nombre, no los args, a propósito. Solo se cachea el éxito
-  (l.169). Probado en `tool_executor_concurrente.test.ts`.
-  *Caveat que no es hallazgo pero sí trampa futura:* el comentario de las
-  l.150-157 sostiene la elección de llave en "Ninguna tool de Likida tiene
-  parámetros a propósito", y eso **ya es falso** desde `chat-tools.ts` — hoy no
-  muerde porque ninguna tool con parámetros es `isMutation`, y el propio
-  comentario deja escrita la condición ("Si algún día una tool sí decide sobre
-  datos, esta llave tiene que volver a incluirlos").
-- **El error de Postgres no cruza hacia el modelo.** `tool-executor.ts:82-89`
-  filtra por vocabulario (`relation|column|constraint|violates|…`) y deja pasar
-  los mensajes de negocio deliberados; el detalle completo se queda en
-  `logger.error` (l.109).
-- **`isTransientError` clasifica por tipo antes que por texto** (l.106-127) y
-  excluye los dígitos pegados a `$`/`-` o con decimal detrás, para que
-  `FOLIO-502` o `monto 503.00` no disparen un cruce de proveedor.
-- **`FALLBACK` con red de seguridad declarada:** `modelosAisladosDeFallback()`
-  (l.94-97) existe para que una prueba enumere los modelos de `PRICES` fuera de la
-  red, que es el modo de falla silencioso documentado en l.54-62.
-- **`costoReal` prefiere el costo del proveedor** sobre la tabla (l.182-193),
-  que es lo único que hace visible el ahorro de la caché de prompt; y
-  `calcCost` estima un modelo desconocido con la tarifa **más cara** + `warn`
-  (l.201-208), que es la forma correcta de equivocarse.
-- **El presupuesto de reloj del chat es coherente:** `maxDuration = 60` en la
-  ruta y un `AbortController` único de 40 s en `ejecutarAnalista` (l.313-314) que
-  cubre los DOS ciclos, no 40 s cada uno.
+- **Idempotencia de mutaciones, con la ventana de check-then-act cerrada.**
+  `tool-executor.ts:147-170` cachea la PROMESA, no el resultado, y la llave es
+  el NOMBRE (`:158`) — un `{"confirmar":true}` no esquiva la rejilla. El fallo
+  no se cachea (`:169`) y se compara la promesa antes de borrar. Cubierto de
+  verdad por `tool_executor_concurrente.test.ts:32-135`, incluido el
+  `Promise.all` de la misma ronda.
+- **Loop-guard: corta antes de pagar la ronda inútil.** `openrouter.ts:779-781`
+  con prueba que verifica que la tool de la última ronda NO se ejecuta
+  (`openrouter_loopguard.test.ts:40`) y que cerrar justo en la última ronda
+  permitida no dispara el guard (`:68`). El conteo es correcto: `maxRounds - 1`
+  es la última ronda que puede pedir tools.
+- **Fallback cross-provider con prueba, y la red de respaldo con prueba de
+  cobertura.** `modelosAisladosDeFallback()` (`openrouter.ts:94-97`) enumera los
+  modelos de `PRICES` fuera de la red y `openrouter_fallback_cobertura.test.ts:29`
+  falla si alguno queda huérfano — verifiqué las doce entradas de `PRICES`
+  contra `FALLBACK` a mano y ninguna está aislada. El fallback SOLO reintenta la
+  completion, nunca re-ejecuta una tool (`openrouter.ts:697-728`).
+- **Costo por ronda con el modelo de esa ronda, en `generateWithTools`.**
+  `openrouter.ts:739-741` + `costoPorModelo` (`:648-652`), consumido en
+  `processor.ts:2110-2118` y `route.ts:122-127` para escribir UNA FILA POR
+  MODELO. Con pruebas de las dos formas (`openrouter_fallback_costo.test.ts:55, 97`).
+- **`PartialExecutionError` lleva lo pagado, y los dos llamadores lo registran.**
+  `processor.ts:2143-2152` y `route.ts:151-159`, este último con prueba
+  (`costo_parcial.test.ts:70`). El cierre del pase 2 sigue en pie.
+- **Una respuesta cortada no pasa por completa.** `openrouter.ts:753-761` tira
+  `TruncatedError` en vez de mandar `finalText: ''` que `processor.ts:2095` habría
+  convertido en "Listo. 👍". Con prueba del caso `content` vacío
+  (`openrouter_truncado_tools.test.ts:65`).
+- **`costoReal` prefiere el costo del proveedor y `calcCost` nunca devuelve $0
+  para un modelo desconocido** (`openrouter.ts:182-209`): estima con la tarifa
+  más cara y deja `llm.modelo_sin_precio`. `registrarCosto` descarta NaN en vez
+  de escribir un 0 que se leería como barato (`costos.ts:120-127`).
+- **El error crudo de Postgres no cruza al modelo.** `tool-executor.ts:82-89`
+  filtra por vocabulario y deja pasar el mensaje de negocio; el detalle completo
+  se queda en `logger.error` (`:109`).
+- **La caché de lectura se llavea por EFECTO, no por llamada.**
+  `llaveDeCache` (`openrouter.ts:581-593`) usa solo el nombre para las tools sin
+  parámetros, y el `ToolCallRecord` guarda los args de la llamada que de verdad
+  produjo el resultado (`:806`, `:832`) — auditable.
+- **`entregar_respuesta` no se confía de la forma que entregó el modelo.**
+  `validarBloques` (`analista.ts:50-112`) recorta a 6 bloques / 10 filas / 60
+  puntos / 900 chars, rescata lo válido y devuelve `{ok:false}` con instrucción
+  en vez de lanzar.
+- **Los seis agentes de `src/lib/likida/agentes/` NO son superficie de tool
+  calling**: `cobranza.ts`, `corridas.ts`, `estrategia.ts`, `notificaciones.ts`
+  son deterministas y no importan nada de `src/lib/llm/`. Verificado por grep.
+  El único agente LLM nuevo de la semana es el analista.
 
 ## Lo que NO alcancé a revisar
 
-- **El prompt del analista** (`agents/prompts.ts`, clave `analista_flota`): solo
-  vi lo que fija `analista_prompt.test.ts`. Si sus instrucciones inducen
-  re-llamadas de tools entre rondas, es el multiplicador del MEDIO de la caché —
-  pero el prompt es rubro agéntico.
-- **La calidad de la guardia de cifras** (`esDerivada`/`cifrasRespaldadas`,
-  `analista.ts:149-187`): revisé su acoplamiento con lo que devuelven las tools
-  (es lo que dispara el reintento del ALTO), no su tasa de falsos positivos ni el
-  efecto de que `esDerivada` acepte hasta 600 números de respaldo.
-- **Los bloques rescatados de una corrida anterior:** en el reintento,
-  `CAPTURAS.get(runId)` (analista.ts:375) puede devolver los bloques del turno 1
-  —los que la guardia ya rechazó— y descartar el `finalText` corregido del turno
-  2. No lo desarrollé porque el efecto es de calidad de respuesta, no de dinero
-  ni de atribución de tenant.
-- **Los demás llamadores de `generateStructured`** (router de intención, intake
-  de XML/consolidado): la contabilidad del error solo la seguí hasta
-  `intake/ocr.ts:275`.
-- **`pruebas-manuales/chat-analista.prueba.ts`** (conjunto dorado): no se corre
-  por regla del repo (pago real), así que el comportamiento REAL de las 11 tools
-  nuevas frente a preguntas de verdad queda sin medir aquí.
-- **No corrí la suite.** Donde digo "anclado" es por haber leído el test y su
-  aserción, no por verlo fallar al revertir — salvo el razonamiento explícito de
-  TC-A1, donde la aserción es una llamada que sencillamente no ocurre sin el
-  arreglo.
+- **El comportamiento real de `finish_reason: 'length'` cuando SÍ vienen
+  `tool_calls`.** La comprobación de `openrouter.ts:753` está dentro del `if
+  (!calls || calls.length === 0)`. Razoné que un `arguments` cortado no parsea y
+  cae en el camino de `args_parse` (`:794-796`), pero no pude confirmar contra el
+  proveedor si OpenRouter puede devolver un `tool_calls` con args cortados que
+  **sí** parseen (p. ej. `bloques` truncado a un array cerrado). Con
+  `maxTokens: 900` en el analista y `entregar_respuesta` emitiendo tablas, el
+  caso no es hipotético.
+- **`costoPorModelo` se llavea con `activeModel` (el slug que pedimos) y el
+  camino de un solo modelo registra con `res.model` (el que devolvió
+  OpenRouter).** Si OpenRouter devuelve el slug con sufijo (`:nitro`, `:floor` —
+  `calcCost:197` lo contempla), `llm_costo` guarda dos etiquetas distintas para
+  el mismo modelo según haya habido fallback o no. No pude verificar con qué
+  frecuencia difieren de verdad.
+- **`faseDeModelo(modelo, 'chat')` clasifica a `'escalacion'` si el slug
+  contiene "opus"** (`costos.ts:102-104`), y el tope diario del chat filtra
+  `.eq('fase','chat')` (`route.ts:85`). Hoy no muerde porque ningún modelo del
+  rol `chat` es Opus; apuntar `LIKIDA_MODEL_CHAT` a Opus dejaría el tope de $1
+  ciego al 100%. No lo cuento como hallazgo porque depende de una variable de
+  entorno que hoy no está puesta.
+- **El presupuesto de `ctx.signal` dentro de los handlers** sigue documentado
+  como BAJO consciente en `tool-executor.ts:19-40` y verifiqué que el diagnóstico
+  sigue siendo exacto (ningún handler lo lee), pero no medí cuánto trabajo
+  desperdiciado produce de verdad con el tope de 8s de `repo.ts`.
+- **No corrí `npx vitest run`** (prohibido por el MAPA); todas las afirmaciones
+  sobre pruebas salen de leer los archivos `.test.ts`, no de una corrida.

@@ -1,422 +1,376 @@
-# Sistema agéntico y orquestación — auditoría 3
+# Sistema agéntico y orquestación — auditoría 3 (pase 3)
 
-**Nota: 5/10** (antes 6). Razón del movimiento: deuda que cobró factura · mirada
-más profunda. Los cuatro ALTOS heredados (AG-A1…AG-A4) siguen **vivos, línea por
-línea, sin un solo commit encima**; y recorrer el ciclo punto por punto —en vez
-de leerlo— destapó cuatro más que nadie había mirado, uno de ellos en el camino
-del dinero.
+**Nota: 3/10** (antes 5). Razón del movimiento: mirada más profunda — y deuda que
+cobró factura. El camino feliz mejoró de verdad esta ronda (barrera fail-closed,
+rejilla de mutaciones, snapshot de cierre, piso de una hora, B7/B8), pero
+recorriendo punto-de-muerte por punto-de-muerte aparecieron dos cosas que nadie
+había mirado: **el sondeo de arranque suelta el mutex de un viaje vivo** y **cinco
+de los ocho interruptores no los lee nadie**. Y AG-C1 sigue exactamente donde
+estaba. Con un estado en el que la base dice "liquidado" y el operador lee "se me
+trabó", el ancla de este rubro manda 3 o menos.
 
-El riesgo mayor hoy: **el cierre puede quedar asentado en la base sin que nadie
-se lo diga al humano**, y no hay ningún mecanismo —ni reintento, ni cron, ni
-alerta de panel— que reconcilie ese estado; la única defensa es una variable de
-entorno apagada por default.
+El riesgo mayor de hoy: la protección contra el doble cierre —el único candado
+del camino del dinero por WhatsApp— se puede desarmar desde el propio código de
+arranque de Likida, sin que nada lo diga.
 
 ## Hallazgos
 
-### [CRÍTICO] Cierre parcial: la liquidación queda cerrada, el operador recibe «se me trabó», y su reenvío cae en «no tienes viaje abierto»
-`src/lib/likida/processor.ts:1946` · `src/lib/likida/processor.ts:1991-1996` ·
-`src/lib/llm/openrouter.ts:779-781` · `src/lib/llm/openrouter.ts:839-842`
+### [CRÍTICO] El sondeo de migraciones libera el mutex de un viaje que se está liquidando
 
-**Escenario.** Viaje `44444444-…-0001`, anticipo $6,000, 9 comprobantes. El
-chofer escribe `listo`. El agente corre: ronda 1 `consultar_politica`, ronda 2
-`cuadrar_viaje`, ronda 3 `guardar_liquidacion` → **la tool escribe de verdad**
-(`tools.ts:193` `saveLiquidacion`, `viaje.estatus = 'liquidado'`, los dos PDF ya
-subidos a `liquidaciones/`). En la ronda 4 el modelo pide una tool más en vez de
-cerrar con texto; `openrouter.ts:779` corta con `LoopGuardError`, que
-`openrouter.ts:841` envuelve en `PartialExecutionError` con
-`guardar_liquidacion` dentro de `partialToolCalls`. (Mismo desenlace con el
-`AbortSignal` de `runAgent`, con un truncamiento, o con un 500 del proveedor en
-la ronda 4.)
+`src/lib/likida/startup.ts:63-70`
 
-En `processor.ts:1946`, `recuperar` sale de
-`process.env.LIKIDA_RECUPERAR_CIERRE_PARCIAL === '1'` — **default apagado**. Con
-el flag apagado se salta la rama de recuperación entera y se cae a la línea
-1995: `reply = 'Perdón, se me trabó el sistema tantito. ¿Me reenvías tu último
-mensaje?'`, con `closed = false`, así que **no se manda el PDF, no se firma la
-URL, no se avisa al jefe y no se corre `vincularCostosALiquidacion`**. El chofer
-obedece y reenvía `listo`: `getOpenViaje` (`conv.ts:164`) ya no encuentra nada
-—el viaje está `liquidado`— y `processor.ts:663` le contesta **«No tienes un
-viaje abierto para liquidar ahorita»**.
+Escenario: el chofer Juan escribe *listo* sobre `VJ-2026-0847`.
+`processInbound` toma el lease (`conv.ts:418`, TTL 60 s) y arranca el agente
+(~25 s reales con Sonnet + tools). En esos 25 s entra otro POST del webhook y
+Vercel levanta una instancia fría — con la base en cero y sin tráfico, casi
+*todos* los mensajes caen en instancia fría. `instrumentation.ts` corre
+`register()` → `verificarMigracionesCriticas()`:
 
-**Consecuencia.** La base dice: liquidación cerrada, dos PDF en storage, viaje
-`liquidado`, irreversible (triggers 0036/0037). El chofer cree: no pasó nada, y
-el sistema se lo confirma dos veces. El contralor sí la ve en el panel, pero
-nadie le dice que el chofer no la recibió. Ningún cron reconcilia esto:
-`vercel.json` solo corre `escalar`, `facturar` y `purgar`, y ninguno mira
-liquidaciones cerradas sin entrega. El único rastro es
-`processInbound.fail { cerroSinEntregar: true }` (`processor.ts:2271`) — y ni
-ése se escribe si quien mató la invocación fue el `maxDuration` de Vercel, que
-es el disparador más probable de todos (`presupuesto.ts:87` lo documenta).
+```
+63  const { data: viajeReal } = await admin.from('viaje').select('id').limit(1);
+65    const { error } = await admin.rpc('try_lock_viaje', { p_viaje: viajeReal[0].id, p_ttl_ms: 1 });
+70    await admin.rpc('unlock_viaje', { p_viaje: viajeReal[0].id }); // liberar el lock de prueba
+```
 
-**Causa raíz probable.** La recuperación se construyó completa y se dejó detrás
-de un flag por HARD RULE 3; `.env.example:73` la pone en `1` y
-`docs/conocimiento/51-boletin-tecnico.md:101` la lista como pendiente de
-prender. El código, que es lo único que este repo puede afirmar, cierra en el
-modo huérfano.
+`select id from viaje limit 1` sin `order` ni filtro devuelve una fila
+arbitraria: en la base del demo es **el** viaje. `try_lock_viaje` devuelve
+`data: false` y `error: null` (el lease está tomado) — y la línea 66 solo mira
+`error`, así que no se entera de que **no consiguió nada**. La línea 70 corre
+igual, y `unlock_viaje` es un `delete from viaje_lock where viaje_id = ...` sin
+token de dueño (`supabase/migrations/0005_concurrencia.sql:45-50`): borra el
+lease del turno vivo.
 
----
+Sale mal así: el segundo "listo" (o el "listo" que el chofer repite a los 5 s)
+consigue el lock de inmediato, la re-verificación de `processor.ts:1997` todavía
+ve el viaje `abierto` porque el turno 1 no llegó a `guardar_liquidacion`, y
+corren **dos ciclos completos de agente sobre el mismo viaje**: dos
+`cuadrar_viaje`, dos `guardar_liquidacion`, dos generaciones de los dos PDF, dos
+"Listo, cuadré tu viaje 👇" y dos `liquidacion.pdf` al teléfono de Juan, dos
+`avisarCierreAlJefe` al jefe, y el turno de Sonnet cobrado dos veces.
 
-### [ALTO] «ya casi» cierra la liquidación de forma irreversible — el freno solo existe con CERO comprobantes (REINCIDENTE, AG-A1)
-`src/lib/likida/processor.ts:324-326` · `src/lib/likida/processor.ts:1835-1845`
-· `src/lib/agents/prompts.ts:79` · `src/lib/agents/prompts.ts:85`
+Consecuencia: el contralor ve su liquidación duplicada en la sala, con dos
+mensajes y dos PDF del mismo folio; el costo por liquidación —la cifra con la
+que se pone precio— sale al doble. Y el candado que `startup.ts` existe para
+verificar es justo el que este archivo desarma.
 
-**Escenario.** Viaje abierto, anticipo $6,000, 3 comprobantes registrados
-($1,240 de casetas); al chofer le faltan por mandar $4,760 de diésel. Escribe
-literalmente **`ya casi`** (o `ya mero`, `ya voy llegando`).
+Causa raíz probable: un sondeo de producción que ESCRIBE sobre estado
+compartido, y que suelta un lock que nunca comprobó haber tomado.
 
-Recorrido real del mensaje: `interpretarHito` (`hitos_viaje.ts:44-59`, lista
-cerrada) → `null`; `responderConsulta` → `null`; `atenderConfirmacion`
-(`confirmar_viaje.ts:174`) → `null` porque el viaje ya está aceptado; sin
-huérfanos. Llega a `processor.ts:1835`: `pareceCierre('ya casi')` es **`true`**
-—el regex es `^\s*(listo|ya|…)(?!\p{L})` y `ya ` cumple— pero el freno solo
-dispara `if (cuantos === 0)` (línea 1845), y aquí `cuantos === 3`. El mensaje
-pasa entero al agente, cuyo prompt lista `"ya"` como ejemplo de cierre
-(`prompts.ts:79`) y ordena en `prompts.ts:85`: «si el operador ya confirmó que
-terminó, CIERRA en ese turno con "guardar_liquidacion". NO le pidas que vuelva a
-confirmar». Con `temperature 0` y `reasoning: high`, cierra.
+### [CRÍTICO] Cierre parcial: la liquidación cierra, el operador oye "se me trabó" y su reenvío cae en "no tienes viaje abierto"
 
-**Consecuencia.** Liquidación emitida con $1,240 comprobados contra $6,000 de
-anticipo: **$4,760 en contra del chofer**, y el cierre es irreversible (0036 /
-0037). Sus tickets siguientes rebotan con «llegó después de que cerré tu
-liquidación» (`processor.ts:1099`). El contralor firma un PDF que acusa a una
-persona de un dinero que sí gastó.
+`src/lib/likida/processor.ts:2276` × `2435-2471` × `770` — **REINCIDENTE** (AG-C1
+del pase 2, sigue abierto contra el árbol de hoy).
 
-**Causa raíz probable.** El propio comentario del freno (`processor.ts:1825`)
-nombra este escenario —«basta un "ya voy" mal leído — `pareceCierre` empata "ya"
-seguido de cualquier cosa»— y luego solo protege el caso de cero comprobantes,
-que es el menos frecuente de los dos. La ambigüedad se resuelve en el prompt,
-que es justo donde no se puede garantizar.
+Escenario, con el punto de muerte exacto: el agente cerró
+(`closed = true`, `processor.ts:2099`). La siguiente línea que toca la red es
+`const entregado = await say(reply)` (`:2276`). `say` llama a `sendText`, que en
+`src/lib/meta/client.ts:120-127` usa `AbortSignal.timeout(10_000)` sobre un
+`fetch` **sin try/catch**: ante un corte de red o 10 s de latencia, **lanza**. El
+control salta al catch general de `:2435`, que no mira `ctxCerro` para decidir
+qué decir (`:2467-2471`) y manda:
 
----
+> *«Perdón, se me trabó tantito. ¿Me reenvías tu último mensaje? 🙏»*
 
-### [ALTO] El agente de cobranza le habla a la población que, por definición, está fuera de la ventana de 24 h — y quema el tier igual (REINCIDENTE, AG-A2)
-`src/lib/likida/agentes/cobranza.ts:261` ·
-`src/lib/likida/agentes/cobranza_pura.ts:87-97` ·
-`src/lib/likida/escalar_viaje.ts:62` · `src/lib/meta/client.ts:286`
+El bloque del PDF (`:2319-2415`) queda por encima del salto y no corre nunca.
+Estado al morir: `liquidacion` escrita, `viaje.estatus = 'liquidado'`, los dos
+PDF en storage, `wa_mensaje_procesado` liberado (`:2463`). Estado del humano:
+nada. Juan obedece y reenvía "listo" → `getOpenViaje` devuelve `null` porque el
+viaje ya no está abierto → `processor.ts:770`:
 
-**Escenario.** Viaje `abierto` con `fecha_inicio` = hace 3 días y `avisado_en`
-no nulo. El chofer contestó «va» el día 0 y no ha vuelto a escribir. El cron de
-las 10:00 llama `ejecutarCobranza`; `tierPendiente(3, [3,7,14], [], false)`
-devuelve `3`; la línea 261 manda el texto con **`sendText`** —free-form, sin
-plantilla—. La ventana de servicio de 24 h de WhatsApp lleva ~48 h cerrada, así
-que Meta responde `131047`/`131026`: `sendText` devuelve `null`, `enviado =
-false`, `detalle = 'WhatsApp rechazó el envío'`.
+> *«No tienes un viaje abierto para liquidar ahorita.»*
 
-La fila de `cobranza_contacto (viaje, tier=3)` **se conserva** con ese detalle
-(línea 272), así que:
-1. el rescate de claims huérfanos (líneas 207-215) no la borra —solo borra las
-   que tienen `detalle is null`—;
-2. `tierPendiente` la ve en `tiersContactados` y **nunca reintenta el tier 3**;
-3. lo mismo pasará el día 7 y el día 14.
+Callejón sin salida: liquidación cerrada e irreversible (triggers 0036/0037), PDF
+existente, y ningún camino por el que llegue. El log de `:2459` sí lo dice
+(`cerroSinEntregar: true`) — pero eso cierra el ciclo con el equipo, no con el
+operador, que es lo que este rubro mide.
 
-`escalar_viaje.ts:62` **sí** tiene su plan B (`PLANTILLA_JEFE =
-'recordatorio_cierre'`, con la caída explícita a plantilla cuando `sendText`
-rebota, líneas 222-263). Cobranza no tiene ninguna: `sendTemplate` no se importa
-en el módulo.
+Consecuencia: el chofer se queda debiendo/cobrando una liquidación que no puede
+ver, y alguien tiene que entrar a mano a la base para saber cuál fue. En un
+demo es el paso 3 del guion muriendo en silencio.
 
-**Consecuencia.** El agente que la página del panel presenta como «la cola
-honesta — a quién va a contactar» contacta a nadie: el 100 % de la población
-objetivo (choferes que llevan días sin escribir) es inalcanzable por el único
-canal que usa. El contralor ve una bitácora de fallos y el chofer nunca recibe
-nada. Es el producto vendido como «cobra solo» sin poder abrir la conversación.
+Causa raíz probable: el catch general trata "no pasó nada" y "ya cerró y no
+entregué" como el mismo suceso; el único brazo que distingue el cierre está
+dentro del `try`.
 
----
+### [CRÍTICO] El kill switch del agente de liquidación no lo lee nadie (y "Ejecutar ahora" se salta el único que sí está cableado)
 
-### [ALTO] El despacho por WhatsApp choca con la 0029 y contesta «Vuelve a responder SÍ» en bucle infinito (REINCIDENTE, AG-A3)
-`src/lib/likida/despacho_wa.ts:150-154` ·
-`src/lib/likida/operacion.ts:559-570` ·
-`supabase/migrations/0029_un_viaje_abierto_por_operador.sql:71`
+`src/lib/likida/interruptores.ts:32-37` (catálogo de ocho) contra sus únicos
+lectores: `src/app/api/cron/escalar/route.ts:79,115`,
+`src/app/api/cron/facturar/route.ts:277-279`,
+`src/app/api/cron/facturar/cola/route.ts:66-68`,
+`src/app/api/cron/purgar/route.ts:77`.
 
-**Escenario.** Juan Pérez (`operador_id` X) ya trae un viaje `abierto`. El jefe
-escribe por WhatsApp: **«nuevo viaje para Juan Pérez, Puebla a Monterrey,
-anticipo 8000»**. `atenderDespachoOficina` resuelve el nombre, guarda el
-pendiente y devuelve el resumen. El jefe contesta **«sí»** → línea 133
-`crearViaje` → el INSERT de `operacion.ts:559` viola el índice único parcial
-`uq_viaje_abierto_por_operador (tenant_id, operador_id) where estatus in
-('abierto','en_cuadre')`. `operacion.ts:570` lo relanza como
-`Error('crearViaje: duplicate key value violates unique constraint …')`. El
-catch de `despacho_wa.ts:150` **no distingue el 23505 de un fallo transitorio**,
-conserva el pendiente a propósito (línea 151) y responde: **«No se pudo crear el
-viaje ahorita. Vuelve a responder SÍ en un momento, o créalo desde Despacho.»**
+Escenario: el agente empieza a cerrar con cifras raras con un cliente real
+encima. Javier abre el ⌘K o `/admin/observabilidad`, apaga
+**`agente:liquidacion`** con motivo. La fila se escribe, `listarInterruptores`
+la devuelve y `interruptores-ui.tsx:79,100` pinta **APAGADO** en rojo con su
+nombre y la hora. Treinta segundos después un chofer manda "listo":
+`processInbound` (`processor.ts:367`) **no consulta ningún interruptor en
+ninguna de sus 2,476 líneas** — corre `runAgent`, llama `guardar_liquidacion`,
+cierra irreversiblemente y manda el PDF. Lo mismo con `global`: **no existe
+ninguna palanca que detenga el camino de WhatsApp**.
 
-El jefe responde «sí». Mismo error. Mismo mensaje. Indefinidamente hasta que
-expiren los 30 min de `VIGENCIA_PENDIENTE_MS`, y ahí el «sí» ya no encuentra
-nada y cae al saludo genérico — sin que nadie le haya dicho jamás cuál era el
-problema.
+Cinco de los ocho no tienen lector: `agente:liquidacion`, `agente:conductores`
+(la escalación de `escalar_viaje.ts`, que sí es un agente del catálogo de
+notificaciones), `agente:peajes`, `agente:proveedores`, `agente:ventas`.
 
-**Consecuencia.** El jefe de tráfico —el usuario que el producto quiere
-enganchar en el canal— recibe una instrucción falsa («vuelve a responder SÍ»)
-sobre una condición que reintentar **no puede** resolver, y no se entera de que
-lo que le falta es cerrar el viaje anterior de ese chofer. En el panel el mismo
-choque sale como «Revisa los datos e inténtalo de nuevo»
-(`src/app/dashboard/despacho/page.tsx:97`), que tampoco lo nombra.
+Y el único agente de flota con palanca cableada la pierde por el botón: el
+"Ejecutar ahora" de Cobranza
+(`src/app/dashboard/agentes/cobranza/page.tsx:96-119`) valida permiso
+(`:102`) y llama `ejecutarCobranza` en `:108` **sin pasar por `estaApagado`**.
+Con `agente:cobranza` apagado por incidente, cualquier `flota_admin` que apriete
+ese botón dispara los WhatsApp a los choferes que Javier acaba de detener.
 
-**Causa raíz probable.** La 0029 se escribió cuando «ninguna línea de `src/`
-inserta en `viaje`» (lo dice su propio encabezado); `crearViaje` nació después y
-nadie volvió a leer la migración. Ningún llamador traduce ese `23505`.
+Consecuencia: un control de seguridad que miente en el único momento para el que
+se construyó — y el propio archivo lo escribe en su encabezado ("un agente
+portándose mal con un cliente real en WhatsApp… si Javier lo apaga"). Rompe
+además la regla dura del repo: un rótulo que dice APAGADO tiene que ser verdad.
 
----
+Causa raíz probable: el catálogo y la UI se construyeron completos y el cableado
+se hizo solo donde había cron; no hay una tabla `CON_LECTOR` como la
+`CON_EMISOR` que `notificaciones.ts:186-205` sí usa para el mismo problema.
 
-### [ALTO] «El aviso a su WhatsApp va en camino» se afirma con `avisarAlChofer` ya fallado, y el viaje queda invisible para la escalación Y para cobranza (REINCIDENTE, AG-A4)
-`src/lib/likida/despacho_wa.ts:143-149` · `src/lib/likida/operacion.ts:585` ·
-`src/lib/likida/operacion.ts:658-666` · `src/lib/likida/escalar_viaje.ts:94` ·
-`src/lib/likida/agentes/cobranza.ts:116`
+### [ALTO] El PDF que se le manda al jefe es el ejemplar del OPERADOR — sin los veredictos fiscales
 
-**Escenario.** El jefe despacha por WhatsApp y confirma con «sí». `crearViaje`
-inserta el viaje y en la línea 585 hace
-`await avisarAlChofer(...).catch(() => {})`. La plantilla de asignación está en
-revisión en Meta (`132001`), así que `notificarAsignacion` devuelve
-`{enviado:false}`; `operacion.ts:664` deja `logger.error('viaje.aviso_no_salio',
-{escalaSolo:false})` y **retorna sin lanzar**, de modo que el UPDATE de
-`avisado_en` (línea 670) nunca corre: la columna queda **NULL**.
+`src/lib/likida/processor.ts:2346` × `:2397` × `src/lib/likida/avisar_cierre.ts:127`
+× `src/lib/likida/tools.ts:202-203` × `src/lib/likida/liquidacion/pdf.ts:429`
 
-`despacho_wa.ts:145` ya tiene su texto escrito y responde: **«Viaje creado ✅
-Juan Pérez · Puebla → Monterrey. / El aviso a su WhatsApp va en camino — en
-Despacho ves si ya aceptó.»** El aviso no va en camino; ya no salió.
+Escenario, con valores: el viaje trae un ticket de diésel de $8,000 cuyo emisor
+está en la lista 69-B; el motor levanta `cfdi_efos`. `tools.ts` genera **dos**
+ejemplares a propósito: `{tenant}/{viaje}.pdf` (contralor, imprime la sección
+DIFERENCIAS DETECTADAS con esa línea) y `{tenant}/{viaje}-operador.pdf`, donde
+`pdf.ts:429` filtra `SOLO_CONTRALOR` (`cuadre/resumen.ts:24-33`, que incluye
+`cfdi_efos`, `cfdi_cancelado`, `rfc_receptor`, `complemento_hidrocarburos`,
+`ieps_no_desglosado`, `texto_sospechoso`). `processor.ts:2346` firma **la ruta
+del operador** y pasa esa misma URL a `avisarCierreAlJefe` (`:2397`), que la
+manda al teléfono de la oficina como `liquidacion-VJ-2026-0847.pdf`
+(`avisar_cierre.ts:127`).
 
-Y con `avisado_en` NULL el viaje desaparece de los dos agentes automáticos:
-`viajesSinAceptar` filtra `.not('avisado_en','is',null)`
-(`escalar_viaje.ts:94`) y `colaCobranza` filtra igual
-(`cobranza.ts:116`). Nadie va a escalar a las 5 h y nadie va a cobrarle a los 3
-días.
+Sale mal así: el jefe recibe, archiva y le entrega a su contador un PDF con el
+mismo folio y los mismos totales que el del panel, pero **sin la línea del
+proveedor en lista negra de $8,000**. El texto de WhatsApp sí se la dice
+(`RUTA_DE_DIFERENCIA.cfdi_efos = 'decision'`), así que el mensaje y su adjunto
+se contradicen en el mismo hilo.
 
-**Consecuencia.** El jefe cree que su chofer fue avisado y que el sistema le
-avisará si no acepta. El chofer no sabe que tiene viaje. Los dos automatismos
-que existirían para atrapar esto están cegados por la misma columna. El único
-rastro es un `logger.error` que nadie mira desde WhatsApp.
+Consecuencia: el contralor —el comprador— archiva el documento equivocado y
+descubre la contradicción al cruzarlo contra el panel; es exactamente el "se lee
+distinto en dos pantallas" que el producto promete no hacer. El propio
+encabezado de `avisar_cierre.ts:14-19` dice que ese PDF "es el documento que va a
+archivar y que le va a dar a su contador".
 
-**Causa raíz probable.** `crearViaje` traga el fallo del aviso a propósito (el
-viaje ya existe), pero no devuelve nada que diga si salió; `despacho_wa` redacta
-su confirmación sin poder preguntarlo.
+Causa raíz probable: `data.signedUrl` se reusa para los dos destinatarios porque
+es la que ya estaba firmada; el ejemplar del contralor nunca se firma.
 
----
+### [ALTO] La recuperación del cierre parcial está detrás de un flag apagado por código
 
-### [ALTO] El PDF que el jefe recibe por WhatsApp es el ejemplar CENSURADO del operador — sin EFOS, sin CFDI cancelado, sin RFC receptor
-`src/lib/likida/processor.ts:2157-2158` · `src/lib/likida/processor.ts:2170` ·
-`src/lib/likida/processor.ts:2209` · `src/lib/likida/avisar_cierre.ts:113-133` ·
-`src/lib/likida/liquidacion/pdf.ts:404-406` ·
-`src/lib/likida/cuadre/resumen.ts:24-33`
+`src/lib/likida/processor.ts:2134`
 
-**Escenario.** Cierra un viaje con dos veredictos fiscales: un CFDI de diésel de
-$9,400 cuyo emisor está en la lista negra 69-B (`cfdi_efos`) y una caseta de
-$780 con el CFDI cancelado (`cfdi_cancelado`). `guardar_liquidacion` genera los
-**dos** ejemplares (`tools.ts:188-189`): `{tenant}/{viaje}.pdf` (contralor,
-completo) y `{tenant}/{viaje}-operador.pdf` (filtrado por `SOLO_CONTRALOR`,
-`pdf.ts:406`).
+Escenario: el ciclo del agente ejecuta `guardar_liquidacion` con éxito en la
+ronda 3 y la ronda 4 revienta (timeout de los 40 s de `reloj.acotar`, o el
+`LoopGuardError` de `openrouter.ts:731`). `generateWithTools` envuelve todo en
+`PartialExecutionError` con esa tool en `partialToolCalls` — y la recuperación
+solo corre si `process.env.LIKIDA_RECUPERAR_CIERRE_PARCIAL === '1'`. El default
+del código es **apagado**; con él apagado se cae al `else` de `:2179` y el
+operador recibe *«Perdón, se me trabó el sistema tantito»* sobre una liquidación
+que **ya está cerrada en la base**, con el mismo callejón del hallazgo AG-C1.
 
-`processor.ts:2158` firma **`-operador.pdf`** —correcto, es el que va al
-chofer— y en la línea 2209 pasa **esa misma `data.signedUrl`** a
-`avisarCierreAlJefe`, que la manda al teléfono de la oficina como
-`liquidacion-{folio}.pdf` con el caption «Liquidación de {operador} — {folio}»
-(`avisar_cierre.ts:127-128`). El encabezado de ese archivo dice, con todas sus
-letras, que ese PDF «es el documento que va a archivar y que le va a dar a su
-contador» (`avisar_cierre.ts:14-19`).
+`.env.example:81` lo trae en `1` y `docs/conocimiento/51-boletin-tecnico.md:101`
+lo lista como *«Ya está resuelto detrás del flag; falta prenderlo»* — o sea que
+el arreglo depende de una variable de entorno que, según la propia
+documentación, sigue sin ponerse en Vercel.
 
-**Consecuencia.** El contralor archiva —y le entrega a su contador— una
-liquidación de la que se borraron exactamente los veredictos que deciden la
-deducibilidad: proveedor en 69-B, CFDI cancelado, RFC receptor equivocado,
-IEPS no desglosado, complemento de hidrocarburos. El ejemplar bueno existe y
-está en `liquidacion.pdf_path`, pero solo entrando al panel. El texto de
-`armarAvisoJefe` mitiga a medias (los dos tipos del ejemplo van a `'decision'`)
-y a medias no: corta a 6 líneas y los veredictos ruteados a `'panel'`
-(`cfdi_pendiente`, `cfdi_efos_indeterminado`, `permiso_cre_no_verificable`) no
-aparecen ni en el texto ni en ese PDF.
+Consecuencia: el brazo del cierre parcial —el punto de muerte más caro del
+ciclo— está construido, probado y desconectado. El modo de falla es silencioso:
+nada en el sistema dice si el flag está puesto.
 
-**Causa raíz probable.** La URL firmada se reusó por economía (un solo
-`createSignedUrl`, un solo TTL) sin notar que cambia de destinatario a mitad del
-bloque; el comentario de la línea 2157 declara el ejemplar correcto para el
-chofer y nadie volvió a leerlo 50 líneas más abajo.
+Causa raíz probable: un default conservador que sobrevivió a su propia
+justificación (HARD RULE 3, "el flag preserva el comportamiento actual").
 
----
+### [ALTO] Todo el camino de los agentes de fondo consulta Supabase sin techo de tiempo
 
-### [ALTO] «Llevas N días con tu viaje sin mandarme comprobantes» — la consulta nunca cuenta un comprobante
-`src/lib/likida/agentes/cobranza.ts:105-117` ·
-`src/lib/likida/agentes/cobranza_pura.ts:109`
+`src/lib/likida/agentes/notificaciones.ts:622, 654, 678, 700, 738, 765, 794, 811`
+· `src/lib/likida/agentes/corridas.ts:54` · `src/lib/likida/pg.ts` (sin una sola
+llamada a `acotada`) · `src/lib/likida/agentes/cobranza.ts` (cero `acotada`).
 
-**Escenario.** Viaje `abierto`, `fecha_inicio` = hace 3 días, `avisado_en` no
-nulo. El chofer mandó **18 comprobantes por $14,300** el mismo día 1 y el viaje
-sigue abierto porque todavía no escribe `listo` (o porque el cierre se cayó, ver
-el CRÍTICO de arriba). `colaCobranza` selecciona por `estatus in
-('abierto','en_cuadre')`, `fecha_inicio not null` y `avisado_en not null` —
-**no hay una sola referencia a `gasto` en toda la consulta ni en
-`tierPendiente`**—, así que ese viaje entra a `paraContactar`, y
-`armarMensajeCobranza` le manda literalmente:
+Escenario: `ejecutarCobranzaGlobal` gasta sus 90 s presupuestados
+(`cobranza.ts:339,362`) y en el segundo 91 llama `avisarCorridasPorFlota`
+(`:399`), que entra a `leerEstado` (`notificaciones.ts:700`). Ese `fetch` hereda
+el default de undici: **300 000 ms**, contra el `maxDuration = 120` del cron. Un
+socket aceptado que no contesta cuelga la invocación; Vercel la mata a los 120 s.
 
-> «Llevas 3 días con tu viaje *VJ-1042* sin mandarme comprobantes. 📋 /
-> Mándame las fotos de tus recibos…»
+Sale mal así: se mandaron 40 WhatsApp a choferes reales y **no queda ninguna
+fila** en `agente_corrida` para ninguna flota (`registrarCorrida` va después, en
+`:401`), no sale el correo de `corrida_fallida` de las que sí fallaron, y la
+pestaña "Historial de corridas" del cliente enseña esa hora **vacía** — que se
+lee como "el agente no corrió", cuando corrió y contactó a su gente.
 
-Y se lo repite el día 7 y el día 14. La palabra «comprobantes» aparece **una
-sola vez** en los dos archivos del motor: en ese texto.
+`presupuesto.ts:78-101` documenta este modo de falla palabra por palabra y creó
+`acotada()` justamente para él; los agentes nuevos de esta ronda nacieron fuera
+de esa red.
 
-**Consecuencia.** El chofer que sí hizo su trabajo es acusado por escrito, tres
-veces, de no haberlo hecho — por el canal que es todo el producto. Es una
-violación directa de «un rótulo tiene que ser verdad»: la frase afirma un hecho
-que la consulta que la disparó no comprobó. Además entrena a ignorar el canal,
-que es justo lo que el diseño de tiers dice estar evitando
-(`cobranza.ts:28-30`).
+Consecuencia: el historial que se le vende al cliente como la prueba de que el
+agente trabaja puede mentir por omisión, y una corrida colgada se lleva el cron
+entero sin dejar un error.
 
-**Causa raíz probable.** Heredado tal cual de `recordatorio_comprobacion.ts`
-(0087, hoy borrado), cuyo `select` tampoco tocaba `gasto`; la
-productización 0089 movió el texto a `cobranza_pura.ts` y copió el rótulo sin
-revisar contra qué se estaba afirmando.
+Causa raíz probable: `acotada` se importa por archivo, no está impuesta en una
+capa; `corridas.ts` sí la importa (`:17`) pero solo para las lecturas de panel,
+no para el `insert` de `:54`.
 
----
+### [MEDIO] El rescate de claims de Cobranza puede reenviar un recordatorio ya entregado
 
-### [ALTO] Un comprobante huérfano que ya fue ofrecido y no recibe un «sí» exacto sale de la conversación para siempre
-`src/lib/likida/processor.ts:1684-1760` (esp. `1687`, `1693`, `1753`) ·
-`src/lib/likida/repo.ts:334-340` · `src/lib/likida/repo.ts:342-358` ·
-`src/lib/likida/intake/huerfanos.ts:118-124`
+`src/lib/likida/agentes/cobranza.ts:225-232` × `:312-316`
 
-**Escenario.** El chofer mandó 4 fotos sin viaje abierto ($3,200 de diésel), que
-quedaron en `comprobante_huerfano`. La flota le abre el viaje. Turno 1: escribe
-«hola» → línea 1753 se le ofrece («¿Los agrego a este viaje? Contéstame *sí* o
-*no*») y `marcarHuerfanosOfrecidos` escribe `ofrecido_en`. Turno 2: en vez de
-contestar, escribe **`listo`** (o «claro que sí, agrégalos todos», 5 palabras →
-`esAfirmacion` devuelve `false` por el tope de 4 de `huerfanos.ts:120`).
+Escenario: el tier 3 de Juan se reclama, `sendText` **sí** entrega el mensaje
+("llevas 3 días sin cerrar el viaje VJ-2026-0847"), y acto seguido el
+`update({ enviado: true, detalle: null })` de `:312` falla por un blip de
+Supabase — el código solo deja un `logger.warn` (`:316`). La fila queda
+`enviado = false, detalle = null`. Una hora después, la corrida siguiente ejecuta
+el DELETE de rescate de `:225-232`, cuya condición es exactamente
+`enviado = false AND detalle IS NULL AND created_at < ahora - 1h`, con el
+comentario *«Una fila sin resultado después de 1 hora es un crash probado»*. El
+unique se libera, `colaCobranza` vuelve a ver el tier pendiente y **Juan recibe
+el mismo recordatorio por segunda vez**.
 
-`esAfirmacion('listo')` es `false` **a propósito** (`huerfanos.ts:113-115`), y
-`esNegacion` también. Y la rama de re-ofrecer exige `!ofrecidos.length`
-(línea 1753), que ya no se cumple. El bloque entero se salta sin decir nada, el
-agente cierra la liquidación, y los 4 huérfanos quedan con `resuelto_en = null`
-y `ofrecido_en` puesto.
+Consecuencia: el canal que este agente cuida de volverse ignorable manda
+duplicados, y la bitácora que el cliente lee pierde el registro del primer
+contacto. El único caso que el rescate no puede distinguir es justo el de un
+envío que sí salió.
 
-**`ofrecido_en` no se limpia en ningún lado del repo.** En el viaje siguiente
-`getHuerfanos` los devuelve, `ofrecidos.length` vuelve a ser 4 y la rama de
-ofrecer se vuelve a saltar: **nunca se le vuelven a ofrecer, en este viaje ni en
-ningún otro.** Solo se pueden rescatar desde `/dashboard/huerfanos`
-(`resolverHuerfanoDesdeOficina`), si el contralor entra y los ve.
+Causa raíz probable: la fila-claim usa la misma firma (`enviado=false`,
+`detalle=null`) para "aún no sé el resultado" y para "murió antes de saberlo".
 
-**Consecuencia.** $3,200 que el chofer sí gastó quedan fuera de su liquidación,
-que se cierra irreversible, y el canal por el que él los mandó nunca vuelve a
-mencionarlos. El comentario de `repo.ts:345-347` afirma exactamente lo
-contrario —«lo que queda es una fila todavía pendiente *que se vuelve a
-ofrecer*»—; esa invariante no se cumple una vez que `ofrecido_en` está escrito.
-El mismo callejón atrapa a los huérfanos cuyo `addGasto` falló a media lista
-(línea 1706): se quedan pendientes, ya ofrecidos, y el mensaje que sale
-(`mensajeAdjuntados` con solo los que sí entraron) no menciona a los que no.
+### [MEDIO] "Ejecutar ahora" que truena no deja corrida ni dice qué alcanzó a mandar
 
----
+`src/app/dashboard/agentes/cobranza/page.tsx:96-119`
 
-### [MEDIO] El adjuntar-huérfanos escribe `gasto` sin mutex y sin tocar la barrera de intake — es el tercer insertor y el único no cubierto
-`src/lib/likida/processor.ts:1700` · vs. `src/lib/likida/processor.ts:719`
-(foto) y `src/lib/likida/processor.ts:1376` (XML) ·
-`src/lib/likida/conv.ts:567`
+Escenario: el encargado aprieta *Ejecutar ahora*. `ejecutarCobranza` (`:108`) no
+está en try/catch, y `leerConfigCobranza` (`cobranza.ts:41`) **lanza** ante un
+error de lectura; `colaCobranza` también. La server action rechaza, el cliente
+cae al error boundary, y `registrarCorrida` —que está en `:110`, después— no se
+ejecuta: no queda fila en `agente_corrida`. Si el fallo ocurre a mitad del bucle
+de envíos, hubo mensajes enviados y la bitácora de corridas dice que esa corrida
+manual **no existió**.
 
-**Escenario.** El chofer tiene 4 huérfanos ofrecidos ($3,200). Escribe **«sí»**
-y, 3 segundos después, **«listo»**. Meta los entrega como dos webhooks; las dos
-invocaciones de `processInbound` corren en paralelo.
+Además `estado` aquí solo puede valer `'ok'` o `'parcial'` (`:114`): el dominio
+tiene `'fallo'` y este llamador no puede producirlo nunca.
 
-- El turno del «sí» entra al bloque de huérfanos, que vive **antes** de
-  `esperarIntake` (línea 1765) y **antes** de `acquireViajeLock` (línea 1798), y
-  hace 4 `addGasto` seriales. **No hace `intakeDelta(+1)`** — a diferencia de la
-  foto (línea 719) y del XML (línea 1376, agregado en la auditoría 8 por esta
-  misma razón).
-- El turno del «listo» consulta `intakePendientes` → `0` (nadie incrementó) →
-  la gracia de 2 s pasa → toma el mutex, corre el agente y cierra.
+Consecuencia: el cliente aprieta un botón que manda WhatsApp a sus choferes y no
+tiene forma de saber si salieron; el historial que la ficha promete queda con un
+hueco donde sí hubo actuación.
 
-Si el cierre gana la carrera, los `addGasto` restantes chocan con el trigger
-0036 (`CU001`), caen en el `catch` de la línea 1702 como
-`logger.error('huerfano.adjuntar_error')` y **no** entran a `puestos`.
+Causa raíz probable: el registro de la corrida se escribió para el camino feliz y
+vive fuera de un `finally`.
 
-**Consecuencia.** Parte de los $3,200 queda fuera de una liquidación ya emitida;
-al chofer se le contesta «Listo, agregué los N comprobantes» con un N menor al
-que él ofreció y sin una palabra sobre los que faltaron; y los que faltaron caen
-en el callejón del hallazgo anterior. La barrera existe justamente para que
-ningún camino que inserte `gasto` sea invisible al «listo» — este lo es.
+### [BAJO] `getSystemPrompt` cae al prompt de liquidación ante una llave desconocida
 
----
+`src/lib/agents/prompts.ts:13-15`
 
-### [MEDIO] `agente.sin_presupuesto` entrega un cuadre completo, deja el viaje abierto, y no se lo dice a nadie
-`src/lib/likida/processor.ts:1881-1892`
+Escenario: alguien agrega un agente con `systemPromptKey: 'analista_flota_v2'` en
+`registry.ts` y olvida el `case`. `getSystemPrompt` no lanza: devuelve
+`liquidacionPrompt(ctx)`. El agente nuevo —que puede estar hablando con el
+contralor en el panel— arranca con *«Eres Likida, el asistente de liquidación de
+viajes de {flota}. Hablas por WhatsApp con OPERADORES (choferes de carga)»* y con
+la REGLA DE CIERRE que lo autoriza a llamar `guardar_liquidacion`.
 
-**Escenario.** La ráfaga se comió el reloj: la barrera esperó 20 s y el mutex
-otros 12. `reloj.alcanza(15_000)` es `false`. Se calcula el cuadre real y se
-manda `resumenCuadre(liq, false, 'operador')`, que empieza con **«Este es el
-cuadre de tu viaje 👇»** seguido de comprobado, anticipo y diferencia. Después,
-`return` — sin `saveConversation` (el `listo` del chofer no queda ni en el
-historial), sin cerrar, sin PDF y **sin una línea que diga qué falta**.
+Consecuencia: destinatario equivocado por una llave mal escrita, sin un solo
+error. Hoy no muerde (dos llaves y un `analista_flota`), pero es deuda que cobra
+factura en cuanto haya un séptimo agente.
 
-**Consecuencia.** El chofer escribió «listo», recibió lo que parece el resultado
-final con sus cifras y deja de mandar comprobantes. El viaje sigue `abierto`; el
-contralor no tiene liquidación; nadie le pide al chofer que vuelva a escribir
-`listo`. Lo único que le llegará después es el agente de cobranza al tercer día
-diciéndole que no ha mandado comprobantes (ver el ALTO de arriba), que es la
-peor forma posible de cerrar este ciclo.
-
-**Causa raíz probable.** La rama se construyó para «una respuesta correcta en
-vez de silencio» y logra eso; lo que no hace es declarar el estado del viaje ni
-la acción pendiente, que es lo único que reabre el ciclo.
+Causa raíz probable: un `default` que adivina en vez de fallar cerrado.
 
 ## Lo que revisé y está bien
 
-Puntos de muerte que recorrí con la pregunta «si el proceso muere aquí, ¿qué ve
-el humano y qué quedó en la base?» y que **sí** cierran:
+**El recorrido punto-de-muerte por punto-de-muerte del turno de WhatsApp**
+(`processor.ts`, de arriba a abajo). En cada punto pregunté: si el proceso muere
+aquí, ¿qué ve el humano y qué quedó en la base?
 
-- **Muere entre el `+1` de la foto y el OCR** — `processor.ts:719-735`: sin
-  incremento confirmado no se procesa la foto, se avisa al operador con
-  instrucción concreta, y se libera el claim (`releaseMessageClaim`). El
-  `finally` de la línea 1294 devuelve el `-1` pase lo que pase, y el TTL de 10
-  min de `conv.ts:543-547` limpia el `+1` de una invocación que no volvió.
-- **Muere el sondeo de la barrera** — `conv.ts:488-548`: `intakeDelta` e
-  `intakePendientes` devuelven `null` (no `0`) ante error, y `esperarIntake`
-  (`conv.ts:598-601`) trata `null` como «no sé» → fail-closed → `intakeOk =
-  false` → aviso explícito al operador en `processor.ts:2119-2129`, bifurcado por
-  `closed` para no afirmar un cuadre que no ocurrió.
-- **Dos «listo» a la vez** — `processor.ts:1798-1814`: mutex + re-verificación
-  de `getOpenViaje` después de tomarlo; el turno que pierde el lock **avisa y
-  libera el claim** en vez de desaparecer.
-- **Mutación repetida dentro del mismo ciclo** —
-  `tool-executor.ts:147-170`: se cachea la **promesa**, no el resultado, así que
-  dos `guardar_liquidacion` en el mismo `Promise.all` se enganchan a la misma
-  ejecución; y `openrouter.ts:799` solo cachea entre rondas las tools
-  `isReadOnly`. El fallback cross-provider (`openrouter.ts:718-728`) reintenta
-  **solo el completado**, nunca una tool ya ejecutada.
-- **El modelo narra una cifra o un hecho falso** — `guardia.ts:38-114` sustituye
-  el texto por el resumen del motor siempre que corrió `cuadrar_viaje` o
-  `guardar_liquidacion`, usando el **snapshot** que la tool devolvió (no una
-  segunda lectura de la base), y con `destinatario: 'operador'` para no mandarle
-  veredictos al chofer; `guardiaEstado` (`processor.ts:2074-2086`) cotea
-  «ya cerré» contra `closed`, que sale de las tool calls y no de una heurística.
-- **El PDF no sale** — `processor.ts:2151-2226`: se revisa `pdf_generado`,
-  `pdf_contralor_generado` y el resultado de `sendDocument`, y en los tres casos
-  se le dice al operador la verdad («ya quedó cerrada, pídeselo a tu contralor»).
-- **Meta rechaza un envío** — `say` (`processor.ts:683-688`) devuelve si salió, y
-  el turno del asistente **no** entra al historial si rebotó
-  (`processor.ts:2236-2245`, y el gemelo de la confirmación en 1644-1657); las
-  marcas (`intentosConfirmacion`, `cierreSinComprobantes`) se arrastran en vez de
-  recalcularse.
-- **Carrera del INSERT de la conversación** — `conv.ts:261-286`: choca contra
-  `wa_conversacion_tenant_tel_uidx`, relee la fila ganadora y lanza
-  `ConsultaFallida` si no aparece, en vez de devolver `id: ''`.
-- **El historial cruza de viaje** — `conv.ts:294-314`: `desdeFila` descarta
-  turnos y marcas cuando el `viaje_id` no coincide.
-- **El chat del panel** — `analista.ts:168-183` y `353-389`: guardia
-  determinística de cifras con reintento acotado y bloqueo final
-  (`AVISO_SIN_RESPALDO`), no solo la promesa del prompt.
-- **El hito** (`hitos_viaje.ts:73-111`) sella con `WHERE <col> IS NULL`, de modo
-  que el mensaje repetido no mueve la hora, distingue `ya_estaba` de `fallo`, y
-  la lista de frases es cerrada y anclada para no comerse mensajes del agente.
-- **El cron** (`api/cron/escalar/route.ts`) falla cerrado sin `CRON_SECRET` y
-  responde 500 —no 200— cuando cualquiera de los dos motores truena.
+1. **Antes del claim** (`:369`) — Meta reintenta solo si la ruta no devolvió 2xx;
+   `route.ts:244-249` ya contesta 429 con `Retry-After` para lo que no cupo, y el
+   claim convierte la reentrega en no-op. Cierre definido.
+2. **Claim indeterminado** (`:374-382`) — no se abandona el turno; se acepta
+   reprocesar porque los efectos con dinero tienen candado propio (hash de
+   imagen, `on conflict(viaje_id)`). Correcto y documentado.
+3. **Gate del aviso de privacidad** (`:617-636`) — cuatro desenlaces, no dos; el
+   claim se libera solo cuando el fallo es nuestro y transitorio. Cierre definido
+   en los cuatro.
+4. **Sin viaje abierto** (`:638-771`) — el XML se conserva por UUID, el
+   consolidado se concilia, la foto huérfana se guarda con su imagen, y cada
+   rama tiene su frase. La única pérdida declarada (huérfano con `monto: 0` que
+   nunca se ofrece) está escrita en el código, no escondida.
+5. **Barrera de ráfaga** (`conv.ts:488-610`) — `intakeDelta`/`intakePendientes`
+   devuelven `null` y no `0` ante un error, la gracia anti-carrera de 2 s cubre
+   fotos y "listo" en el mismo lote, y el `+1` fallido corta la foto en vez de
+   sostener la barrera con un incremento que no ocurrió (`processor.ts:855-871`,
+   con liberación de claim). Fail-closed real.
+6. **Mutex ocupado** (`:1984-1993`) — ya no se abandona en silencio: avisa y
+   libera el claim.
+7. **Re-verificación tras el lock** (`:1997`) — el segundo "listo" no re-corre el
+   agente.
+8. **Sin presupuesto para el agente** (`:2070-2080`) — se manda el resumen
+   determinístico del motor en vez de arrancar un ciclo que Vercel va a cortar.
+   Es el mejor cierre del archivo.
+9. **Ciclo del agente** (`openrouter.ts:731-838`) — el loop-guard corta **antes**
+   de pagar la última ronda de tools (`:697-700`), el fallback solo reintenta el
+   *completado* (nunca re-ejecuta una mutación), la caché cross-round solo guarda
+   lecturas exitosas, y la rejilla de `tool-executor.ts:147-169` impide dos
+   `guardar_liquidacion` en el mismo ciclo. No encontré un reintento que duplique
+   efecto por esta vía.
+10. **Guardias de salida** — `guardiaCifras` usa el **snapshot** que
+    `guardar_liquidacion` devolvió (`guardia.ts:69-72`, `tools.ts:230`) en vez de
+    releer la base, así que el PDF archivado y el WhatsApp narran la misma
+    fotografía; `resumenCuadre(..., 'operador')` va explícito en los tres sitios
+    (`guardia.ts:114`, `processor.ts:2074`, `:2174`); `guardiaFundamento` recibe
+    el historial crudo y decide por tema; `guardiaEstado` cotejando `closed`
+    contra las tool calls, con `entrego: 'pendiente'` y no `false`. El portón de
+    `cifras.ts:79-90` evalúa por cláusula y cubre cardinales sueltos y palabras.
+11. **Entrega del PDF** (`:2319-2415`) — se revisa `pdf_generado`,
+    `pdf_contralor_generado`, el resultado de `sendDocument`, y hay frase al
+    operador en los dos modos de fallo.
+12. **`saveConversation`** (`:2424-2433`) — solo guarda el turno del asistente si
+    el envío salió; las marcas se arrastran explícitamente para no borrarlas al
+    reescribir el jsonb.
+
+**Lo que llegó de master y aguanta el examen:**
+
+- **Peajes ya es agente**: `desglose_peaje.ts:600-640` registra corrida con
+  disparo real y `registrarCorrida` nunca lanza.
+- **El escalado se emite de verdad**: `escalar_viaje.ts:260-360` reclama ANTES de
+  mandar (`reclamarEscalacion`, UPDATE condicional con `is('escalado_en', null)`),
+  cada envío en su propio try/catch para no tumbar el lote, y el par
+  `conductores:escalado` está en `CON_EMISOR` con su llamador real.
+- **`CON_EMISOR`** (`notificaciones.ts:186-205`) es el patrón correcto para no
+  ofrecer interruptores decorativos — y `validarConfigNotificaciones:294-302`
+  descarta en el guardado los eventos sin emisor, no solo en el render.
+- **El piso de una hora y el parpadeo (B7/B8)**: `debeAvisar:441-517` distingue
+  `ultimoDeIncidenteCerrado`, `cerrarIncidente` conserva la huella y
+  `guardarMagnitud` la degrada a la marca 1 — el agente que falla un lote sí y
+  uno no manda un correo por hora, no uno por lote. `reclamarAviso:773-789` mueve
+  la decisión a Postgres con `.or(avisado_en.is.null,avisado_en.lt.<umbral>)`.
+- **`FalloDePlataforma`** (`:917-923`) evita acusar al cliente de un problema
+  nuestro.
+- **Destinatarios**: `repartoDe:565-601` filtra por `puedeVerRuta`, deduplica por
+  correo, topa en 20 y declara cada exclusión con su porqué. Nunca operadores.
+- **Corte por reloj de Cobranza** (`cobranza.ts:255-266`, `:362-380`): el corte
+  ocurre **antes** del claim, así que un tier no se consume sin mandar nada.
+- **`avisarCorridasPorFlota`** con `allSettled` y sin propagar: un Resend caído no
+  convierte una corrida buena en fallida.
 
 ## Lo que NO alcancé a revisar
 
-- **El agente `analista` del panel de punta a punta** (`analista.ts`,
-  `chat-tools.ts`, streaming NDJSON, historial 0088): revisé su guardia de cifras
-  y su prompt, no el ciclo completo de tools ni el comportamiento del stream
-  cuando la conexión muere a media secuencia.
-- **`crear_viaje_wa.ts` como parser** (~660 líneas): solo lo seguí desde
-  `despacho_wa`; no audité `interpretarPeticionViaje` frase por frase (falsos
-  positivos del parser, anticipos mal leídos, `resolverOperadorPorNombre` con
-  homónimos parciales).
-- **Los otros cinco agentes del panel** (`liquidacion`, `facturas`, `peajes`,
-  `proveedores`, `conductores`): solo miré cobranza, que es el único con motor
-  que manda mensajes solo.
-- **`escalar_viaje.ts` completo** (reaviso, doble corrida del cron, plantilla vs.
-  texto): lo leí para confirmar AG-A2 y AG-A4, no como ciclo propio.
-- **El acuse de ráfaga bajo concurrencia real** (`intake/rafaga.ts`, libreta en
-  memoria): la libreta vive en el proceso, así que dos instancias de Lambda
-  atendiendo la misma ráfaga tendrían dos libretas — no lo verifiqué.
-- **`consulta_chofer.responderConsulta` corre antes de la barrera**
-  (`processor.ts:1558`), así que un «¿cuánto llevo?» durante una ráfaga puede
-  contestar de menos; no medí si el texto lo declara.
+- **El agente analista del panel** (`agents/analista.ts`, `chat-tools.ts`, 675
+  líneas): solo leí su prompt. No recorrí su ciclo de tools, su
+  `entregar_respuesta` ni el tope diario `LIKIDA_CHAT_TOPE_DIA_USD`. Es el otro
+  agente que habla con un humano y merece su propio recorrido.
+- **El agente de Proveedores por correo** (`0108`, disparo `'correo'`): no abrí
+  el buzón ni el webhook de entrada; ahí vive el punto de muerte "llegó el
+  correo, no se cerró el ciclo".
+- **El cron de facturación** (`api/cron/facturar/**`, con Chromium): solo
+  verifiqué que consulta los interruptores. Su ciclo de vida completo —claim,
+  CAPTCHA, `cola_atorada`— no lo recorrí.
+- **`despacho_wa.ts` / `asignar_wa.ts` / `talacha_wa.ts`**: el pendiente único y
+  su confirmación SÍ/NO es una máquina de estados con destinatario de oficina que
+  no auditté; el orden de precedencia en `processor.ts:485-558` parece cuidado,
+  pero no lo verifiqué contra carreras.
+- No pude comprobar el valor real de `LIKIDA_RECUPERAR_CIERRE_PARCIAL` en Vercel
+  (sin credenciales). El hallazgo se basa en el default del código y en lo que la
+  propia documentación del repo dice que falta.

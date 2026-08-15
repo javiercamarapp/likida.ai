@@ -1,447 +1,459 @@
-# Operabilidad y DX — auditoría 3
+# Operabilidad y DX — auditoría 3 (pase 3)
 
-**Nota: 6/10** (antes 5). Razón del movimiento: **se atacó y subió** — OP-C1 está
-vivo y verificado en `escalar/route.ts:99`, OP-A2 subió de `info` a `error`, y
-esta ronda leí de punta a punta cosas que el pase anterior no acreditó (el
-`huellaId` reversible-contra-la-base del `logger`, los 12 sondeos de esquema del
-arranque, `runbook.test.ts` como guardián de `.env.example`, un CI que corre
-build + cobertura en TODAS las ramas, un runbook que declara lo que NO cubre).
-La nota no pasa de 6 porque encontré **la misma forma de OP-C1 en otro sitio**:
-un motor del camino del dinero cuyo 100% de fallos se registra en nivel `info` y
-contesta 200.
+**Nota: 7/10** (antes 6). Razón del movimiento: **se atacó y subió** — `f7d6981`
+construyó de verdad lo que su asunto promete para el camino que **lanza**: un
+canal de correo al operador (`alerta.ts`), un `codigo` estable que separa causas
+en el fingerprint de Sentry (`sentry.ts:259`), un `/api/health` que contesta 503
+cuando la base no responde, y una `/admin/salud-sistema` donde cada semáforo está
+MEDIDO o dice que no lo está. Eso es maquinaria real, no prosa.
 
-**El riesgo mayor, hoy:** el Agente de Cobranza puede dejar de contactar a TODOS
-los choferes de TODAS las flotas —cada hora, indefinidamente— y el cron seguirá
-saliendo verde en Vercel con una sola línea `info`; nadie se entera hasta que un
-contralor pregunte por qué no le llegaron comprobantes.
+No pasa de 7 por tres cosas verificadas hoy: **OP-C1 sigue vivo palabra por
+palabra**; encontré **la misma forma en cobranza, agravada** —ahí el 100 % de
+fallos no solo calla, sino que **CIERRA su propio incidente con un éxito falso**
+(el bug que `escalar_viaje.ts:392` arregló el 14-ago y que su hermano no
+heredó)—; y el canal nuevo **sigue sin haberle llegado nunca a un humano**: no
+hay botón de prueba para `ALERTA_EMAIL`, `DEPLOY.md` ni siquiera la nombra en su
+tabla de variables, y su sección «Lo que este runbook NO cubre» todavía afirma
+que **no existe ningún canal**.
+
+**El riesgo mayor, hoy:** el Agente de Cobranza puede fallar 40 de 40 contactos,
+en las 3 flotas, cada hora e indefinidamente, y el sistema entero lo lee como una
+corrida sana: HTTP 200, `logger.info('cron.cobranza.ok')`, cron verde en Vercel,
+cero eventos en Sentry, cero correos a Javier — y además `corridas.set(t, null)`
+le dice al motor de avisos que el problema se resolvió, re-armando el filo que
+existe justo para contarlo.
 
 ---
 
 ## Hallazgos
 
-### [CRÍTICO] Cobranza y escalación: 100% de fallos → HTTP 200 y nivel `info` (REINCIDENTE de forma, OP-C1)
+### [CRÍTICO] 100 % de fallos sin excepción → HTTP 200 y nivel `info` (REINCIDENTE, OP-C1)
 
-`src/app/api/cron/escalar/route.ts:85-93,99` · `src/lib/likida/agentes/cobranza.ts:251-257` · `src/lib/likida/escalar_viaje.ts:203-205,285`
+`src/app/api/cron/escalar/route.ts:90,94,121,139` · `src/lib/likida/agentes/cobranza.ts:328` · `src/lib/likida/escalar_viaje.ts:235,367`
 
-**Escenario.** La 0089 (`cobranza_contacto`) no está aplicada en producción, o un
-constraint/RLS de esa tabla cambia — exactamente la clase de cosa que ya pasó
-esta semana con la FK compuesta de la 0075 (`2e59040`/`566a962`). Entra: la
-corrida horaria con 3 flotas y 40 viajes vencidos. Sale:
+**Escenario, con valores.** `WHATSAPP_ACCESS_TOKEN` caduca — el propio
+`.env.example:19` lo marca «CADUCA» y `DEPLOY.md:80` lo llama sospechoso número
+uno. A las 03:00 corre `/api/cron/escalar` con 3 flotas y 40 viajes vencidos.
+Cada `sendText` devuelve `null` y cada `sendTemplate` devuelve `{ok:false}`, así
+que `escalarViajesSinAceptar` empuja 12 renglones a `r.fallos`
+(`escalar_viaje.ts:344`) y `ejecutarCobranza` empuja 40 a `r.fallos`
+(`cobranza.ts:308`). **Ninguno lanza.** La ruta entra por la rama feliz:
 
+```ts
+const r = await escalarViajesSinAceptar();
+logger.info('cron.escalar.ok', { ...r });        // ← :94, INFO
+...
+const r = await ejecutarCobranzaGlobal();
+logger.info('cron.cobranza.ok', { ...r });       // ← :121, INFO
+...
+return NextResponse.json(resultado, { status: huboFallo ? 500 : 200 });  // ← :139
 ```
-const { error: errClaim } = await admin.from('cobranza_contacto').insert({...});
-if (errClaim) {
-  if (errClaim.code !== '23505') r.fallos.push(`reclamar ${v.folio}: ${errClaim.message}`);
-  continue;                       // ← ni un logger.warn, ni un logger.error
+
+`huboFallo` (`:90`) solo se pone a `true` dentro de los dos `catch`, y ningún
+`catch` se dispara. Sale: **200**, dos líneas `info`. `logger.ts:148` solo
+replica `warn`/`error` a Sentry, así que Sentry no ve nada. `alertarOperador`
+no se llama: solo vive en los `catch`. El cron queda **verde** en el panel de
+Vercel.
+
+**Consecuencia.** El agente que existe para que vuelvan los comprobantes queda
+mudo para 750 choferes, y el contralor lo descubre cuando pregunta por qué no le
+llegó nada. A la mañana siguiente lo único que hay es
+`{"level":"info","msg":"cron.cobranza.ok","meta":{"tenants":3,"contactados":0,"fallos":[...]}}`
+en el runtime log de Vercel — retención corta y **sin log drain**, lo dice
+`DEPLOY.md:24-27`.
+
+**Causa raíz probable.** El motor reporta los fallos POR VALOR (`fallos: string[]`)
+y el cron solo mira excepciones; nada lee `r.fallos.length` para decidir el
+status ni el nivel del log — es `exigir()` de `analytics.ts` sin aplicar al cron.
+
+*(REINCIDENTE del pase 2, sin un solo cambio: los mismos cuatro puntos, con las
+líneas corridas por el kill switch de la 0110.)*
+
+---
+
+### [CRÍTICO] Cobranza cierra su propio incidente con un éxito falso — el bug que su hermano ya arregló
+
+`src/lib/likida/agentes/cobranza.ts:387,399` · contra `src/lib/likida/escalar_viaje.ts:392` · `src/lib/likida/agentes/notificaciones.ts:458-461`
+
+**Escenario, con valores.** Misma corrida de arriba: la flota `A` tiene 40 viajes
+vencidos y los 40 contactos fallan (ventana de 24 h cerrada + plantilla
+rechazada). `ejecutarCobranza` **devuelve normalmente** con
+`{contactados: 0, fallos: [40 renglones]}`. Entonces:
+
+```ts
+const r = await ejecutarCobranza(t, ahora, { venceEn });
+...
+corridas.set(t, null);          // ← :387  null == "esta corrida SÍ terminó"
+...
+await avisarCorridasPorFlota('cobranza', corridas, ahora);   // ← :399
+```
+
+`avisarCorridaFallida` interpreta `null` como `hayProblema: false`
+(`notificaciones.ts:1046` → `:458-461`), que **no manda nada Y re-arma el filo**:
+`MARCAS_DE_INSISTENCIA` vuelve a cero. Así que la única vía que quedaba —el
+correo al cliente— tampoco sale, y la racha se borra en cada corrida horaria: el
+contador nunca llega a la marca 1, ni a las 24 corridas del día, ni a las 216 de
+nueve días.
+
+El hermano ya lo arregla: `escalar_viaje.ts:392` hace
+`cierre.set(tenantId, c.fallidos === c.intentos ? c.ultimo : null)`, y su propio
+comentario (`:373-377`) dice literalmente *«Un éxito falso es peor que no avisar:
+borra la racha de la flota justo cuando su problema sigue vivo, así que el aviso
+nunca llega a salir»*. Cobranza no recibió esa corrección.
+
+**Consecuencia.** Es lo que convierte el hallazgo anterior de «silencioso» en
+«activamente suprimido». Ni Javier (no hay `alertarOperador` fuera de los
+`catch`) ni el contralor (el aviso se cancela y la racha se resetea) se enteran
+jamás. Lo único que sobrevive es la ficha del agente, que sí anota `parcial`
+(`cobranza.ts:404`) — un dato que hay que ir a mirar a propósito.
+
+**Causa raíz probable.** El mapa de cierre se llena desde el `try/catch` del
+bucle de flotas (solo la excepción cuenta como fallo) en vez de desde el
+resultado medido de la corrida (`r.fallos` vs `r.contactados`).
+
+---
+
+### [ALTO] El camino del dinero por WhatsApp no tiene canal de alerta: `alertarOperador` solo lo llaman los 3 crons
+
+`src/lib/observability/alerta.ts:59` (3 llamadores: `cron/escalar/route.ts:105,129`, `cron/facturar/route.ts:374,684`, `cron/purgar/route.ts:98,109`) · `src/lib/likida/processor.ts:2182,2341,2368`
+
+**Escenario, con valores.** 03:10. La flota `A` cierra su viaje `F-1042`; la tool
+de PDF revienta contra storage. `processor.ts:2341` emite
+`logger.error('pdf.contralor_no_generado', { tenant, viaje, liqId })` — con
+identificadores suficientes, eso está bien. Va a Sentry con
+`fingerprint: ['pdf.contralor_no_generado', 'error', 'id:9f2c1a4b77de']`
+(`sentry.ts:198` + `discriminadores`). Nace el issue, Javier recibe UNA
+notificación. A las 03:40 fallan los otros **39 cierres de la misma flota**:
+caen todos en el issue ya existente y, por el modelo que el propio repo declara
+en `alerta.ts:6-8` (*«Sentry solo notifica cuando NACE un issue — un fallo que
+cae en un issue viejo solo engorda un contador»*), **cero notificaciones nuevas**.
+Ningún correo: `alertarOperador` no se llama desde `processor.ts` en ninguna de
+sus 2 500 líneas.
+
+**Consecuencia.** El producto ES el cierre de liquidación por WhatsApp. Los tres
+crons —que son la red de seguridad— tienen canal directo con piso de una hora; el
+camino principal no tiene ninguno. El chofer lee «se me trabó el sistema
+tantito» (`processor.ts:2183`), el contralor no recibe su PDF, y el guardia se
+entera cuando alguien llame.
+
+**Causa raíz probable.** `D1` cableó el canal donde el hallazgo ardía (los crons,
+9 días tronando) y no donde vive el dinero; falta un criterio de qué `msg` merece
+correo además de Sentry.
+
+---
+
+### [ALTO] Un interruptor ilegible para los tres crons y responde 200 diciendo que alguien lo apagó
+
+`src/lib/likida/interruptores.ts:76-77,81-85` × `src/app/api/cron/escalar/route.ts:79-82` · `facturar/route.ts:277-283` · `purgar/route.ts:77-80`
+
+**Escenario, con valores.** Supabase tiene un incidente de red parcial: el
+`SELECT apagado FROM interruptor WHERE id='global'` devuelve error por valor.
+`estaApagado` falla cerrado (decisión deliberada y bien argumentada) y devuelve
+`true`. Los tres crons hacen entonces:
+
+```ts
+if (await estaApagado('global')) {
+  logger.warn('cron.escalar.saltado', { interruptor: 'global' });   // ← :80
+  return NextResponse.json({ corrio: false, saltado: 'interruptor global' });  // 200
 }
 ```
 
-`ejecutarCobranzaGlobal` acumula los 40 en `total.fallos` y **devuelve normal**.
-El cron entra por la rama feliz:
+Sale: **200**, cron verde, y una línea que afirma *«saltado: interruptor global»*
+— que es **falso**: nadie tocó ninguna palanca. La línea que sí dice la verdad,
+`interruptores.lectura_fallo` (`:76`), lleva meta `{interruptor, err}` **sin
+`tenant` ni `codigo`/`status`**, así que `discriminadores` (`sentry.ts:161-169`)
+devuelve `[]` y el fingerprint es `['interruptores.lectura_fallo','error']`: un
+solo issue para siempre, una sola notificación, exactamente la lección de OP-A1
+que `D2` fue a arreglar en los otros seis `logger.error` y en éste no. Y no hay
+`alertarOperador`: escalación, cobranza, facturación y purga quedan paradas de
+madrugada con tres semáforos verdes.
 
-```
-const r = await ejecutarCobranzaGlobal();
-logger.info('cron.cobranza.ok', { ...r });      // ← INFO. logger.ts:148 solo
-resultado.comprobacion = r;                      //    manda warn/error a Sentry
-...
-return NextResponse.json(resultado, { status: huboFallo ? 500 : 200 });
-```
+**Consecuencia.** Un hipo de base de 40 minutos se lee, en el panel y en el log,
+igual que «Javier apagó todo a propósito». Rompe la regla del repo de que un
+rótulo tiene que ser verdad, en la línea que un guardia leería primero.
 
-`huboFallo` solo se pone a `true` en el `catch`. Ningún `catch` se dispara: el
-motor no lanzó, simplemente falló 40 de 40. Lo que queda a la mañana siguiente es
-`{"level":"info","msg":"cron.cobranza.ok","meta":{"tenants":3,"contactados":0,
-"fallos":[...]}}` en el runtime log de Vercel (retención corta, sin drain — lo
-dice `DEPLOY.md`), el cron en **verde**, y cero eventos en Sentry.
-
-Idéntico en escalación: `escalar_viaje.ts:203` empuja el fallo de claim a
-`r.fallos` sin log, y `viaje.escalacion` (l.285) emite en `info` solo el
-**conteo**, no el detalle.
-
-**Consecuencia.** El agente que existe para que vuelvan los comprobantes deja de
-funcionar y el panel de crons dice que corrió bien. Es literalmente el mecanismo
-que OP-C1 documenta en el comentario de `escalar/route.ts:66-71` («~216 corridas
-"verdes"»), sobreviviendo en la ruta que la arregló.
-
-**Causa raíz probable.** El arreglo de OP-C1 ató la señal de salud a *"¿lanzó el
-motor?"* en vez de a *"¿el motor logró algo?"*: `contactados: 0` con `fallos: 40`
-es indistinguible de `contactados: 0` con `revisados: 0`.
+**Causa raíz probable.** `estaApagado` devuelve un `boolean` que colapsa dos
+estados distintos («apagado a propósito» y «no pude leer»), y el llamador no
+puede distinguirlos para elegir status ni texto.
 
 ---
 
-### [ALTO] El catch de la cima del camino del dinero no dice qué mensaje se perdió
+### [ALTO] El catch del webhook borra el único identificador del mensaje perdido
 
-`src/app/api/webhook/whatsapp/route.ts:169-171`
+`src/app/api/webhook/whatsapp/route.ts:170`
 
-```
-processInbound(m).catch((e) => logger.error('processInbound', { err: ... }))
-```
+**Escenario, con valores.** Meta entrega un POST con 5 fotos del chofer
+`5219993700779`. `processInbound` lanza en la tercera (p. ej. `claimMessage`
+choca con la base). Sale, literalmente:
 
-**Escenario.** Se rota `SUPABASE_SERVICE_ROLE_KEY` en Vercel y se escribe mal.
-`processInbound` llama a `claimMessage` en su **línea 330**, antes de abrir el
-`try` de la l.365; `claimMessage` → `supabaseAdmin()` → `admin.ts:13` **lanza**
-`Error('Supabase service-role no configurado')`. El rico `catch` de
-`processor.ts:2258-2274` (que sí lleva `id`, `de`, `tenant`, `viaje`,
-`cerroSinEntregar`) nunca se alcanza. Lo que queda en el log de cada mensaje de
-cada operador es:
-
-```
-{"t":"...","level":"error","msg":"processInbound","meta":{"err":"Supabase service-role no configurado"}}
+```json
+{"t":"2026-08-15T09:03:11.482Z","level":"error","msg":"processInbound",
+ "meta":{"err":"TypeError: Cannot read properties of null"}}
 ```
 
-Sin `waMessageId`, sin `from`, sin tipo. Y el webhook **ya contestó 200**
-(l.250), así que Meta no reintenta y `wa_mensaje_procesado` no tiene fila: no
-existe la lista de qué se perdió.
+Sin `waMessageId`, sin `from`, sin tenant, sin viaje. El `m` está en el closure
+—`(m) => processInbound(m).catch(...)`— y no se usa. Peor: el webhook **ya
+contestó 200** (`DEPLOY.md:138-141`), así que **Meta no reintenta** y ese
+comprobante se perdió para siempre. Y en Sentry el fingerprint es
+`['processInbound','error']` sin discriminadores: TODOS los fallos del corazón
+del producto, de todas las flotas y todas las causas, colapsan en **un issue** —
+una notificación, la primera vez, nunca más.
 
-**Consecuencia.** Se sabe que el sistema está roto (el error sí llega a Sentry),
-pero es imposible reconstruir qué comprobantes entraron y se tiraron: ni por log,
-ni por base, ni por Meta.
+**Consecuencia.** El caso de manual del rubro: a las 3 a.m. el log dice que algo
+falló procesando un mensaje y no dice cuál, de quién, ni de qué viaje. Contrasta
+con el cuidado del mismo archivo doce líneas más arriba
+(`wa.ratelimit_diferido`, `:149`) y más abajo (`wa.no_entregado`, `:215-220`),
+que sí conservan el `id`.
 
-**Causa raíz probable.** El `catch` se escribió como red de última instancia
-asumiendo que `processInbound` ya trae su propio contexto — y lo trae, salvo en
-las ~35 líneas que corren fuera de su `try` (claim, presupuesto) y en el
-`finally` (`releaseViajeLock`). `m.waMessageId` y `m.from` están a mano en el
-mismo scope.
+**Causa raíz probable.** El `.catch` se escribió como red de última hora sobre el
+pool y no se le pasó el contexto que tenía a mano.
 
 ---
 
-### [ALTO] El panel del cliente puede reventar en el navegador sin dejar rastro en ningún servidor
+### [ALTO] DX: `npm ci` no corre en una máquina limpia, y deja `node_modules` VACÍO
 
-`src/app/dashboard/error.tsx:39-49` · `src/app/global-error.tsx:31-38` · `src/lib/logger.ts:148`
+`package.json:38` (`"xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"`) · `.github/workflows/ci.yml:44` · `README.md:83`
 
-Las dos fronteras de error son `'use client'` y reportan así:
+**Escenario, con valores.** Alguien clona el repo detrás de una política de red
+que solo permite `registry.npmjs.org` (el contenedor de esta misma auditoría, y
+cualquier proxy corporativo). `npm ci` recibe **403 en el CONNECT** a
+`cdn.sheetjs.com`, **revierte la instalación entera** y deja `node_modules/`
+vacío: no falta un paquete, faltan los 452. No corre `tsc`, ni `vitest`, ni
+`next dev`. El mismo `npm ci` es el paso 1 del CI (`ci.yml:44`), así que el día
+que SheetJS retire ese tarball —lo hacen: publican solo las últimas versiones en
+su CDN— **todas las ramas se ponen rojas a la vez y nadie puede instalar**.
 
-```
-useEffect(() => {
-  void import('@/lib/logger').then(({ logger }) =>
-    logger.error('panel.boundary', { digest: error.digest ?? 'sin-digest', err: error.message }));
-}, [error]);
-```
+Y no hay una sola línea en el repo que explique por qué la dependencia viene de
+un CDN: `package.json` sí documenta con todo detalle el override de `sharp`
+(`"//overrides"`), pero de `xlsx` no dice nada, y `README.md`/`DEPLOY.md`
+tampoco. El arreglo «obvio» para quien se topa con esto es apuntarla al
+registry (`xlsx@0.18.5`) — lo que hizo el arnés de esta corrida — que es una
+versión con prototype pollution conocida, alcanzable desde `intake/archivo.ts`
+y desde el `.xlsx` que sube el usuario en `dashboard/viajes/page.tsx`.
 
-`useEffect` corre **solo en el navegador**. Ahí, `logger.emit` hace
-`console.error` (queda en la consola del contralor) y la rama de Sentry está
-muerta: `process.env.SENTRY_DSN` no es `NEXT_PUBLIC_*`, así que en el bundle de
-cliente vale `undefined`. No hay `instrumentation-client.ts` ni
-`withSentryConfig`: **no existe Sentry de navegador**.
+**Consecuencia.** «Arranca en una máquina limpia» es hoy condicional a la red del
+que clona, y el modo de falla es total y sin diagnóstico. Un contratista o un
+agente en la nube pierde la primera hora antes de entender que no es su código.
 
-**Escenario.** 3 a.m., un contralor abre `/dashboard/agentes/cobranza`. Un
-componente de cliente —una gráfica con un dato nulo, el streaming NDJSON del
-chat, el lector universal de archivos— lanza en render. `onRequestError`
-(`instrumentation.ts:56`) **no se dispara**: no hubo error de servidor. El
-boundary pinta "No se pudo cargar el panel", `error.digest` es `undefined` (Next
-solo lo emite para errores de servidor), así que **ni siquiera hay código de
-incidente en pantalla**. A la mañana siguiente: nada. Cero líneas en Vercel, cero
-eventos en Sentry, y el propio comentario de `error.tsx:43-47` afirma «en el
-servidor, la línea del log» — que para esta ruta no ocurre nunca.
-
-**Consecuencia.** La superficie que el cliente paga (~31 páginas, la más
-recientemente reescrita — rediseño v3 del 12-13 ago) es la única sin telemetría.
-
-**Causa raíz probable.** El cableado de Sentry se hizo entero por el runtime
-Node (`instrumentation.ts` + import dinámico); el runtime de navegador quedó
-fuera del diseño y el comentario del boundary lo da por cubierto.
+**Causa raíz probable.** Se pinneó el tarball del CDN (probablemente para huir de
+los CVE de `xlsx` en npm) sin dejar la nota que convierte una decisión en
+conocimiento, y sin ninguna verificación de que la instalación sea reproducible.
 
 ---
 
-### [ALTO] `wa.sendText` / `wa.sendButtons`: nivel arreglado, identificador no (REINCIDENTE, OP-A2)
+### [MEDIO] `DEPLOY.md` quedó atrás del código justo en las dos secciones que se leen a las 3 a.m.
 
-`src/lib/meta/client.ts:96` y `:195`
+`docs/conocimiento/DEPLOY.md:101-107,147-149` × `src/lib/observability/arranque.ts:34-47` · guardián insuficiente en `src/lib/observability/runbook.test.ts:104-109`
 
-```
-if (!res.ok) { logger.error('wa.sendText', { status: res.status, body: await res.text()... }); return null; }
-```
+**Escenario, con valores.** Javier provisiona Vercel siguiendo el runbook. La
+tabla «Variables que deben estar en Vercel — las **dos** que hay que revisar a
+mano porque si faltan el sistema arranca igual» lista `SENTRY_DSN` y
+`DEMO_TENANT_ID`. Pero `SILENCIOSAS` (`arranque.ts:34-47`) ya son **cuatro**:
+faltan `NEXT_PUBLIC_APP_URL` (login manda los magic links a otro dominio y nadie
+entra, sin un solo error) y `ALERTA_EMAIL` (los fallos de cron no le llegan a
+nadie). Y `CRON_SECRET`, que `salud-sistema` marca en **rojo** porque sin él los
+tres crons devuelven 500, no aparece en la tabla en absoluto.
 
-El nivel ya es `error` (OP-A2 pedía eso). Lo que sigue faltando es a **quién**:
-no hay `tenant`, ni `viaje`, ni `to`. Y el `fingerprint: [msg, nivel]` de
-`sentry.ts:160` mete todos los rechazos de todos los tenants en un solo issue.
+Peor, cuarenta líneas abajo, «Lo que este runbook NO cubre» sigue diciendo:
+*«**Quién recibe qué cuando algo falla.** Hoy no hay nadie asignado ni ningún
+canal»* (`:147-149`). Eso dejó de ser cierto con `f7d6981`: el canal existe y se
+llama `ALERTA_EMAIL`. El documento al que se acude en un incidente le dice al
+guardia que no busque un canal que sí tiene.
 
-**Escenario.** El teléfono capturado de un chofer tiene un dígito de más. La
-cobranza intenta el tier 2 del viaje `LK-0442`: Meta responde 400 (#131030).
-`cobranza.ts:263` recibe `null`, escribe `detalle:'WhatsApp rechazó el envío'` en
-`cobranza_contacto` (ahí sí queda el viaje) y empuja a `r.fallos`, que muere en
-`info` (ver el CRÍTICO). El único evento que llega a Sentry es
-`{"msg":"wa.sendText","status":400,"body":"..."}` — indistinguible del rechazo de
-cualquier otra flota, y sin nada que permita saber que el afectado fue `LK-0442`.
+**Consecuencia.** La ausencia más cara de la lista (`ALERTA_EMAIL`) es
+exactamente la que el runbook no pide, así que el canal nuevo se queda apagado en
+producción por el mismo camino por el que se quedó apagado `SENTRY_DSN` en la
+auditoría 5. `runbook.test.ts:104-109` existe para impedir esto y solo comprueba
+las dos variables viejas, hardcodeadas — no lee `SILENCIOSAS`.
 
-**Consecuencia.** La alerta existe pero no es accionable: se sabe que "algún
-envío rebotó", no cuál liquidación se quedó sin su recordatorio. Es el ancla de
-8+ («identificador suficiente para reconstruirlo») incumplida en el envío más
-usado del producto.
-
-**Causa raíz probable.** `sendText` es una primitiva sin contexto de negocio y
-ninguna firma lo transporta; los llamadores que sí lo tienen (`cobranza.ts`,
-`escalar_viaje.ts`, `processor.ts`) no lo registran al recibir `null`.
-
----
-
-### [ALTO] El presupuesto de 90 s de la cobranza global se mide desde su propio arranque, no desde el de la invocación
-
-`src/lib/likida/agentes/cobranza.ts:308-315` · `src/app/api/cron/escalar/route.ts:74,85` · `maxDuration = 120` (l.11)
-
-El comentario dice: *«El reloj de la corrida GLOBAL: 90s de los 120 del
-maxDuration del cron — el resto es margen para la escalación que corre antes»*.
-El código hace otra cosa:
-
-```
-const venceEn = Date.now() + PLAZO_COBRANZA_GLOBAL_MS;   // l.315 — relativo a AQUÍ
-```
-
-y `ejecutarCobranzaGlobal()` se invoca en `route.ts:85` **después** de
-`escalarViajesSinAceptar()` (l.74), que no tiene reloj ninguno: manda hasta dos
-WhatsApps por viaje en serie, cada uno con `SEND_TIMEOUT_MS = 10_000`.
-
-**Escenario.** 8 viajes sin aceptar y Meta lento: escalación consume 55 s. La
-cobranza arranca en t=55 s y se otorga hasta t=145 s. Vercel mata la invocación
-en t=120 s. Queda: claims de `cobranza_contacto` insertados con
-`enviado=false, detalle=null` para los viajes en vuelo, **sin** la línea
-`cron.cobranza.ok`, sin `cortadosPorReloj`, y sin el 500 que marcaría el cron
-como fallido con detalle. El rescate de `cobranza.ts:207-215` los borra una hora
-después — incluidos aquellos cuyo `sendText` SÍ salió pero cuyo `update` no
-alcanzó a correr, así que ese chofer recibe el mismo tier dos veces.
-
-**Consecuencia.** El único guardia de reloj del cron no acota lo que dice acotar,
-y su modo de falla (invocación matada) es el que menos rastro deja.
-
-**Causa raíz probable.** El presupuesto se ancló al arranque de la función que lo
-usa en vez de pasarse desde la ruta, que es la única que conoce `maxDuration`.
-`facturar/route.ts:275` sí lo hace bien (`inicioLote` en el GET, pasado como
-argumento); `escalar` no lo copió.
+**Causa raíz probable.** El guardián prueba una lista literal en vez de la lista
+del código.
 
 ---
 
-### [MEDIO] `startup.migraciones` colapsa cinco fallos distintos en un solo issue de Sentry (REINCIDENTE, OP-A1)
+### [MEDIO] El canal de alerta al operador nunca se ha probado que llegue a un humano
 
-`src/lib/observability/sentry.ts:160` · `src/lib/likida/startup.ts:45,151,177,213,219`
+`src/app/admin/salud-sistema/page.tsx:96-117` · `src/app/dashboard/agentes/prueba-correo.ts:1-11` · `src/lib/observability/alerta.ts:35-37`
 
-El fingerprint pasó de `[msg]` a `[msg, nivel]` — eso separó el aviso de su
-desmentido (`ok:true` vs fallo), que era la mitad de OP-A1. La otra mitad sigue:
-`startup.migraciones` es **el mismo `msg` para cinco causas distintas**, con el
-texto real metido en `meta.msg`, que Sentry no usa para agrupar.
+**Escenario, con valores.** Javier abre `/admin/salud-sistema`. El renglón «Canal
+de alerta al operador» dice **verde**: `Alertas de cron a j***@gmail.com`. Lo que
+esa afirmación mide es `!!process.env.ALERTA_EMAIL && correoConfigurado()`
+(`alerta.ts:36`) — presencia de tres variables de entorno. No prueba que Resend
+acepte el dominio remitente, ni que el correo no caiga en spam de Gmail, ni que
+la dirección exista. La primera vez que se sabrá si funciona es la madrugada en
+que algo truene.
 
-**Escenario.** Una base a la que le falta la 0019 **y** el trigger
-`trg_gasto_no_tras_liquidar`. `startup.ts:151` emite un `error` por índice
-faltante en un `for`, y `:177` otro por trigger. Los dos —«el mismo CFDI se
-liquida dos veces, con su IVA acreditado por duplicado» y «un gasto puede
-insertarse después de emitida la liquidación»— llegan a Sentry como **un solo
-issue titulado `startup.migraciones`**. Con la regla por defecto de Sentry
-("nuevo issue"), el segundo no dispara ninguna notificación.
+El repo YA tiene el mecanismo correcto y no lo aplicó aquí: `585b099` construyó
+«Mándate una prueba» con su rate limit y sus tres acuses honestos
+(`prueba-correo.ts:82-106`) — pero **solo para los avisos del TENANT**, en
+`/dashboard/agentes`. El canal del operador del sistema, que es el único que
+cubre los fallos de plataforma, no tiene botón.
 
-**Consecuencia.** Se arregla lo que dice el título del issue y se cierra; el
-segundo defecto del esquema —de la misma familia de gravedad— queda tapado bajo
-un issue ya visto.
+**Consecuencia.** Es literalmente la razón que el pase 2 dio para no subir la
+nota: «no hay aún verificación de que las alertas lleguen a un humano». Sigue
+siendo cierta, con la diferencia de que ahora el semáforo verde afirma más de lo
+que midió.
 
-**Causa raíz probable.** El propio docstring de `sentry.ts:146-152` señala
-`startup.migraciones` como el caso motivador y resolvió el eje `nivel`, no el eje
-`causa`. Es el único `msg` del repo reutilizado para causas ortogonales.
-
----
-
-### [MEDIO] `flushObservabilidad` solo se llama en 2 de los ~15 caminos que emiten errores
-
-`src/lib/observability/sentry.ts:129-135` · llamada únicamente en `webhook/whatsapp/route.ts:194` e `instrumentation.ts:82`
-
-`reportar()` (l.157-164) es fire-and-forget: mete la promesa en `enVuelo` y
-devuelve. Su propio comentario dice que en serverless «el proceso puede
-congelarse antes de que ese temporizador dispare» y que «quien pueda esperar de
-verdad, que llame a `flushObservabilidad`».
-
-**Escenario.** El cron de escalación truena. `route.ts:79` emite
-`cron.escalar.falló`, `reportar` dispara el `captureMessage`, y **dos líneas
-después** la ruta hace `return NextResponse.json(...)`. La invocación termina;
-Vercel puede congelar el sandbox antes de que el POST a Sentry asiente. Igual en
-`chat/route.ts:141` (`chat.analista.fallo`, respondiendo **200** con un evento de
-error dentro del stream, así que Sentry es la única señal que existe),
-`ingesta/route.ts:69`, `purgar/route.ts:76` y `stripe/webhook/route.ts:71`.
-
-**Consecuencia.** El evento que más importa —el último antes de que la invocación
-muera— es el que menos probabilidad tiene de salir, que es exactamente el
-problema que esta función se escribió para resolver y que solo resolvió en el
-webhook.
-
-**Causa raíz probable.** La corrección de la auditoría 6 se aplicó al `after()`
-del webhook (el único caso identificado entonces) y no se convirtió en regla de
-salida de ruta.
+**Causa raíz probable.** `B5` y `D1` se construyeron en commits distintos y nadie
+cruzó el botón de uno con el canal del otro.
 
 ---
 
-### [MEDIO] Sin `withSentryConfig` ni source maps: el único camino que produce stack lo produce minificado
+### [MEDIO] Los diagnósticos de arranque no pueden usar el canal de correo, que es el único que sobrevive a su propio fallo
 
-`package.json:19` (`@sentry/nextjs ^10`) · `next.config.ts` (sin `withSentryConfig`, sin `productionBrowserSourceMaps`) · `src/lib/observability/sentry.ts:189-208`
+`src/instrumentation.ts:16-27` · `src/lib/observability/arranque.ts:66-70` · `src/lib/observability/sentry.ts:69-75`
 
-El SDK se usa "a mano": import dinámico + `init()`. Nunca se envuelve la config
-de Next, así que no hay subida de source maps ni `SENTRY_AUTH_TOKEN` en el
-inventario de `.env.example` (verificado: solo aparece `SENTRY_DSN`).
+**Escenario, con valores.** Un despliegue del viernes pierde `SENTRY_DSN` (pasó,
+auditoría 5). `avisarObservabilidad()` hace exactamente lo que debe:
+`logger.error('startup.observabilidad', { sentry:false, err:'SENTRY_DSN
+ausente…' })`. Pero `logger.ts:148` solo replica a Sentry `if
+(process.env.SENTRY_DSN)` — y no hay DSN. El grito **muere en el runtime log de
+Vercel**, que es justo el sitio que el mensaje declara insuficiente. Lo mismo con
+`startup.config_silenciosa` (`arranque.ts:66`) y `startup.entorno_grupos`
+(`:95`). `ALERTA_EMAIL` está puesta, es independiente de Sentry, y nadie la usa
+aquí: `alertarOperador` no se importa en ningún archivo de arranque.
 
-**Escenario.** Un Server Component del panel lanza en producción.
-`onRequestError` llama a `reportarExcepcion`, cuyo docstring lo vende como «el
-único que produce stack traces». Lo que llega a Sentry es el stack del bundle
-minificado de Next: `.next/server/chunks/8412.js:1:48213`. El `digest` sí sirve
-para atar pantalla↔log, pero para localizar la línea de fuente hay que
-reconstruirla a mano.
+**Consecuencia.** El diagnóstico que existe para detectar «arrancamos ciegos» solo
+puede salir por el canal que acaba de declararse ausente. Hasta el lunes nadie lo
+sabe, y `DEPLOY.md:24-27` avisa que para entonces la línea puede haber caducado.
 
-**Consecuencia.** La única fuente de stacks del sistema entrega stacks que no se
-pueden leer, y el `redactarTexto` que se les aplica encima (l.178) no cambia eso.
-
-**Causa raíz probable.** Se eligió el cableado manual para poder pasar todo por
-`redactarTexto` (decisión buena y bien argumentada); el coste colateral —perder
-el pipeline de artefactos de build de Sentry— no se anotó en ninguna parte.
-
----
-
-### [MEDIO] Nada detecta la AUSENCIA de una corrida: el `ignoreCommand` y la verificación de despliegue son 100% manuales
-
-`vercel.json:3` · `docs/conocimiento/DEPLOY.md:170-183`
-
-`"ignoreCommand": "git log -1 --pretty=%s | grep -qi '\\[deploy\\]' && exit 1 || exit 0"`.
-La red que lo compensa es una instrucción humana en el runbook (`git log -1` vs
-`vercel inspect`). No hay heartbeat, ni un `select max(created_at)` sobre
-`cobranza_contacto`, ni un chequeo de que `escalar` corrió en la última hora.
-
-**Escenario.** Se añade un cron a `vercel.json` (o se cambia su `schedule`) en un
-commit sin `[deploy]`. El push se ve normal en GitHub, CI pasa entero (typecheck,
-lint, cobertura, build), y **la configuración de crons de producción sigue siendo
-la del deployment anterior**. Nada en el repo ni en el runtime contradice la
-suposición de que el cron nuevo está corriendo. Sale: cero corridas, cero logs,
-cero alertas — la ausencia de señal es indistinguible de "no había trabajo".
-
-**Consecuencia.** El modo de falla que CLAUDE.md ya declara silencioso no tiene
-ninguna detección automática; depende de que alguien se acuerde antes de un demo.
-
-**Causa raíz probable.** El `ignoreCommand` optimiza costo de build y se aceptó
-su silencio, pero no se pagó la contrapartida: una señal de "lo desplegado ≠ lo
-comiteado" o de "el cron dejó de latir".
+**Causa raíz probable.** El arranque se cableó antes de que existiera un segundo
+canal, y no se revisó al añadirlo.
 
 ---
 
-### [BAJO] `CRON_SECRET` no está en el inventario de arranque
+### [MEDIO] `/api/health` existe, contesta 503 correctamente, y ningún documento del repo lo nombra
 
-`src/lib/env.ts:29-38` · `src/app/api/cron/{escalar,facturar,purgar}/route.ts`
+`src/app/api/health/route.ts:34-56` · ausente en `docs/conocimiento/DEPLOY.md` y `README.md`
 
-`GROUPS` cubre `llm`, `whatsapp` y `supabase`. `CRON_SECRET` —la variable sin la
-cual **los tres crons fallan cerrado**— no está. `avisarConfiguracionSilenciosa`
-tampoco la lista. Entra: un entorno nuevo desplegado con `deploy-vercel.sh` desde
-un `.env.local` sin esa línea (`push_env` salta las vacías). Sale: arranque
-limpio (`startup.entorno_grupos {ok:true}`) y el descubrimiento llega **hasta la
-hora en punto**, por `cron.escalar.sin_secreto`. Consecuencia: hasta 60 minutos
-de escalación y cobranza sin correr en un entorno recién levantado, con el
-arranque afirmando que la configuración está completa. Causa raíz probable:
-`GROUPS` se agrupó por *servicio externo* y `CRON_SECRET` no pertenece a ninguno.
+**Escenario, con valores.** El endpoint está bien hecho: consulta real HEAD+count
+sobre `tenant` bajo `acotada`, devuelve `{ok, db, sentry, version, hora}` y
+**503** si la base no responde; sin auth a propósito para que un monitor gratuito
+pueda usarlo. Su propio comentario (`:14-17`) dice que un UptimeRobot cada minuto
+convertiría el incidente de 9 días en una alerta de minutos. Pero `grep api/health
+docs/conocimiento/*.md README.md` no devuelve **nada**: el runbook no lo
+menciona, no dice a qué monitor apuntarlo, no hay ninguna variable ni ningún
+registro de que exista un monitor externo. El pulso está construido y sin
+enchufar.
 
-### [BAJO] El runbook nombra un mensaje de arranque que el código no emite
+Y `version` es la pieza que faltaba contra el modo de falla silencioso del
+`ignoreCommand` (`vercel.json:3` + `CLAUDE.md`): un `GET /api/health` compara el
+sha publicado contra `git log -1` en un segundo. `DEPLOY.md:177-180` sigue
+mandando a `vercel inspect`.
 
-`docs/conocimiento/DEPLOY.md:47` («`startup.entorno` — falta configuración crítica») vs `src/lib/observability/arranque.ts:59,61,87,90`
+**Consecuencia.** El único mecanismo capaz de detectar que la app entera está
+caída sigue dependiendo de que alguien lo descubra a mano — que es el modo de
+falla original del rubro.
 
-El código emite `startup.config_silenciosa` y `startup.entorno_grupos`. Un
-`grep startup.entorno` todavía encuentra el segundo por prefijo, pero
-`startup.config_silenciosa` —la línea que delata `DEMO_TENANT_ID` ausente, el
-caso de manual del propio runbook— **no aparece en DEPLOY.md**. `runbook.test.ts`
-verifica que el texto contenga la cadena `DEMO_TENANT_ID`, no el `msg` con el que
-buscarlo. Consecuencia: a las 3 a.m. se busca por el nombre equivocado.
-
-### [BAJO] `despacho_wa.pendiente_ilegible` no dice de qué flota ni de qué teléfono
-
-`src/lib/likida/despacho_wa.ts:60-65`
-
-`logger.warn('despacho_wa.pendiente_ilegible', { err: error.message })` — sin
-`tenantId` ni `telefono` (que estarían huellados/redactados, no en claro). Entra:
-la lectura de `wa_conversacion` rebota para el jefe de una flota; sale: el jefe
-escribe "sí" y el sistema le re-pregunta el viaje entero, con una línea de log
-que no permite saber a quién le pasó ni cuántas veces.
+**Causa raíz probable.** `D4` cerró la parte que se escribe en código y no la
+parte que se configura fuera del repo, y no dejó la instrucción de hacerlo.
 
 ---
 
-## Las 3 de la mañana
+### [BAJO] El `README` describe un arranque que no deja el proyecto corriendo, y cita cifras de otra época
 
-**1. El PDF de una liquidación cerrada no llega al chofer.**
-Queda: `pdf.no_entregado` (`processor.ts:2179-2181`) con `viaje`, `tenant`,
-`codigo` y `error` de Meta — huellados (`id:xxxxxxxxxxxx`), cruzables contra la
-base con `huellaId()`, como documenta `DEPLOY.md:26-38`. Además el chofer recibe
-un mensaje que le dice a quién pedírselo, y si Meta acepta pero luego falla la
-entrega, el acuse entra por `wa.no_entregado` (`webhook/route.ts:215`) con el
-wamid. **Identificador: suficiente.** **¿Alguien se entera?** Solo si
-`SENTRY_DSN` está puesto en Vercel *y* hay una regla de alerta con destinatario —
-y el propio runbook lo declara pendiente: «Quién recibe qué cuando algo falla.
-Hoy no hay nadie asignado ni ningún canal» (`DEPLOY.md:145-148`). El
-procedimiento de reenvío tampoco está escrito (l.149-150). **Este es el mejor
-caso del sistema y aun así se queda en "está registrado, no está alertado".**
+`README.md:17,65-66,82-89`
 
-**2. La cobranza deja de contactar a todos los choferes.**
-Queda: una línea `info` (`cron.cobranza.ok`) con el arreglo `fallos` completo, en
-el runtime log de Vercel, con retención corta y sin log drain. **Identificador:
-sí, dentro de esa línea (folios).** **¿Alguien se entera? NO** — `info` no llega
-a Sentry (`logger.ts:148`), el cron sale 200 y verde. Si el fallo es de envío en
-vez de de claim, llega *un* evento `wa.sendText` sin tenant ni viaje, colapsado
-con los de todas las demás flotas. Ver el CRÍTICO y el ALTO de OP-A2.
+`## Correr el demo` dice `npm install` → `cp .env.example .env.local` → `npm run
+dev`. Con eso la app levanta y **no hay base**: no menciona `npm run seed` (que
+existe en `package.json:14` y exige `DATABASE_URL` + `psql`), ni que hay que
+crear el proyecto de Supabase, ni el bucket `liquidaciones`. `npm run setup`
+(`package.json:15`) tampoco aparece. Y afirma «**3,149 pruebas verdes**» (`:17`)
+y «`~3,150 pruebas`» (`:66`) contra las ~4,502 de la línea base de hoy — CLAUDE.md
+avisa explícitamente de no citar esa cifra de memoria. Consecuencia: el primer
+documento que abre alguien nuevo no lo lleva a un proyecto que corra, y las
+cifras erosionan la confianza en el resto de la página.
 
-**3. El panel se cae para el contralor.**
-Si el fallo es de **servidor**: `request.fail` con `digest`, `ruta`, `metodo` y
-`err` (`instrumentation.ts:67-73`), más `reportarExcepcion` con stack — el digest
-está en pantalla, seleccionable, y el puente pantalla↔log funciona
-(`CLAVES_NO_PII` lo protege de la redacción). El stack, eso sí, viene minificado.
-**Alerta: sí, si hay DSN.** Si el fallo es **de navegador**: nada. Ni línea de
-servidor, ni evento, ni digest en pantalla. Ver el ALTO correspondiente.
+---
+
+### [BAJO] El piso de una hora de la alerta es un no-op en serverless, y la pantalla lo afirma sin condición
+
+`src/lib/observability/alerta.ts:41-44,70-76` × `src/app/admin/salud-sistema/page.tsx:102`
+
+`ultimaAlerta` es un `Map` en memoria del proceso. En Vercel cada disparo de cron
+es, típicamente, una invocación fría con el mapa vacío, así que el piso casi
+nunca aplica. El archivo lo declara con honestidad en su cabecera («por
+instancia… mejor esfuerzo»), pero `salud-sistema:102` se lo enseña a Javier como
+un hecho: *«máximo uno por evento por hora»*. Con un cron horario coincide por
+casualidad; con el de facturar reintentado 2 veces por QStash sobre 5xx
+(`facturar/route.ts:698`), tres correos idénticos del mismo evento en el mismo
+minuto. Consecuencia: la garantía que se muestra en pantalla no es la que da el
+código — el mismo tipo de rótulo que `D3` fue a limpiar de esa misma página.
+
+---
+
+### [BAJO] Nada detecta que un cron dejó de dispararse
+
+`src/app/api/health/route.ts:20-23`
+
+`/api/health` declara explícitamente que **no** mide la ausencia de corridas
+(«con la base en cero flotas, "no hubo corridas con trabajo" es lo normal»), lo
+cual es correcto hoy y deja el hueco abierto: si el `ignoreCommand` se come un
+deploy, si el plan de Vercel cambia, o si `vercel.json` pierde una entrada de
+`crons`, el cron simplemente no corre. Ni 200 ni 500: nada. `agente_corrida`
+(0102) ya guarda `inicio`/`fin` por flota y es el sustrato natural del
+«¿cuándo fue la última corrida?», sin consumidor todavía. Con el primer cliente
+esto pasa de deuda a incidente.
 
 ---
 
 ## Lo que revisé y está bien
 
-- **OP-C1 verificado vivo.** `escalar/route.ts:65-99`: `huboFallo` y
-  `status: huboFallo ? 500 : 200`, con el porqué escrito encima. El arreglo del
-  `444492a` está en el árbol.
-- **Los otros dos crons fallan cerrado y lo dicen.** `facturar` responde 503 con
-  los tres caminos probados para Chromium y **no marca los tickets como
-  intentados** (l.541-563); `purgar` comprueba `error` de supabase-js
-  explícitamente (l.75) e informa `llmCostoPurgado:false` para que una corrida
-  verde no se lea como "ya se limpió todo".
-- **El webhook de Stripe.** El único camino de dinero entrante y está bien
-  cerrado: 503 sin secreto, HMAC sobre el cuerpo crudo, marca-antes-de-aplicar,
-  500 a propósito para que Stripe reintente, y `stripe.webhook.marca_huerfana`
-  para el caso que deja un pago cobrado sin plan (l.36-89).
-- **El callback de QStash.** Verifica la firma con las signing keys reales antes
-  de tocar nada, revalida contra la base que los gastos siguen sin CFDI, y
-  devuelve 5xx para que QStash reintente (`facturar/cola/route.ts:21-75`).
-- **`logger.ts` completo.** La huella FNV-1a estable en vez de `[UUID]` es el
-  arreglo más valioso del rubro: permite agrupar por flota y cruzar contra
-  Postgres sin filtrar nada. Una sola pasada de regex (no encadenada), `digest`
-  exento de redacción, y `t` en ISO-8601 para poder ordenar dos líneas idénticas.
-- **`instrumentation.ts`.** Orden correcto (observabilidad → precarga →
-  migraciones → aviso de privacidad), `onRequestError` con `digest`, y
-  `flushObservabilidad` esperado ahí, que es donde se puede.
-- **`startup.ts`.** Doce sondeos del esquema del camino del dinero, sin `return`
-  temprano, distinguiendo «no está» de «no pude preguntar» (`sinRespuesta`),
-  y mirando el catálogo real para índices y triggers en vez de columnas que
-  responden igual con o sin ellos.
-- **`runbook.test.ts`.** `.env.example` verificado contra el árbol de fuentes en
-  las dos direcciones (falta / sobra), sin duplicados, y sin prometer palancas
-  que ningún archivo lee. Es la mejor pieza de DX del repo.
-- **CI.** Corre en `'**'` (no solo master), con `npm ci`, typecheck, lint,
-  cobertura como puerta, las dos pruebas de tiempo que `--coverage` se salta, y
-  **build** con placeholders. Sin secretos, ~2 min.
-- **`arranque.ts` / `env.ts`.** La categoría "variables cuya ausencia no rompe
-  nada" está bien elegida y `faltantes()` tiene consumidor real (la nota de por
-  qué `requireEnv` se eliminó es correcta).
-- **`DEPLOY.md`.** Ordenado por lo que se necesita a las 3 a.m., con la tabla de
-  las cuatro líneas de `costos.ts`, la rotación del token de Meta, y —lo más
-  raro— una sección **«Lo que este runbook NO cubre»** que es exacta.
-- **`seed.sh`.** Detecta esquema ya aplicado en vez de reventar, y marca en rojo
-  los valores inventados.
+- **`src/instrumentation.ts:9-33`** — el orden del arranque está pensado: primero
+  se dice si hay observabilidad, luego se enciende, luego se sondea el esquema, y
+  la comprobación de red (aviso de privacidad) al final para no retrasar el
+  diagnóstico. `onRequestError` (`:56-88`) es el único puente real entre el
+  `Digest:` que ve el contralor en pantalla y la línea del servidor, y llama
+  `flushObservabilidad()` antes de que la invocación se congele.
+- **`src/lib/logger.ts:82-99`** — la huella FNV de UUID en vez del borrado. Es la
+  decisión que hace que un log a las 3 a.m. sirva para algo: `huellaId(fila.id)`
+  cruza el log contra Postgres, y RFC/teléfono siguen borrándose enteros porque su
+  espacio es enumerable. `CLAVES_NO_PII` (`:122`) rescata el `digest` de Next, que
+  tiene exactamente la forma de un celular.
+- **`src/lib/observability/sentry.ts:161-169,192-203`** — `discriminadores`
+  (tenant + causa) metidos al fingerprint, con el argumento de cardinalidad
+  explícito y la decisión de NO meter `viajeId`. Y `:259-276` `codigoDeError`,
+  estable ante UUIDs y timestamps en el mensaje.
+- **`src/app/api/cron/purgar/route.ts:90-111`** — el modelo de cómo debería
+  verse el resto: `error` comprobado por valor, `codigo`, `alertarOperador` y
+  **500**, en los dos caminos (por valor y por excepción).
+- **`src/app/api/cron/facturar/route.ts:612-635,686-763`** — el 503 con los TRES
+  caminos probados para el binario de Chromium, y el `finally` que rescata el
+  cierre de corrida del camino de fallo duro (con el porqué escrito). `B8`
+  (`FalloDePlataforma`, `notificaciones.ts:961`) hace que el correo no acuse al
+  cliente de un problema nuestro.
+- **`src/app/admin/salud-sistema/page.tsx:74-172`** — cada semáforo medido o
+  declarado no-medido; Vercel en neutral honesto; el estado PARCIAL de QStash
+  (token sin llaves) identificado como el peligroso.
+- **`src/lib/observability/runbook.test.ts:59-98`** — `.env.example` como
+  inventario verificado contra `process.env.*` del árbol, en las dos direcciones,
+  sin duplicados y sin prometer palancas muertas.
+- **`.github/workflows/ci.yml:22-24,58-66`** — corre en TODAS las ramas (no solo
+  master), con `concurrency` que cancela lo viejo, y recupera con un paso aparte
+  las dos pruebas de tiempo que `--coverage` se salta. Termina en `build`.
+- **`src/app/api/correo/entrante/route.ts:147-179,261-290`** — registrar-antes-
+  de-procesar con la liberación del dedup cuando la descarga cae, para que Resend
+  reintente en vez de consumir el CFDI. Los 503 están donde deben.
+- **`src/app/api/webhook/whatsapp/route.ts:212-224`** — `wa.no_entregado` con
+  `id`, `codigo` y `detalle`: cierra el circuito del incidente del 28-jul.
+- **`src/lib/likida/interruptores.ts:1-22`** — la decisión de fallar cerrado está
+  argumentada de verdad (aunque su consecuencia operativa esté en los hallazgos).
 
 ## Lo que NO alcancé a revisar
 
-- **Si `SENTRY_DSN` está de verdad puesto en Vercel producción, y si existe
-  alguna regla de alerta con destinatario.** Es la pregunta que decide la mitad
-  de esta nota y no se puede contestar desde el repo (`vercel env ls production`
-  / el panel de Sentry). El runbook sugiere que sigue pendiente.
-- **Si `CRON_SECRET` está puesto**, y por tanto si los tres crons están corriendo
-  hoy o llevan tiempo devolviendo 500.
-- **Retención real de los runtime logs** en el plan Pro y si el volumen justifica
-  un drain (`DEPLOY.md` lo lista como no cubierto).
-- **`api/dashboard/{archivo,conversaciones}` y `api/export/pdf/[id]`** — solo los
-  hojeé; no verifiqué sus caminos de error.
-- **`lib/llm/openrouter.ts`**: cómo se registran los fallos y reintentos del
-  gateway, y si un `PartialExecutionError` deja identificador de tenant fuera del
-  chat.
-- **Los agentes de facturas/proveedores/peajes** (`0091`,
-  `api/export/facturas-proveedor`): no revisé su instrumentación.
-- **No corrí nada** — ni `npm test`, ni `npm run build`, ni las
-  `pruebas-manuales/*.prueba.ts`, según la instrucción del MAPA. Todo lo anterior
-  es lectura y `grep`.
+- **La configuración fuera del repo**: si `SENTRY_DSN`, `ALERTA_EMAIL` y
+  `CRON_SECRET` están de verdad en Vercel production, si hay reglas de alerta en
+  Sentry más allá del «issue nuevo», y si algún monitor externo apunta a
+  `/api/health`. Sin `vercel env ls` ni acceso a Sentry, esto solo se puede
+  afirmar desde el código — y desde el código todo es «configurado», nunca
+  «conectado». Es el mismo hueco que el pase 2 llamó «la prueba de fuego».
+- **La prueba de fuego en vivo**: no disparé ningún cron, ningún correo de alerta
+  ni ningún evento de Sentry (no corro `npm run build` ni las pruebas de pago).
+  Todo lo de arriba es lectura de código verificada línea por línea.
+- **`scripts/respaldo.sh`, `scripts/cosecha`, `scripts/deploy-vercel.sh`** — los
+  abrí solo de nombre; el runbook de restauración de un respaldo no lo audité.
+- **La retención real de los runtime logs** en el plan Pro y si hay log drain: el
+  propio `DEPLOY.md:152-153` lo declara sin resolver, y no es verificable desde
+  aquí.
+- **El costo/ruido del volumen de logs** con tráfico real (la base está en cero
+  viajes): cuántas líneas por liquidación y si eso es sostenible.
