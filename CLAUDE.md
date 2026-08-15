@@ -47,9 +47,17 @@ el panel afirma "aún no hay liquidaciones" estando ciego. Ver `exigir()` y
   operador, encargado.
 - `cliente`, `unidad`, `tarifa`, `factura_emitida`, `pago_recibido`, `posicion` y
   `geocerca` SÍ EXISTEN (migs. 0047-0050), y `viaje` tiene `km_recorridos` e
-  `ingreso_flete`. Lo que pasa es que están VACÍAS: nadie las escribe todavía.
-  Esa distinción importa — hasta el 4-ago-2026 esta línea decía "no existen", y
-  eso le prohibía a cada agente nuevo construir sobre tablas ya aplicadas.
+  `ingreso_flete`. **Están vacías, pero YA NO por falta de escritor** — la
+  distinción cambió el 14-ago-2026 y hay que leerla con cuidado:
+  - `cliente`, `unidad` y `tarifa` **ya tienen quien las escriba** (el panel y
+    `POST /v1/{viajes,unidades}`). Si vas a "construir el escritor", ya existe.
+  - `factura_emitida`, `pago_recibido`, `posicion` y `geocerca` siguen sin uno.
+  - La base entera está en cero (0 viajes, 14-ago-2026) porque **no hay
+    clientes todavía**, no porque falte código. Ver `project_likida_sin_clientes`.
+
+  El historial de esta línea es la advertencia: hasta el 4-ago decía "no
+  existen" y le prohibía a cada agente construir sobre tablas ya aplicadas;
+  después dijo "nadie las escribe" y mandaba a escribir un escritor duplicado.
   Antes de usar cualquiera, mira si tiene filas; si no, la pantalla dice qué falta.
 - `requireSessionTenant(destino)` arma su redirect a /login con un string fijo,
   así que **pierde el query string** — por eso existe `dashboard/sufijo.ts`.
@@ -86,3 +94,13 @@ que no urgían.
 `NEXT_PUBLIC_APP_URL` debe ser `https://app.likida.ai`; si no coincide con el
 Site URL de Supabase (Auth → URL Configuration), el login deja la cookie en otro
 dominio y el usuario queda fuera de su propia cuenta.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

@@ -60,6 +60,39 @@ Verificado contra el texto vigente en `normas/lfpdppp-2-XII-XX.yaml`.
 | 3 | **Supabase** | Todo lo que se guarda: gastos, montos, folios, RFC, liquidaciones | `src/lib/supabase/admin.ts` |
 | 4 | **Vercel** | Hosting: los datos pasan por su cómputo en tránsito | `scripts/deploy-vercel.sh` |
 | 5 | **Sentry** | Solo `warn` y `error`, **ya redactados** | `src/lib/observability/sentry.ts` |
+| 6 | **Resend** (correo transaccional, salida Y ENTRADA) | Salida: el **correo** de quien recibe el aviso y el contenido del aviso (folios, número económico, conteos). Entrada (desde ago-2026): **el correo entrante del proveedor completo y sus adjuntos — es decir, el CFDI entero: RFC de emisor y receptor, montos, UUID** | Salida: `api.resend.com` en `src/lib/correo/enviar.ts`. Entrada: webhook `api/correo/entrante/route.ts` — Resend recibe y ALMACENA el correo antes de entregárnoslo |
+| 6a | └ Amazon Web Services (SES) | Lo mismo, en las dos direcciones: Resend entrega Y recibe por SES | Comprobado en el DNS de `mail.likida.ai`: `v=spf1 include:amazonses.com` y `feedback-smtp.us-east-1.amazonses.com` (el MX de recepción es el mismo eslabón) |
+
+**Sobre Resend (dado de alta el 14-ago-2026).** Entra a la cadena porque los
+avisos por correo salen de `avisos@mail.likida.ai`. Lo que viaja es el correo de
+la persona de oficina —contralor, contador, dueño— y el contenido del aviso.
+
+**Y desde la misma semana, Resend también RECIBE (auditoría 4, E2).** El buzón
+de intake del Agente de Proveedores (`f-<token>@mail.likida.ai`, migs. 0095 y
+0096) significa que el correo del proveedor —remitente, asunto, cuerpo y
+adjuntos— pasa por Resend y se ALMACENA ahí el tiempo que su retención
+determine, antes y además de entregárnoslo por webhook. Los adjuntos son el
+CFDI completo: RFC del emisor y del receptor, montos, UUID, conceptos. Es un
+tratamiento distinto del de salida —ahí Likida decide qué viaja; aquí viaja lo
+que el proveedor mande— y por el renglón 6a también pasa por AWS SES. La
+verificación de firma Svix (`RESEND_WEBHOOK_SECRET`) autentica el webhook, no
+reduce lo que Resend ya vio.
+
+Dos decisiones que acotan lo que sale, y que están en el código con su porqué:
+
+- **Ningún aviso lleva montos.** El de comprobantes sin viaje dice cuántos son,
+  nunca cuánto suman: un correo se reenvía y puede acabar en una bandeja que no
+  debería ver el gasto de la flota. Hay una prueba que escanea los avisos
+  buscando `$`, `MXN` o `peso` y falla si aparecen (`avisos.test.ts`).
+- **El correo del destinatario NO se escribe en los logs.** Cuando Resend
+  rechaza un envío se guarda el status y 200 caracteres del cuerpo, nunca la
+  dirección (`enviar.ts`).
+
+Y una consecuencia que hay que decir en voz alta: **Resend entrega por Amazon
+SES**, así que la cadena tiene un eslabón más (6a). Se comprobó mirando el DNS
+que la propia integración creó, no leyendo su documentación: el SPF de
+`mail.likida.ai` incluye `amazonses.com` y el MX apunta a
+`feedback-smtp.us-east-1.amazonses.com`. Ese registro es la evidencia.
 
 **Sobre Sentry (cableado el 28-jul-2026).** Es el único de la tabla que recibe
 datos *filtrados*: se alimenta del `logger`, que antes de emitir **borra** el RFC

@@ -69,8 +69,9 @@ export function puedeVerArea(rol: string, area: Area): boolean {
  * vieja simplemente deja de abrir para todos, dueño incluido — el efecto
  * correcto mientras no exista nada que gatear. `/dashboard` se queda: sigue
  * siendo Resumen para todos los roles, incluido el jefe de tráfico
- * (`inicio-operacion.tsx`). Con el panel del contador vacío, `inicioDe`
- * (abajo) ya no lo manda a `/dashboard/contador` — ver esa función.
+ * (`inicio-operacion.tsx`). La RAÍZ del panel del contador volvió el
+ * 14-ago-2026 (`/dashboard/contador`, sin las 5 subrutas viejas) y con ella
+ * `inicioDe` (abajo) vuelve a mandarlo ahí — ver esa función.
  */
 const AREA_POR_RUTA: Record<string, Area> = {
   '/dashboard': 'operacion',
@@ -84,16 +85,44 @@ const AREA_POR_RUTA: Record<string, Area> = {
   // `dinero_por_area.test.ts` los escanea).
   '/dashboard/viajes': 'operacion',
   '/dashboard/operadores': 'operacion',
+  // El Registro de Unidades (14-ago-2026): el activo que produce el dinero y
+  // sus vigencias de ley. Es `operacion` porque el jefe de tráfico es
+  // exactamente quien debe enterarse de que una unidad no puede salir, y la
+  // pantalla no enseña un peso.
+  '/dashboard/unidades': 'operacion',
   // El mapa (F3): viajes vivos sobre México, sin un peso en pantalla.
   '/dashboard/mapa': 'operacion',
+  // Carta Porte (A3, 14-ago-2026): cero pesos en pantalla, y la declaración
+  // de ruta ("¿pisa federal?") es del jefe de tráfico — la regla 2.7.7.2.1
+  // exige plena certeza de quien CONOCE la ruta, no del que ve el dinero.
+  '/dashboard/carta-porte': 'operacion',
   // El Agente de Conductores (F4) es el ÚNICO agente de operación: no toca
   // un peso y su usuario diario es el jefe de tráfico. Sus hermanos
   // (liquidación/facturas/cobranza) siguen en dinero.
   '/dashboard/agentes/conductores': 'operacion',
   '/dashboard/arco': 'operacion',
   '/dashboard/soporte': 'operacion',
+  // Notificaciones (14-ago-2026) — el "alertas primero" de Handle, con página
+  // propia. Es `operacion` para que la vean TODOS los roles, y no porque sea
+  // inofensiva: cada alerta se filtra ADENTRO con este mismo `puedeVerRuta`
+  // contra la pantalla donde se resuelve, así que un encargado no recibe el
+  // renglón de huérfanos ni su conteo. Ponerla en `dinero` habría dejado al
+  // jefe de tráfico sin enterarse de un viaje escalado, que es suyo.
+  '/dashboard/notificaciones': 'operacion',
+  // Mi perfil (14-ago-2026) — la mig. 0046 dejó `avatar_url` y el bucket
+  // `avatares` desde el 12-ago diciendo que servirían "el día que su propio
+  // panel tenga edición de perfil". Es `operacion` porque TODO rol edita su
+  // nombre y su foto; las server actions escriben contra el userId de la
+  // sesión, así que el área no gatea a quién, sino a qué pantalla.
+  '/dashboard/mi-perfil': 'operacion',
 
   // Dinero — lo que el encargado no ve
+  // La casa del contador, reconstruida el 14-ago-2026 (la raíz sola; sus 5
+  // subrutas viejas no volvieron). Es `dinero` y no un área nueva: es el
+  // Resumen de quien vive del dinero y del papel, y el dueño también puede
+  // abrirla. Además es el aterrizaje de `inicioDe` para el rol que solo ve
+  // dinero — sin esta línea, ese rebote sería el bucle que esa función evita.
+  '/dashboard/contador': 'dinero',
   // AGENTES (13-ago-2026): las ventanas de los dos agentes enseñan montos
   // comprobados y colas de facturación — área dinero.
   '/dashboard/agentes/liquidacion': 'dinero',
@@ -111,10 +140,22 @@ const AREA_POR_RUTA: Record<string, Area> = {
   // La bandeja de huérfanos (F2): enseña montos de comprobantes — dinero.
   '/dashboard/huerfanos': 'dinero',
   '/dashboard/combustible-casetas': 'dinero',
+  // Rentabilidad y cobranza a clientes (F7): margen y cartera — dinero puro.
+  '/dashboard/rentabilidad': 'dinero',
+  // El lado del INGRESO (0048/0049), que existía en la base y estaba dormido.
+  // Los dos son `dinero`: quién te paga, cuánto y cuánto debe es exactamente lo
+  // que el jefe de tráfico no ve.
+  '/dashboard/clientes': 'dinero',
+  '/dashboard/facturacion': 'dinero',
   // Preguntar a la IA — reconstruida el 12-ago-2026 (la primera de las 17).
   // Es `dinero` porque responde montos comprobados/IVA/peaje (§12: las
   // cifras se piden DESPUÉS de este gateo).
   '/dashboard/chat': 'dinero',
+  // Conocimiento normativo (14-ago-2026) — de dónde sale el fundamento de cada
+  // cifra fiscal. Es `dinero` porque su lector es el contador: quien decide con
+  // esto es quien firma la declaración. La ley es la misma para todas las
+  // flotas, así que la página no recibe tenantId; aquí solo se gatea el acceso.
+  '/dashboard/conocimiento': 'dinero',
   // Lo que Likida le cobra a la flota (0052). Es `dinero` y no
   // `administracion` porque el contador necesita las facturas de Likida para su
   // propia contabilidad — es el mismo criterio que la RLS de la 0052, que las
@@ -122,6 +163,17 @@ const AREA_POR_RUTA: Record<string, Area> = {
   '/dashboard/suscripcion': 'dinero',
 
   // Administración de la cuenta — solo el dueño
+  // Conexiones (F7): la configuración de conectores de la cuenta.
+  '/dashboard/conexiones': 'administracion',
+  // Integraciones (chasis Handle, 14-ago-2026): con qué sistemas del cliente
+  // conecta Likida y CÓMO conecta hoy con cada uno. Es `administracion` —
+  // decidir conectar el ERP o el GPS es del dueño, no del jefe de tráfico.
+  '/dashboard/integraciones': 'administracion',
+  // Llaves de API (A6, 14-ago-2026): una llave es CONTROL, no dato — con
+  // ella se lee desde fuera, sin sesión, todo lo que su área permita. Mismo
+  // criterio que la RLS de la 0093 (`administra_flota()`): ni el contador ni
+  // el encargado la ven, solo el dueño y el superadmin.
+  '/dashboard/llaves-api': 'administracion',
   '/dashboard/usuarios': 'administracion',
   '/dashboard/politicas': 'administracion',
   '/dashboard/configuracion': 'administracion',
@@ -145,13 +197,16 @@ export function puedeVerRuta(rol: string, href: string): boolean {
  * las rutas de esa área en `puedeVerRuta`. Aquí no gana visibilidad de nada:
  * solo se declara la puerta de salida.
  *
- * Vacío desde el 7-ago-2026: el chofer (`operador`) era el único caso —
- * tenía panel propio en /chofer. Retirado su login (solo WhatsApp de aquí en
- * adelante), no queda ningún rol con casa fuera de /dashboard. Se deja la
- * tabla declarada, no el `Record` en línea: es el punto de extensión para el
- * día que un rol futuro sí la necesite.
+ * Estuvo vacío del 7-ago-2026 (salió el chofer con /chofer) al 14-ago-2026,
+ * cuando entró `vendedor` (0105): rol de LIKIDA con tenant null cuya casa es
+ * /vendedor. NO aparece en `AREAS_POR_ROL` a propósito — esa ausencia es la
+ * garantía (vía el `?? []` de `areasDe`) de que un vendedor no abre NINGUNA
+ * pantalla de /dashboard: su trabajo son prospectos, no los datos de una
+ * flota. Aquí solo se declara su puerta de salida.
  */
-const PANEL_PROPIO: Record<string, string> = {};
+const PANEL_PROPIO: Record<string, string> = {
+  vendedor: '/vendedor',
+};
 
 /**
  * A dónde mandar a un rol que no puede ver donde está parado.
@@ -187,21 +242,23 @@ export function rolEfectivo(rolReal: string, rolPedido?: string | null): string 
 
 export function inicioDe(rol: string): string {
   // PRIMERO el panel ajeno: un rol que vive fuera de /dashboard no se rebota
-  // adentro ni por accidente. Hoy solo aplica al chofer, que no tiene áreas,
-  // así que el orden no cambia nada — lo cambiaría el día que alguien le dé
-  // un área a un rol de esta tabla, y ese es justo el día en que importa.
+  // adentro ni por accidente. Desde el 14-ago-2026 aplica al `vendedor`
+  // (0105): sin áreas, su destino es /vendedor. El orden importaría el día
+  // que alguien le dé un área a un rol de esta tabla — por eso va primero.
   const propio = PANEL_PROPIO[rol];
   if (propio) return propio;
 
   if (puedeVerArea(rol, 'operacion')) return '/dashboard';
-  // El panel del contador (`/dashboard/contador`) se borró el 10-ago-2026
-  // para rehacerse desde cero — mandarlo ahí sería un bucle (`puedeVerRuta`
-  // lo negaría otra vez, sin área declarada). Mientras no exista un panel
-  // propio, aterriza en la única pantalla de `dinero` que le sigue quedando
-  // Y que de verdad es suya: Plan & Facturación, las facturas de Likida que
-  // ya necesitaba para su propia contabilidad. La rama sigue siendo por
-  // ÁREA y no por nombre de rol: cualquier rol futuro que solo vea dinero
-  // aterriza aquí sin que haya que acordarse de agregarlo.
-  if (puedeVerArea(rol, 'dinero')) return '/dashboard/suscripcion';
+  // El rol que solo ve dinero aterriza en el panel del contador. La raíz se
+  // reconstruyó el 14-ago-2026: mientras estuvo borrada (10→14-ago) esta
+  // rama mandaba a `/dashboard/suscripcion` — la única pantalla de `dinero`
+  // que era suya de verdad — porque rebotar a una ruta sin área declarada
+  // habría sido un bucle (`puedeVerRuta` niega lo no clasificado). Hoy
+  // `/dashboard/contador` está declarada como `dinero` en AREA_POR_RUTA, así
+  // que por construcción el destino sí se puede ver y el bucle no existe.
+  // La rama sigue siendo por ÁREA y no por nombre de rol: cualquier rol
+  // futuro que solo vea dinero aterriza aquí sin que haya que acordarse de
+  // agregarlo.
+  if (puedeVerArea(rol, 'dinero')) return '/dashboard/contador';
   return '/sin-acceso';
 }

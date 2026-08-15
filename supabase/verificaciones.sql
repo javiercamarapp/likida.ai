@@ -3188,3 +3188,1132 @@ begin
   raise exception E'PROVEEDOR_0091  doble-rebota=%  estado-rebota=%  rls=%   (esperado t / t / 0)',
     doble_rebota, estado_rebota, n_rls;
 end $$;
+
+-- ── 67. viaje_folio_unico: el dedup del import ES de la base (mig. 0092) ──
+--
+-- Corrida real (14-ago-2026): doble-rebota=t (unique tenant+folio — el
+-- segundo submit concurrente del mismo archivo choca aquí), otra-flota=t
+-- (dos flotas SÍ pueden repetir folio: el unique es por tenant), nulos=2
+-- (dos viajes de despacho WA con folio NULL conviven — NULLS DISTINCT).
+-- TODOS los viajes de prueba van 'liquidado' para quedar FUERA del índice
+-- parcial uq_viaje_abierto_por_operador (0029, abierto|en_cuadre): así el
+-- único unique que puede rebotar aquí es viaje_folio_unico, no el de 0029.
+-- El RAISE final revierte los datos de prueba.
+do $$
+declare
+  v_t1 uuid; v_t2 uuid; v_op1 uuid; v_op2 uuid;
+  doble_rebota boolean := false;
+  otra_flota boolean := false;
+  n_nulos int;
+begin
+  insert into tenant (nombre) values ('ZZZ VERIF 0092 A') returning id into v_t1;
+  insert into tenant (nombre) values ('ZZZ VERIF 0092 B') returning id into v_t2;
+  -- Teléfonos distintos: uq_operador_telefono_activo es GLOBAL (no por tenant).
+  insert into operador (tenant_id, nombre, telefono) values (v_t1, 'Verif', '+5210000000921') returning id into v_op1;
+  insert into operador (tenant_id, nombre, telefono) values (v_t2, 'Verif', '+5210000000922') returning id into v_op2;
+
+  insert into viaje (tenant_id, operador_id, folio, estatus) values (v_t1, v_op1, 'V-VERIF-1', 'liquidado');
+  begin
+    insert into viaje (tenant_id, operador_id, folio, estatus) values (v_t1, v_op1, 'V-VERIF-1', 'liquidado');
+  exception when unique_violation then doble_rebota := true;
+  end;
+
+  begin
+    insert into viaje (tenant_id, operador_id, folio, estatus) values (v_t2, v_op2, 'V-VERIF-1', 'liquidado');
+    otra_flota := true;
+  exception when unique_violation then otra_flota := false;
+  end;
+
+  insert into viaje (tenant_id, operador_id, folio, estatus) values (v_t1, v_op1, null, 'liquidado');
+  insert into viaje (tenant_id, operador_id, folio, estatus) values (v_t1, v_op1, null, 'liquidado');
+  select count(*) into n_nulos from viaje where tenant_id = v_t1 and folio is null;
+
+  delete from tenant where id in (v_t1, v_t2);
+  raise exception E'VIAJE_FOLIO_0092  doble-rebota=%  otra-flota=%  nulos=%   (esperado t / t / 2)',
+    doble_rebota, otra_flota, n_nulos;
+end $$;
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- ── 68. Llaves de API por flota: la llave EN CLARO no cabe (mig. 0093) ──────
+--
+-- Lo que se comprueba, y por qué cada uno importa:
+--   1. Una llave EN CLARO no cabe en la columna `hash`. Es el candado que
+--      impide que un volcado de esta tabla —o un `select` de alguien con
+--      service role— sea acceso directo a la API de todas las flotas.
+--   2. Un hash de largo equivocado tampoco entra.
+--   3. El mismo hash no se puede repetir: dos flotas no comparten llave.
+--   4. Un `area` inventada rebota: fail closed, igual que un rol desconocido.
+--   5. Un nombre vacío rebota: una lista de hashes sin nombre es
+--      indistinguible y nadie se atreve a revocar ninguna.
+--   6. RLS encendida.
+--   7. Borrar la flota se lleva sus llaves: una flota dada de baja no puede
+--      dejar credenciales vivas apuntando a ella.
+--
+-- CORRIDA REAL (14-ago-2026, proyecto gngoqsvrxdguxvsizpbw):
+--   TENANT_API_KEY_0093  claro=t  corto=t  dup=t  area=t  nombre=t  rls=t
+--                        huerfanas=0   (esperado t/t/t/t/t/t/0)
+-- ═══════════════════════════════════════════════════════════════════════════
+do $$
+declare
+  t uuid;
+  h1 text := repeat('a', 64);
+  h2 text := repeat('b', 64);
+  claro_rebota boolean := false;
+  hash_corto_rebota boolean := false;
+  dup_rebota boolean := false;
+  area_mala_rebota boolean := false;
+  nombre_vacio_rebota boolean := false;
+  quedan int;
+  rls boolean;
+begin
+  insert into tenant (nombre) values ('ZZZ VERIF 0093') returning id into t;
+
+  begin
+    insert into tenant_api_key (tenant_id, nombre, prefijo, hash)
+      values (t, 'en claro', 'lk_live_x', 'lk_live_secreto_en_claro');
+  exception when check_violation then claro_rebota := true;
+  end;
+
+  begin
+    insert into tenant_api_key (tenant_id, nombre, prefijo, hash)
+      values (t, 'corto', 'lk_live_x', 'abc123');
+  exception when check_violation then hash_corto_rebota := true;
+  end;
+
+  insert into tenant_api_key (tenant_id, nombre, prefijo, hash, area)
+    values (t, 'TMS propio', 'lk_live_abc123', h1, 'operacion');
+
+  begin
+    insert into tenant_api_key (tenant_id, nombre, prefijo, hash)
+      values (t, 'duplicada', 'lk_live_abc123', h1);
+  exception when unique_violation then dup_rebota := true;
+  end;
+
+  begin
+    insert into tenant_api_key (tenant_id, nombre, prefijo, hash, area)
+      values (t, 'area mala', 'lk_live_zzz', h2, 'todo');
+  exception when check_violation then area_mala_rebota := true;
+  end;
+
+  begin
+    insert into tenant_api_key (tenant_id, nombre, prefijo, hash)
+      values (t, '   ', 'lk_live_yyy', h2);
+  exception when check_violation then nombre_vacio_rebota := true;
+  end;
+
+  select relrowsecurity into rls from pg_class where relname = 'tenant_api_key';
+
+  delete from tenant where id = t;
+  select count(*) into quedan from tenant_api_key where tenant_id = t;
+
+  raise exception E'TENANT_API_KEY_0093  claro=%  corto=%  dup=%  area=%  nombre=%  rls=%  huerfanas=%   (esperado t/t/t/t/t/t/0)',
+    claro_rebota, hash_corto_rebota, dup_rebota, area_mala_rebota, nombre_vacio_rebota, rls, quedan;
+end $$;
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- ── 69. Credenciales de conector: un JSON en claro NO cabe (mig. 0094) ──────
+--
+-- La tabla existe porque `rastreo_credencial` (0050) solo acepta proveedores de
+-- GPS, así que 14 de los 19 conectores no tenían dónde guardar sus accesos.
+--
+-- Lo que se comprueba:
+--   1. Un JSON EN CLARO rebota. Es el candado que impide que la contraseña de
+--      un SAP se guarde sin cifrar por un descuido del llamador: un objeto
+--      serializado empieza con `{` y un cifrado nunca.
+--   2. Un `conector_id` vacío rebota.
+--   3. DOS juegos de accesos al mismo conector en la misma flota rebotan: es
+--      una ambigüedad que nadie sabría resolver al conectar.
+--   4. Pero OTRA flota SÍ puede tener su propio SAP — el unique es por
+--      (tenant, conector), no global.
+--   5. RLS encendida con su política.
+--   6. Borrar la flota se lleva sus credenciales: una flota dada de baja no
+--      puede dejar accesos vivos a los sistemas de su cliente.
+--
+-- CORRIDA REAL (14-ago-2026, proyecto gngoqsvrxdguxvsizpbw):
+--   CONECTOR_CREDENCIAL_0094  en_claro=t  id_vacio=t  dup=t  otra_flota=t
+--                             rls=t  politicas=1  huerfanas=0
+--                             (esperado t/t/t/t/t/1/0)
+-- ═══════════════════════════════════════════════════════════════════════════
+do $$
+declare
+  t uuid; t2 uuid;
+  en_claro_rebota boolean := false;
+  id_vacio_rebota boolean := false;
+  dup_rebota boolean := false;
+  otra_flota_ok boolean := false;
+  quedan int;
+  rls boolean;
+  pol int;
+begin
+  insert into tenant (nombre) values ('ZZZ VERIF 0094 A') returning id into t;
+  insert into tenant (nombre) values ('ZZZ VERIF 0094 B') returning id into t2;
+
+  begin
+    insert into conector_credencial (tenant_id, conector_id, valores_cifrados)
+      values (t, 'sap_b1', '{"password":"secreto"}');
+  exception when check_violation then en_claro_rebota := true;
+  end;
+
+  begin
+    insert into conector_credencial (tenant_id, conector_id, valores_cifrados)
+      values (t, '   ', 'AAAAcifradoAAAA');
+  exception when check_violation then id_vacio_rebota := true;
+  end;
+
+  insert into conector_credencial (tenant_id, conector_id, valores_cifrados, pistas)
+    values (t, 'sap_b1', 'AAAAcifradoAAAA', '{"host":"sap.cliente.mx","usuario":"likida","password":"…4f2a"}');
+
+  begin
+    insert into conector_credencial (tenant_id, conector_id, valores_cifrados)
+      values (t, 'sap_b1', 'BBBBotroBBBB');
+  exception when unique_violation then dup_rebota := true;
+  end;
+
+  begin
+    insert into conector_credencial (tenant_id, conector_id, valores_cifrados)
+      values (t2, 'sap_b1', 'CCCCterceroCCCC');
+    otra_flota_ok := true;
+  exception when unique_violation then otra_flota_ok := false;
+  end;
+
+  select relrowsecurity into rls from pg_class where relname='conector_credencial';
+  select count(*) into pol from pg_policies where tablename='conector_credencial';
+
+  delete from tenant where id in (t, t2);
+  select count(*) into quedan from conector_credencial where tenant_id in (t, t2);
+
+  raise exception E'CONECTOR_CREDENCIAL_0094  en_claro=%  id_vacio=%  dup=%  otra_flota=%  rls=%  politicas=%  huerfanas=%   (esperado t/t/t/t/t/1/0)',
+    en_claro_rebota, id_vacio_rebota, dup_rebota, otra_flota_ok, rls, pol, quedan;
+end $$;
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- ── 70. Buzón de intake: el token NO se deriva del tenant (mig. 0095) ───────
+--
+-- La dirección `f-<token>@mail.likida.ai` es por donde entran las facturas de
+-- talleres y diésel. El token es ALEATORIO y no el `tenant_id`, porque un id
+-- aparece en URLs, logs y exports: quien lo tuviera podría inyectar facturas
+-- falsas en la contabilidad de esa flota. Un id identifica, no autoriza.
+--
+-- Lo que se comprueba:
+--   1. Un token CORTO rebota — sería adivinable.
+--   2. Caracteres AMBIGUOS (0/O, 1/l) rebotan: la dirección se dicta por
+--      teléfono y se transcribe mal.
+--   3. El bueno entra.
+--   4. DOS flotas no pueden compartir buzón: la una recibiría las facturas de
+--      la otra.
+--   5. Pero muchas flotas SÍ pueden tener NULL a la vez — el índice único es
+--      parcial, porque una flota sin buzón simplemente no lo tiene encendido.
+--
+-- CORRIDA REAL (14-ago-2026, proyecto gngoqsvrxdguxvsizpbw):
+--   BUZON_INTAKE_0095  corto=t  ambiguo=t  bueno=t  dup=t  nulos_conviven=t
+--                      (esperado t/t/t/t/t)
+-- ═══════════════════════════════════════════════════════════════════════════
+do $$
+declare
+  t uuid; t2 uuid;
+  corto_rebota boolean := false;
+  ambiguo_rebota boolean := false;
+  dup_rebota boolean := false;
+  nulos_conviven boolean := false;
+  bueno_entra boolean := false;
+begin
+  insert into tenant (nombre) values ('ZZZ VERIF 0095 A') returning id into t;
+  insert into tenant (nombre) values ('ZZZ VERIF 0095 B') returning id into t2;
+
+  begin
+    update tenant set buzon_token = 'abc' where id = t;
+  exception when check_violation then corto_rebota := true;
+  end;
+
+  begin
+    update tenant set buzon_token = 'abcdefgh0ijklmnop1qrstuv' where id = t;
+  exception when check_violation then ambiguo_rebota := true;
+  end;
+
+  update tenant set buzon_token = 'abcdefghjkmnpqrstvwxyz23' where id = t;
+  select true into bueno_entra;
+
+  begin
+    update tenant set buzon_token = 'abcdefghjkmnpqrstvwxyz23' where id = t2;
+  exception when unique_violation then dup_rebota := true;
+  end;
+
+  select count(*) = 0 into nulos_conviven
+    from tenant where buzon_token is null and id = t2;
+  nulos_conviven := not nulos_conviven;
+
+  delete from tenant where id in (t, t2);
+
+  raise exception E'BUZON_INTAKE_0095  corto=%  ambiguo=%  bueno=%  dup=%  nulos_conviven=%   (esperado t/t/t/t/t)',
+    corto_rebota, ambiguo_rebota, bueno_entra, dup_rebota, nulos_conviven;
+end $$;
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- ── 71. Idempotencia del correo entrante (mig. 0096) ───────────────────────
+--
+-- Resend REINTENTA cualquier webhook que no conteste 2xx. Sin esta tabla, un
+-- timeout nuestro a mitad de proceso produce una segunda entrega del MISMO
+-- correo y una segunda factura en la contabilidad del cliente.
+--
+-- El dedup de `factura_proveedor` (unique tenant+uuid) NO alcanza: atrapa el
+-- mismo CFDI, pero no el correo con varios adjuntos donde el segundo falló —
+-- al reintentar, el primero se re-procesa. Por eso la llave es el CORREO.
+--
+-- El insert ES la comprobación (llave primaria). Preguntar-y-después-escribir
+-- dejaría una ventana por la que se cuelan dos entregas simultáneas.
+-- ═══════════════════════════════════════════════════════════════════════════
+do $$
+declare
+  repite_rebota boolean := false;
+  primero_entra boolean := false;
+begin
+  insert into correo_procesado (email_id) values ('ZZZ-VERIF-0096');
+  primero_entra := true;
+
+  begin
+    insert into correo_procesado (email_id) values ('ZZZ-VERIF-0096');
+  exception when unique_violation then repite_rebota := true;
+  end;
+
+  delete from correo_procesado where email_id = 'ZZZ-VERIF-0096';
+
+  raise exception E'CORREO_PROCESADO_0096  primero=%  repite_rebota=%   (esperado t/t)',
+    primero_entra, repite_rebota;
+end $$;
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- ── 72. Notificaciones por agente: la huella va completa (mig. 0097) ───────
+--
+-- Lo que se comprueba:
+--   1. Un `agente` con typo NO crea una fila de config inalcanzable en
+--      silencio — el dominio duplica el catálogo de TypeScript a propósito.
+--   2. Un `evento` inventado tampoco.
+--   3. Magnitud negativa rebota.
+--   4. LA HUELLA VA COMPLETA O NO VA: una con `avisado_en` pero sin
+--      `magnitud_avisada` se leería como magnitud 0 —"cualquier cosa es
+--      noticia"— y el anti-ruido dejaría de existir sin que nada fallara.
+--   5. Completa sí entra.
+--   6. EL CLAIM: un UPDATE condicional dentro del piso de 60 min afecta CERO
+--      filas. Es lo que impide que dos corridas solapadas de Vercel Cron
+--      manden dos copias del mismo aviso.
+--   7. Borrar la flota se lleva su configuración.
+--
+-- CORRIDA REAL (14-ago-2026, proyecto gngoqsvrxdguxvsizpbw):
+--   AGENTE_NOTIF_0097  agente_malo=t  evento_malo=t  magnitud_neg=t
+--                      huella_coja=t  completa=t  claim_reciente_no_pasa=0
+--                      huerfanas=0   (esperado t/t/t/t/t/0/0)
+-- ═══════════════════════════════════════════════════════════════════════════
+do $$
+declare
+  t uuid;
+  agente_malo boolean := false;
+  evento_malo boolean := false;
+  huella_coja boolean := false;
+  magnitud_neg boolean := false;
+  huella_completa_ok boolean := false;
+  claim_gana int;
+  quedan int;
+begin
+  insert into tenant (nombre) values ('ZZZ VERIF 0097') returning id into t;
+
+  begin
+    insert into agente_notificacion_config (tenant_id, agente) values (t, 'liquidacionn');
+  exception when check_violation then agente_malo := true;
+  end;
+
+  begin
+    insert into agente_notificacion_estado (tenant_id, agente, evento) values (t, 'cobranza', 'lo_que_sea');
+  exception when check_violation then evento_malo := true;
+  end;
+
+  begin
+    insert into agente_notificacion_estado (tenant_id, agente, evento, magnitud)
+      values (t, 'cobranza', 'corrida_fallida', -1);
+  exception when check_violation then magnitud_neg := true;
+  end;
+
+  begin
+    insert into agente_notificacion_estado (tenant_id, agente, evento, avisado_en)
+      values (t, 'cobranza', 'corrida_fallida', now());
+  exception when check_violation then huella_coja := true;
+  end;
+
+  insert into agente_notificacion_estado (tenant_id, agente, evento, magnitud, avisado_en, magnitud_avisada)
+    values (t, 'cobranza', 'corrida_fallida', 5, now(), 5);
+  huella_completa_ok := true;
+
+  update agente_notificacion_estado
+     set avisado_en = now(), magnitud_avisada = 20
+   where tenant_id = t and agente = 'cobranza' and evento = 'corrida_fallida'
+     and (avisado_en is null or avisado_en < now() - interval '60 minutes');
+  get diagnostics claim_gana = row_count;
+
+  delete from tenant where id = t;
+  select count(*) into quedan from agente_notificacion_config where tenant_id = t;
+
+  raise exception E'AGENTE_NOTIF_0097  agente_malo=%  evento_malo=%  magnitud_neg=%  huella_coja=%  completa=%  claim_reciente_no_pasa=%  huerfanas=%   (esperado t/t/t/t/t/0/0)',
+    agente_malo, evento_malo, magnitud_neg, huella_coja, huella_completa_ok, claim_gana, quedan;
+end $$;
+
+-- ── 73. Idempotencia durable de la API v1 (mig. 0098) ──────────────────────
+--
+-- Lo que se prueba NO es el duplicado: ése ya lo impide la llave natural
+-- (`viaje_folio_unico`) y no depende de esta tabla. Se prueba lo que esta
+-- tabla añade — que la MISMA llave no pueda servir dos respuestas distintas —
+-- y las tres formas en que la base se niega a guardar basura que después se
+-- serviría como si fuera buena.
+--
+-- CORRIDO CONTRA PRODUCCIÓN el 14-ago-2026. Salida real:
+--   politicas=0  rls=true  filas_residuales=0  → todos los guardias rechazaron
+--
+-- `politicas=0` con `rls=true` es lo esperado y no un olvido: esta tabla la
+-- toca EXCLUSIVAMENTE la capa de API con service role. Sin políticas, ningún
+-- camino con llave anónima o de usuario puede leerla ni escribirla.
+do $$
+declare
+  t uuid;
+  llave_corta boolean := false;
+  huella_mala boolean := false;
+  status_500  boolean := false;
+  dup_llave   boolean := false;
+  otra_ruta_convive boolean := false;
+  politicas int;
+  rls_on boolean;
+begin
+  select id into t from public.tenant limit 1;
+
+  -- Una llave de un carácter colisionaría entre peticiones sin relación, y
+  -- quien llegara segundo recibiría la respuesta del primero.
+  begin
+    insert into public.api_idempotencia(tenant_id,ruta,llave,huella,status,cuerpo)
+    values (t,'v1.viajes.post','corta', repeat('a',64), 201, '{}'::jsonb);
+  exception when check_violation then llave_corta := true; end;
+
+  begin
+    insert into public.api_idempotencia(tenant_id,ruta,llave,huella,status,cuerpo)
+    values (t,'v1.viajes.post','llave-valida-1234','no-es-un-hash',201,'{}'::jsonb);
+  exception when check_violation then huella_mala := true; end;
+
+  -- Un 500 NO se recuerda: un fallo sí se puede reintentar, y grabarlo dejaría
+  -- al integrador replayando su propio error para siempre.
+  begin
+    insert into public.api_idempotencia(tenant_id,ruta,llave,huella,status,cuerpo)
+    values (t,'v1.viajes.post','llave-valida-1234',repeat('b',64),500,'{}'::jsonb);
+  exception when check_violation then status_500 := true; end;
+
+  insert into public.api_idempotencia(tenant_id,ruta,llave,huella,status,cuerpo)
+  values (t,'v1.viajes.post','llave-valida-1234',repeat('c',64),201,'{"dato":{"folio":"VJ-1"}}'::jsonb);
+
+  begin
+    insert into public.api_idempotencia(tenant_id,ruta,llave,huella,status,cuerpo)
+    values (t,'v1.viajes.post','llave-valida-1234',repeat('d',64),200,'{}'::jsonb);
+  exception when unique_violation then dup_llave := true; end;
+
+  -- La misma llave en OTRA ruta SÍ convive: un cliente que reusa su llave entre
+  -- recursos no debe recibir el cuerpo del recurso equivocado, pero tampoco un
+  -- rechazo — son dos operaciones distintas.
+  insert into public.api_idempotencia(tenant_id,ruta,llave,huella,status,cuerpo)
+  values (t,'v1.unidades.post','llave-valida-1234',repeat('e',64),201,'{}'::jsonb);
+  otra_ruta_convive := true;
+
+  delete from public.api_idempotencia where tenant_id = t and llave = 'llave-valida-1234';
+
+  select count(*) into politicas from pg_policies where tablename = 'api_idempotencia';
+  select relrowsecurity into rls_on from pg_class where relname = 'api_idempotencia';
+
+  raise exception E'API_IDEMPOTENCIA_0098  llave_corta=%  huella_mala=%  status_500=%  dup_llave=%  otra_ruta=%  politicas=%  rls=%   (esperado t/t/t/t/t/0/t)',
+    llave_corta, huella_mala, status_500, dup_llave, otra_ruta_convive, politicas, rls_on;
+end $$;
+
+-- ── 74. La purga de la idempotencia respeta lo reciente (mig. 0098) ────────
+--
+-- Una purga que borra de más es peor que no purgar: se lleva el recuerdo de
+-- un reintento que todavía está en vuelo, y el TMS recibe una respuesta
+-- distinta a la que ya había recibido. Por eso lo que se prueba no es que
+-- borre, sino que DEJE la fresca.
+--
+-- CORRIDO CONTRA PRODUCCIÓN el 14-ago-2026. Salida real:
+--   borradas=1  quedan_frescas=1  reporta_la_llave=t
+--
+-- `reporta_la_llave` verifica que `mantenimiento_de_datos` incluya el conteo
+-- en su jsonb: el cron registra ese objeto en el log, y una purga que corre
+-- sin aparecer ahí es una purga que nadie puede auditar.
+do $$
+declare t uuid; borradas bigint; quedan int; res jsonb;
+begin
+  select id into t from public.tenant limit 1;
+
+  insert into public.api_idempotencia(tenant_id,ruta,llave,huella,status,cuerpo,created_at)
+  values (t,'v1.viajes.post','purga-vieja-0001',repeat('a',64),201,'{}'::jsonb, now() - interval '9 days'),
+         (t,'v1.viajes.post','purga-fresca-001',repeat('b',64),201,'{}'::jsonb, now() - interval '1 hour');
+
+  borradas := public.purgar_api_idempotencia();
+
+  select count(*) into quedan from public.api_idempotencia
+   where tenant_id = t and llave in ('purga-vieja-0001','purga-fresca-001');
+
+  res := public.mantenimiento_de_datos(30);
+
+  delete from public.api_idempotencia where tenant_id = t and llave like 'purga-%';
+
+  raise exception E'PURGA_0098  borradas=%  quedan_frescas=%  reporta_la_llave=%   (esperado 1/1/t)',
+    borradas, quedan, (res ? 'idempotenciaPurgada');
+end $$;
+
+-- ── 75. Ninguna función de purga es alcanzable por `anon` (mig. 0098) ──────
+--
+-- El bug que este bloque existe para que no vuelva: `purgar_api_idempotencia`
+-- se creó SECURITY DEFINER SIN `revoke`, y Postgres deja EXECUTE a PUBLIC por
+-- omisión. Supabase la publicaba en /rest/v1/rpc/, corría como `postgres`,
+-- saltaba la RLS que la propia migración encendía, y cualquiera con la anon
+-- key —pública por diseño, va en el bundle— podía vaciar la tabla desde
+-- internet llamándola con p_dias=0.
+--
+-- Se comprueba el CONJUNTO y no solo la función culpable: el modo de falla es
+-- omitir el revoke al escribir la SIGUIENTE, y una prueba que solo mira la de
+-- ayer no atrapa la de mañana.
+--
+-- CORRIDO CONTRA PRODUCCIÓN el 14-ago-2026, antes y después del arreglo:
+--   antes:   purgar_api_idempotencia  anon_puede=t   ← las otras 3 en f
+--   después: purgar_api_idempotencia  anon_puede=f   acl = postgres=X | service_role=X
+do $$
+declare abiertas text;
+begin
+  select string_agg(p.proname, ', ') into abiertas
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public'
+     and p.prosecdef                       -- solo las que corren como postgres
+     and (has_function_privilege('anon', p.oid, 'EXECUTE')
+       or has_function_privilege('authenticated', p.oid, 'EXECUTE'));
+
+  raise exception E'PURGA_ACL_0098  funciones_security_definer_abiertas=[%]   (esperado vacío)',
+    coalesce(abiertas, '');
+end $$;
+
+-- ── 76. Carta Porte: los datos del transportista tienen dónde vivir (0099) ─
+--
+-- Seis columnas nuevas en `unidad` (configuración vehicular, peso bruto,
+-- aseguradora y póliza RC, tipo y número de permiso SICT) y las dos
+-- DECLARACIONES por viaje (¿pisa federal?, radio del tramo federal). Todas
+-- nullables y sin defaults de catálogo: un permiso no declarado NO es TPXX00,
+-- y un NULL en ccp_pisa_federal significa "falta declarar", nunca "no pisa".
+--
+-- CORRIDO CONTRA PRODUCCIÓN el 14-ago-2026:
+--   parte 1: cols_unidad=6  cols_viaje=2  defaults_indebidos=0  checks=2
+--   parte 2: CCP_0099  peso_250_rebota=t  radio_negativo_rebota=t  (esperado t/t)
+select
+  (select count(*) from information_schema.columns
+    where table_schema='public' and table_name='unidad'
+      and column_name in ('config_vehicular','peso_bruto_ton','aseguradora_rc','poliza_rc_numero','permiso_sict_tipo','permiso_sict_numero')) as cols_unidad,
+  (select count(*) from information_schema.columns
+    where table_schema='public' and table_name='viaje'
+      and column_name in ('ccp_pisa_federal','ccp_radio_federal_km')) as cols_viaje,
+  (select count(*) from information_schema.columns
+    where table_schema='public' and table_name='unidad'
+      and column_name in ('config_vehicular','permiso_sict_tipo') and column_default is not null) as defaults_indebidos,
+  (select count(*) from pg_constraint where conname in ('unidad_peso_bruto_sano','viaje_ccp_radio_sano')) as checks;
+
+do $$
+declare t uuid; u uuid; peso_malo boolean := false; radio_malo boolean := false;
+begin
+  insert into public.tenant (nombre) values ('__verif_0099__') returning id into t;
+  insert into public.unidad (tenant_id, numero_economico, peso_bruto_ton, config_vehicular)
+    values (t, '__V99__', 17.5, 'T3S2') returning id into u;
+  begin
+    update public.unidad set peso_bruto_ton = 250 where id = u;
+  exception when check_violation then peso_malo := true;
+  end;
+  begin
+    insert into public.viaje (tenant_id, folio, ccp_radio_federal_km) values (t, '__V99__', -5);
+  exception when others then radio_malo := true;
+  end;
+  delete from public.tenant where id = t;  -- el raise de abajo revierte todo igual
+  raise exception E'CCP_0099  peso_250_rebota=%  radio_negativo_rebota=%   (esperado t/t)', peso_malo, radio_malo;
+end $$;
+
+-- ── 77. La oposición del titular tiene dónde vivir (0100) ──────────────────
+--
+-- `operador.oposicion_automatizada`: timestamptz nullable sin default. NULL =
+-- derecho no ejercido (medición, no relleno); con fecha, el motor de cuadre
+-- manda toda liquidación suya a revisión humana (diferencia oposicion_titular).
+--
+-- CORRIDO CONTRA PRODUCCIÓN el 14-ago-2026:
+--   [{"column_name":"oposicion_automatizada","data_type":"timestamp with time zone","is_nullable":"YES","column_default":null}]
+select column_name, data_type, is_nullable, column_default
+  from information_schema.columns
+ where table_schema='public' and table_name='operador' and column_name='oposicion_automatizada';
+
+-- ── 78. La purga del intake por correo existe y no es alcanzable (0101) ────
+--
+-- `correo_procesado` crecía para siempre: la 0096 creó el índice por fecha
+-- "para poder limpiar" y `mantenimiento_de_datos` nunca la tocó (C3,
+-- auditoría 4). Ahora la purga borra lo más viejo que 90 días, conserva lo
+-- fresco, reporta su llave en el jsonb del mantenimiento, y NO es ejecutable
+-- por `anon` (la lección de la 0098, aplicada de entrada).
+--
+-- CORRIDO CONTRA PRODUCCIÓN el 14-ago-2026:
+--   PURGA_CORREO_0101  borradas=1  quedan_frescas=1  llave_en_jsonb=t  anon_puede=f  (esperado >=1/1/t/f)
+do $$
+declare res jsonb; quedan bigint; borro bigint; anon_puede boolean;
+begin
+  insert into public.correo_procesado (email_id, created_at) values
+    ('verif-0101-viejo', now() - interval '120 days'),
+    ('verif-0101-fresco', now() - interval '2 days');
+  res := public.mantenimiento_de_datos(30);
+  select count(*) into quedan from public.correo_procesado where email_id like 'verif-0101-%';
+  borro := (res->>'correoPurgado')::bigint;
+  select has_function_privilege('anon', 'public.purgar_correo_procesado(integer, timestamptz)', 'EXECUTE') into anon_puede;
+  raise exception E'PURGA_CORREO_0101  borradas=%  quedan_frescas=%  llave_en_jsonb=%  anon_puede=%   (esperado >=1/1/t/f)',
+    borro, quedan, (res ? 'correoPurgado'), anon_puede;
+end $$;
+
+-- ── 79. La bitácora de corridas de agentes existe y se purga (0102) ────────
+--
+-- `agente_corrida`: una fila por (corrida × flota) con Periodo · Estado ·
+-- Tareas · Duración — la ficha de Handle. Dominios vigilados por CHECK,
+-- lectura por tenant vía RLS, escritura solo service role, purga a 180 días
+-- integrada a `mantenimiento_de_datos` con su revoke desde el día uno.
+--
+-- CORRIDO CONTRA PRODUCCIÓN el 14-ago-2026:
+--   CORRIDA_0102  agente_malo_rebota=t  estado_malo_rebota=t  purga_reporta=t  purgo_vieja=1  anon_puede=f  (esperado t/t/t/1/f)
+do $$
+declare t uuid; rebota_agente boolean := false; rebota_estado boolean := false; res jsonb; anon_puede boolean;
+begin
+  insert into public.tenant (nombre) values ('__verif_0102__') returning id into t;
+  insert into public.agente_corrida (tenant_id, agente, inicio, fin, estado, disparo, tareas_hechas, tareas_total)
+    values (t, 'cobranza', now() - interval '5 minutes', now(), 'ok', 'cron', 3, 3);
+  begin
+    insert into public.agente_corrida (tenant_id, agente, inicio, estado) values (t, 'inventado', now(), 'ok');
+  exception when check_violation then rebota_agente := true;
+  end;
+  begin
+    insert into public.agente_corrida (tenant_id, agente, inicio, estado) values (t, 'peajes', now(), 'verde');
+  exception when check_violation then rebota_estado := true;
+  end;
+  insert into public.agente_corrida (tenant_id, agente, inicio, estado, creada_en)
+    values (t, 'peajes', now() - interval '200 days', 'ok', now() - interval '200 days');
+  res := public.mantenimiento_de_datos(30);
+  select has_function_privilege('anon', 'public.purgar_agente_corrida(integer, timestamptz)', 'EXECUTE') into anon_puede;
+  raise exception E'CORRIDA_0102  agente_malo_rebota=%  estado_malo_rebota=%  purga_reporta=%  purgo_vieja=%  anon_puede=%   (esperado t/t/t/1/f)',
+    rebota_agente, rebota_estado, (res ? 'corridasPurgadas'), (res->>'corridasPurgadas'), anon_puede;
+end $$;
+
+-- ── 80. El índice muerto de conector_credencial se tiró (0103) ─────────────
+--
+-- El parcial `conector_credencial_por_flota` estaba totalmente cubierto por
+-- el UNIQUE `conector_credencial_unica` (mismas columnas, sin filtro).
+--
+-- CORRIDO CONTRA PRODUCCIÓN el 14-ago-2026:
+--   [{"indice_muerto":0,"unique_vivo":1}]
+select
+  (select count(*) from pg_indexes where schemaname='public' and indexname='conector_credencial_por_flota') as indice_muerto,
+  (select count(*) from pg_indexes where schemaname='public' and indexname='conector_credencial_unica') as unique_vivo;
+
+-- ── 81. F1 resuelto por evidencia: 0067-0069 NUNCA EXISTIERON ──────────────
+--
+-- La auditoría 4 reportó "migraciones 0067, 0068 y 0069 sin archivo" como el
+-- modo de falla de apply_migration por MCP. Se verificó contra el registro
+-- de producción (supabase_migrations.schema_migrations) y contra el repo:
+--   · el registro NO tiene ninguna migración con esos números ni ninguna
+--     entrada sin archivo correspondiente en esa ventana (05-ago-2026);
+--   · cero referencias a 0067/0068/0069 en supabase/, src/ y docs/;
+--   · el hueco es de NUMERACIÓN (la secuencia saltó de 0066 a 0070), no de
+--     archivos perdidos: una base reconstruida desde el repo NO diverge por
+--     esta causa.
+-- Lo que el registro SÍ mostró es lo inverso: los archivos 0078-0085 no
+-- aparecen en el ledger (se aplicaron fuera de él); sus objetos SÍ están en
+-- producción — verificado abajo por muestreo (función de la 0084, columna de
+-- la 0080). El repo sigue siendo la fuente de verdad reconstruible.
+--
+-- CORRIDO CONTRA PRODUCCIÓN el 14-ago-2026:
+--   [{"f_0084":1,"col_0080":1,"col_avisos":1,"ledger_0067_69":0}]
+select
+  (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='public' and p.proname='sumar_combustible_ejercicio') as f_0084,
+  (select count(*) from information_schema.columns
+    where table_schema='public' and table_name='operador' and column_name='rfc') as col_0080,
+  (select count(*) from information_schema.columns
+    where table_schema='public' and table_name='viaje' and column_name='escalado_en') as col_avisos,
+  (select count(*) from supabase_migrations.schema_migrations
+    where name ~ '^00(6[7-9])') as ledger_0067_69;
+
+-- ── 82. La retención operativa prometida ya corre (0104) ───────────────────
+--
+-- /privacidad prometía plazos de borrado sin ejecutor (E5, auditoría 4). Las
+-- dos purgas nuevas (wa_conversacion y codigo_pendiente a 180 días) borran lo
+-- viejo, conservan lo fresco, reportan sus llaves en el jsonb del
+-- mantenimiento, y NO son ejecutables por anon. Nada fiscal se toca: el CFF
+-- 30 obliga a conservarlo (ver la cabecera de la 0104 para el porqué de cada
+-- exclusión).
+--
+-- CORRIDO CONTRA PRODUCCIÓN el 14-ago-2026:
+--   RETENCION_0104  conv_purgadas=1  cod_purgados=1  quedan_conv=1  quedan_cod=1  anon=f/f  (esperado >=1/>=1/1/1/f/f)
+do $$
+declare t uuid; op uuid; v uuid; res jsonb; quedan_conv bigint; quedan_cod bigint; anon_conv boolean; anon_cod boolean;
+begin
+  insert into public.tenant (nombre) values ('__verif_0104__') returning id into t;
+  insert into public.operador (tenant_id, nombre, telefono) values (t, '__V104__', '5210000000104') returning id into op;
+  insert into public.viaje (tenant_id, operador_id, folio) values (t, op, '__V104__') returning id into v;
+  insert into public.wa_conversacion (tenant_id, telefono, estado, updated_at) values
+    (t, '5210000000001', '{}', now() - interval '200 days'),
+    (t, '5210000000002', '{}', now() - interval '2 days');
+  insert into public.codigo_pendiente (tenant_id, viaje_id, monto, creado_en) values
+    (t, v, 100, now() - interval '200 days'),
+    (t, v, 200, now() - interval '2 days');
+  res := public.mantenimiento_de_datos(30);
+  select count(*) into quedan_conv from public.wa_conversacion where tenant_id = t;
+  select count(*) into quedan_cod from public.codigo_pendiente where tenant_id = t;
+  select has_function_privilege('anon', 'public.purgar_wa_conversacion(integer, timestamptz)', 'EXECUTE') into anon_conv;
+  select has_function_privilege('anon', 'public.purgar_codigo_pendiente(integer, timestamptz)', 'EXECUTE') into anon_cod;
+  raise exception E'RETENCION_0104  conv_purgadas=%  cod_purgados=%  quedan_conv=%  quedan_cod=%  anon=%/%   (esperado >=1/>=1/1/1/f/f)',
+    (res->>'conversacionesPurgadas'), (res->>'codigosPurgados'), quedan_conv, quedan_cod, anon_conv, anon_cod;
+end $$;
+
+-- ── 83. La zona de vendedores (0105) ───────────────────────────────────────
+--
+-- Tres cosas que solo la base puede demostrar: (a) el rol `vendedor` entró
+-- al dominio y un rol inventado sigue rebotando; (b) `prospecto` vigila su
+-- embudo — estado fuera del dominio rebota, cerrado exige `cerrado_en` (y
+-- viceversa), `tenant_id` solo se acepta en cerrado, empresa en blanco
+-- rebota, y la tabla tiene RLS SIN políticas (deny-all: cero policies en
+-- pg_policies); (c) `agente_corrida` acepta al agente `ventas` con
+-- `tenant_id` NULL y sigue rebotando un agente inventado. Todo dentro de un
+-- DO que revierte con su excepción final — no queda ni una fila.
+--
+-- SALIDA REAL (14-ago-2026, corrida vía MCP tras aplicar la 0105):
+--   ERROR: P0001: VENDEDORES_0105  rol_malo_rebota=t  estado_malo=t
+--   cerrado_sin_fecha=t  fecha_sin_cerrado=t  tenant_sin_cerrar=t
+--   empresa_vacia=t  rls=t  policies=0  indice=1  agente_malo=t
+--   (esperado t/t/t/t/t/t/t/0/1/t) — coincide; el RAISE final revirtió
+--   todas las filas de prueba.
+do $$
+declare
+  u uuid := gen_random_uuid(); p uuid; t uuid;
+  rol_malo boolean := false; estado_malo boolean := false;
+  cerrado_sin_fecha boolean := false; fecha_sin_cerrado boolean := false;
+  tenant_sin_cerrar boolean := false; empresa_vacia boolean := false;
+  agente_malo boolean := false; rls_activa boolean; policies int; idx int;
+begin
+  -- (a) el dominio de rol
+  insert into public.app_user (id, email, rol, tenant_id) values (u, '__verif_0105__@likida.ai', 'vendedor', null);
+  begin
+    insert into public.app_user (id, email, rol) values (gen_random_uuid(), '__verif_0105b__@likida.ai', 'gerente');
+  exception when check_violation then rol_malo := true;
+  end;
+
+  -- (b) el embudo de prospecto
+  insert into public.prospecto (empresa, vacante, vendedor_id)
+    values ('__VERIF_0105__', 'Analista de liquidaciones', u) returning id into p;
+  begin
+    insert into public.prospecto (empresa, estado) values ('__V105__', 'tibio');
+  exception when check_violation then estado_malo := true;
+  end;
+  begin
+    insert into public.prospecto (empresa, estado) values ('__V105__', 'cerrado');  -- sin cerrado_en
+  exception when check_violation then cerrado_sin_fecha := true;
+  end;
+  begin
+    insert into public.prospecto (empresa, estado, cerrado_en) values ('__V105__', 'nuevo', now());
+  exception when check_violation then fecha_sin_cerrado := true;
+  end;
+  insert into public.tenant (nombre) values ('__verif_0105__') returning id into t;
+  begin
+    insert into public.prospecto (empresa, estado, tenant_id) values ('__V105__', 'nuevo', t);
+  exception when check_violation then tenant_sin_cerrar := true;
+  end;
+  begin
+    insert into public.prospecto (empresa) values ('   ');
+  exception when check_violation then empresa_vacia := true;
+  end;
+  select relrowsecurity into rls_activa from pg_class where oid = 'public.prospecto'::regclass;
+  select count(*) into policies from pg_policies where schemaname = 'public' and tablename = 'prospecto';
+  select count(*) into idx from pg_indexes where schemaname = 'public' and indexname = 'prospecto_por_vendedor';
+
+  -- (c) la bitácora del agente de ventas, sin flota
+  insert into public.agente_corrida (tenant_id, agente, inicio, fin, estado, disparo, tareas_hechas, tareas_total)
+    values (null, 'ventas', now() - interval '3 seconds', now(), 'ok', 'manual', 2, 2);
+  begin
+    insert into public.agente_corrida (tenant_id, agente, inicio, estado) values (null, 'marketing', now(), 'ok');
+  exception when check_violation then agente_malo := true;
+  end;
+
+  raise exception E'VENDEDORES_0105  rol_malo_rebota=%  estado_malo=%  cerrado_sin_fecha=%  fecha_sin_cerrado=%  tenant_sin_cerrar=%  empresa_vacia=%  rls=%  policies=%  indice=%  agente_malo=%   (esperado t/t/t/t/t/t/t/0/1/t)',
+    rol_malo, estado_malo, cerrado_sin_fecha, fecha_sin_cerrado, tenant_sin_cerrar, empresa_vacia, rls_activa, policies, idx, agente_malo;
+end $$;
+
+-- ── 84. El desglose del proveedor de peaje (0106) ──────────────────────────
+--
+-- Lo que solo la base puede demostrar de la 0106: (a) el dominio de estatus
+-- rebota un valor inventado y el default es `sin_contraparte` (toda línea
+-- nace sin conciliar — sin cruce no se afirma nada); (b) `diferencia` y
+-- `viaje_id` aceptan NULL (NULL ≠ 0: sin contraparte no hay diferencia que
+-- medir); (c) el UNIQUE (desglose_id, indice) rebota el renglón repetido;
+-- (d) el periodo incoherente (hasta < desde) rebota; (e) ambas tablas tienen
+-- RLS activa con CERO políticas (deny-all — todo acceso por service_role);
+-- (f) los tres índices existen; (g) borrar el desglose arrastra sus líneas
+-- (cascade). Todo dentro de un DO que revierte con su excepción final.
+--
+-- SALIDA REAL (14-ago-2026, corrida vía MCP tras aplicar la 0106 — con el
+--   arreglo de operador_id anotado arriba):
+--   ERROR: P0001: DESGLOSE_0106  default_sin_contraparte=t  diferencia_nula=t
+--   estatus_malo_rebota=t  indice_repetido_rebota=t  periodo_malo_rebota=t
+--   rls=t/t  policies=0  indices=3  lineas_tras_borrar=0
+--   (esperado t/t/t/t/t/t/t/0/3/0) — coincide; el RAISE revirtió todo.
+do $$
+declare
+  t uuid; o uuid; d uuid; v uuid; lin uuid;
+  estatus_malo boolean := false; indice_repetido boolean := false;
+  periodo_malo boolean := false;
+  default_ok boolean; dif_nula boolean;
+  rls_desglose boolean; rls_linea boolean; policies int; indices int;
+  lineas_tras_borrar int;
+begin
+  insert into public.tenant (nombre) values ('__verif_0106__') returning id into t;
+  -- viaje.operador_id es NOT NULL (0001): sin un operador de utilería el
+  -- INSERT de abajo rebota — atrapado en la primera corrida real del bloque.
+  insert into public.operador (tenant_id, nombre, telefono)
+    values (t, '__verif_0106__', '5210000000106') returning id into o;
+  insert into public.viaje (tenant_id, operador_id, folio) values (t, o, '__V106__') returning id into v;
+
+  -- (a) default sin_contraparte + dominio vigilado
+  insert into public.desglose_peaje (tenant_id, proveedor, archivo_nombre)
+    values (t, 'IAVE', 'verif_0106.xlsx') returning id into d;
+  insert into public.desglose_peaje_linea (tenant_id, desglose_id, indice, fecha, caseta, monto, tag)
+    values (t, d, 0, current_date, 'Tepotzotlán', 189.00, 'IMDM00106') returning id into lin;
+  select (estatus = 'sin_contraparte'), (diferencia is null)
+    into default_ok, dif_nula
+    from public.desglose_peaje_linea where id = lin;
+  begin
+    insert into public.desglose_peaje_linea (tenant_id, desglose_id, indice, monto, estatus)
+      values (t, d, 1, 100.00, 'conciliada');  -- estatus de OTRA tabla: aquí no existe
+  exception when check_violation then estatus_malo := true;
+  end;
+
+  -- (b) una línea que cuadra puede señalar su viaje y su diferencia medida
+  update public.desglose_peaje_linea
+     set estatus = 'cuadra', viaje_id = v, diferencia = 0.00 where id = lin;
+
+  -- (c) el renglón repetido rebota
+  begin
+    insert into public.desglose_peaje_linea (tenant_id, desglose_id, indice, monto)
+      values (t, d, 0, 55.00);
+  exception when unique_violation then indice_repetido := true;
+  end;
+
+  -- (d) el periodo incoherente rebota
+  begin
+    insert into public.desglose_peaje (tenant_id, periodo_desde, periodo_hasta)
+      values (t, '2026-08-10', '2026-08-01');
+  exception when check_violation then periodo_malo := true;
+  end;
+
+  -- (e) RLS activa, cero policies en las dos
+  select relrowsecurity into rls_desglose from pg_class where oid = 'public.desglose_peaje'::regclass;
+  select relrowsecurity into rls_linea from pg_class where oid = 'public.desglose_peaje_linea'::regclass;
+  select count(*) into policies from pg_policies
+    where schemaname = 'public' and tablename in ('desglose_peaje', 'desglose_peaje_linea');
+
+  -- (f) los tres índices
+  select count(*) into indices from pg_indexes
+    where schemaname = 'public' and indexname in
+      ('desglose_peaje_linea_por_desglose', 'desglose_peaje_linea_por_estatus', 'desglose_peaje_por_flota');
+
+  -- (g) borrar el desglose arrastra sus líneas
+  delete from public.desglose_peaje where id = d;
+  select count(*) into lineas_tras_borrar from public.desglose_peaje_linea where desglose_id = d;
+
+  raise exception E'DESGLOSE_0106  default_sin_contraparte=%  diferencia_nula=%  estatus_malo_rebota=%  indice_repetido_rebota=%  periodo_malo_rebota=%  rls=%/%  policies=%  indices=%  lineas_tras_borrar=%   (esperado t/t/t/t/t/t/t/0/3/0)',
+    default_ok, dif_nula, estatus_malo, indice_repetido, periodo_malo,
+    rls_desglose, rls_linea, policies, indices, lineas_tras_borrar;
+end $$;
+
+-- ── 85. La decisión de la talacha se firma o no existe (0107 + 0109) ───────
+--
+-- Lo que solo la base puede demostrar de la 0107: (a) el dominio de
+-- `autorizacion` rebota un valor inventado; (b) una decisión SIN firma
+-- (autorizada sin quién/cuándo) rebota — una "autorizada" anónima se leería
+-- igual que una firmada, y la firma es todo el punto del circuito §4.6;
+-- (c) una firma SIN decisión (pendiente con autorizada_en) también rebota —
+-- la coherencia es bicondicional, como incidencia_cierre_coherente; (d) el
+-- claim anti-doble-decisión: dos UPDATE condicionales `WHERE autorizacion =
+-- 'pendiente'` — el primero toca 1 fila, el segundo 0, así el segundo botón
+-- del jefe no re-firma ni pisa la primera decisión; (e) las incidencias de
+-- siempre (autorizacion NULL) siguen entrando sin firma — la 0107 no les
+-- exige nada nuevo; (f) el índice parcial de pendientes existe. Todo dentro
+-- de un DO que revierte con su excepción final.
+--
+-- SALIDA REAL (14-ago-2026, DOS corridas vía MCP — y la primera ATRAPÓ un
+--   hueco real):
+--   1ª corrida (0107 recién aplicada, con el arreglo de operador_id anotado
+--   arriba): firma_suelta_rebota=f — el check de la 0107 dejaba estampar
+--   `autorizada_en` sola sobre una PENDIENTE (false=false pasa el ⇔). Todo
+--   lo demás en verde: t/t/f/1/0/t/t contra esperado t/t/t/1/0/t/t.
+--   2ª corrida (tras la 0109, que ata cada campo de la firma a la decisión):
+--   ERROR: P0001: TALACHA_0107  dominio_rebota=t  sin_firma_rebota=t
+--   firma_suelta_rebota=t  primer_claim=1  segundo_claim=0  vieja_entra=t
+--   indice=t   (esperado t/t/t/1/0/t/t) — coincide; el RAISE revirtió todo.
+do $$
+declare
+  t uuid; o uuid; v uuid; jefe uuid; inc uuid;
+  dominio_rebota boolean := false; sin_firma_rebota boolean := false;
+  firma_suelta_rebota boolean := false;
+  primer_claim int; segundo_claim int;
+  vieja_entra boolean := false; indice_existe boolean;
+begin
+  insert into public.tenant (nombre) values ('__verif_0107__') returning id into t;
+  -- viaje.operador_id es NOT NULL (0001) — mismo arreglo que el bloque 84.
+  insert into public.operador (tenant_id, nombre, telefono)
+    values (t, '__verif_0107__', '5210000000107') returning id into o;
+  insert into public.viaje (tenant_id, operador_id, folio) values (t, o, '__V107__') returning id into v;
+  insert into public.app_user (id, tenant_id, email, rol)
+    values (gen_random_uuid(), t, 'verif0107@likida.test', 'flota_admin') returning id into jefe;
+
+  -- (e) la incidencia informativa de siempre: sin autorizacion, sin firma.
+  begin
+    insert into public.incidencia (tenant_id, viaje_id, tipo, descripcion)
+      values (t, v, 'retraso', 'verif 0107: informativa');
+    vieja_entra := true;
+  exception when others then vieja_entra := false;
+  end;
+
+  -- La talacha pendiente del circuito.
+  insert into public.incidencia (tenant_id, viaje_id, tipo, prioridad, descripcion, monto_estimado, autorizacion)
+    values (t, v, 'averia', 'alta', 'verif 0107: talacha', 800, 'pendiente') returning id into inc;
+
+  -- (a) dominio vigilado.
+  begin
+    update public.incidencia set autorizacion = 'verde' where id = inc;
+  exception when check_violation then dominio_rebota := true;
+  end;
+
+  -- (b) decisión sin firma.
+  begin
+    update public.incidencia set autorizacion = 'autorizada' where id = inc;
+  exception when check_violation then sin_firma_rebota := true;
+  end;
+
+  -- (c) firma sin decisión.
+  begin
+    update public.incidencia set autorizada_en = now() where id = inc;
+  exception when check_violation then firma_suelta_rebota := true;
+  end;
+
+  -- (d) el claim: gana exactamente un botón.
+  update public.incidencia
+     set autorizacion = 'autorizada', autorizada_por = jefe, autorizada_en = now()
+   where id = inc and autorizacion = 'pendiente';
+  get diagnostics primer_claim = row_count;
+  update public.incidencia
+     set autorizacion = 'rechazada', autorizada_por = jefe, autorizada_en = now()
+   where id = inc and autorizacion = 'pendiente';
+  get diagnostics segundo_claim = row_count;
+
+  -- (f) el índice parcial de pendientes.
+  select count(*) = 1 into indice_existe
+    from pg_indexes
+   where schemaname = 'public' and indexname = 'incidencia_autorizacion_pendiente_idx';
+
+  raise exception E'TALACHA_0107  dominio_rebota=%  sin_firma_rebota=%  firma_suelta_rebota=%  primer_claim=%  segundo_claim=%  vieja_entra=%  indice=%   (esperado t/t/t/1/0/t/t)',
+    dominio_rebota, sin_firma_rebota, firma_suelta_rebota, primer_claim, segundo_claim, vieja_entra, indice_existe;
+end $$;
+
+-- ── 86. El flujo de proveedores: foto, SAT, export y disparo correo (0108) ──
+--
+-- Lo que solo la base puede demostrar de la 0108: (a) el dedup por
+-- (tenant, cfdi_uuid) sigue vivo con las columnas nuevas puestas; (b) una
+-- factura de FOTO cabe sin xml_crudo PORQUE trae ocr_confianza, y una fila
+-- sin respaldo (ni XML ni OCR) rebota; (c) los dominios de origen y
+-- estado_sat rebotan valores inventados; (d) exportada_en solo cabe sobre
+-- una aprobada; (e) `agente_corrida` acepta el disparo 'correo' y sigue
+-- rebotando uno inventado; (f) la tabla sigue deny-all para authenticated.
+-- Todo dentro de un DO que revierte con su excepción final.
+--
+-- SALIDA REAL (14-ago-2026, corrida vía MCP tras aplicar la 0108):
+--   ERROR: P0001: PROVEEDOR_FLUJO_0108  dedup=t  foto_sin_xml=1
+--   sin_respaldo_rebota=t  origen_malo=t  sat_malo=t
+--   export_pendiente_rebota=t  exportadas=1  disparo_correo_malo_rebota=t
+--   rls=0   (esperado t/1/t/t/t/t/1/t/0) — coincide; el RAISE revirtió todo.
+do $$
+declare
+  v_t uuid;
+  dedup_vivo boolean := false;
+  sin_respaldo_rebota boolean := false;
+  origen_malo boolean := false;
+  sat_malo boolean := false;
+  export_pendiente_rebota boolean := false;
+  disparo_malo boolean := false;
+  n_foto int;
+  n_export int;
+  n_rls int;
+begin
+  insert into tenant (nombre) values ('ZZZ VERIF 0108') returning id into v_t;
+
+  -- (a) XML con las columnas nuevas, y el dedup contra una FOTO del mismo UUID
+  insert into factura_proveedor (tenant_id, cfdi_uuid, total, xml_crudo, origen, estado_sat)
+    values (v_t, 'UUID-VERIF-0108', 100, '<x/>', 'correo', 'vigente');
+  begin
+    insert into factura_proveedor (tenant_id, cfdi_uuid, total, ocr_confianza, origen)
+      values (v_t, 'UUID-VERIF-0108', 100, 0.62, 'subida');
+  exception when unique_violation then dedup_vivo := true;
+  end;
+
+  -- (b) la foto cabe sin XML porque declara su OCR; sin ninguno de los dos, no
+  insert into factura_proveedor (tenant_id, cfdi_uuid, total, ocr_confianza, origen, estado_sat)
+    values (v_t, 'UUID-VERIF-0108-F', 250, 0.62, 'subida', 'pendiente');
+  select count(*) into n_foto from factura_proveedor
+    where tenant_id = v_t and xml_crudo is null and ocr_confianza = 0.62;
+  begin
+    insert into factura_proveedor (tenant_id, cfdi_uuid, total)
+      values (v_t, 'UUID-VERIF-0108-N', 300);
+  exception when check_violation then sin_respaldo_rebota := true;
+  end;
+
+  -- (c) los dominios nuevos
+  begin
+    insert into factura_proveedor (tenant_id, cfdi_uuid, total, xml_crudo, origen)
+      values (v_t, 'UUID-VERIF-0108-O', 10, '<x/>', 'fax');
+  exception when check_violation then origen_malo := true;
+  end;
+  begin
+    insert into factura_proveedor (tenant_id, cfdi_uuid, total, xml_crudo, estado_sat)
+      values (v_t, 'UUID-VERIF-0108-S', 10, '<x/>', 'valido');
+  exception when check_violation then sat_malo := true;
+  end;
+
+  -- (d) exportada_en: rebota sobre pendiente, cabe sobre aprobada
+  begin
+    update factura_proveedor set exportada_en = now()
+      where tenant_id = v_t and cfdi_uuid = 'UUID-VERIF-0108';
+  exception when check_violation then export_pendiente_rebota := true;
+  end;
+  update factura_proveedor set estado = 'aprobada', decidido_por = 'verif', decidido_en = now()
+    where tenant_id = v_t and cfdi_uuid = 'UUID-VERIF-0108';
+  update factura_proveedor set exportada_en = now()
+    where tenant_id = v_t and cfdi_uuid = 'UUID-VERIF-0108';
+  select count(*) into n_export from factura_proveedor
+    where tenant_id = v_t and exportada_en is not null;
+
+  -- (e) el disparo 'correo' de la bitácora
+  insert into agente_corrida (tenant_id, agente, inicio, fin, estado, disparo, tareas_hechas, tareas_total)
+    values (v_t, 'proveedores', now() - interval '2 seconds', now(), 'ok', 'correo', 1, 2);
+  begin
+    insert into agente_corrida (tenant_id, agente, inicio, estado, disparo)
+      values (v_t, 'proveedores', now(), 'ok', 'webhook');
+  exception when check_violation then disparo_malo := true;
+  end;
+
+  -- (f) deny-all intacto
+  set local role authenticated;
+  select count(*) into n_rls from factura_proveedor where tenant_id = v_t;
+  reset role;
+
+  delete from tenant where id = v_t;
+  raise exception E'PROVEEDOR_FLUJO_0108  dedup=%  foto_sin_xml=%  sin_respaldo_rebota=%  origen_malo=%  sat_malo=%  export_pendiente_rebota=%  exportadas=%  disparo_correo_malo_rebota=%  rls=%   (esperado t/1/t/t/t/t/1/t/0)',
+    dedup_vivo, n_foto, sin_respaldo_rebota, origen_malo, sat_malo, export_pendiente_rebota, n_export, disparo_malo, n_rls;
+end $$;
+
+-- ── 87. El kill switch y el dedup de impersonación (0110) ──────────────────
+--
+-- Lo que solo la base puede demostrar de la 0110: (a) `interruptor` vigila su
+-- dominio — un nombre inventado rebota, 'global' y 'agente:cobranza' caben;
+-- (b) apagar exige motivo NO VACÍO — sin motivo rebota, con espacios rebota,
+-- con motivo cabe, y encendido sin motivo cabe (encender es el default);
+-- (c) las dos tablas tienen RLS activa SIN políticas (deny-all: cero policies
+-- en pg_policies) y `authenticated` no lee ni una fila; (d) el PK de
+-- `impersonacion_dia` deduplica de verdad — el segundo insert del mismo
+-- (actor, flota, día) rebota con unique_violation, que es el mecanismo por el
+-- que la bitácora se firma UNA vez por día. Todo dentro de un DO que revierte
+-- con su excepción final — no queda ni una fila.
+--
+-- SALIDA REAL (15-ago-2026, corrida vía MCP tras aplicar la 0110):
+--   ERROR: P0001: INTERRUPTORES_0110  dominio_malo_rebota=t
+--   apagado_sin_motivo_rebota=t  motivo_blanco_rebota=t  apagados=1
+--   encendidos=1  dedup_impersonacion=t  rls_int=t  rls_imp=t
+--   policies_int=0  policies_imp=0  lee_auth_int=0  lee_auth_imp=0
+--   (esperado t/t/t/1/1/t/t/t/0/0/0/0) — coincide; el RAISE revirtió todo.
+do $$
+declare
+  v_t uuid; v_u uuid := gen_random_uuid();
+  dominio_malo boolean := false;
+  apagado_sin_motivo boolean := false;
+  apagado_motivo_blanco boolean := false;
+  dedup_impersonacion boolean := false;
+  n_apagados int; n_encendidos int;
+  rls_int boolean; rls_imp boolean;
+  pol_int int; pol_imp int;
+  n_lee_int int; n_lee_imp int;
+begin
+  -- (a) el dominio del nombre
+  insert into public.interruptor (id, apagado, motivo, cambiado_por)
+    values ('agente:cobranza', true, 'verificación 0110: incidente de prueba', null);
+  insert into public.interruptor (id) values ('global');  -- encendido, sin motivo: cabe
+  begin
+    insert into public.interruptor (id) values ('agente:marketing');
+  exception when check_violation then dominio_malo := true;
+  end;
+
+  -- (b) apagar exige motivo no vacío
+  begin
+    insert into public.interruptor (id, apagado) values ('agente:peajes', true);
+  exception when check_violation then apagado_sin_motivo := true;
+  end;
+  begin
+    insert into public.interruptor (id, apagado, motivo) values ('agente:peajes', true, '   ');
+  exception when check_violation then apagado_motivo_blanco := true;
+  end;
+  select count(*) into n_apagados from public.interruptor where apagado;
+  select count(*) into n_encendidos from public.interruptor where not apagado;
+
+  -- (d) el dedup de impersonacion_dia — necesita actor y flota reales (FKs)
+  insert into public.tenant (nombre) values ('__verif_0110__') returning id into v_t;
+  insert into public.app_user (id, email, rol, tenant_id)
+    values (v_u, '__verif_0110__@likida.ai', 'superadmin', null);
+  insert into public.impersonacion_dia (actor_id, tenant_id, dia) values (v_u, v_t, current_date);
+  begin
+    insert into public.impersonacion_dia (actor_id, tenant_id, dia) values (v_u, v_t, current_date);
+  exception when unique_violation then dedup_impersonacion := true;
+  end;
+
+  -- (c) deny-all en las dos: RLS activa, cero policies, authenticated ciego
+  select relrowsecurity into rls_int from pg_class where oid = 'public.interruptor'::regclass;
+  select relrowsecurity into rls_imp from pg_class where oid = 'public.impersonacion_dia'::regclass;
+  select count(*) into pol_int from pg_policies where schemaname = 'public' and tablename = 'interruptor';
+  select count(*) into pol_imp from pg_policies where schemaname = 'public' and tablename = 'impersonacion_dia';
+  set local role authenticated;
+  select count(*) into n_lee_int from public.interruptor;
+  select count(*) into n_lee_imp from public.impersonacion_dia;
+  reset role;
+
+  raise exception E'INTERRUPTORES_0110  dominio_malo_rebota=%  apagado_sin_motivo_rebota=%  motivo_blanco_rebota=%  apagados=%  encendidos=%  dedup_impersonacion=%  rls_int=%  rls_imp=%  policies_int=%  policies_imp=%  lee_auth_int=%  lee_auth_imp=%   (esperado t/t/t/1/1/t/t/t/0/0/0/0)',
+    dominio_malo, apagado_sin_motivo, apagado_motivo_blanco, n_apagados, n_encendidos,
+    dedup_impersonacion, rls_int, rls_imp, pol_int, pol_imp, n_lee_int, n_lee_imp;
+end $$;
+
+-- ── 88. Los dos índices de rango-de-fecha de la 0111 existen ────────────────
+--
+-- No hay concurrencia que probar: la garantía es que `gasto_tenant_fecha_idx`
+-- y `viaje_tenant_fecha_inicio_idx` EXISTEN en el esquema público con la
+-- definición exacta de la 0111 — un `create index if not exists` que alguien
+-- renombró o aplicó a medias se ve idéntico desde el código, y el planeador
+-- simplemente no lo usa. Se leen de pg_indexes y se cuentan.
+--
+-- Esperado: ambos=2  gasto_def=t  viaje_def=t
+-- SALIDA REAL (15-ago-2026, corrida vía MCP tras aplicar la 0111):
+--   ERROR: P0001: INDICES_0111  ambos=2  gasto_def=t  viaje_def=t
+--   (esperado 2/t/t) — coincide.
+do $$
+declare
+  n int;
+  gasto_def boolean;
+  viaje_def boolean;
+begin
+  select count(*) into n from pg_indexes
+    where schemaname = 'public'
+      and indexname in ('gasto_tenant_fecha_idx', 'viaje_tenant_fecha_inicio_idx');
+  select indexdef ilike '%(tenant_id, fecha)%' into gasto_def from pg_indexes
+    where schemaname = 'public' and indexname = 'gasto_tenant_fecha_idx';
+  select indexdef ilike '%(tenant_id, fecha_inicio)%' into viaje_def from pg_indexes
+    where schemaname = 'public' and indexname = 'viaje_tenant_fecha_inicio_idx';
+  raise exception E'INDICES_0111  ambos=%  gasto_def=%  viaje_def=%   (esperado 2/t/t)',
+    n, coalesce(gasto_def, false), coalesce(viaje_def, false);
+end $$;

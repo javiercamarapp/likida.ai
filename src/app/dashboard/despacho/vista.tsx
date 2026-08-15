@@ -4,7 +4,7 @@ import type { ViajeRow } from '@/lib/likida/analytics';
 import { numero, fechaCorta } from '@/lib/formato';
 import { BarraPagina } from '../resumen-visual';
 import { FormaViaje, type AccionCrearViaje } from '../forma-viaje';
-import { AsignarFila, BotonReenviar, AltaOperador, type AccionDespacho } from './acciones';
+import { AsignarFila, AsignarUnidadFila, BotonReenviar, AltaOperador, type AccionDespacho } from './acciones';
 
 /** Tope de las listas — declarado en pantalla cuando recorta. */
 const MAX_FILAS = 12;
@@ -21,15 +21,21 @@ const MAX_FILAS = 12;
  * columna — el estándar de siempre del despacho.
  */
 export function VistaDespacho({
-  tablero, sinAsignar, activos, operadores, carga, crear, asignarYAvisar, reenviarAviso, altaOperador,
+  tablero, sinAsignar, activos, operadores, clientes, unidades, carga, crear,
+  asignarYAvisar, asignarUnidadViaje, reenviarAviso, altaOperador,
 }: {
   tablero: TableroOperacion | null;
   sinAsignar: ViajeSinAsignar[];
   activos: ViajeRow[];
   operadores: Array<{ id: string; nombre: string }>;
+  /** Los clientes de la flota, para atar el viaje a quien paga el flete. */
+  clientes: Array<{ id: string; nombre: string }>;
+  /** Las unidades activas — para el select del formulario y el amarre en "En curso". */
+  unidades: Array<{ id: string; numeroEconomico: string }>;
   carga: CargaOperador[] | null;
   crear: AccionCrearViaje;
   asignarYAvisar: AccionDespacho;
+  asignarUnidadViaje: AccionDespacho;
   reenviarAviso: AccionDespacho;
   altaOperador: AccionDespacho;
 }) {
@@ -51,7 +57,7 @@ export function VistaDespacho({
           ) : (
             <div className="grid grid-cols-3 lg:grid-cols-6 gap-3">
               <Kpi titulo="Viajes activos" valor={numero(tablero.viajesActivos)} />
-              <Kpi titulo="Por asignar" valor={numero(tablero.porAsignar)} tono={tablero.porAsignar > 0 ? 'warn' : undefined} />
+              <Kpi titulo="Sin unidad" valor={numero(tablero.sinUnidad)} tono={tablero.sinUnidad > 0 ? 'warn' : undefined} />
               <Kpi titulo="Unidades libres" valor={numero(tablero.unidadesDisponibles)} />
               <Kpi titulo="En taller" valor={numero(tablero.unidadesEnTaller)} />
               <Kpi titulo="Incidencias" valor={numero(tablero.incidenciasAbiertas)} tono={tablero.incidenciasAbiertas > 0 ? 'warn' : undefined} />
@@ -105,7 +111,7 @@ export function VistaDespacho({
               <p className="text-[11px] mb-3" style={{ color: 'var(--faint)' }}>
                 Nace abierto: desde ese momento el operador puede mandar comprobantes por WhatsApp
               </p>
-              <FormaViaje action={crear} operadores={operadores} />
+              <FormaViaje action={crear} operadores={operadores} clientes={clientes} unidades={unidades} />
             </section>
           </div>
 
@@ -128,6 +134,7 @@ export function VistaDespacho({
                         <th className="etiqueta-mono text-[10px] uppercase font-normal pb-2">Viaje</th>
                         <th className="etiqueta-mono text-[10px] uppercase font-normal pb-2">Ruta</th>
                         <th className="etiqueta-mono text-[10px] uppercase font-normal pb-2">Operador</th>
+                        <th className="etiqueta-mono text-[10px] uppercase font-normal pb-2">Unidad</th>
                         <th className="etiqueta-mono text-[10px] uppercase font-normal pb-2">Inicio</th>
                         <th className="etiqueta-mono text-[10px] uppercase font-normal pb-2">Aviso</th>
                         <th className="pb-2" />
@@ -141,6 +148,18 @@ export function VistaDespacho({
                             {v.origen ?? '—'} → {v.destino ?? '—'}
                           </td>
                           <td className="py-2">{v.operadorNombre ?? <span style={{ color: 'var(--faint)' }}>Sin asignar</span>}</td>
+                          <td className="py-2 pr-2">
+                            {/* "Asignar unidad después" vive aquí: el gemelo de
+                                asignar operador, sobre los viajes en curso. Sin
+                                catálogo no se pinta un select hueco — se enseña
+                                lo que hay (la unidad actual o el guion). */}
+                            {unidades.length === 0 ? (
+                              <span className="cifra-mono" style={{ color: 'var(--faint)' }}>{v.unidadEco ?? '—'}</span>
+                            ) : (
+                              <AsignarUnidadFila viajeId={v.id} unidadId={v.unidadId}
+                                unidades={unidades} asignarUnidadViaje={asignarUnidadViaje} />
+                            )}
+                          </td>
                           <td className="py-2" style={{ color: 'var(--muted)' }}>{fechaCorta(v.fechaInicio)}</td>
                           <td className="py-2"><PillAviso v={v} /></td>
                           <td className="py-2 text-right">

@@ -20,9 +20,11 @@ const MOTIVO: Record<MotivoHuerfano, string> = {
  * las dos salidas reales: adjuntar a un viaje VIVO o descartar. La foto no
  * se enseña (candado del 2-ago); el dato extraído sí.
  */
-export function VistaHuerfanos({ pendientes, viajesVivos, acciones }: {
+export function VistaHuerfanos({ pendientes, viajesVivos, cargados, acciones }: {
   pendientes: HuerfanoDeFlota[];
   viajesVivos: ViajeVivo[];
+  /** Cuántos viajes recientes cargó la page — el alcance real del selector. */
+  cargados: number;
   acciones: { adjuntar: AccionHuerfano; descartar: AccionHuerfano };
 }) {
   return (
@@ -75,12 +77,19 @@ export function VistaHuerfanos({ pendientes, viajesVivos, acciones }: {
                             </span>
                           )}
                         </td>
-                        <td className="py-2.5 pr-6 text-right cifra-mono">{mxn(h.monto)}</td>
+                        <td className="py-2.5 pr-6 text-right">
+                          {/* Un $0.00 aquí sería una cifra que nadie midió (el
+                              OCR no pudo leerla) — se dice, no se pinta. */}
+                          {h.monto > 0
+                            ? <span className="cifra-mono">{mxn(h.monto)}</span>
+                            : <span className="text-[11px]" style={{ color: 'var(--faint)' }}>sin monto legible</span>}
+                        </td>
                         <td className="py-2.5 text-[12px]" style={{ color: 'var(--muted)' }}>
                           {MOTIVO[h.motivo] ?? h.motivo}
                         </td>
                         <td className="py-2.5 pl-4">
                           <FilaAcciones huerfanoId={h.id} viajesVivos={viajesVivos}
+                            sinMonto={h.monto <= 0} cargados={cargados}
                             adjuntar={acciones.adjuntar} descartar={acciones.descartar} />
                         </td>
                       </tr>

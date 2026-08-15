@@ -1,11 +1,18 @@
 import Link from 'next/link';
 import { revalidatePath } from 'next/cache';
 import { getResumenNegocio } from '@/lib/admin/negocio';
+import { getOnboardingFlotas, type OnboardingFlota } from '@/lib/admin/onboarding';
+import { telefonosJefe } from '@/lib/likida/contactos';
 import { usd } from '@/lib/utils';
-import { Truck, ExternalLink, Plus } from 'lucide-react';
+import { numero } from '@/lib/formato';
+import {
+  Truck, ExternalLink, Plus, ClipboardCheck, CheckCircle2, Circle,
+  AlertTriangle, ArrowRight,
+} from 'lucide-react';
 import { requireSuperadmin } from '@/lib/auth/guard';
 import { crearFlota, mensajeParaPantalla } from '@/lib/likida/administracion';
 import { actualizarFacilidad15 } from '@/lib/likida/repo';
+import { BarraPagina, TituloSeccion } from '../../dashboard/resumen-visual';
 import ContadorRetro from '../contador-retro';
 import { HBars } from '../ui/graficas';
 import { ChartCard, EstadoVacio } from '../ui/kit';
@@ -35,6 +42,7 @@ async function accionCrearFlota(_previo: ResultadoAccion, fd: FormData): Promise
         ciudad: String(fd.get('ciudad') ?? ''),
         emailAdmin,
         nombreAdmin: String(fd.get('nombreAdmin') ?? ''),
+        telefonoAdmin: String(fd.get('telefonoAdmin') ?? '') || undefined,
         dedicacionExclusivaCarga: fd.get('dedicacionExclusivaCarga') === 'on' ? true : undefined,
         regimenFiscal: String(fd.get('regimenFiscal') ?? '') || undefined,
       },
@@ -70,178 +78,313 @@ async function accionFacilidad(_previo: ResultadoAccion, fd: FormData): Promise<
 }
 
 /**
+ * Una casilla del checklist de onboarding. Tres estados y los tres se
+ * dibujan distinto: `ok` (medido y cumplido), `pendiente` (medido y falta) y
+ * `sin_medir` (la lectura falló — NO se pinta como pendiente, porque
+ * "no se pudo mirar" no es "falta"). Cada casilla lleva a DONDE se resuelve.
+ */
+function Casilla({ estado, texto, href, accion }: {
+  estado: 'ok' | 'pendiente' | 'sin_medir';
+  texto: string;
+  href: string;
+  accion: string;
+}) {
+  const icono = estado === 'ok'
+    ? <CheckCircle2 width={14} height={14} strokeWidth={1.75} style={{ color: 'var(--ok)' }} />
+    : estado === 'pendiente'
+      ? <Circle width={14} height={14} strokeWidth={1.75} style={{ color: 'var(--muted)' }} />
+      : <AlertTriangle width={14} height={14} strokeWidth={1.75} style={{ color: 'var(--warn)' }} />;
+  return (
+    <div className="flex items-start gap-2 text-sm py-1">
+      <span className="mt-0.5 shrink-0">{icono}</span>
+      <span className="flex-1 min-w-0" style={estado === 'ok' ? undefined : { color: 'var(--muted)' }}>{texto}</span>
+      {estado !== 'ok' && (
+        <Link href={href} className="shrink-0 inline-flex items-center gap-1 text-xs font-medium underline hover:opacity-70 transition-opacity">
+          {accion} <ArrowRight width={11} height={11} strokeWidth={1.75} />
+        </Link>
+      )}
+    </div>
+  );
+}
+
+/**
  * Flotas / Clientes — versión dedicada y con más aire de la sección
  * "Flotas" de Inicio. Misma tabla real (`resumen.flotas`: nombre, plan,
  * viajes, costoIaUsd) de `getResumenNegocio()`, aquí ordenada por costo de
  * IA de mayor a menor (el único "sort" que aplica sin over-engineering).
- * El contador retro junto al título es el mismo componente Solari que usa
- * Inicio para el MRR, mostrando aquí `resumen.tenants` — el único número
- * de cabecera de esta página con un dato real y singular detrás.
+ * El contador retro es el mismo componente Solari que usa Inicio para el
+ * MRR, mostrando aquí `resumen.tenants` — el único número de cabecera de
+ * esta página con un dato real y singular detrás.
+ *
+ * Anatomía FlowAI (14-ago): BarraPagina + tarjetas blancas sobre el lienzo
+ * tenue (--g1), como consola.tsx. El contador (45px de alto) no cabe en la
+ * barra de 44px, así que encabeza la tarjeta de la tabla.
  */
 export default async function FlotasPage() {
   const r = await getResumenNegocio();
   const flotasOrdenadas = [...r.flotas].sort((a, b) => b.costoIaUsd - a.costoIaUsd);
 
+  // ── Las mediciones del checklist de onboarding ─────────────────────────
+  // Cada lectura cae POR SU LADO a `null`: si `telefonosJefe` falla, sus
+  // casillas dicen "no se pudo medir" (que no es "pendiente") y las demás
+  // siguen midiendo. La tabla maestra no depende de ninguna de las dos.
+  const [telefonos, onboarding] = await Promise.all([
+    r.flotas.length === 0
+      ? Promise.resolve<Record<string, string> | null>({})
+      : telefonosJefe(r.flotas.map((f) => f.id)).catch(() => null),
+    getOnboardingFlotas().catch(() => null as Map<string, OnboardingFlota> | null),
+  ]);
+  /** Una flota sin filas en las tablas de onboarding = ceros CONTADOS (la
+   *  lectura sí se completó); `null` solo cuando la lectura entera falló. */
+  const onboardingDe = (tenantId: string): OnboardingFlota | null =>
+    onboarding === null
+      ? null
+      : onboarding.get(tenantId) ?? { credenciales: { total: 0, probadas: 0 }, avisosConfigurados: 0 };
+
   return (
-    <div className="flex flex-col gap-4">
-      <header className="glass-panel flex items-center justify-between gap-4 px-5 py-4">
-        <div className="flex items-center gap-2.5">
-          <Truck width={16} height={16} strokeWidth={1.75} />
-          <span className="text-sm font-medium">Flotas / Clientes</span>
-        </div>
-        <ContadorRetro valor={r.tenants} digitos={3} etiqueta="Flotas dadas de alta" tamaño="lg" />
-      </header>
+    <main className="h-full">
+      <div className="rounded-2xl overflow-hidden min-h-full flex flex-col hairline" style={{ background: 'var(--g1)' }}>
+        <BarraPagina
+          icono={<Truck width={15} height={15} strokeWidth={1.75} style={{ color: 'var(--muted)' }} />}
+          titulo="Flotas / Clientes"
+        />
 
-      <div className="glass-panel overflow-hidden">
-        <div className="px-5 pt-5 pb-2 flex items-center justify-between gap-4">
-          <h2 className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--muted)' }}>
-            Tabla maestra
-          </h2>
-          {r.flotas.length > 1 && (
-            <span className="text-xs" style={{ color: 'var(--muted)' }}>
-              Ordenada por costo de IA, de mayor a menor
-            </span>
-          )}
-        </div>
-        {flotasOrdenadas.length === 0 ? (
-          <div className="px-5 pt-3 pb-5">
-            <EstadoVacio icono={<Truck width={17} height={17} strokeWidth={1.75} style={{ color: 'var(--marca)' }} />}>
-              Sin flotas dadas de alta todavía.
-            </EstadoVacio>
+        <div className="px-5 py-5 flex-1 space-y-2.5">
+          <div className="card overflow-hidden">
+            <div className="px-4 pt-3 pb-1 flex items-center justify-between gap-4">
+              <div>
+                <TituloSeccion>Tabla maestra</TituloSeccion>
+                {r.flotas.length > 1 && (
+                  <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
+                    Ordenada por costo de IA, de mayor a menor
+                  </p>
+                )}
+              </div>
+              <ContadorRetro valor={r.tenants} digitos={3} etiqueta="Flotas dadas de alta" tamaño="lg" />
+            </div>
+            {flotasOrdenadas.length === 0 ? (
+              <div className="px-4 pt-2 pb-4">
+                <EstadoVacio icono={<Truck width={17} height={17} strokeWidth={1.75} style={{ color: 'var(--marca)' }} />}>
+                  Sin flotas dadas de alta todavía.
+                </EstadoVacio>
+              </div>
+            ) : (
+              <div className="overflow-x-auto mt-1">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr style={{ color: 'var(--muted)' }} className="text-left">
+                      <th className="px-4 py-2 font-medium">Flota</th>
+                      <th className="px-4 py-2 font-medium">Plan</th>
+                      <th className="px-4 py-2 font-medium text-right">Viajes</th>
+                      <th className="px-4 py-2 font-medium text-right">Costo de IA</th>
+                      <th className="px-4 py-2 font-medium">Facilidad 15% (RFA 2.9)</th>
+                      <th className="px-4 py-2 font-medium text-right"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {flotasOrdenadas.map((f) => (
+                      <tr key={f.id} className="border-t transition-colors hover:bg-[var(--canvas)]" style={{ borderColor: 'var(--line2)' }}>
+                        <td className="px-4 py-2.5 font-medium">{f.nombre}</td>
+                        <td className="px-4 py-2.5" style={{ color: 'var(--muted)' }}>{f.plan}</td>
+                        <td className="px-4 py-2.5 text-right tabular">{f.viajes}</td>
+                        <td className="px-4 py-2.5 text-right tabular">{usd(f.costoIaUsd)}</td>
+                        <td className="px-4 py-2.5">
+                          <FormaConAviso accion={accionFacilidad} boton="Guardar" columnas="110px auto">
+                            <input type="hidden" name="flotaId" value={f.id} />
+                            <select name="ded" defaultValue={f.facilidad15?.dedicacionExclusivaCarga === true ? 'si' : f.facilidad15?.dedicacionExclusivaCarga === false ? 'no' : ''}
+                              className="text-xs" style={{ width: 110 }}>
+                              <option value="">Carga: —</option>
+                              <option value="si">Carga: Sí</option>
+                              <option value="no">Carga: No</option>
+                            </select>
+                            <select name="reg" defaultValue={f.facilidad15?.regimenElegible === true ? 'si' : f.facilidad15?.regimenElegible === false ? 'no' : ''}
+                              className="text-xs" style={{ width: 110 }}>
+                              <option value="">Régimen: —</option>
+                              <option value="si">Régimen: Sí</option>
+                              <option value="no">Régimen: No</option>
+                            </select>
+                          </FormaConAviso>
+                        </td>
+                        <td className="px-4 py-2.5 text-right">
+                          {/* Ve el panel REAL que ve esa flota (mismo /dashboard del
+                              cliente), no una copia — "Login as" honesto: sin
+                              fingir ser un usuario de esa flota, el superadmin
+                              entra con su propia sesión y `?tenant=` resuelve el
+                              tenant, validado contra la tabla real (ver
+                              dashboard/page.tsx). */}
+                          {/* DOS PUERTAS, no una. El dueño y el jefe de tráfico
+                              comparten la misma URL y ven cosas distintas
+                              (visibilidad.ts): sin el segundo link no había forma
+                              de comprobar qué ve cada quien sin la contraseña de
+                              los dos. `?rol=` solo QUITA visibilidad y solo se
+                              honra si la sesión real es superadmin. */}
+                          <div className="inline-flex items-center gap-1.5">
+                            <Link href={`/dashboard?tenant=${f.id}`} target="_blank"
+                              className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full hairline hover:opacity-70 transition-opacity">
+                              <ExternalLink width={11} height={11} strokeWidth={1.75} /> Panel de dueño
+                            </Link>
+                            <Link href={`/dashboard?tenant=${f.id}&rol=encargado`} target="_blank"
+                              className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full hairline hover:opacity-70 transition-opacity">
+                              <ExternalLink width={11} height={11} strokeWidth={1.75} /> Panel de jefe de flota
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="overflow-x-auto mt-1">
-            <table className="w-full text-sm">
-              <thead>
-                <tr style={{ color: 'var(--muted)' }} className="text-left">
-                  <th className="px-5 py-2.5 font-medium">Flota</th>
-                  <th className="px-5 py-2.5 font-medium">Plan</th>
-                  <th className="px-5 py-2.5 font-medium text-right">Viajes</th>
-                  <th className="px-5 py-2.5 font-medium text-right">Costo de IA</th>
-                  <th className="px-5 py-2.5 font-medium">Facilidad 15% (RFA 2.9)</th>
-                  <th className="px-5 py-2.5 font-medium text-right"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {flotasOrdenadas.map((f) => (
-                  <tr key={f.id} className="border-t transition-colors hover:bg-[color-mix(in_srgb,var(--muted)_6%,transparent)]" style={{ borderColor: 'var(--line)' }}>
-                    <td className="px-5 py-3 font-medium">{f.nombre}</td>
-                    <td className="px-5 py-3" style={{ color: 'var(--muted)' }}>{f.plan}</td>
-                    <td className="px-5 py-3 text-right tabular">{f.viajes}</td>
-                    <td className="px-5 py-3 text-right tabular">{usd(f.costoIaUsd)}</td>
-                    <td className="px-5 py-3">
-                      <FormaConAviso accion={accionFacilidad} boton="Guardar" columnas="110px auto">
-                        <input type="hidden" name="flotaId" value={f.id} />
-                        <select name="ded" defaultValue={f.facilidad15?.dedicacionExclusivaCarga === true ? 'si' : f.facilidad15?.dedicacionExclusivaCarga === false ? 'no' : ''}
-                          className="text-xs" style={{ width: 110 }}>
-                          <option value="">Carga: —</option>
-                          <option value="si">Carga: Sí</option>
-                          <option value="no">Carga: No</option>
-                        </select>
-                        <select name="reg" defaultValue={f.facilidad15?.regimenElegible === true ? 'si' : f.facilidad15?.regimenElegible === false ? 'no' : ''}
-                          className="text-xs" style={{ width: 110 }}>
-                          <option value="">Régimen: —</option>
-                          <option value="si">Régimen: Sí</option>
-                          <option value="no">Régimen: No</option>
-                        </select>
-                      </FormaConAviso>
-                    </td>
-                    <td className="px-5 py-3 text-right">
-                      {/* Ve el panel REAL que ve esa flota (mismo /dashboard del
-                          cliente), no una copia — "Login as" honesto: sin
-                          fingir ser un usuario de esa flota, el superadmin
-                          entra con su propia sesión y `?tenant=` resuelve el
-                          tenant, validado contra la tabla real (ver
-                          dashboard/page.tsx). */}
-                      {/* DOS PUERTAS, no una. El dueño y el jefe de tráfico
-                          comparten la misma URL y ven cosas distintas
-                          (visibilidad.ts): sin el segundo link no había forma
-                          de comprobar qué ve cada quien sin la contraseña de
-                          los dos. `?rol=` solo QUITA visibilidad y solo se
-                          honra si la sesión real es superadmin. */}
-                      <div className="inline-flex items-center gap-1.5">
-                        <Link href={`/dashboard?tenant=${f.id}`} target="_blank"
-                          className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-full hairline hover:opacity-70 transition-opacity">
-                          <ExternalLink width={12} height={12} strokeWidth={1.75} /> Panel de dueño
-                        </Link>
-                        <Link href={`/dashboard?tenant=${f.id}&rol=encargado`} target="_blank"
-                          className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-full hairline hover:opacity-70 transition-opacity">
-                          <ExternalLink width={12} height={12} strokeWidth={1.75} /> Panel de jefe de flota
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
 
-        {/* Ranking real de las mismas flotas de la tabla, por costo de IA —
-            HBars (design system v2) compara categorías de un vistazo; la
-            tabla arriba se queda porque tiene columnas que una barra no
-            puede mostrar (plan, viajes, el link "Ver dashboard"). Solo con
-            2+ flotas: con 1 sola, "ranking" no dice nada que la tabla ya no
-            diga. */}
-        {flotasOrdenadas.length > 1 && (
-          <div className="px-5 pt-2 pb-5 border-t" style={{ borderColor: 'var(--line)' }}>
+          {/* Ranking real de las mismas flotas de la tabla, por costo de IA —
+              HBars (design system v2) compara categorías de un vistazo; la
+              tabla arriba se queda porque tiene columnas que una barra no
+              puede mostrar (plan, viajes, el link "Ver dashboard"). Solo con
+              2+ flotas: con 1 sola, "ranking" no dice nada que la tabla ya no
+              diga. */}
+          {flotasOrdenadas.length > 1 && (
             <ChartCard titulo="Top flotas por costo de IA" tamano="M">
               <HBars datos={flotasOrdenadas.map((f) => ({ etiqueta: f.nombre, valor: f.costoIaUsd }))} formato="usd" />
             </ChartCard>
-          </div>
-        )}
+          )}
 
-        <section className="px-5 pt-5 pb-5 border-t" style={{ borderColor: 'var(--line)' }}>
-          <div className="flex items-center gap-2 mb-3">
-            <Plus width={15} height={15} strokeWidth={1.75} />
-            <h2 className="text-xs font-semibold uppercase tracking-wide m-0" style={{ color: 'var(--muted)' }}>
-              Dar de alta una flota
-            </h2>
-          </div>
-          <FormaConAviso accion={accionCrearFlota} boton="Dar de alta">
-            <Campo nombre="nombre" etiqueta="Nombre de la flota" requerido placeholder="Flota de ejemplo" />
-            <Campo nombre="rfc" etiqueta="RFC" placeholder="Opcional"
-              ayuda="Se rechaza si no pasa el dígito verificador." />
-            <Campo nombre="ciudad" etiqueta="Ciudad" placeholder="Opcional" />
-            <Campo nombre="emailAdmin" etiqueta="Correo del administrador" tipo="email" placeholder="dueño@flota.mx"
-              ayuda="Sin él, la flota nace sin quién pueda entrar." />
-            <Campo nombre="nombreAdmin" etiqueta="Nombre del administrador" placeholder="Opcional" />
-            <label className="flex items-start gap-2 text-xs mt-1" style={{ color: 'var(--muted)' }}>
-              <input type="checkbox" name="dedicacionExclusivaCarga" className="mt-0.5" />
-              <span>
-                <b>¿Exclusivamente autotransporte de carga federal?</b> — habilita la
-                facilidad del 15% de diésel en efectivo (RFA 2026 regla 2.9).
-              </span>
-            </label>
-            <label className="flex items-start gap-2 text-xs" style={{ color: 'var(--muted)' }}>
-              <span className="mt-1">Régimen fiscal (c_RegimenFiscal SAT):</span>
-              <select name="regimenFiscal" className="text-xs" defaultValue="">
-                <option value="">Sin declarar</option>
-                <option value="601">601 — General de Ley PM (coordinados)</option>
-                <option value="612">612 — PF con actividades empresariales</option>
-                <option value="605">605 — Sueldos y Salarios</option>
-                <option value="606">606 — Arrendamiento</option>
-                <option value="607">607 — Régimen de Enajenación</option>
-                <option value="608">608 — Demás ingresos</option>
-                <option value="610">610 — Residentes en el Extranjero</option>
-                <option value="611">611 — Ingresos por Dividendos</option>
-                <option value="615">615 — Incorporación Fiscal</option>
-                <option value="616">616 — Otros regímenes</option>
-              </select>
-              <span>
-                — la facilidad del 15% (RFA 2.9) exige 601 o 612; cualquier otro
-                no califica y el efectivo en combustible no se deduce.
-              </span>
-            </label>
-          </FormaConAviso>
-          <p className="text-xs mt-3" style={{ color: 'var(--muted)' }}>
-            El RFC se valida en el alta porque es la única oportunidad barata: con uno inválido, el motor apaga la
-            comprobación de a nombre de quién vienen las facturas y ninguna se rechaza por estar a nombre de otro. La
-            flota creería que se está revisando.
-          </p>
-        </section>
+          {/* ── Checklist de onboarding por flota (auditoría D9) ────────────
+              SOLO casillas que se pueden MEDIR hoy — cada una con su dato y
+              su link a donde se resuelve. Lo que no se puede medir (que el
+              jefe ya entendió el flujo, que el bot le contestó bien) no
+              aparece como casilla: una palomita sin medición sería inventada. */}
+          {flotasOrdenadas.length > 0 && (
+            <section className="card p-4">
+              <div className="flex items-center gap-2">
+                <ClipboardCheck width={15} height={15} strokeWidth={1.75} style={{ color: 'var(--muted)' }} />
+                <TituloSeccion>Onboarding por flota — el ciclo real de arranque</TituloSeccion>
+              </div>
+              <div className="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-2">
+                {flotasOrdenadas.map((f) => {
+                  const tel = telefonos === null ? null : telefonos[f.id] ?? null;
+                  const ob = onboardingDe(f.id);
+                  return (
+                    <div key={f.id} className="hairline rounded-lg px-3 py-2.5" style={{ background: 'var(--surface)' }}>
+                      <div className="text-[13px] font-medium mb-1">{f.nombre}</div>
+                      {/* 1. El teléfono de quien decide (encargado o dueño) —
+                          sin él, la escalación por WhatsApp no tiene a quién. */}
+                      <Casilla
+                        estado={telefonos === null ? 'sin_medir' : tel ? 'ok' : 'pendiente'}
+                        texto={telefonos === null
+                          ? 'Teléfono del jefe: no se pudo leer (≠ que falte)'
+                          : tel
+                            ? `Teléfono del jefe capturado (${tel})`
+                            : 'Sin teléfono de jefe ni de dueño — la escalación por WhatsApp no tiene a quién avisar'}
+                        href="/admin/usuarios/nuevo" accion="capturar"
+                      />
+                      {/* 2. La política de gastos PROPIA (override crudo, ver
+                          negocio.ts — getConfig fusiona y no distingue). */}
+                      <Casilla
+                        estado={f.politicaPropia ? 'ok' : 'pendiente'}
+                        texto={f.politicaPropia
+                          ? 'Política de gastos propia guardada'
+                          : 'Sin política propia — el motor cuadra con los topes de demo'}
+                        href={`/dashboard/politicas?tenant=${f.id}`} accion="configurar"
+                      />
+                      {/* 3. Credenciales de conectores PROBADAS (guardar no es
+                          conectar: la prueba real es `probada_en`, 0094). */}
+                      <Casilla
+                        estado={ob === null ? 'sin_medir' : ob.credenciales.probadas > 0 ? 'ok' : 'pendiente'}
+                        texto={ob === null
+                          ? 'Credenciales de conectores: no se pudo leer (≠ que falten)'
+                          : ob.credenciales.total === 0
+                            ? 'Sin credenciales de conectores guardadas'
+                            : `Credenciales de conectores: ${numero(ob.credenciales.probadas)} de ${numero(ob.credenciales.total)} probadas contra el sistema real`}
+                        href={`/dashboard/conexiones?tenant=${f.id}`} accion="conectar"
+                      />
+                      {/* 4. Avisos de los agentes — filas en la config (0097).
+                          Sin fila NO está roto: corren los defaults del código. */}
+                      <Casilla
+                        estado={ob === null ? 'sin_medir' : ob.avisosConfigurados > 0 ? 'ok' : 'pendiente'}
+                        texto={ob === null
+                          ? 'Avisos de agentes: no se pudo leer (≠ que falten)'
+                          : ob.avisosConfigurados > 0
+                            ? `Avisos ajustados en ${numero(ob.avisosConfigurados)} ${ob.avisosConfigurados === 1 ? 'agente' : 'agentes'}`
+                            : 'Avisos sin ajustar — corren los defaults del código (no está roto, pero nadie los decidió)'}
+                        href={`/dashboard/agentes/liquidacion?tenant=${f.id}`} accion="ajustar"
+                      />
+                      {/* 5. El primer viaje — el conteo real que ya trae la
+                          tabla maestra, no una consulta nueva. */}
+                      <Casilla
+                        estado={f.viajes > 0 ? 'ok' : 'pendiente'}
+                        texto={f.viajes > 0
+                          ? `${numero(f.viajes)} ${f.viajes === 1 ? 'viaje registrado' : 'viajes registrados'}`
+                          : 'Ni un viaje registrado todavía'}
+                        href={`/dashboard/viajes?tenant=${f.id}`} accion="ver viajes"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-xs mt-2" style={{ color: 'var(--muted)' }}>
+                Solo aparecen casillas medibles con datos de hoy: teléfono de quien decide (app_user),
+                política propia (override de tenant.config), credenciales probadas (probada_en),
+                avisos ajustados (agente_notificacion_config) y viajes. «No se pudo leer» significa
+                que la consulta falló — no que la casilla esté pendiente.
+              </p>
+            </section>
+          )}
 
-        <div className="px-5 pt-4 pb-5 border-t" style={{ borderColor: 'var(--line)' }}>
+          <section className="card p-4">
+            <div className="flex items-center gap-2">
+              <Plus width={15} height={15} strokeWidth={1.75} style={{ color: 'var(--muted)' }} />
+              <TituloSeccion>Dar de alta una flota</TituloSeccion>
+            </div>
+            <div className="mt-3">
+              <FormaConAviso accion={accionCrearFlota} boton="Dar de alta">
+                <Campo nombre="nombre" etiqueta="Nombre de la flota" requerido placeholder="Flota de ejemplo" />
+                <Campo nombre="rfc" etiqueta="RFC" placeholder="Opcional"
+                  ayuda="Se rechaza si no pasa el dígito verificador." />
+                <Campo nombre="ciudad" etiqueta="Ciudad" placeholder="Opcional" />
+                <Campo nombre="emailAdmin" etiqueta="Correo del administrador" tipo="email" placeholder="dueño@flota.mx"
+                  ayuda="Sin él, la flota nace sin quién pueda entrar." />
+                <Campo nombre="nombreAdmin" etiqueta="Nombre del administrador" placeholder="Opcional" />
+                {/* D5 (auditoría 4): sin este teléfono, el dueño no puede
+                    escribirle al bot — el matcher de oficina no lo reconoce. */}
+                <Campo nombre="telefonoAdmin" etiqueta="WhatsApp del administrador" placeholder="10 dígitos — opcional, para que el bot lo reconozca"
+                  ayuda="Con él, el bot reconoce al administrador cuando escribe (avisos contestables, despacho por chat). Se puede capturar después." />
+                <label className="flex items-start gap-2 text-xs mt-1" style={{ color: 'var(--muted)' }}>
+                  <input type="checkbox" name="dedicacionExclusivaCarga" className="mt-0.5" />
+                  <span>
+                    <b>¿Exclusivamente autotransporte de carga federal?</b> — habilita la
+                    facilidad del 15% de diésel en efectivo (RFA 2026 regla 2.9).
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-xs" style={{ color: 'var(--muted)' }}>
+                  <span className="mt-1">Régimen fiscal (c_RegimenFiscal SAT):</span>
+                  <select name="regimenFiscal" className="text-xs" defaultValue="">
+                    <option value="">Sin declarar</option>
+                    <option value="601">601 — General de Ley PM (coordinados)</option>
+                    <option value="612">612 — PF con actividades empresariales</option>
+                    <option value="605">605 — Sueldos y Salarios</option>
+                    <option value="606">606 — Arrendamiento</option>
+                    <option value="607">607 — Régimen de Enajenación</option>
+                    <option value="608">608 — Demás ingresos</option>
+                    <option value="610">610 — Residentes en el Extranjero</option>
+                    <option value="611">611 — Ingresos por Dividendos</option>
+                    <option value="615">615 — Incorporación Fiscal</option>
+                    <option value="616">616 — Otros regímenes</option>
+                  </select>
+                  <span>
+                    — la facilidad del 15% (RFA 2.9) exige 601 o 612; cualquier otro
+                    no califica y el efectivo en combustible no se deduce.
+                  </span>
+                </label>
+              </FormaConAviso>
+            </div>
+            <p className="text-xs mt-3" style={{ color: 'var(--muted)' }}>
+              El RFC se valida en el alta porque es la única oportunidad barata: con uno inválido, el motor apaga la
+              comprobación de a nombre de quién vienen las facturas y ninguna se rechaza por estar a nombre de otro. La
+              flota creería que se está revisando.
+            </p>
+          </section>
+
           <EstadoVacio>
             &quot;Ver dashboard&quot; ya existe (arriba) — entra al panel real de esa flota con tu propia sesión de superadmin, sin credenciales nuevas. Uso vs. límite, salud (activa/en riesgo/morosa), MRR por cliente y un audit log de qué flota viste y cuándo siguen en el roadmap.
             <br /><br />
@@ -249,6 +392,6 @@ export default async function FlotasPage() {
           </EstadoVacio>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

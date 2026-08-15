@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { estaApagado } from '@/lib/likida/interruptores';
 import { logger } from '@/lib/logger';
+import { codigoDeError } from '@/lib/observability/sentry';
+import { alertarOperador } from '@/lib/observability/alerta';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -64,6 +67,18 @@ export async function GET(req: Request) {
     return new NextResponse(null, { status: 401 });
   }
 
+  // ── EL KILL SWITCH (0110): solo 'global' — la purga no es un agente ──────
+  //
+  // Esta ruta BORRA FILAS: en un incidente donde Javier apaga todo, lo último
+  // que quiere es un cron borrando datos mientras investiga. 200 y no error:
+  // apagado a propósito no es fallo, y el `saltado` del cuerpo distingue esta
+  // corrida de una sana. Fail-closed: interruptor ilegible = apagado con
+  // grito en el log (interruptores.ts) — no se borra sin permiso legible.
+  if (await estaApagado('global')) {
+    logger.warn('cron.purgar.saltado', { interruptor: 'global' });
+    return NextResponse.json({ corrio: false, saltado: 'interruptor global' });
+  }
+
   try {
     const { data, error } = await supabaseAdmin().rpc('mantenimiento_de_datos', {
       p_dias_wa: DIAS_WA,
@@ -73,7 +88,14 @@ export async function GET(req: Request) {
     // base caída se leería como una purga que no encontró nada que borrar y la
     // corrida saldría verde. Ver `exigir()` en analytics.ts.
     if (error) {
-      logger.error('cron.purgar.falló', { error: error.message });
+      // El `codigo` discrimina la causa en el fingerprint de Sentry: un error
+      // de PostgREST trae `code` ('42P01', 'PGRST202'…) y ese viaja tal cual —
+      // una causa nueva es un issue nuevo, o sea una notificación que sí llega.
+      // La alerta va directo al operador del sistema: los avisos por tenant no
+      // cubren un cron global, y este no tiene tenant que emitir.
+      const codigo = codigoDeError(error);
+      logger.error('cron.purgar.falló', { error: error.message, codigo });
+      await alertarOperador('cron.purgar', { error: error.message, codigo });
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
@@ -81,7 +103,10 @@ export async function GET(req: Request) {
     return NextResponse.json({ corrio: true, ...(data as Record<string, unknown>) });
   } catch (e) {
     const error = e instanceof Error ? e.message : String(e);
-    logger.error('cron.purgar.falló', { error });
+    // Mismo criterio que el `if (error)` de arriba, para el camino que lanza.
+    const codigo = codigoDeError(e);
+    logger.error('cron.purgar.falló', { error, codigo });
+    await alertarOperador('cron.purgar', { error, codigo });
     return NextResponse.json({ error }, { status: 500 });
   }
 }

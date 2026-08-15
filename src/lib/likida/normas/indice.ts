@@ -306,6 +306,34 @@ export const NORMAS: Record<string, Norma> = {
     exigibleDesde: null,
     ficha: "normas/rmf-2026-2.7.1.48.yaml",
   },
+  'rmf-2026-9.1.8': {
+    id: 'rmf-2026-9.1.8',
+    instrumento: "Resolución Miscelánea Fiscal para 2026",
+    articulo: "9.1.8 (Título 9, Capítulo 9.1)",
+    titulo: "Requisitos operativos del estímulo del 50% de peaje: aviso de marzo, bitácora de viaje conciliada, pago electrónico y factor 0.5 sin IVA",
+    citas: ["RMF 9.1.8", "regla 9.1.8"],
+    jerarquia: 3,
+    estado: "verificado_fuente_primaria",
+    // La entrada en vigor de la RMF 2026 (DOF 28-dic-2025, vigor 01-ene-2026).
+    // La fr. IV RESUELVE el hallazgo H4 de la ficha LIF: la base del
+    // acreditamiento es el importe SIN IVA — lo que el motor ya aplicaba.
+    exigibleDesde: '2026-01-01',
+    ficha: "normas/rmf-2026-9.1.8.yaml",
+  },
+  'rmf-2026-2.7.7': {
+    id: 'rmf-2026-2.7.7',
+    instrumento: "Resolución Miscelánea Fiscal para 2026",
+    articulo: "Sección 2.7.7 (2.7.7.1.1, 2.7.7.1.2, 2.7.7.2.1, 2.7.7.2.8)",
+    titulo: "Complemento Carta Porte: obligados, traslado local y la excepción del radio de 30 km",
+    citas: ["2.7.7.1.1", "2.7.7.2.1", "2.7.7.2.8", "Carta Porte"],
+    jerarquia: 3,
+    estado: "verificado_fuente_primaria",
+    // La fecha es la de la VERSIÓN 3.1 del complemento (obligatoria desde el
+    // 17-jul-2024). No hay periodo de gracia en 2026: se leyeron los 25
+    // transitorios de la RMF 2026 y la 1a Modificación no tocó la 2.7.7.
+    exigibleDesde: '2024-07-17',
+    ficha: "normas/rmf-2026-2.7.7.yaml",
+  },
 };
 
 /** Todas las normas conocidas. */

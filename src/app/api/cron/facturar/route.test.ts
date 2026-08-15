@@ -37,6 +37,20 @@ delete process.env.FACTURACION_MODO;
 const logger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() };
 vi.mock('@/lib/logger', () => ({ logger }));
 
+// El canal de alerta al operador (auditoría 4, D1) se mockea: aquí se prueba
+// que el cron LO DISPARA al fallar, no el canal (observability/alerta.test.ts).
+const alertarOperador = vi.fn(async () => {});
+vi.mock('@/lib/observability/alerta', () => ({
+  alertarOperador: (...a: unknown[]) => alertarOperador(...(a as [])),
+}));
+
+// El kill switch (0110). Default: sin fila = encendido (false) — así TODAS
+// las pruebas existentes prueban de paso que sin interruptor el cron corre.
+const estaApagado = vi.fn(async (nombre: string) => nombre === '__ninguno_apagado__');
+vi.mock('@/lib/likida/interruptores', () => ({
+  estaApagado: (...a: unknown[]) => estaApagado(...(a as [string])),
+}));
+
 /** Lo que devuelve la consulta de la cola. */
 let cola: { data: Array<Record<string, unknown>> | null; error: { message: string } | null };
 const consulta: Array<[string, unknown[]]> = [];
@@ -109,7 +123,34 @@ vi.mock('@/lib/likida/facturacion/adaptadores/registro', () => ({
   PORTALES_CONOCIDOS: ['capufe'] as readonly string[],
 }));
 
+/**
+ * El cierre de corridas se mockea para poder MIRAR qué mapa le llega: es donde
+ * viaja la marca de «fallo de plataforma» (B8). Y `avisar` también (B2): es
+ * por donde sale el aviso de cola atorada, y estas pruebas necesitan VER la
+ * llamada —a qué flota, con qué magnitud— sin arrastrar la base que el motor
+ * real toca por dentro. Todo lo demás del módulo se queda real —en particular
+ * `FalloDePlataforma`, que la ruta usa para marcar— porque mockear la clase
+ * rompería el `instanceof` que se está probando.
+ */
+const avisarCorridasPorFlota = vi.fn(async () => {});
+const avisar = vi.fn(async (..._a: unknown[]) => ({ avisado: true, porque: 'ok', destinatarios: 1, magnitud: 1 }));
+vi.mock('@/lib/likida/agentes/notificaciones', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/likida/agentes/notificaciones')>()),
+  avisarCorridasPorFlota: (...a: unknown[]) => avisarCorridasPorFlota(...(a as [])),
+  avisar: (...a: unknown[]) => avisar(...(a as [])),
+}));
+
+/** El aviso por WhatsApp al encargado (`avisarALasPersonas`) resuelve su
+ *  teléfono por aquí. `null` = flota sin teléfono capturado: ese camino se
+ *  corta solo y sin tocar más base — lo que estas pruebas miran es el aviso
+ *  de CORREO de la cola (B2), no el de WhatsApp. */
+const telefonoJefeDe = vi.fn(async (): Promise<string | null> => null);
+vi.mock('@/lib/likida/contactos', () => ({
+  telefonoJefeDe: (...a: unknown[]) => telefonoJefeDe(...(a as [])),
+}));
+
 const { GET } = await import('./route');
+const { FalloDePlataforma } = await import('@/lib/likida/agentes/notificaciones');
 
 /** Una fila de la cola. Por default, un ticket de CAPUFE. */
 const CAPUFE = { urlFacturacion: 'https://facturacioncapufe.com.mx/Capufe/', codigo: 'X' };
@@ -142,6 +183,11 @@ beforeEach(() => {
   getFiscalDeFlota.mockClear();
   conNavegador.mockClear();
   conPortales.mockClear();
+  avisarCorridasPorFlota.mockClear();
+  telefonoJefeDe.mockClear();
+  avisar.mockReset();
+  avisar.mockResolvedValue({ avisado: true, porque: 'ok', destinatarios: 1, magnitud: 1 });
+  estaApagado.mockReset().mockResolvedValue(false);
   for (const f of Object.values(logger)) f.mockReset();
 });
 
@@ -159,6 +205,45 @@ describe('la puerta', () => {
   it('con el bearer equivocado, 401', async () => {
     expect((await pedir('Bearer otro')).status).toBe(401);
     expect(facturarAlVuelo).not.toHaveBeenCalled();
+  });
+});
+
+describe('el kill switch (0110)', () => {
+  it("con 'global' apagado: 200 con {saltado}, sin tocar la cola ni abrir navegador", async () => {
+    estaApagado.mockImplementation(async (n: string) => n === 'global');
+    const res = await pedir();
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ corrio: false, saltado: 'interruptor global' });
+    // Ni la consulta de la cola (los tickets no se marcan), ni navegador, ni
+    // el camino de "sin adaptadores": la ruta se detiene ANTES de todo eso.
+    expect(consulta).toHaveLength(0);
+    expect(conNavegador).not.toHaveBeenCalled();
+    expect(facturarAlVuelo).not.toHaveBeenCalled();
+    expect(facturarLoteAlVuelo).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith('cron.facturar.saltado', { interruptor: 'global' });
+  });
+
+  it("con 'agente:facturas' apagado (y global encendido): salta igual, y dice CUÁL palanca fue", async () => {
+    estaApagado.mockImplementation(async (n: string) => n === 'agente:facturas');
+    const res = await pedir();
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ corrio: false, saltado: 'interruptor agente:facturas' });
+    expect(facturarLoteAlVuelo).not.toHaveBeenCalled();
+  });
+
+  it('sin fila (el default) el cron corre — las palancas se consultaron y estaban en encendido', async () => {
+    const cuerpo = await (await pedir()).json();
+
+    expect(cuerpo.corrio).toBe(true);
+    const consultados = estaApagado.mock.calls.map((c) => c[0]);
+    expect(consultados).toEqual(['global', 'agente:facturas']);
+  });
+
+  it('con el bearer equivocado el interruptor NI SE LEE: la puerta va primero', async () => {
+    await pedir('Bearer otro');
+    expect(estaApagado).not.toHaveBeenCalled();
   });
 });
 
@@ -323,6 +408,119 @@ describe('cuando Chromium no arranca —que es HOY, en Vercel—', () => {
     await pedir();
     expect(logger.error).toHaveBeenCalledWith('cron.facturar.sin_navegador', expect.objectContaining({ sinIntentar: 1 }));
   });
+
+  it('el fallo viaja marcado como DE PLATAFORMA para TODAS las flotas del lote (B8)', async () => {
+    // Es la marca que hace que el correo de cada flota diga «el problema es de
+    // Likida, tu información está bien» en vez del genérico que la manda a
+    // revisar sus datos — con Chromium caído lo reciben hasta 20 flotas a la
+    // vez, incluidas las que ni alcanzaron a intentar (el arranque se descubre
+    // en la primera y vale para toda la corrida).
+    cola = { data: [fila({ id: 'g-1', tenant_id: 't-1' }), fila({ id: 'g-2', tenant_id: 't-2' })], error: null };
+
+    await pedir();
+
+    expect(avisarCorridasPorFlota).toHaveBeenCalledTimes(1);
+    const [agente, corridas] = avisarCorridasPorFlota.mock.calls[0] as unknown as [string, Map<string, unknown>];
+    expect(agente).toBe('facturas');
+    expect(corridas.size).toBe(2);
+    for (const [tenant, fallo] of corridas) {
+      expect(fallo, tenant).toBeInstanceOf(FalloDePlataforma);
+    }
+  });
+});
+
+describe('el cierre de corridas distingue el origen del fallo', () => {
+  it('una corrida buena cierra con null: sin marca, sin fallo', async () => {
+    // Control de B8: el camino feliz no puede quedar marcado como fallo de
+    // plataforma — eso mandaría el correo tranquilizador a quien no espera
+    // ningún correo.
+    await pedir();
+
+    expect(avisarCorridasPorFlota).toHaveBeenCalledTimes(1);
+    const [, corridas] = avisarCorridasPorFlota.mock.calls[0] as unknown as [string, Map<string, unknown>];
+    expect(corridas.get('t-1')).toBeNull();
+  });
+
+  it('una flota sin datos fiscales NO cuenta como corrida fallida ni como fallo de plataforma', async () => {
+    // Es un hueco de captura del cliente, no un agente caído: la corrida
+    // terminó. Ya estaba decidido así; B8 no lo cambia.
+    fiscalPorFlota = { 't-1': { flota: null, falta: ['la flota no tiene RFC'] } };
+    await pedir();
+
+    const [, corridas] = avisarCorridasPorFlota.mock.calls[0] as unknown as [string, Map<string, unknown>];
+    expect(corridas.get('t-1')).toBeNull();
+  });
+});
+
+describe('la cola atorada de Facturas (B2): lo que la máquina ya no va a intentar sola avisa por correo', () => {
+  // `avisoColaAtorada` existía desde el 14-ago sin llamador — el hallazgo de
+  // la pestaña: interruptores que no podían dispararse nunca. Su primer emisor
+  // real es este cron: los tickets que ESTA corrida bloqueó (requiere_cuenta,
+  // CAPTCHA) salieron de la cola automática y esperan a una persona. Aquí se
+  // fija el CABLE; el anti-ruido (marcas, piso de una hora) vive en `avisar`
+  // y se prueba en `agentes/notificaciones.test.ts` — no se duplica.
+
+  /** Un lote cuyo portal bloquea TODOS sus tickets. `mockImplementationOnce`
+   *  para no dejarle la implementación pegada a las demás pruebas. */
+  const loteBloqueado = () =>
+    facturarLoteAlVuelo.mockImplementationOnce(async (a: { gastoIds: string[] }) => ({
+      porGasto: a.gastoIds.map((gastoId) => ({
+        intentado: true, facturado: false, detalle: 'el portal exige cuenta', gastoId,
+      })),
+      facturados: 0,
+      bloqueados: a.gastoIds.map((gastoId) => ({ gastoId, motivo: 'requiere_cuenta' })),
+    }));
+
+  it('un lote con bloqueados dispara el aviso POR FLOTA, con la magnitud medida', async () => {
+    cola = { data: [fila({ id: 'g-1', tenant_id: 't-1' }), fila({ id: 'g-2', tenant_id: 't-2' })], error: null };
+    loteBloqueado();
+    loteBloqueado();
+
+    const cuerpo = await (await pedir()).json();
+    expect(cuerpo.corrio).toBe(true);
+
+    const deCola = avisar.mock.calls.filter((c) => c[2] === 'cola_atorada');
+    expect(deCola).toHaveLength(2);   // una por flota, no una por ticket
+    const deT1 = deCola.find((c) => c[0] === 't-1')!;
+    expect(deT1.slice(1, 4)).toEqual(['facturas', 'cola_atorada', { hayProblema: true, magnitud: 1 }]);
+    expect(deCola.find((c) => c[0] === 't-2')![3]).toEqual({ hayProblema: true, magnitud: 1 });
+
+    // El armador produce el correo REAL (`avisoColaAtorada`), con el nombre y
+    // la ruta que `avisar` resuelve del catálogo, y SIN días inventados:
+    // `diasSinBajar: null` es la verdad — esta cola no tiene serie histórica.
+    type Armador = (d: {
+      flota: string | null; agente: string; ruta: string; magnitud: number; cuando: string;
+    }) => { asunto: string; datos?: Array<[string, string]> };
+    const correo = (deT1[4] as unknown as Armador)({
+      flota: null, agente: 'Agente de Facturas', ruta: '/dashboard/agentes/facturas',
+      magnitud: 1, cuando: 'hoy 09:00',
+    });
+    expect(correo.asunto).toBe('Agente de Facturas: 1 pendiente sin avanzar');
+    expect(correo.datos).toEqual([['Agente', 'Agente de Facturas'], ['Pendientes', '1']]);
+  });
+
+  it('un lote sin bloqueados NO lo dispara', async () => {
+    // El default de `facturarLoteAlVuelo` no bloquea nada: cero avisos de cola.
+    const cuerpo = await (await pedir()).json();
+    expect(cuerpo.corrio).toBe(true);
+    expect(avisar.mock.calls.filter((c) => c[2] === 'cola_atorada')).toHaveLength(0);
+  });
+
+  it('el aviso jamás tumba la corrida, y el cierre de corrida_fallida sale igual', async () => {
+    // `avisar` promete no lanzar; la ruta no cuelga de esa promesa — se prueba
+    // con la forma de fallo que la promesa NO cubre.
+    loteBloqueado();
+    avisar.mockRejectedValue(new Error('canal de correo caído'));
+
+    const res = await pedir();
+    const cuerpo = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(cuerpo.corrio).toBe(true);
+    expect(avisarCorridasPorFlota).toHaveBeenCalledTimes(1);
+    expect(logger.error).toHaveBeenCalledWith('cron.facturar.aviso_cola_roto',
+      expect.objectContaining({ tenant: 't-1' }));
+  });
 });
 
 describe('el presupuesto de tiempo del lote', () => {
@@ -400,13 +598,28 @@ describe('el modo', () => {
     expect((facturarLoteAlVuelo.mock.calls[0][0] as unknown as { modo: string }).modo).toBe('ensayo');
   });
 
-  it('solo emite con FACTURACION_MODO=emitir puesto a mano en el ambiente', async () => {
+  it('solo emite con las DOS llaves: FACTURACION_MODO=emitir Y el mandato aceptado', async () => {
+    // D7 (auditoría 4): el modo del cron pasa por `modoEfectivo`, así que el
+    // candado legal del runbook (docs/encender-emision.md) aplica también
+    // aquí — una sola llave no basta, y el JSON reporta el modo REAL.
+    process.env.FACTURACION_MODO = 'emitir';
+    process.env.FACTURACION_MANDATO_ACEPTADO = 'si';
+    const cuerpo = await (await pedir()).json();
+    delete process.env.FACTURACION_MODO;
+    delete process.env.FACTURACION_MANDATO_ACEPTADO;
+
+    expect(cuerpo.modo).toBe('emitir');
+    expect((facturarLoteAlVuelo.mock.calls[0][0] as unknown as { modo: string }).modo).toBe('emitir');
+  });
+
+  it('FACTURACION_MODO=emitir SIN el mandato corre en ensayo Y LO DICE (antes mentía "emitir")', async () => {
     process.env.FACTURACION_MODO = 'emitir';
     const cuerpo = await (await pedir()).json();
     delete process.env.FACTURACION_MODO;
 
-    expect(cuerpo.modo).toBe('emitir');
-    expect((facturarLoteAlVuelo.mock.calls[0][0] as unknown as { modo: string }).modo).toBe('emitir');
+    // El hallazgo D7 exacto: corría en ensayo (bien) y reportaba "emitir".
+    expect(cuerpo.modo).toBe('ensayo');
+    expect((facturarLoteAlVuelo.mock.calls[0][0] as unknown as { modo: string }).modo).toBe('ensayo');
   });
 
   it('cualquier otro valor es ensayo', async () => {
@@ -425,5 +638,15 @@ describe('cuando la base no contesta', () => {
     expect(res.status).toBe(500);
     expect((await res.json()).error).toBe('timeout');
     expect(facturarAlVuelo).not.toHaveBeenCalled();
+  });
+
+  it('el fallo lleva código estable y dispara la alerta al operador (auditoría 4, D1/D2)', async () => {
+    alertarOperador.mockClear();
+    logger.error.mockClear();
+    cola = { data: null, error: { message: 'timeout' } };
+    await pedir();
+
+    expect(logger.error).toHaveBeenCalledWith('cron.facturar.falló', expect.objectContaining({ codigo: expect.any(String) }));
+    expect(alertarOperador).toHaveBeenCalledWith('cron.facturar', expect.objectContaining({ codigo: expect.any(String) }));
   });
 });

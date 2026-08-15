@@ -34,6 +34,7 @@
 
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { acotada } from '../presupuesto';
+import { traerTodo, conteo } from '../pg';
 import { logger } from '@/lib/logger';
 import { enLotes } from '../lotes';
 import type { Gasto } from '@/types/likida';
@@ -57,7 +58,10 @@ export const TOLERANCIA_MONTO_MXN = 1;
  */
 export const VENTANA_DIAS_FECHA = 1;
 
-function diasDeDiferencia(a: string, b: string): number {
+// Exportada porque `desglose_peaje.ts` cruza con la MISMA regla de ventana:
+// dos copias de este cálculo serían dos oportunidades de que una redondee
+// distinto y los dos cruces dejen de significar lo mismo.
+export function diasDeDiferencia(a: string, b: string): number {
   const ta = Date.parse(`${a}T00:00:00Z`);
   const tb = Date.parse(`${b}T00:00:00Z`);
   if (Number.isNaN(ta) || Number.isNaN(tb)) return Infinity;
@@ -227,27 +231,82 @@ export async function guardarYConciliarConsolidado(
   // `cfdi_uuid` deja de ser null), así que una segunda pasada lo vería como
   // "no disponible" y reportaría esa línea como huérfana — un reenvío
   // legítimo desligaría en apariencia lo que ya estaba bien ligado.
-  const { data: existentes, error: errExistentes } = await acotada(supabaseAdmin()
-    .from('cfdi_consolidado_linea')
-    .select('estatus')
-    .eq('cfdi_xml_id', cfdiXmlId), 'consolidado.lineas_existentes');
-  if (!errExistentes && existentes && existentes.length > 0) {
+  // Paginado con `traerTodo` (auditoría de escala 15k): un consolidado mensual
+  // de una flota de 500 viajes/día trae MILES de líneas, y el `.select()` sin
+  // rango se recortaba a 1,000 en silencio — el acuse del reenvío reportaba
+  // 1,000 líneas donde había más, con toda la pinta de un total. El error de
+  // lectura conserva su camino de siempre (seguir al JOIN, que la reanudación
+  // de abajo protege), pero ahora con su línea de log.
+  let existentes: Array<{ estatus: unknown }> | null = null;
+  try {
+    existentes = await traerTodo<{ estatus: unknown }>(
+      (d, h) => acotada(supabaseAdmin()
+        .from('cfdi_consolidado_linea')
+        .select('estatus', conteo(d))
+        // `tenant_id` además del id del XML: todas sus vecinas del archivo lo
+        // filtran y esta era la única que no (misma auditoría).
+        .eq('tenant_id', tenantId)
+        .eq('cfdi_xml_id', cfdiXmlId)
+        .order('id').range(d, h), 'consolidado.lineas_existentes'),
+      'consolidado.lineas_existentes',
+    );
+  } catch (e) {
+    logger.warn('consolidado.lineas_existentes_ilegibles', {
+      tenant: tenantId, cfdiXmlId, err: e instanceof Error ? e.message : String(e),
+    });
+    existentes = null;
+  }
+  if (existentes && existentes.length > 0) {
     const conciliadasYa = existentes.filter((f) => f.estatus === 'conciliada').length;
     return { cfdiXmlId, totalLineas: existentes.length, conciliadas: conciliadasYa, porConciliar: existentes.length - conciliadasYa };
   }
 
+  // ── REANUDACIÓN TRAS FALLA PARCIAL (auditoría 3, BE-A4) ──────────────────
+  // Si una corrida anterior selló gastos con ESTE uuid pero murió antes de
+  // escribir sus líneas (el throw de abajo), la decisión de aquella pasada ya
+  // está grabada en el propio sello: `cfdi_orden` = índice de la línea. Esas
+  // líneas se respetan tal cual — re-correr el JOIN para ellas las reportaría
+  // como huérfanas (su gasto ya no es candidato: `cfdi_uuid` dejó de ser
+  // null) y el reenvío "desligaría" en apariencia lo que quedó bien ligado.
+  // Falla CERRADO: sin poder leer los sellos no se corre el JOIN a ciegas.
+  // `traerTodo` (escala 15k): un consolidado sella un gasto POR LÍNEA. Con más
+  // de 1,000 sellados, el mapa salía incompleto y el reenvío re-corría el JOIN
+  // sobre líneas ya resueltas — reportando como huérfano lo que estaba bien
+  // ligado, que es EXACTAMENTE el fallo que este bloque dice venir a evitar.
+  const yaSellados = await traerTodo<{ id: unknown; cfdi_orden: unknown }>(
+    (d, h) => acotada(supabaseAdmin()
+      .from('gasto')
+      .select('id, cfdi_orden', conteo(d))
+      .eq('tenant_id', tenantId)
+      .eq('cfdi_uuid', xml.uuid)
+      .order('id').range(d, h), 'consolidado.gastos_ya_sellados'),
+    'consolidado.gastos_ya_sellados',
+  );
+  const selladoPorIndice = new Map(
+    yaSellados
+      .filter((g) => g.cfdi_orden !== null && g.cfdi_orden !== undefined)
+      .map((g) => [Number(g.cfdi_orden), String(g.id)]),
+  );
+
   const rango = rangoFechasLineas(xml.lineas);
   let candidatosDb: Gasto[] = [];
   if (rango) {
-    const { data, error } = await acotada(supabaseAdmin()
-      .from('gasto')
-      .select('id, concepto, monto, fecha')
-      .eq('tenant_id', tenantId)
-      .is('cfdi_uuid', null)
-      .gte('fecha', rango.desde)
-      .lte('fecha', rango.hasta), 'consolidado.candidatos_gasto');
-    if (error) throw new Error(`guardarYConciliarConsolidado: ${error.message}`);
-    candidatosDb = (data ?? []).map((g) => ({
+    // `traerTodo` (escala 15k): el rango es el del estado de cuenta —un mes—
+    // y con ~45,000 gastos/mes los candidatos sin CFDI pasan de 1,000 con
+    // holgura. El recorte silencioso marcaba `por_conciliar`/`sin_match`
+    // líneas perfectamente conciliables: fraude aparente por truncamiento.
+    const data = await traerTodo<{ id: unknown; concepto: unknown; monto: unknown; fecha: unknown }>(
+      (d, h) => acotada(supabaseAdmin()
+        .from('gasto')
+        .select('id, concepto, monto, fecha', conteo(d))
+        .eq('tenant_id', tenantId)
+        .is('cfdi_uuid', null)
+        .gte('fecha', rango.desde)
+        .lte('fecha', rango.hasta)
+        .order('id').range(d, h), 'consolidado.candidatos_gasto'),
+      'consolidado.candidatos_gasto',
+    );
+    candidatosDb = data.map((g) => ({
       id: g.id as string,
       concepto: g.concepto as Gasto['concepto'],
       monto: Number(g.monto),
@@ -255,7 +314,15 @@ export async function guardarYConciliarConsolidado(
     }));
   }
 
-  const resultados = conciliarLineas(xml.lineas, candidatosDb);
+  // Las líneas cuya decisión YA quedó sellada en `gasto` no se re-adivinan;
+  // el JOIN corre solo para el resto.
+  const preClamadas: ResultadoLinea[] = xml.lineas
+    .filter((l) => selladoPorIndice.has(l.indice))
+    .map((l) => ({ linea: l, estatus: 'conciliada' as const, gastoId: selladoPorIndice.get(l.indice) as string, candidatos: [] }));
+  const resultados = [
+    ...preClamadas,
+    ...conciliarLineas(xml.lineas.filter((l) => !selladoPorIndice.has(l.indice)), candidatosDb),
+  ];
 
   // EN LOTES DE 10, NO EN SERIE (auditoría 3, REND-C1): el UPDATE por línea
   // en serie sumaba ~300s con 1,000 conciliadas contra maxDuration=120 —
@@ -264,7 +331,9 @@ export async function guardarYConciliarConsolidado(
   // que una falle no pierde el resto (`enLotes` atrapa el error en su
   // lugar); un `false` sin error (el guardia negó la fila) se registra
   // porque en el camino automático es señal de carrera real.
-  const porLigar = resultados.filter((r) => r.estatus === 'conciliada' && r.gastoId);
+  // Las pre-clamadas NO se re-ligan: su gasto ya trae el sello.
+  const porLigar = resultados.filter((r) =>
+    r.estatus === 'conciliada' && r.gastoId && !selladoPorIndice.has(r.linea.indice));
   const ligados = await enLotes(porLigar, 10, (r) =>
     ligarLineaAGasto(tenantId, xml.uuid!, r.linea.indice, r.gastoId as string));
   ligados.forEach((l, i) => {
@@ -294,7 +363,14 @@ export async function guardarYConciliarConsolidado(
     .from('cfdi_consolidado_linea')
     .upsert(filasLinea, { onConflict: 'cfdi_xml_id,indice' }), 'consolidado.guardar_lineas');
   if (errLineas) {
+    // SE PROPAGA, no se traga (auditoría 3, BE-A4): devolver el resumen
+    // normal aquí era un acuse que mentía — "están en el panel" con el panel
+    // en cero, porque la cola del contador ES esta tabla y los candidatos
+    // calculados se acaban de perder. Los gastos ya sellados arriba NO se
+    // deshacen: el reenvío los reconoce por su sello (bloque de reanudación)
+    // y reconstruye sus líneas sin re-adivinar.
     logger.error('consolidado.guardar_lineas_error', { tenant: tenantId, cfdiXmlId, err: errLineas.message });
+    throw new Error(`guardarYConciliarConsolidado: no se pudieron guardar las líneas — ${errLineas.message}`);
   }
 
   const conciliadas = resultados.filter((r) => r.estatus === 'conciliada').length;
@@ -411,6 +487,252 @@ export async function resolverLineaAMano(
     return { ok: false, motivo: 'ya_resuelta' };
   }
   return { ok: true };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EL BARRIDO — la tercera vía, y la que faltaba (auditoría 4, B1).
+//
+// El JOIN automático corre cuando LLEGA el XML; la resolución a mano corre
+// cuando un HUMANO abre la mesa. Ninguna de las dos vuelve a mirar una línea
+// `por_conciliar` cuando el gasto que le faltaba llega DESPUÉS del XML — el
+// caso real de una oficina que sube el estado de cuenta del TAG el día de
+// corte y captura los tickets rezagados durante la semana. Sin esto, esa
+// línea solo se cerraba si un contador la ligaba a mano... contra una lista
+// de candidatos congelada el día del XML, en la que el gasto nuevo NI
+// APARECE. El barrido re-corre el mismo matcher sobre la cola completa del
+// tenant: liga lo que ahora es único y refresca los candidatos del resto.
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface ResumenBarrido {
+  /** Cuántas líneas `por_conciliar` se revisaron. */
+  revisadas: number;
+  /** Cuántas quedaron conciliadas en esta pasada (contra gastos que llegaron
+   *  después, o que un desligue dejó disponibles). */
+  conciliadas: number;
+  /** Cuántas siguen pendientes pero con su lista de candidatos puesta al día. */
+  candidatosRefrescados: number;
+  /** Cuántas siguen esperando a un humano. */
+  siguenPendientes: number;
+}
+
+/** Una fila de `cfdi_consolidado_linea` tal como la devuelve el SELECT del
+ *  barrido — snake_case de la base, sin convertir todavía. */
+interface FilaPendiente {
+  id: unknown; cfdi_xml_id: unknown; indice: unknown; fuente: unknown;
+  fecha: unknown; monto: unknown; descripcion: unknown; estacion_rfc: unknown;
+  estacion_clave: unknown; folio_operacion: unknown; candidatos: unknown;
+}
+
+/** La fila de la base, de vuelta a la forma que `conciliarLineas` espera.
+ *  `fecha` viene como date de Postgres ('YYYY-MM-DD'); el matcher hace
+ *  `.slice(0, 10)`, así que el formato corto entra igual que el dateTime del
+ *  XML original. Lo que la base guardó como `null` vuelve a `undefined`, que
+ *  es como el parser lo entrega. */
+function lineaDesdeFila(f: FilaPendiente): CfdiLineaXml {
+  return {
+    indice: Number(f.indice),
+    fuente: f.fuente as CfdiLineaXml['fuente'],
+    fecha: (f.fecha as string | null) ?? undefined,
+    monto: Number(f.monto),
+    descripcion: (f.descripcion as string | null) ?? undefined,
+    estacionRfc: (f.estacion_rfc as string | null) ?? undefined,
+    estacionClave: (f.estacion_clave as string | null) ?? undefined,
+    folioOperacion: (f.folio_operacion as string | null) ?? undefined,
+  };
+}
+
+/** ¿La lista nueva dice lo mismo que la guardada? Se compara SIN orden: el
+ *  fondo de candidatos sale de un SELECT sin ORDER BY, y un "cambio" que es
+ *  puro reordenamiento reescribiría la columna en cada barrido sin darle al
+ *  contador nada nuevo que elegir. */
+function mismosCandidatos(a: CandidatoConciliacion[], b: CandidatoConciliacion[]): boolean {
+  if (a.length !== b.length) return false;
+  const llave = (c: CandidatoConciliacion) => `${c.gastoId}|${c.monto}|${c.fecha ?? ''}`;
+  const aa = a.map(llave).sort();
+  const bb = b.map(llave).sort();
+  return aa.every((v, i) => v === bb[i]);
+}
+
+/**
+ * Barre la cola `por_conciliar` del tenant contra los gastos DISPONIBLES de
+ * hoy. Es lo que el botón «Ejecutar ahora» del Agente de Peajes dispara.
+ *
+ * Corre el matcher POR GRUPO de `cfdi_xml` —igual que la ingesta— para que
+ * sus reglas de unicidad apliquen dentro de cada consolidado; entre grupos,
+ * un gasto que un grupo ya ligó sale del fondo del siguiente. La escritura
+ * reusa `ligarLineaAGasto` (el mismo sello y el mismo guardia de los otros
+ * dos caminos): si el guardia niega el gasto —otro proceso se lo llevó entre
+ * la lectura y aquí—, la línea SE QUEDA `por_conciliar` y se cuenta como
+ * pendiente, no se marca.
+ *
+ * Y el refresco de `candidatos` no es cosmético: esa columna es lo que
+ * `resolverLineaAMano` le ofrece al contador. Sin refrescarla, un gasto que
+ * llegó después del XML JAMÁS se puede elegir a mano — el hueco que este
+ * barrido existe para cerrar.
+ */
+export async function barrerPorConciliar(tenantId: string): Promise<ResumenBarrido> {
+  // 1) La cola completa del tenant. Error de lectura LANZA: "no hay nada que
+  //    barrer" y "no pude leer la cola" llevan a acuses opuestos. El límite es
+  //    explícito porque PostgREST recorta a 1,000 en silencio (CLAUDE.md); el
+  //    barrido es re-entrante — lo que no quepa en esta pasada lo barre la
+  //    siguiente, y el acuse solo afirma lo que sí revisó.
+  const { data: filas, error: errFilas } = await acotada(supabaseAdmin()
+    .from('cfdi_consolidado_linea')
+    .select('id, cfdi_xml_id, indice, fuente, fecha, monto, descripcion, estacion_rfc, estacion_clave, folio_operacion, candidatos')
+    .eq('tenant_id', tenantId)
+    .eq('estatus', 'por_conciliar')
+    .limit(1000), 'barrido.lineas_pendientes');
+  if (errFilas) throw new Error(`barrerPorConciliar: ${errFilas.message}`);
+
+  const pendientes = (filas ?? []) as FilaPendiente[];
+  const resumen: ResumenBarrido = {
+    revisadas: pendientes.length, conciliadas: 0, candidatosRefrescados: 0, siguenPendientes: 0,
+  };
+  if (pendientes.length === 0) {
+    logger.info('peajes.barrido', { tenant: tenantId, ...resumen });
+    return resumen;
+  }
+
+  // 2a) El folio fiscal de cada consolidado — sin `cfdi_uuid` no hay sello
+  //     que escribir en `gasto`.
+  const xmlIds = [...new Set(pendientes.map((f) => String(f.cfdi_xml_id)))];
+  const { data: filasXml, error: errXml } = await acotada(supabaseAdmin()
+    .from('cfdi_xml')
+    .select('id, cfdi_uuid')
+    .eq('tenant_id', tenantId)
+    .in('id', xmlIds), 'barrido.cfdi_xml');
+  if (errXml) throw new Error(`barrerPorConciliar: ${errXml.message}`);
+  const uuidPorXmlId = new Map(
+    (filasXml ?? []).map((r) => [r.id as string, (r.cfdi_uuid as string) || null]),
+  );
+
+  // 2b) Los gastos disponibles de HOY, con el mismo criterio que la ingesta
+  //     (`cfdi_uuid` null + rango de fechas de las líneas ± la ventana). Las
+  //     líneas sin fecha no aportan rango ni pueden ligar solas — misma regla
+  //     dura de `conciliarLineas`.
+  const rango = rangoFechasLineas(pendientes.map(lineaDesdeFila));
+  let disponibles: Gasto[] = [];
+  if (rango) {
+    // `traerTodo` por la misma razón que `consolidado.candidatos_gasto`: el
+    // recorte a 1,000 dejaba al barrido cruzando contra una fracción del
+    // universo y las líneas cuyo gasto quedó fuera nunca se conciliaban.
+    const data = await traerTodo<{ id: unknown; concepto: unknown; monto: unknown; fecha: unknown }>(
+      (d, h) => acotada(supabaseAdmin()
+        .from('gasto')
+        .select('id, concepto, monto, fecha', conteo(d))
+        .eq('tenant_id', tenantId)
+        .is('cfdi_uuid', null)
+        .gte('fecha', rango.desde)
+        .lte('fecha', rango.hasta)
+        .order('id').range(d, h), 'barrido.candidatos_gasto'),
+      'barrido.candidatos_gasto',
+    );
+    disponibles = data.map((g) => ({
+      id: g.id as string,
+      concepto: g.concepto as Gasto['concepto'],
+      monto: Number(g.monto),
+      fecha: (g.fecha as string | null) ?? undefined,
+    }));
+  }
+
+  // 3) El matcher, POR GRUPO de cfdi_xml y en el orden del XML (`indice`),
+  //    como en la ingesta. Los grupos se recorren en serie a propósito: un
+  //    gasto que un grupo liga sale de `disponibles` antes de que el
+  //    siguiente lo evalúe.
+  const grupos = new Map<string, FilaPendiente[]>();
+  for (const f of pendientes) {
+    const k = String(f.cfdi_xml_id);
+    const g = grupos.get(k);
+    if (g) g.push(f); else grupos.set(k, [f]);
+  }
+
+  for (const [xmlId, filasGrupo] of grupos) {
+    filasGrupo.sort((a, b) => Number(a.indice) - Number(b.indice));
+    const uuid = uuidPorXmlId.get(xmlId) ?? null;
+    const resultados = conciliarLineas(filasGrupo.map(lineaDesdeFila), disponibles);
+
+    // `conciliarLineas` devuelve un resultado por línea EN EL MISMO ORDEN, así
+    // que el índice del arreglo alinea resultado con su fila de la base.
+    for (let i = 0; i < resultados.length; i++) {
+      const r = resultados[i];
+      const lineaId = String(filasGrupo[i].id);
+
+      if (r.estatus === 'conciliada' && r.gastoId) {
+        if (!uuid) {
+          // El cfdi_xml no se pudo leer o no trae uuid: sin folio fiscal el
+          // sello sería inventado. Se grita y la línea espera a la siguiente
+          // pasada — nunca se liga a ciegas.
+          logger.error('barrido.cfdi_sin_uuid', { tenant: tenantId, cfdiXmlId: xmlId, linea: lineaId });
+          resumen.siguenPendientes++;
+          continue;
+        }
+        // 4) El MISMO sello y el MISMO guardia de los otros dos caminos. Un
+        //    `false` es que otro proceso reclamó ese gasto entre la lectura y
+        //    aquí: la línea se queda por_conciliar y cuenta como pendiente.
+        const ligado = await ligarLineaAGasto(tenantId, uuid, r.linea.indice, r.gastoId);
+        if (!ligado) {
+          resumen.siguenPendientes++;
+          continue;
+        }
+        disponibles = disponibles.filter((g) => g.id !== r.gastoId);
+
+        const { data: marcada, error: errMarcar } = await acotada(supabaseAdmin()
+          .from('cfdi_consolidado_linea')
+          .update({
+            estatus: 'conciliada',
+            gasto_id: r.gastoId,
+            resuelto_por: 'barrido',
+            resuelto_en: new Date().toISOString(),
+          })
+          .eq('id', lineaId)
+          .eq('tenant_id', tenantId)
+          .eq('estatus', 'por_conciliar')
+          .select('id'), 'barrido.marcar_conciliada');
+        if (errMarcar) {
+          // El gasto YA quedó sellado y la línea no se pudo marcar — el mismo
+          // dilema documentado en `resolverLineaAMano`: no se deshace el sello
+          // sin saber por qué falló el segundo UPDATE. En la base la línea
+          // sigue por_conciliar, así que se cuenta como pendiente y se grita.
+          logger.error('barrido.marcar_conciliada_error', { tenant: tenantId, linea: lineaId, gasto: r.gastoId, err: errMarcar.message });
+          resumen.siguenPendientes++;
+          continue;
+        }
+        if (!marcada || marcada.length === 0) {
+          // Otro (un humano en la mesa) la resolvió entre la lectura y aquí:
+          // ni conciliada de esta pasada ni pendiente — se documenta y ya.
+          logger.error('barrido.marcar_conciliada_carrera', { tenant: tenantId, linea: lineaId, gasto: r.gastoId });
+          continue;
+        }
+        resumen.conciliadas++;
+        continue;
+      }
+
+      // 5) Sigue por_conciliar. Si el fondo de hoy cambió lo que hay para
+      //    elegir, la columna se refresca; anclada a `estatus` para no pisar
+      //    una resolución que un humano cerró en paralelo. Best-effort: que
+      //    un refresco falle no aborta el barrido — se grita y la lista vieja
+      //    sigue siendo la verdad de su momento.
+      resumen.siguenPendientes++;
+      const guardados = (filasGrupo[i].candidatos as CandidatoConciliacion[] | null) ?? [];
+      if (!mismosCandidatos(guardados, r.candidatos)) {
+        const { data: refrescada, error: errRefrescar } = await acotada(supabaseAdmin()
+          .from('cfdi_consolidado_linea')
+          .update({ candidatos: r.candidatos.length ? r.candidatos : null })
+          .eq('id', lineaId)
+          .eq('tenant_id', tenantId)
+          .eq('estatus', 'por_conciliar')
+          .select('id'), 'barrido.refrescar_candidatos');
+        if (errRefrescar) {
+          logger.error('barrido.refrescar_candidatos_error', { tenant: tenantId, linea: lineaId, err: errRefrescar.message });
+        } else if ((refrescada?.length ?? 0) > 0) {
+          resumen.candidatosRefrescados++;
+        }
+      }
+    }
+  }
+
+  logger.info('peajes.barrido', { tenant: tenantId, ...resumen });
+  return resumen;
 }
 
 /**

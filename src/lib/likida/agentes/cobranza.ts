@@ -1,6 +1,9 @@
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
-import { sendText } from '@/lib/meta/client';
+import { traerTodo, traerPorIds, conteo } from '../pg';
+import { avisarCorridasPorFlota } from './notificaciones';
+import { registrarCorrida } from './corridas';
+import { sendText, sendTemplate, motivoDeFalloWhatsApp } from '@/lib/meta/client';
 import {
   CONFIG_COBRANZA_DEFAULT, validarConfigCobranza, dentroDeVentana,
   tierPendiente, armarMensajeCobranza, type ConfigCobranza,
@@ -102,32 +105,47 @@ export async function colaCobranza(tenantId: string, ahora: Date = new Date()): 
   // `operador:operador_id` y no `operador` a secas: viaje tiene MÁS de una
   // relación con operador y PostgREST rechaza el embed ambiguo (se pagó en
   // producción el 14-ago-2026: la página entera caía con el error boundary).
-  const { data, error } = await supabaseAdmin()
-    .from('viaje')
-    .select('id, folio, fecha_inicio, avisado_en, recordatorio_comprobacion_en, operador:operador_id(nombre, telefono)')
-    .eq('tenant_id', tenantId)
-    .in('estatus', ['abierto', 'en_cuadre'])
-    .not('fecha_inicio', 'is', null)
-    // SOLO VIAJES QUE LIKIDA AVISÓ (auditoría 3, BE-C1): un viaje que el
-    // chofer nunca recibió por WhatsApp no se le cobra por WhatsApp — sin
-    // esto, el import del TMS (viajes históricos SIN aviso a propósito)
-    // armaba cientos de "Llevas N días..." en la primera corrida del cron.
-    // Mismo criterio que la escalación (escalar_viaje.ts).
-    .not('avisado_en', 'is', null)
-    .limit(500);
-  if (error) throw new Error(`colaCobranza: ${error.message}`);
+  // `traerTodo` y no el `.limit(500)` que vivía aquí (auditoría de escala
+  // 15k): `cola.vigilados` — el KPI "Viajes vigilados" de la página — era
+  // `viajes.length` topado a 500, y un cliente de 500 viajes/día lo llenaba
+  // solo. Lo abierto está acotado por la OPERACIÓN (un abierto por operador,
+  // mig. 0029), no por el tiempo: paginar aquí es barato y el conteo vuelve a
+  // ser verdad.
+  const viajes = await traerTodo<{
+    id: unknown; folio: unknown; fecha_inicio: unknown; avisado_en: unknown;
+    recordatorio_comprobacion_en: unknown; operador: unknown;
+  }>(
+    (d, h) => supabaseAdmin()
+      .from('viaje')
+      .select('id, folio, fecha_inicio, avisado_en, recordatorio_comprobacion_en, operador:operador_id(nombre, telefono)', conteo(d))
+      .eq('tenant_id', tenantId)
+      .in('estatus', ['abierto', 'en_cuadre'])
+      .not('fecha_inicio', 'is', null)
+      // SOLO VIAJES QUE LIKIDA AVISÓ (auditoría 3, BE-C1): un viaje que el
+      // chofer nunca recibió por WhatsApp no se le cobra por WhatsApp — sin
+      // esto, el import del TMS (viajes históricos SIN aviso a propósito)
+      // armaba cientos de "Llevas N días..." en la primera corrida del cron.
+      // Mismo criterio que la escalación (escalar_viaje.ts).
+      .not('avisado_en', 'is', null)
+      .order('id').range(d, h),
+    'colaCobranza',
+  );
 
-  const viajes = data ?? [];
   const ids = viajes.map((v) => v.id as string);
   const contactosPorViaje = new Map<string, number[]>();
   if (ids.length > 0) {
-    const { data: contactos, error: errC } = await supabaseAdmin()
-      .from('cobranza_contacto')
-      .select('viaje_id, tier')
-      .eq('tenant_id', tenantId)
-      .in('viaje_id', ids);
-    if (errC) throw new Error(`colaCobranza.contactos: ${errC.message}`);
-    for (const c of contactos ?? []) {
+    // `traerPorIds`: un `.in()` con más de mil viajes vivos se recorta a
+    // 1,000 en silencio y el tier de contacto se perdería (ver pg.ts).
+    const contactos = await traerPorIds<{ viaje_id: unknown; tier: unknown }>(
+      ids,
+      (tanda) => supabaseAdmin()
+        .from('cobranza_contacto')
+        .select('viaje_id, tier')
+        .eq('tenant_id', tenantId)
+        .in('viaje_id', tanda),
+      'colaCobranza.contactos',
+    );
+    for (const c of contactos) {
       const lista = contactosPorViaje.get(c.viaje_id as string) ?? [];
       lista.push(c.tier as number);
       contactosPorViaje.set(c.viaje_id as string, lista);
@@ -260,7 +278,29 @@ export async function ejecutarCobranza(
       // sendText devuelve el id del mensaje de Meta, o null si rechazó.
       const idMensaje = await sendText(v.operadorTelefono as string, armarMensajeCobranza(v.folio, v.dias, config));
       enviado = idMensaje !== null;
-      if (!enviado) detalle = 'WhatsApp rechazó el envío';
+      if (!enviado) {
+        // LA PLANTILLA CUANDO EL TEXTO NO PUEDE SALIR (auditoría 3, AG-A2).
+        // La población objetivo de este agente es el chofer que lleva DÍAS
+        // sin escribir — exactamente el que trae la ventana de 24 h cerrada,
+        // donde Meta rechaza todo texto libre. Sin este fallback el agente
+        // era mudo para quien existe: el claim consumía el tier en bitácora
+        // y el chofer no recibía NI UNO de los tres contactos. Mismo patrón
+        // que la escalación (escalar_viaje.ts): el texto bueno primero, la
+        // plantilla aprobada solo cuando Meta lo rechaza. El cuerpo de
+        // `recordatorio_cierre` se escribió para el cierre de liquidación —
+        // menos preciso que el texto con los días y la firma, pero es lo
+        // ÚNICO que WhatsApp entrega con la ventana cerrada, y habla del
+        // mismo pendiente: cerrar el viaje.
+        const env = await sendTemplate(v.operadorTelefono as string, 'recordatorio_cierre', {
+          parametros: [v.operadorNombre ?? 'Operador', v.folio ?? 'sin folio'],
+        });
+        if (env.ok) {
+          enviado = true;
+          detalle = 'plantilla recordatorio_cierre (ventana de 24 h cerrada)';
+        } else {
+          detalle = `WhatsApp rechazó el texto libre y la plantilla también falló: ${motivoDeFalloWhatsApp(env.error, env.codigo)}`;
+        }
+      }
     } catch (e) {
       detalle = e instanceof Error ? e.message : 'error inesperado al enviar';
     }
@@ -299,14 +339,22 @@ export async function ejecutarCobranza(
 export const PLAZO_COBRANZA_GLOBAL_MS = 90_000;
 
 export async function ejecutarCobranzaGlobal(ahora: Date = new Date()): Promise<{ tenants: number; contactados: number; cortadosPorReloj: number; fallos: string[] }> {
-  const { data, error } = await supabaseAdmin()
-    .from('viaje')
-    .select('tenant_id')
-    .in('estatus', ['abierto', 'en_cuadre'])
-    .not('fecha_inicio', 'is', null)
-    .limit(1000);
-  if (error) throw new Error(`ejecutarCobranzaGlobal: ${error.message}`);
-  const tenants = [...new Set((data ?? []).map((v) => v.tenant_id as string))];
+  // `traerTodo` y no el `.limit(1000)` que vivía aquí — que estaba EXACTAMENTE
+  // en el tope de PostgREST, donde "hay 1,000" y "hay 90,000" son
+  // indistinguibles (auditoría de escala 15k). Un solo cliente de 500
+  // viajes/día llenaba las 1,000 filas con sus propios abiertos y NINGUNA
+  // otra flota volvía a ser cobrada, sin error y sin log. Lo abierto está
+  // acotado por la operación (mig. 0029), así que paginarlo es barato.
+  const data = await traerTodo<{ tenant_id: unknown }>(
+    (d, h) => supabaseAdmin()
+      .from('viaje')
+      .select('tenant_id', conteo(d))
+      .in('estatus', ['abierto', 'en_cuadre'])
+      .not('fecha_inicio', 'is', null)
+      .order('id').range(d, h),
+    'ejecutarCobranzaGlobal',
+  );
+  const tenants = [...new Set(data.map((v) => v.tenant_id as string))];
 
   // Un solo vencimiento para TODA la corrida (auditoría 3, REND-C2): a 750
   // camiones los envíos seriales nunca cabían en el maxDuration y el proceso
@@ -315,20 +363,51 @@ export async function ejecutarCobranzaGlobal(ahora: Date = new Date()): Promise<
   const venceEn = Date.now() + PLAZO_COBRANZA_GLOBAL_MS;
 
   const total = { tenants: tenants.length, contactados: 0, cortadosPorReloj: 0, fallos: [] as string[] };
+  // Cómo le fue a CADA flota que sí alcanzó turno. El aviso se manda al final
+  // y no aquí adentro por el reloj: los 90s están presupuestados para los
+  // envíos de WhatsApp, y meter una escritura de notificación por flota dentro
+  // de esa ventana le quitaría turno a choferes reales. Las que el corte dejó
+  // fuera NO entran al mapa — ver `avisarCorridasPorFlota`.
+  const corridas = new Map<string, unknown>();
+  // Lo que se anota en la bitácora de corridas (B3) — se escribe AL FINAL,
+  // por la misma razón del comentario de arriba: la ventana de 90s es de los
+  // envíos, no de las anotaciones.
+  const paraBitacora: Array<{ tenant: string; inicio: Date; fin: Date; contactados: number; fallos: number; error?: string }> = [];
   for (const t of tenants) {
     if (Date.now() >= venceEn) {
       logger.warn('cobranza.global_corte_por_reloj', { tenantsSinCorrer: tenants.length - tenants.indexOf(t) });
       break;
     }
+    const inicioFlota = new Date();
     try {
       const r = await ejecutarCobranza(t, ahora, { venceEn });
       total.contactados += r.contactados;
       total.cortadosPorReloj += r.cortadosPorReloj;
       total.fallos.push(...r.fallos);
+      corridas.set(t, null);
+      paraBitacora.push({ tenant: t, inicio: inicioFlota, fin: new Date(), contactados: r.contactados, fallos: r.fallos.length });
     } catch (e) {
       total.fallos.push(`${t}: ${e instanceof Error ? e.message : 'corrida fallida'}`);
+      corridas.set(t, e);
+      paraBitacora.push({
+        tenant: t, inicio: inicioFlota, fin: new Date(), contactados: 0, fallos: 0,
+        error: 'La corrida de cobranza de esta flota no se pudo completar. El detalle quedó en los registros del sistema.',
+      });
     }
   }
+
+  await avisarCorridasPorFlota('cobranza', corridas, ahora);
+  // `registrarCorrida` nunca lanza; allSettled es cinturón sobre tirantes.
+  await Promise.allSettled(paraBitacora.map((b) => registrarCorrida(b.tenant, 'cobranza', {
+    inicio: b.inicio,
+    fin: b.fin,
+    estado: b.error ? 'fallo' : b.fallos > 0 ? 'parcial' : 'ok',
+    disparo: 'cron',
+    tareasHechas: b.contactados,
+    tareasTotal: b.contactados + b.fallos,
+    resumen: { contactados: b.contactados, fallos: b.fallos },
+    error: b.error,
+  })));
   return total;
 }
 

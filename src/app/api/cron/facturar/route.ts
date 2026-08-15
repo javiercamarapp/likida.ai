@@ -9,6 +9,13 @@ import { telefonoJefeDe } from '@/lib/likida/contactos';
 import { conPortales, PORTALES_CONOCIDOS } from '@/lib/likida/facturacion/adaptadores/registro';
 import { conNavegador } from '@/lib/likida/facturacion/adaptadores/pagina_playwright';
 import { logger } from '@/lib/logger';
+import { codigoDeError } from '@/lib/observability/sentry';
+import { alertarOperador } from '@/lib/observability/alerta';
+import { avisar, avisarCorridasPorFlota, FalloDePlataforma } from '@/lib/likida/agentes/notificaciones';
+import { avisoColaAtorada } from '@/lib/correo/avisos';
+import { registrarCorrida } from '@/lib/likida/agentes/corridas';
+import { modoEfectivo } from '@/lib/likida/facturacion/modo';
+import { estaApagado } from '@/lib/likida/interruptores';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -255,7 +262,25 @@ export async function GET(req: Request) {
     return new NextResponse(null, { status: 401 });
   }
 
-  const modo = process.env.FACTURACION_MODO === 'emitir' ? 'emitir' as const : 'ensayo' as const;
+  // ── EL KILL SWITCH (0110), DESPUÉS de la puerta y ANTES de tocar la cola ─
+  //
+  // Este cron entero ES el Agente de Facturas, así que dos palancas lo
+  // apagan: 'global' (todo el trabajo programado) y 'agente:facturas' (solo
+  // él). Responde 200, no error: apagado A PROPÓSITO no es un fallo, y un
+  // 500 mandaría a alguien a investigar la decisión de Javier como si fuera
+  // un incidente. El interruptor es GLOBAL por agente (v1), no por tenant:
+  // el barrido por flota de `procesarLoteEnCola` se corta ENTERO — apagar
+  // facturas para una sola flota sería config de esa flota, no esta palanca.
+  // Fail-closed: si el interruptor no se puede LEER se lee como apagado, con
+  // grito en el log (interruptores.ts) — emitir CFDIs con la palanca ilegible
+  // es el error caro; saltar una corrida que reintenta en una hora, el barato.
+  const apagadoPor = (await estaApagado('global'))
+    ? 'global'
+    : (await estaApagado('agente:facturas')) ? 'agente:facturas' : null;
+  if (apagadoPor) {
+    logger.warn('cron.facturar.saltado', { interruptor: apagadoPor });
+    return NextResponse.json({ corrio: false, saltado: `interruptor ${apagadoPor}` });
+  }
 
   // Sin un solo portal escrito no hay nada que este cron pueda hacer, y se dice
   // con todas sus letras. Callarlo dejaría un cron en verde dando la impresión
@@ -338,7 +363,15 @@ export async function GET(req: Request) {
     return procesarLoteEnCola(lote, req, hoy, inicioLote, quedaron);
   } catch (e) {
     const error = e instanceof Error ? e.message : String(e);
-    logger.error('cron.facturar.falló', { error });
+    // El `codigo` discrimina la causa en el fingerprint de Sentry ("base
+    // caída" hoy y "cola malformada" mañana son issues DISTINTOS, o sea dos
+    // notificaciones); la alerta va al operador del sistema porque los avisos
+    // por tenant no cubren un fallo del cron entero. Aquí todavía no hay
+    // flota en juego —el fallo es antes de armar el lote—, no hay tenant que
+    // emitir.
+    const codigo = codigoDeError(e);
+    logger.error('cron.facturar.falló', { error, codigo });
+    await alertarOperador('cron.facturar', { error, codigo });
     return NextResponse.json({ error }, { status: 500 });
   }
 }
@@ -353,7 +386,30 @@ export async function procesarLoteEnCola(
   inicioLote: number,
   quedaron: number,
 ): Promise<NextResponse> {
-  const modo = process.env.FACTURACION_MODO === 'emitir' ? 'emitir' as const : 'ensayo' as const;
+  // D7 (auditoría 4): el modo que se REPORTA pasa por `modoEfectivo`, no por
+  // process.env a secas. Con FACTURACION_MODO=emitir y el mandato sin aceptar,
+  // el cron corría en ensayo (bien) y su JSON y su log decían "emitir"
+  // (mintiendo sobre su propio estado). Ahora dice el modo con el que de
+  // verdad va a correr — el mismo que decide `conNavegador`.
+  const modo = modoEfectivo(process.env.FACTURACION_MODO === 'emitir' ? 'emitir' : 'ensayo');
+
+  // Cómo le fue a CADA flota que alcanzó turno. El éxito SÍ se registra: es lo
+  // que rearma el filo del anti-ruido (`avisarCorridasPorFlota`). Las que se
+  // quedaron sin presupuesto de tiempo NO entran — no fallaron, no les tocó;
+  // la corrida de la siguiente hora las levanta enteras.
+  //
+  // FUERA del `try` a propósito: el cierre se manda desde el `finally`, y ahí
+  // esta variable tiene que estar viva incluso cuando el lote reventó — que es
+  // justo el caso en que el aviso importa.
+  const corridas = new Map<string, unknown>();
+  const inicioCorrida = new Date();
+  /** Flota → los gastos que ESTA corrida sacó de la cola automática. FUERA del
+   *  `try` por la misma razón que `corridas`: el aviso de cola atorada (B2) se
+   *  manda desde el `finally`, y un lote que reventó a la mitad ya pudo haber
+   *  bloqueado tickets — esos siguen esperando a una persona aunque la corrida
+   *  muera. Cada entrada nace con al menos un gasto (`anotarBloqueo`). */
+  const bloqueadosPorFlota = new Map<string, Array<{ gastoId: string; motivo: string }>>();
+
   try {
     // ── Agrupar: flota → portal → tickets. El portal sale de `armar()`, que es
     // la MISMA función con la que `al_vuelo.ts` reconoce el comercio; derivarlo
@@ -385,9 +441,6 @@ export async function procesarLoteEnCola(
       /** Cuántas SESIONES de portal se abrieron, contra cuántos tickets. */
       sesiones?: number;
     }> = [];
-    /** Flota → los gastos que ESTA corrida sacó de la cola automática. */
-    const bloqueadosPorFlota = new Map<string, Array<{ gastoId: string; motivo: string }>>();
-
     const correr = async (g: FilaCola) => {
       // Se vuelve a leer el gasto dentro de `facturarAlVuelo` a propósito: es el
       // único sitio que decide si se emite y el único que escribe el UUID. Entre
@@ -444,6 +497,14 @@ export async function procesarLoteEnCola(
       if (falloDeArranque) {
         // Ya se sabe que no hay navegador. No se vuelve a intentar arrancarlo ni
         // se marcan estos tickets: quedan enteros para la corrida en que se pueda.
+        // SÍ cuenta como corrida fallida para ESTA flota, aunque el error se
+        // haya descubierto en otra: su agente no pudo trabajar, y ése es
+        // exactamente el hecho que el aviso existe para contar. El anti-ruido
+        // lo topa en 3 correos por incidente, no uno por flota por hora.
+        // Va MARCADO como fallo de plataforma (B8): Chromium es infraestructura
+        // de Likida, y el correo de la flota tiene que decir «el problema es
+        // nuestro, tu información está bien», no mandarla a revisar sus datos.
+        corridas.set(tenantId, new FalloDePlataforma(falloDeArranque));
         sinIntentar += tickets.length;
         flotas.push({ tenantId, tickets: tickets.length, falta: ['no se intentó: el navegador no arrancó'] });
         continue;
@@ -458,6 +519,11 @@ export async function procesarLoteEnCola(
         logger.warn('cron.facturar.flota_sin_datos_fiscales', { tenant: tenantId, falta: falta.join('; ') });
         flotas.push({ tenantId, tickets: tickets.length, falta });
         for (const g of tickets) await correr(g);
+        // La corrida SÍ terminó: lo que falta son los datos fiscales de la
+        // flota, que es un hueco de captura y no un agente caído. Llamarlo
+        // «corrida fallida» mandaría a alguien a revisar logs de un agente
+        // que funciona.
+        corridas.set(tenantId, null);
         continue;
       }
 
@@ -524,17 +590,22 @@ export async function procesarLoteEnCola(
             ? { directorioCapturas: process.env.LIKIDA_CAPTURAS_DIR }
             : undefined,
         });
+        corridas.set(tenantId, null);
       } catch (e) {
         const detalle = e instanceof Error ? e.message : String(e);
         if (arranco) throw e; // el navegador sí abrió: es otro fallo, sube
 
         // `conNavegador` arranca Chromium ANTES de correr el cuerpo, así que si
-        // el cuerpo nunca se ejecutó, lo que falló fue el arranque.
+        // el cuerpo nunca se ejecutó, lo que falló fue el arranque — o sea la
+        // PLATAFORMA de Likida, no los datos de la flota. La marca (B8) es lo
+        // que hace que el correo diga la verdad sobre de quién es el problema.
         falloDeArranque = detalle;
+        corridas.set(tenantId, new FalloDePlataforma(detalle));
         sinIntentar += tickets.length;
         flotas.push({ tenantId, tickets: tickets.length, falta: ['no se intentó: el navegador no arrancó'] });
       }
     }
+
 
     const facturados = resultados.filter((r) => r.facturado).length;
 
@@ -604,7 +675,91 @@ export async function procesarLoteEnCola(
     });
   } catch (e) {
     const error = e instanceof Error ? e.message : String(e);
-    logger.error('cron.facturar.falló', { error });
+    // Mismo criterio que el catch del GET: código estable para el fingerprint
+    // y alerta al operador. El fallo duro típico aquí cruza flotas (`if
+    // (arranco) throw e` propaga fuera del bucle), así que tampoco hay UN
+    // tenant que emitir sin mentir sobre el alcance.
+    const codigo = codigoDeError(e);
+    logger.error('cron.facturar.falló', { error, codigo });
+    await alertarOperador('cron.facturar', { error, codigo });
     return NextResponse.json({ error }, { status: 500 });
+  } finally {
+    // ── EN `finally`, Y ÉSA ES LA CORRECCIÓN ────────────────────────────────
+    //
+    // Estaba después del bucle de flotas, que es donde parece que va y no va.
+    // El camino de fallo duro de este cron —`if (arranco) throw e`, cuando el
+    // navegador SÍ abrió y la sesión del portal revienta a media escritura—
+    // propaga fuera del bucle y salta al catch de arriba: el aviso nunca
+    // corría. O sea que el ÚNICO fallo que de verdad merecía el correo «el
+    // agente no pudo trabajar» era exactamente el que lo silenciaba.
+    //
+    // Peor que no avisar: también se perdían los cierres de las flotas que SÍ
+    // terminaron bien en ese lote, así que sus rachas quedaban sin re-armar.
+    // Y QStash reintenta 2 veces sobre 5xx, de modo que el silencio se repetía
+    // tres veces.
+    //
+    // `avisarCorridasPorFlota` nunca propaga, así que ponerlo en el `finally`
+    // no puede convertir una corrida buena en un 500 — que es la única razón
+    // por la que un `finally` daría miedo aquí.
+    await avisarCorridasPorFlota('facturas', corridas);
+    // La bitácora de corridas (B3), en el MISMO finally y por la misma razón:
+    // el fallo duro es exactamente la corrida que más merece quedar anotada.
+    // Sin conteo de tareas por flota aquí (los renglones son por portal, no
+    // por flota): tareas null, y la ficha pinta «—», no un 0/0 inventado.
+    await Promise.allSettled([...corridas.entries()].map(([tenant, err]) =>
+      registrarCorrida(tenant, 'facturas', {
+        inicio: inicioCorrida,
+        fin: new Date(),
+        estado: err ? 'fallo' : 'ok',
+        disparo: 'cron',
+        // La ficha también distingue el origen (B8): un fallo de plataforma no
+        // manda a nadie a revisar la información de la flota.
+        error: err
+          ? (err instanceof FalloDePlataforma
+            ? 'La plataforma de Likida tuvo un problema y esta corrida no se pudo completar. La información de la flota está bien; se reintenta solo.'
+            : 'La corrida de facturación de esta flota no se pudo completar. El detalle quedó en los registros del sistema.')
+          : undefined,
+      })));
+
+    // ── LA COLA ATORADA DE FACTURAS (B2, auditoría 4) ──────────────────────
+    //
+    // `avisoColaAtorada` existía desde el 14-ago sin un solo llamador; éste es
+    // su primer emisor real, y SOLO para Facturas: los tickets que ESTA
+    // corrida bloqueó (`requiere_cuenta`, CAPTCHA, emisión sin confirmar)
+    // salieron de la cola automática y esperan a una persona — exactamente lo
+    // que el evento existe para contar. La magnitud es MEDIDA (cuántos bloqueó
+    // esta corrida) y `diasSinBajar` va en `null` porque es la verdad: no hay
+    // serie histórica de esta cola, y la plantilla lo maneja sin inventar días.
+    //
+    // SOLO cuando algo se bloqueó en esta corrida, igual que el WhatsApp de
+    // `avisarALasPersonas`: una corrida sin bloqueos nuevos no sabe si la cola
+    // vieja ya la atendió una persona, así que tampoco cierra el incidente por
+    // ella. El anti-ruido (marcas de insistencia y piso de una hora) vive en
+    // `avisar` — aquí no se duplica nada de eso.
+    //
+    // `avisar` promete no lanzar, pero la corrida no cuelga de esa promesa:
+    // una invariante que solo aguanta fallos por valor no es una invariante
+    // (el mismo criterio del emisor de `escalado` en escalar_viaje.ts).
+    for (const [tenantId, bloqueados] of bloqueadosPorFlota) {
+      try {
+        await avisar(
+          tenantId, 'facturas', 'cola_atorada',
+          { hayProblema: true, magnitud: bloqueados.length },
+          // El nombre y la ruta salen del catálogo vía `avisar` (d.agente,
+          // d.ruta) — el mismo patrón que `avisarCorridaFallida`.
+          (d) => avisoColaAtorada({
+            flota: d.flota,
+            agente: d.agente,
+            href: d.ruta,
+            cuantos: bloqueados.length,
+            diasSinBajar: null,
+          }),
+        );
+      } catch (e) {
+        logger.error('cron.facturar.aviso_cola_roto', {
+          tenant: tenantId, err: e instanceof Error ? e.message : String(e),
+        });
+      }
+    }
   }
 }

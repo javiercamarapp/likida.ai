@@ -5,9 +5,10 @@ import { ConsultaFallida } from './conv';
 import { esAfirmacion, esNegacion } from './intake/huerfanos';
 import {
   interpretarPeticionViaje, resumenParaConfirmar, resolverOperadorPorNombre,
-  OperadorNombreAmbiguo,
+  resolverUnidadPorEconomico, OperadorNombreAmbiguo,
 } from './crear_viaje_wa';
 import { crearViaje } from './operacion';
+import { violaIndice } from './pg_errores';
 import { puedeAsignar } from '@/lib/auth/permisos';
 import { TZ_MX } from '@/lib/formato';
 import type { RolOficina } from './contactos';
@@ -44,7 +45,13 @@ interface PendienteViaje {
   origen: string | null;
   destino: string | null;
   anticipo: number | null;
+  /** El número económico como está en la BASE cuando se amarró, o como lo
+   *  tecleó el jefe cuando no. Es lo que el resumen enseña. */
   unidad: string | null;
+  /** El id resuelto contra `unidad.numero_economico` AL ARMAR el pendiente.
+   *  `null` = el jefe dictó una unidad que no está dada de alta (y el resumen
+   *  ya se lo dijo); ausente en pendientes anteriores a este campo. */
+  unidadId?: string | null;
   /** ISO de cuándo se propuso — la vigencia se mide contra esto. */
   en: string;
 }
@@ -69,7 +76,8 @@ async function cargarPendiente(tenantId: string, telefono: string, ahora: Date):
   return p;
 }
 
-async function guardarPendiente(tenantId: string, telefono: string, p: PendienteViaje | null): Promise<void> {
+/** `true` si la escritura quedó. Quien restaura un pendiente NECESITA saberlo. */
+async function guardarPendiente(tenantId: string, telefono: string, p: PendienteViaje | null): Promise<boolean> {
   const { error } = await acotada(supabaseAdmin()
     .from('wa_conversacion')
     .upsert({
@@ -85,7 +93,32 @@ async function guardarPendiente(tenantId: string, telefono: string, p: Pendiente
     // encontrar nada — el flujo re-pide en vez de crear a ciegas. Se grita
     // para el diagnóstico, no se detiene la respuesta.
     logger.error('despacho_wa.pendiente_sin_guardar', { err: error.message });
+    return false;
   }
+  return true;
+}
+
+/**
+ * EL CLAIM ATÓMICO DEL PENDIENTE (auditoría 3, BE-A2).
+ *
+ * Leer el pendiente y borrarlo eran DOS viajes a la base, y entre uno y otro
+ * cabía el segundo "sí" del jefe: ambos leían el mismo pendiente y ambos
+ * llegaban a `crearViaje`. Este UPDATE condicional es leer-y-borrar en UN solo
+ * statement — la condición `estado->viajePendiente is not null` solo puede
+ * cumplirse para uno, así que gana exactamente uno y el claim ES el borrado.
+ */
+async function reclamarPendiente(tenantId: string, telefono: string): Promise<'reclamado' | 'ya_reclamado' | 'fallo'> {
+  const { data, error } = await acotada(supabaseAdmin()
+    .from('wa_conversacion')
+    .update({ estado: {}, updated_at: new Date().toISOString() })
+    .eq('tenant_id', tenantId).eq('telefono', telefono)
+    .not('estado->viajePendiente', 'is', null)
+    .select('telefono'), 'despachoWa.reclamarPendiente');
+  if (error) {
+    logger.error('despacho_wa.reclamo_fallo', { err: error.message });
+    return 'fallo';
+  }
+  return (data?.length ?? 0) > 0 ? 'reclamado' : 'ya_reclamado';
 }
 
 /** El día de México — `fecha_inicio` del viaje despachado por WhatsApp. */
@@ -129,27 +162,105 @@ export async function atenderDespachoOficina(
         await guardarPendiente(cuenta.tenantId, telefono, null);
         return 'Tu rol no asigna viajes — eso le toca al dueño o al jefe de tráfico.';
       }
+
+      // ── EL CLAIM VA ANTES DE crearViaje (auditoría 3, BE-A2) ─────────────
+      // Dos "sí" en la misma ventana leían el MISMO pendiente y ambos
+      // llegaban a crearViaje: el 0029 salvaba los datos rechazando al
+      // segundo, pero la conversación mentía («todavía tiene un viaje
+      // abierto» por un choque consigo mismo). Y el clear post-éxito que
+      // fallaba solo se logueaba: quedaba un pendiente fantasma que
+      // re-disparaba ese mismo choque con el siguiente "sí". Reclamando
+      // ANTES, gana exactamente un "sí" y el borrado ya ocurrió.
+      const reclamo = await reclamarPendiente(cuenta.tenantId, telefono);
+      if (reclamo === 'ya_reclamado') {
+        return 'Esa confirmación ya la estoy procesando — dame un momento.';
+      }
+      if (reclamo === 'fallo') {
+        // Fallar cerrado: sin claim no hay crearViaje. El pendiente quedó
+        // intacto, así que el reintento del jefe sí lo va a encontrar.
+        return 'No pude tomar tu confirmación — mándame el SÍ otra vez en un momento.';
+      }
+
       try {
-        await crearViaje(cuenta.tenantId, {
+        const viajeId = await crearViaje(cuenta.tenantId, {
           operadorId: pendiente.operadorId,
           origen: pendiente.origen ?? undefined,
           destino: pendiente.destino ?? undefined,
           anticipo: pendiente.anticipo ?? undefined,
+          // Ya resuelta AL ARMAR el pendiente (contra `numero_economico`, de
+          // esta flota) — `crearViaje` la re-verifica igual (`unidadPropia`).
+          unidadId: pendiente.unidadId ?? undefined,
           fechaInicio: hoyMx(ahora),
         });
-        await guardarPendiente(cuenta.tenantId, telefono, null);
+        // El pendiente ya lo limpió el claim — aquí no queda nada que borrar.
+
+        // ¿EL AVISO SALIÓ DE VERDAD? (auditoría 3, AG-A4). `crearViaje`
+        // espera a `avisarAlChofer` pero se TRAGA el resultado — "el aviso va
+        // en camino" se afirmaba también cuando el envío ya había fallado o
+        // ni se intentó (sin teléfono, plantilla pausada). Y ese viaje, con
+        // `avisado_en` NULL, es invisible para la escalación de 5 h
+        // (`viajesSinAceptar` filtra por el sello): el jefe cree que avisó,
+        // el chofer nunca se entera, y nadie vigila. Para cuando crearViaje
+        // devuelve, el sello ya está puesto o no — se LEE y se dice la
+        // verdad; si la lectura falla, se dice que no se pudo verificar.
+        // Nunca se afirma una entrega sin el dato.
+        let lineaAviso = 'No pude verificar si el aviso salió — revísalo en Despacho.';
+        const { data: sello, error: errSello } = await acotada(supabaseAdmin()
+          .from('viaje')
+          .select('avisado_en')
+          .eq('id', viajeId).eq('tenant_id', cuenta.tenantId)
+          .maybeSingle(), 'despachoWa.avisadoEn');
+        if (errSello) {
+          logger.warn('despacho_wa.aviso_ilegible', { viaje: viajeId, err: errSello.message });
+        } else if (sello) {
+          lineaAviso = (sello as { avisado_en?: string | null }).avisado_en
+            ? 'El aviso ya salió a su WhatsApp — en Despacho ves si aceptó.'
+            : '⚠️ El viaje quedó creado pero el aviso NO salió (revisa su teléfono); mándalo desde Despacho — sin aviso, la escalación de 5 h no lo vigila.';
+        }
+
         const ruta = pendiente.origen && pendiente.destino
           ? `${pendiente.origen} → ${pendiente.destino}` : (pendiente.origen ?? pendiente.destino ?? 'sin ruta');
+        // La unidad SE DICE con su resultado real: amarrada con su ✓, o la
+        // verdad de que no está dada de alta — nunca un "va incluida" sin dato.
+        const conUnidad = pendiente.unidadId && pendiente.unidad ? ` · unidad ${pendiente.unidad} ✓` : '';
         return [
-          `Viaje creado ✅ ${pendiente.operadorNombre} · ${ruta}.`,
-          'El aviso a su WhatsApp va en camino — en Despacho ves si ya aceptó.',
-          ...(pendiente.unidad
-            ? [`(La unidad «${pendiente.unidad}» no la amarré: por aquí todavía no; se captura en el panel.)`]
+          `Viaje creado ✅ ${pendiente.operadorNombre} · ${ruta}${conUnidad}.`,
+          lineaAviso,
+          ...(pendiente.unidad && !pendiente.unidadId
+            ? [`La unidad «${pendiente.unidad}» no está dada de alta — el viaje quedó sin unidad; asígnala en Despacho.`]
             : []),
         ].join('\n');
       } catch (e) {
-        // El pendiente SE CONSERVA: el jefe puede reintentar con otro "sí".
+        // EL CHOQUE 0029 ES PERMANENTE, NO UN TROPIEZO (auditoría 3, AG-A3).
+        // El estado NORMAL de un chofer entre liquidaciones es traer un viaje
+        // abierto (los tiers de cobranza son 3/7/14 días), y el índice
+        // `uq_viaje_abierto_por_operador` lo rechaza hoy y mañana igual —
+        // "vuelve a responder SÍ en un momento" era una instrucción falsa que
+        // armaba un bucle de reintentos durante los 30 min de vigencia.
+        //
+        // `crearViaje` (operacion.ts:570) envuelve el error de Postgres en un
+        // Error plano: el `code` 23505 no sobrevive y `violaIndice` solo no
+        // basta. Por eso además se busca el nombre del índice en el mensaje
+        // envuelto — ese nombre solo puede venir del propio Postgres, así que
+        // no reabre el falso positivo del que `violaIndice` se cuida.
+        const chocaViajeAbierto = violaIndice(e, 'uq_viaje_abierto_por_operador')
+          || (e instanceof Error && e.message.includes('uq_viaje_abierto_por_operador'));
+        if (chocaViajeAbierto) {
+          // El pendiente ya quedó limpio por el claim: otro "sí" no repite
+          // el choque. No hay nada más que borrar aquí.
+          logger.info('despacho_wa.operador_con_viaje_abierto', { tenant: cuenta.tenantId, operador: pendiente.operadorId });
+          return `«${pendiente.operadorNombre}» todavía tiene un viaje abierto — ciérralo o despacha a otro operador. No creé nada.`;
+        }
+        // Lo transitorio de verdad: el claim ya consumió el pendiente, así
+        // que para que el reintento con otro "sí" funcione hay que
+        // DEVOLVERLO a su lugar antes de prometer nada.
         logger.error('despacho_wa.crear_fallo', { tenant: cuenta.tenantId, err: e instanceof Error ? e.message : String(e) });
+        const restaurado = await guardarPendiente(cuenta.tenantId, telefono, pendiente);
+        if (!restaurado) {
+          // Sin pendiente restaurado, el "sí" de reintento no va a encontrar
+          // nada — pedirlo sería mentir. Se dice la verdad: hay que re-armar.
+          return 'No se pudo crear el viaje y tampoco pude guardar tu confirmación para reintentar. Díctame el viaje otra vez, o créalo desde Despacho.';
+        }
         return 'No se pudo crear el viaje ahorita. Vuelve a responder SÍ en un momento, o créalo desde Despacho.';
       }
     }
@@ -193,17 +304,45 @@ export async function atenderDespachoOficina(
     return `No tengo un operador activo que se llame «${intencion.operador}». Revisa el nombre, o dalo de alta en Despacho.`;
   }
 
+  // La unidad se resuelve AQUÍ, no al confirmar: así el resumen ya dice la
+  // verdad de lo que va a pasar — amarrada (con el número como está en la
+  // base) o no encontrada, ANTES de que el jefe responda SÍ. Un error de
+  // consulta corta el armado: prometer un amarre que no se pudo verificar
+  // sería afirmar sin dato.
+  let unidadId: string | null = null;
+  let unidadEnsenada = intencion.unidad;
+  let avisoUnidad = '';
+  if (intencion.unidad) {
+    let u;
+    try {
+      u = await resolverUnidadPorEconomico(cuenta.tenantId, intencion.unidad);
+    } catch (e) {
+      if (e instanceof ConsultaFallida) {
+        return 'No pude consultar las unidades ahorita — inténtalo de nuevo en un momento.';
+      }
+      throw e;
+    }
+    if (u) {
+      unidadId = u.unidadId;
+      unidadEnsenada = u.numeroEconomico;
+    } else {
+      avisoUnidad = `\n\n⚠️ La unidad «${intencion.unidad}» no está dada de alta — si confirmas, el viaje queda sin unidad.`;
+    }
+  }
+
   await guardarPendiente(cuenta.tenantId, telefono, {
     operadorId: candidato.operadorId,
     operadorNombre: candidato.nombre,
     origen: intencion.origen,
     destino: intencion.destino,
     anticipo: intencion.anticipo,
-    unidad: intencion.unidad,
+    unidad: unidadEnsenada,
+    unidadId,
     en: ahora.toISOString(),
   });
 
   // El resumen enseña el nombre RESUELTO de la base, no el texto del jefe:
-  // lo que va a confirmar es a quién le llega el aviso de verdad.
-  return resumenParaConfirmar({ ...intencion, operador: candidato.nombre });
+  // lo que va a confirmar es a quién le llega el aviso de verdad. La unidad,
+  // igual: si se amarró, sale con su número canónico.
+  return resumenParaConfirmar({ ...intencion, operador: candidato.nombre, unidad: unidadEnsenada }) + avisoUnidad;
 }

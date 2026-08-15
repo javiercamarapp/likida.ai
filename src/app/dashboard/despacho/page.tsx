@@ -5,6 +5,7 @@ import { puedeVerRuta } from '@/lib/auth/visibilidad';
 import { puedeAsignar } from '@/lib/auth/permisos';
 import {
   getTableroOperacion, getViajesSinAsignar, getCargaOperadores, crearViaje, avisarAlChofer,
+  asignarUnidad,
 } from '@/lib/likida/operacion';
 import { listOperadores, reasignarOperador } from '@/lib/likida/repo';
 import { crearOperador } from '@/lib/likida/administracion';
@@ -13,6 +14,7 @@ import { getViajes } from '@/lib/likida/analytics';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
 import { VistaDespacho } from './vista';
+import { validarIngreso } from '@/lib/likida/ingreso_viaje';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,13 +47,27 @@ export default async function PaginaDespacho({
 
   // Las COLAS son el corazón: sin catch — base caída = página caída, no una
   // cola vacía que afirma "nada por asignar". El tablero y la carga degradan.
-  const [tablero, sinAsignar, viajes, operadores, carga] = await Promise.all([
+  const [tablero, sinAsignar, viajes, operadores, carga, clientes, unidades] = await Promise.all([
     safe(() => getTableroOperacion(tenantId)),
     getViajesSinAsignar(tenantId),
     getViajes(tenantId, 100),
     listOperadores(tenantId),
     safe(() => getCargaOperadores(tenantId)),
-  ]);
+      // Los clientes, para atar el viaje a quien paga el flete (14-ago-2026).
+    // `catch → []` a propósito: si esta lectura falla, el `<select>` sale
+    // vacío y el viaje se crea igual SIN cliente. Tirar el despacho entero
+    // porque no se pudo leer un catálogo cambiaría un problema de captura por
+    // uno de operación — y el cliente se puede asignar después.
+    supabaseAdmin().from('cliente').select('id, nombre')
+      .eq('tenant_id', tenantId).eq('activo', true).order('nombre')
+      .then(({ data, error }) => (error || !data ? [] : data as Array<{ id: string; nombre: string }>)),
+    // Las unidades activas, mismo trato que los clientes: catálogo degradable
+    // (`catch → []`), porque la unidad también se puede asignar después.
+    supabaseAdmin().from('unidad').select('id, numero_economico')
+      .eq('tenant_id', tenantId).eq('activo', true).order('numero_economico')
+      .then(({ data, error }) => (error || !data ? [] :
+        (data as Array<{ id: string; numero_economico: string }>).map((u) => ({ id: u.id, numeroEconomico: u.numero_economico })))),
+]);
 
   /** El chequeo que TODA action repite: sesión viva, rol que asigna, y que
    *  la flota de la sesión sea la del render (superadmin exento: su tenant
@@ -77,6 +93,12 @@ export default async function PaginaDespacho({
     if (!Number.isFinite(anticipo) || anticipo < 0) {
       return { error: 'El anticipo tiene que ser un monto válido (o dejarse vacío).' };
     }
+    // `viaje.operador_id` es NOT NULL (0001). Sin este guard, elegir "sin
+    // operador" llegaba a la base y volvía como un 23502 traducido a "No se
+    // pudo crear el viaje": un mensaje que no dice qué arreglar.
+    if (!texto('operadorId', 64)) {
+      return { error: 'Elige un operador: un viaje no puede existir sin quién lo maneje.' };
+    }
     const fecha = texto('fechaInicio', 10);
     if (fecha && !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
       return { error: 'La fecha de inicio no tiene un formato válido.' };
@@ -85,6 +107,16 @@ export default async function PaginaDespacho({
       // `crearViaje` re-valida que el operador sea de ESTA flota y manda el
       // aviso de WhatsApp él mismo (y se traga el fallo del aviso a
       // propósito: el viaje ya existe y "Reavisar" vive aquí abajo).
+      // El lado del ingreso. `validarIngreso` distingue VACÍO de CERO, que es
+      // la distinción de la que depende toda la medición de margen: con
+      // `Number('')` un viaje sin capturar se contaría como uno que no produjo
+      // nada, y su -100% se vería perfectamente plausible.
+      const ing = validarIngreso({
+        clienteId: String(fd.get('clienteId') ?? ''),
+        ingresoFlete: String(fd.get('ingresoFlete') ?? ''),
+        kmRecorridos: String(fd.get('kmRecorridos') ?? ''),
+      });
+
       await crearViaje(tenantId, {
         folio: texto('folio', 40),
         origen: texto('origen', 120),
@@ -92,6 +124,13 @@ export default async function PaginaDespacho({
         fechaInicio: fecha,
         anticipo,
         operadorId: texto('operadorId', 64),
+        // '' → null (sin unidad, que la base admite). Que el id sea de ESTA
+        // flota lo re-verifica `crearViaje` (`unidadPropia`), igual que hace
+        // con el operador — el `<select>` es UI, no servidor.
+        unidadId: texto('unidadId', 64),
+        clienteId: ing.clienteId,
+        ingresoFlete: ing.ingresoFlete,
+        kmRecorridos: ing.kmRecorridos,
       });
     } catch (err) {
       logger.error('despacho.crear.fallo', { err: err instanceof Error ? err.message : String(err) });
@@ -123,6 +162,28 @@ export default async function PaginaDespacho({
       // Asignado SÍ quedó; el aviso no salió — se dice y "Reavisar" existe.
       logger.error('despacho.aviso.fallo', { viajeId, err: err instanceof Error ? err.message : String(err) });
       return { error: 'Quedó asignado, pero el aviso de WhatsApp no salió — usa Reavisar en "En curso".' };
+    }
+    redirect(destino);
+  }
+
+  async function asignarUnidadViaje(_prev: { error?: string } | null, fd: FormData): Promise<{ error?: string } | null> {
+    'use server';
+    const rechazo = await guardia();
+    if (rechazo) return { error: rechazo };
+
+    const viajeId = typeof fd.get('viajeId') === 'string' ? (fd.get('viajeId') as string).trim().slice(0, 64) : '';
+    const unidadId = typeof fd.get('unidadId') === 'string' ? (fd.get('unidadId') as string).trim().slice(0, 64) : '';
+    if (!viajeId) return { error: 'Falta el viaje.' };
+
+    try {
+      // `asignarUnidad` verifica que la unidad sea de ESTA flota, ancla el
+      // update a tenant Y comprueba filas afectadas: un viaje ajeno no se
+      // reporta como "asignado". `'' → null` desasigna — opción legítima,
+      // `viaje.unidad_id` es nullable.
+      await asignarUnidad(tenantId, viajeId, unidadId || null);
+    } catch (err) {
+      logger.error('despacho.asignar_unidad.fallo', { viajeId, err: err instanceof Error ? err.message : String(err) });
+      return { error: 'No se pudo asignar la unidad. Inténtalo de nuevo.' };
     }
     redirect(destino);
   }
@@ -180,9 +241,12 @@ export default async function PaginaDespacho({
       sinAsignar={sinAsignar}
       activos={viajes.filter((v) => v.estatus === 'abierto' || v.estatus === 'en_cuadre')}
       operadores={operadores}
+      clientes={clientes}
+      unidades={unidades}
       carga={carga}
       crear={crear}
       asignarYAvisar={asignarYAvisar}
+      asignarUnidadViaje={asignarUnidadViaje}
       reenviarAviso={reenviarAviso}
       altaOperador={altaOperador}
     />

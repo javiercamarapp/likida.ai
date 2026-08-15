@@ -4,9 +4,13 @@ import {
   CONFIG_COBRANZA_DEFAULT,
 } from './cobranza';
 
-// Solo el motor PURO: claims, envíos y bitácora se prueban con la
-// verificación 64 de la base y el arnés manual — un mock de Supabase
-// probaría el mock.
+// Solo el motor PURO. Los caminos con DB los cubren la verificación 64 de la
+// base (claim único, ventana válida, RLS, cascade — verificaciones.sql),
+// `cobranza_cola.test.ts` (la cola y su filtro de avisados) y
+// `cobranza_reloj.test.ts` (el corte por reloj antes del claim, claim→envío,
+// plantilla y bitácora). Aquí un mock de Supabase de más probaría el mock.
+// (Hasta el 14-ago-2026 este header citaba un "arnés manual" que no existía
+// en el repo — un rótulo de prueba tiene que ser verdad.)
 
 describe('validarConfigCobranza', () => {
   it('sin nada, devuelve la conducta del 0087 (defaults)', () => {
@@ -85,6 +89,22 @@ describe('tierPendiente — a quién le toca insistir', () => {
   it('el sello viejo (0087) consume el primer tier: al estrenar tiers nadie recibe doble el recordatorio que ya recibió', () => {
     expect(tierPendiente(4, TIERS, [], true)).toBeNull();
     expect(tierPendiente(8, TIERS, [], true)).toBe(7);
+  });
+
+  // AUD3 backend ALTO (BE-A1): la corrida SIGUIENTE. Contactado el 14, la
+  // hora siguiente devolvía 7, y la siguiente 3 — el mismo cobro tres veces
+  // en tres horas. Un contacto en un tier consume también los menores.
+  it('tras contactar un tier, los MENORES no quedan pendientes: la corrida siguiente no camina hacia abajo', () => {
+    expect(tierPendiente(20, TIERS, [14], false)).toBeNull();
+    expect(tierPendiente(20, TIERS, [7], false)).toBe(14); // hacia ARRIBA sí
+    expect(tierPendiente(20, TIERS, [7, 14], false)).toBeNull();
+  });
+
+  it('el tier consumido por el sello viejo NO reaparece después del primer contacto nuevo', () => {
+    // Antes: el sello solo contaba con bitácora vacía; tras contactar el 7,
+    // el 3 (ya cubierto por el 0087) volvía a estar "pendiente".
+    expect(tierPendiente(8, TIERS, [7], true)).toBeNull();
+    expect(tierPendiente(20, TIERS, [14], true)).toBeNull();
   });
 });
 

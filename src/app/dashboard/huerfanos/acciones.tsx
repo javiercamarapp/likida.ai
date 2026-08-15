@@ -3,6 +3,7 @@
 import { useState, useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Link2, Trash2 } from 'lucide-react';
+import { numero } from '@/lib/formato';
 
 export type AccionHuerfano = (
   prev: { error?: string } | null,
@@ -16,10 +17,17 @@ export interface ViajeVivo { id: string; rotulo: string }
  * confirmación de dos pasos — descartar saca el comprobante de la vista de
  * todos, chofer incluido). Las acciones viven en el servidor y re-verifican
  * sesión, rol y tenant; aquí solo se pinta.
+ *
+ * `sinMonto`: un comprobante que el OCR no pudo leer (monto 0) NO ofrece
+ * adjuntar — metería una línea de $0.00 en la liquidación. El mismo guardia
+ * vive en el server action y en el flujo de WhatsApp; aquí solo se dice.
  */
-export function FilaAcciones({ huerfanoId, viajesVivos, adjuntar, descartar }: {
+export function FilaAcciones({ huerfanoId, viajesVivos, sinMonto, cargados, adjuntar, descartar }: {
   huerfanoId: string;
   viajesVivos: ViajeVivo[];
+  sinMonto: boolean;
+  /** Cuántos viajes recientes cargó la page — el alcance real del selector. */
+  cargados: number;
   adjuntar: AccionHuerfano;
   descartar: AccionHuerfano;
 }) {
@@ -44,7 +52,11 @@ export function FilaAcciones({ huerfanoId, viajesVivos, adjuntar, descartar }: {
       ) : (
         <form action={accionAdj} className="flex items-center gap-2 justify-end">
           <input type="hidden" name="huerfanoId" value={huerfanoId} />
-          {viajesVivos.length > 0 ? (
+          {sinMonto ? (
+            <span className="text-[12px] text-right" style={{ color: 'var(--faint)' }}>
+              Sin monto legible no se puede adjuntar (metería $0.00) — pídele al chofer que reenvíe la foto
+            </span>
+          ) : viajesVivos.length > 0 ? (
             <>
               <select name="viajeId" required aria-label="Viaje al que va" defaultValue=""
                 className="flex-1 min-w-0 max-w-[180px] text-[12px] px-2 py-1.5 rounded-lg hairline"
@@ -63,6 +75,11 @@ export function FilaAcciones({ huerfanoId, viajesVivos, adjuntar, descartar }: {
             <Trash2 width={13} height={13} strokeWidth={1.75} />
           </button>
         </form>
+      )}
+      {!confirmando && !sinMonto && viajesVivos.length > 0 && (
+        <p className="text-[11px] mt-1 text-right" style={{ color: 'var(--faint)' }}>
+          El selector ofrece los viajes vivos entre los {numero(cargados)} más recientes.
+        </p>
       )}
       {estadoAdj?.error && <p className="text-[11px] mt-1 text-right" style={{ color: 'var(--bad)' }}>{estadoAdj.error}</p>}
       {estadoDesc?.error && <p className="text-[11px] mt-1 text-right" style={{ color: 'var(--bad)' }}>{estadoDesc.error}</p>}

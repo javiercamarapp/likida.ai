@@ -17,6 +17,7 @@ import { notificarAsignacion } from './notificar';
 import { logger } from '@/lib/logger';
 import { acotada } from './presupuesto';
 import { conteo, traerTodo } from './pg';
+import { DatoInvalido } from './errores';
 
 /** Los tres estatus que `viaje` de verdad admite (`viaje_estatus_dominio`,
  *  0025). Un cuarto valor no se traduce ni se esconde: se cuenta aparte. */
@@ -153,6 +154,13 @@ export interface UnidadRow {
    *  ninguno está capturado. NEGATIVO significa vencido, y así se pinta. */
   diasAlVencimiento: number | null;
   queVence: string | null;
+  /** Las tres fechas CRUDAS (`YYYY-MM-DD` o `null`). El resumen de arriba
+   *  basta para el semáforo; éstas existen para que la forma de edición
+   *  prellene lo capturado en vez de enseñar campos vacíos sobre datos
+   *  que sí hay. */
+  polizaVence: string | null;
+  permisoSictVence: string | null;
+  verificacionVence: string | null;
   ordenesAbiertas: number;
   activo: boolean;
 }
@@ -216,6 +224,9 @@ export async function getUnidades(tenantId: string, hoy = new Date()): Promise<U
       kmActual: u.km_actual == null ? null : Number(u.km_actual),
       diasAlVencimiento,
       queVence,
+      polizaVence: (u.poliza_vence as string) || null,
+      permisoSictVence: (u.permiso_sict_vence as string) || null,
+      verificacionVence: (u.verificacion_vence as string) || null,
       ordenesAbiertas: abiertasPorUnidad.get(u.id as string) ?? 0,
       activo: Boolean(u.activo),
     };
@@ -416,7 +427,20 @@ export async function rechazarPod(tenantId: string, podId: string, nota: string 
 
 export interface TableroOperacion {
   viajesActivos: number;
-  porAsignar: number;
+  /**
+   * Viajes en curso SIN unidad asignada.
+   *
+   * Antes esto era `porAsignar` y contaba viajes sin OPERADOR — un número que
+   * no podía ser distinto de 0 nunca: `viaje.operador_id` es NOT NULL desde la
+   * 0001 (verificado contra producción el 14-ago-2026). El tablero enseñaba un
+   * cero que se leía como medición ("no hay pendientes") cuando en realidad era
+   * imposible que hubiera, que es exactamente el cero que este producto
+   * prohíbe.
+   *
+   * `unidad_id` SÍ es nullable, así que este conteo mide algo real: un viaje
+   * despachado al que todavía no se le asignó tractocamión.
+   */
+  sinUnidad: number;
   unidadesDisponibles: number;
   unidadesEnTaller: number;
   incidenciasAbiertas: number;
@@ -434,8 +458,8 @@ export interface TableroOperacion {
 export async function getTableroOperacion(tenantId: string): Promise<TableroOperacion> {
   const admin = supabaseAdmin();
   const [viajes, unidades, incidencias, pods] = await Promise.all([
-    traerTodo<{ id: unknown; operador_id: unknown; estatus: unknown }>(
-      (d, h) => admin.from('viaje').select('id, operador_id, estatus', conteo(d)).eq('tenant_id', tenantId).order('id').range(d, h),
+    traerTodo<{ id: unknown; unidad_id: unknown; estatus: unknown }>(
+      (d, h) => admin.from('viaje').select('id, unidad_id, estatus', conteo(d)).eq('tenant_id', tenantId).order('id').range(d, h),
       'getTableroOperacion.viaje',
     ),
     traerTodo<{ estado: unknown }>(
@@ -457,7 +481,7 @@ export async function getTableroOperacion(tenantId: string): Promise<TableroOper
 
   return {
     viajesActivos: enCurso.length,
-    porAsignar: enCurso.filter((v) => !v.operador_id).length,
+    sinUnidad: enCurso.filter((v) => !v.unidad_id).length,
     unidadesDisponibles: unidades.filter((u) => u.estado === 'disponible').length,
     unidadesEnTaller: unidades.filter((u) => u.estado === 'taller').length,
     incidenciasAbiertas: incidencias.length,
@@ -482,6 +506,27 @@ export interface NuevoViaje {
   anticipo?: number;
   operadorId?: string | null;
   unidadId?: string | null;
+
+  // ── EL LADO DEL INGRESO (14-ago-2026) ────────────────────────────────────
+  //
+  // La migración 0048 se llama literalmente "EL LADO DEL INGRESO" y creó estas
+  // tres columnas hace semanas. Nadie las escribía: no había formulario, así
+  // que `getRentabilidad` sumaba sobre `ingreso_flete` nulos, el libro del
+  // viaje no podía calcular contribución, y la pregunta que de verdad le
+  // importa a un dueño de flota —"¿este viaje ganó dinero?"— no tenía
+  // respuesta posible. El esqueleto estaba; faltaba quien lo alimentara.
+  //
+  // Los tres son OPCIONALES y su ausencia es `null`, NUNCA 0. Un viaje sin
+  // ingreso capturado no es un viaje que ingresó cero: es uno del que no se
+  // sabe, y el motor entero depende de esa distinción (ver `aNumero` en
+  // `libro_viaje.ts` y `getRentabilidad` en `comercial.ts`, que cuentan
+  // aparte los viajes sin ingreso en vez de promediarlos con ceros).
+  clienteId?: string | null;
+  /** Lo que se le cobra al cliente por el flete. NO es el anticipo: el
+   *  anticipo es lo que la empresa le ADELANTA al operador. Confundirlos
+   *  produce márgenes que se ven bien y están mal. */
+  ingresoFlete?: number | null;
+  kmRecorridos?: number | null;
 }
 
 /**
@@ -503,6 +548,24 @@ async function unidadPropia(tenantId: string, unidadId: string): Promise<boolean
     (d, h) => supabaseAdmin().from('unidad').select('id', conteo(d))
       .eq('tenant_id', tenantId).eq('id', unidadId).order('id').range(d, h),
     'unidadPropia',
+  );
+  return filas.length > 0;
+}
+
+/**
+ * Comprueba que un cliente sea del tenant, ANTES de escribirlo en `viaje`.
+ *
+ * Mismo candado que `operadorId` y `unidadId`, por la misma razón exacta: el
+ * `<select>` del formulario solo ofrece los clientes de la flota, pero eso es
+ * la UI, no el servidor. Un POST directo al server action con el `clienteId`
+ * de OTRA flota crearía un viaje con `tenant_id = A` apuntando al cliente de
+ * B — y con él, el ingreso de A se contaría en la cartera de B.
+ */
+async function clientePropioLocal(tenantId: string, clienteId: string): Promise<boolean> {
+  const filas = await traerTodo<{ id: unknown }>(
+    (d, h) => supabaseAdmin().from('cliente').select('id', conteo(d))
+      .eq('tenant_id', tenantId).eq('id', clienteId).order('id').range(d, h),
+    'clientePropioLocal',
   );
   return filas.length > 0;
 }
@@ -556,6 +619,11 @@ export async function crearViaje(tenantId: string, v: NuevoViaje): Promise<strin
     throw new Error('crearViaje: la unidad no pertenece a esta flota');
   }
 
+  // Y el tercero, para el cliente que paga el flete (14-ago-2026).
+  if (v.clienteId && !(await clientePropioLocal(tenantId, v.clienteId))) {
+    throw new Error('crearViaje: el cliente no pertenece a esta flota');
+  }
+
   const { data, error } = await acotada(supabaseAdmin().from('viaje').insert({
     tenant_id: tenantId,
     folio: v.folio || null,
@@ -565,6 +633,13 @@ export async function crearViaje(tenantId: string, v: NuevoViaje): Promise<strin
     anticipo: v.anticipo ?? 0,
     operador_id: v.operadorId || null,
     unidad_id: v.unidadId || null,
+    // `?? null` y NO `|| null`: con `||` un ingreso de 0 —un viaje de
+    // cortesía, o el tramo de regreso vacío que se factura aparte— se
+    // convertiría en "sin capturar", y el viaje se saldría de la medición de
+    // rentabilidad en vez de entrar con su cero real.
+    cliente_id: v.clienteId ?? null,
+    ingreso_flete: v.ingresoFlete ?? null,
+    km_recorridos: v.kmRecorridos ?? null,
     estatus: 'abierto',
   }).select('id').single(), 'crearViaje');
   if (error) throw new Error(`crearViaje: ${error.message}`);
@@ -688,10 +763,17 @@ export async function asignarUnidad(tenantId: string, viajeId: string, unidadId:
     throw new Error('asignarUnidad: la unidad no pertenece a esta flota');
   }
 
-  const { error } = await acotada(supabaseAdmin().from('viaje')
+  // El `.select('id')` no es adorno: con el id de un viaje de OTRA flota este
+  // UPDATE toca cero filas y Postgres no lo considera un error. Sin mirar lo
+  // que devolvió, la pantalla diría "asignada" sobre una unidad que sigue sin
+  // viaje — la misma asimetría que `editarCliente` ya cerró en clientes.ts.
+  const { data, error } = await acotada(supabaseAdmin().from('viaje')
     .update({ unidad_id: unidadId })
-    .eq('id', viajeId).eq('tenant_id', tenantId), 'asignarUnidad');
+    .eq('id', viajeId).eq('tenant_id', tenantId).select('id'), 'asignarUnidad');
   if (error) throw new Error(`asignarUnidad: ${error.message}`);
+  if (!Array.isArray(data) || data.length === 0) {
+    throw new Error('asignarUnidad: el viaje no existe en esta flota');
+  }
 }
 
 export async function cambiarEstadoUnidad(tenantId: string, unidadId: string, estado: string): Promise<void> {
@@ -707,21 +789,178 @@ export interface NuevaUnidad {
   marca?: string | null;
   modelo?: string | null;
   anio?: number | null;
+  // Las tres vigencias de ley (columnas de la 0047, `YYYY-MM-DD`). Opcionales
+  // y su ausencia es `null`, nunca una fecha inventada: una unidad sin póliza
+  // capturada sale como "sin papeles" en el panel, no como vigente.
+  polizaVence?: string | null;
+  permisoSictVence?: string | null;
+  verificacionVence?: string | null;
+}
+
+/** Lo que llega del formulario de unidades: puros strings. `''` = sin dato. */
+export interface UnidadCruda {
+  numeroEconomico: string;
+  placas: string;
+  marca: string;
+  modelo: string;
+  anio: string;
+  polizaVence: string;
+  permisoSictVence: string;
+  verificacionVence: string;
+}
+
+/** `''` → `null`; largo un texto opcional. Mismo criterio que clientes.ts. */
+function textoOpcional(crudo: string, campo: string, max: number): string | null {
+  const t = crudo.trim();
+  if (t === '') return null;
+  if (t.length > max) throw new DatoInvalido(`${campo} no puede pasar de ${max} caracteres.`);
+  return t;
+}
+
+const FECHA_UNIDAD_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Una vigencia opcional. Se comprueba que la fecha EXISTA: `2026-02-30` pasa
+ *  el regex y no es un día — Postgres la rechazaría, pero con su mensaje. */
+function fechaOpcional(crudo: string, campo: string): string | null {
+  const t = crudo.trim();
+  if (t === '') return null;
+  if (!FECHA_UNIDAD_RE.test(t)) throw new DatoInvalido(`${campo} tiene que venir como AAAA-MM-DD.`);
+  const [a, m, d] = t.split('-').map(Number);
+  const f = new Date(Date.UTC(a, m - 1, d));
+  if (f.getUTCFullYear() !== a || f.getUTCMonth() !== m - 1 || f.getUTCDate() !== d) {
+    throw new DatoInvalido(`${campo} no es una fecha que exista.`);
+  }
+  return t;
+}
+
+/** El primer año de una unidad de carga que siga rodando; espeja
+ *  `ANIO_MIN_UNIDAD` de la API para que las dos puertas admitan lo mismo. */
+const ANIO_MIN = 1950;
+
+/**
+ * Del formulario al motor. PURA: se prueba sin pantalla ni base.
+ *
+ * Los mensajes son `DatoInvalido` y se enseñan VERBATIM en la forma — dicen
+ * QUÉ corregir, que es lo único que un error de captura puede aportar.
+ */
+export function validarUnidad(c: UnidadCruda, hoy = new Date()): UnidadValida {
+  const numeroEconomico = c.numeroEconomico.trim();
+  if (numeroEconomico === '') {
+    throw new DatoInvalido('Falta el número económico: es como la flota llama a la unidad en la radio y en el papel.');
+  }
+  if (numeroEconomico.length > 40) {
+    throw new DatoInvalido('El número económico no puede pasar de 40 caracteres.');
+  }
+
+  let anio: number | null = null;
+  const anioMax = hoy.getUTCFullYear() + 2; // los modelos se venden adelantados
+  const a = c.anio.trim();
+  if (a !== '') {
+    const n = Number(a);
+    if (!Number.isInteger(n)) throw new DatoInvalido('El año tiene que ser un número entero (2019, no 2019.5).');
+    if (n < ANIO_MIN || n > anioMax) {
+      throw new DatoInvalido(`El año tiene que estar entre ${ANIO_MIN} y ${anioMax}. Déjalo vacío si no lo sabes.`);
+    }
+    anio = n;
+  }
+
+  return {
+    numeroEconomico,
+    placas: textoOpcional(c.placas, 'Las placas', 20),
+    marca: textoOpcional(c.marca, 'La marca', 60),
+    modelo: textoOpcional(c.modelo, 'El modelo', 60),
+    anio,
+    polizaVence: fechaOpcional(c.polizaVence, 'La fecha de la póliza'),
+    permisoSictVence: fechaOpcional(c.permisoSictVence, 'La fecha del permiso SICT'),
+    verificacionVence: fechaOpcional(c.verificacionVence, 'La fecha de la verificación'),
+  };
+}
+
+/** `validarUnidad` ya normalizó: aquí ningún campo es opcional-de-tipo. */
+export interface UnidadValida {
+  numeroEconomico: string;
+  placas: string | null;
+  marca: string | null;
+  modelo: string | null;
+  anio: number | null;
+  polizaVence: string | null;
+  permisoSictVence: string | null;
+  verificacionVence: string | null;
+}
+
+/** `NuevaUnidad` (tipada, como llega del panel o de `POST /v1/unidades`) a la
+ *  forma cruda que `validarUnidad` sabe revisar. Existe para que `crearUnidad`
+ *  y `editarUnidad` re-validen SIEMPRE sin cambiar su firma pública. */
+function aCruda(u: NuevaUnidad): UnidadCruda {
+  return {
+    numeroEconomico: u.numeroEconomico ?? '',
+    placas: u.placas ?? '',
+    marca: u.marca ?? '',
+    modelo: u.modelo ?? '',
+    anio: u.anio == null ? '' : String(u.anio),
+    polizaVence: u.polizaVence ?? '',
+    permisoSictVence: u.permisoSictVence ?? '',
+    verificacionVence: u.verificacionVence ?? '',
+  };
 }
 
 export async function crearUnidad(tenantId: string, u: NuevaUnidad): Promise<string> {
+  // TODO camino pasa por `validarUnidad`, aunque el llamador ya haya validado
+  // (el panel valida en su server action; `POST /v1/unidades` normaliza en su
+  // borde con los MISMOS topes). Este es el único cuello por el que se escribe
+  // `unidad`: re-validar aquí garantiza que el llamador nuevo de mañana no
+  // inserte sin reglas. Antes esta función no validaba nada.
+  const v = validarUnidad(aCruda(u));
+  // El choque contra `unidad_economico_unico` NO se traduce aquí a propósito:
+  // `POST /v1/unidades` reconoce ese nombre en el mensaje (`chocoContra`) para
+  // resolver la carrera de dos peticiones en paralelo. El panel lo traduce él.
   const { data, error } = await acotada(supabaseAdmin().from('unidad').insert({
     tenant_id: tenantId,
-    numero_economico: u.numeroEconomico,
-    placas: u.placas || null,
-    marca: u.marca || null,
-    modelo: u.modelo || null,
-    anio: u.anio ?? null,
+    numero_economico: v.numeroEconomico,
+    placas: v.placas,
+    marca: v.marca,
+    modelo: v.modelo,
+    anio: v.anio,
+    poliza_vence: v.polizaVence,
+    permiso_sict_vence: v.permisoSictVence,
+    verificacion_vence: v.verificacionVence,
   }).select('id').single(), 'crearUnidad');
   if (error) throw new Error(`crearUnidad: ${error.message}`);
   const id = (data as { id?: unknown } | null)?.id;
   if (!id) throw new Error('crearUnidad: el insert no devolvió id');
   return id as string;
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function editarUnidad(tenantId: string, unidadId: string, u: NuevaUnidad): Promise<void> {
+  if (!UUID_RE.test(unidadId)) throw new DatoInvalido('No se reconoce esa unidad. Vuelve a abrir la pantalla.');
+  const v = validarUnidad(aCruda(u));
+
+  // Mismo candado que `editarCliente`: el UPDATE anclado a tenant toca cero
+  // filas ante un id ajeno y Postgres no lo llama error — se mira lo devuelto.
+  const { data, error } = await acotada(supabaseAdmin().from('unidad').update({
+    numero_economico: v.numeroEconomico,
+    placas: v.placas,
+    marca: v.marca,
+    modelo: v.modelo,
+    anio: v.anio,
+    poliza_vence: v.polizaVence,
+    permiso_sict_vence: v.permisoSictVence,
+    verificacion_vence: v.verificacionVence,
+  }).eq('id', unidadId).eq('tenant_id', tenantId).select('id'), 'editarUnidad');
+
+  if (error) {
+    // Renombrar a un número económico que ya existe en la flota es el único
+    // choque esperable, y es de captura: se dice en palabras de quien capturó.
+    if (error.message.includes('unidad_economico_unico')) {
+      throw new DatoInvalido(`Ya tienes una unidad con el número económico "${v.numeroEconomico}". Si es otra, distínguela en el número.`);
+    }
+    throw new Error(`editarUnidad: ${error.message}`);
+  }
+  if (!Array.isArray(data) || data.length === 0) {
+    throw new DatoInvalido('No se encontró esa unidad en tu flota. Puede que alguien la haya borrado — recarga la pantalla.');
+  }
 }
 
 export interface NuevaIncidencia {
@@ -731,6 +970,36 @@ export interface NuevaIncidencia {
   prioridad?: string;
   descripcion?: string | null;
   slaHoras?: number | null;
+
+  // ── El circuito de la talacha por WhatsApp (0107, F4) ──────────────────────
+  //
+  // Los cuatro son opcionales para que las incidencias de siempre (las del
+  // panel) sigan naciendo informativas sin tocar a sus llamadores. `null` y
+  // ausente significan lo mismo: no aplica.
+  /** Lo que el chofer dijo o la nota trae. `null` = sin monto reportado —
+   *  NUNCA se rellena con 0: un cero aquí sería una cifra que nadie midió. */
+  montoEstimado?: number | null;
+  /** La foto de la nota en Storage (mismo bucket que los comprobantes). */
+  evidenciaPath?: string | null;
+  /** El gasto que esa nota generó en la liquidación — el enlace por el que un
+   *  gasto de camino se lee como pre-autorizado, sin tocar el motor de cuadre. */
+  gastoId?: string | null;
+  /** `'pendiente'` arranca el circuito de autorización del jefe. La decisión
+   *  ('autorizada'/'rechazada') NUNCA se escribe al crear: la firma un humano
+   *  después, con quién y cuándo (constraint `incidencia_decision_firmada`). */
+  autorizacion?: 'pendiente' | null;
+}
+
+/** Comprueba que un gasto sea del tenant, ANTES de enlazarlo a una incidencia.
+ *  Mismo candado que viajePropio/unidadPropia (auditoría 12): la UI y el
+ *  processor solo mandan ids propios, pero eso es el llamador, no el motor. */
+async function gastoPropio(tenantId: string, gastoId: string): Promise<boolean> {
+  const filas = await traerTodo<{ id: unknown }>(
+    (d, h) => supabaseAdmin().from('gasto').select('id', conteo(d))
+      .eq('tenant_id', tenantId).eq('id', gastoId).order('id').range(d, h),
+    'gastoPropio',
+  );
+  return filas.length > 0;
 }
 
 export async function crearIncidencia(tenantId: string, i: NuevaIncidencia): Promise<string> {
@@ -744,6 +1013,11 @@ export async function crearIncidencia(tenantId: string, i: NuevaIncidencia): Pro
   if (i.unidadId && !(await unidadPropia(tenantId, i.unidadId))) {
     throw new Error('crearIncidencia: la unidad no pertenece a esta flota');
   }
+  // Y el tercero, para el gasto enlazado (0107): un gasto de OTRA flota
+  // enlazado aquí haría que el panel de A pintara el dinero de B.
+  if (i.gastoId && !(await gastoPropio(tenantId, i.gastoId))) {
+    throw new Error('crearIncidencia: el gasto no pertenece a esta flota');
+  }
   const { data, error } = await acotada(supabaseAdmin().from('incidencia').insert({
     tenant_id: tenantId,
     viaje_id: i.viajeId || null,
@@ -752,6 +1026,13 @@ export async function crearIncidencia(tenantId: string, i: NuevaIncidencia): Pro
     prioridad: i.prioridad || 'media',
     descripcion: i.descripcion || null,
     sla_horas: i.slaHoras ?? null,
+    // `?? null` y NO `|| null` en el monto: un estimado de 0 no existe en este
+    // dominio (nadie reporta una talacha de $0), pero el patrón se mantiene
+    // igual que en crearViaje para no reabrir esa trampa por copia.
+    monto_estimado: i.montoEstimado ?? null,
+    evidencia_path: i.evidenciaPath ?? null,
+    gasto_id: i.gastoId ?? null,
+    autorizacion: i.autorizacion ?? null,
   }).select('id').single(), 'crearIncidencia');
   if (error) throw new Error(`crearIncidencia: ${error.message}`);
   const id = (data as { id?: unknown } | null)?.id;

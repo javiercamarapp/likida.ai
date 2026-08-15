@@ -29,10 +29,11 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { exigir, traerTodo, conteo } from './pg';
+import { traerTodo, traerPorIds, conteo } from './pg';
 import { round2 } from '@/lib/formato';
 import { armar as armarPorFacturar } from './facturacion/pendientes';
 import { evaluarTope15, type ResultadoTope15 } from './periodo/combustible';
+import { proporcionAlimentacionPorGasto } from './cuadre/tope_alimentacion';
 import type { LikidaConfig } from './config';
 
 // ── La fila de `gasto` leída con ojos de contador ──────────────────────────
@@ -75,8 +76,10 @@ export interface GastoFiscal {
   viajeFolio: string | null;
   operadorNombre: string | null;
   /**
-   * ¿Ya no se puede pedir la factura? Lo calcula `getGastosFiscales` con el
-   * plazo real del comercio (`facturacion/caducidad.ts`).
+   * ¿El PORTAL del comercio ya cerró su plazo? Lo calcula `getGastosFiscales`
+   * con el plazo del comercio (`facturacion/caducidad.ts`). Es política de un
+   * tercero (nivel 6), no un plazo legal: el derecho de exigir la factura
+   * vive todo el ejercicio (`normas/politica-portales-plazos.yaml`).
    *
    * `null` = no se sabe (sin fecha de ticket confiable, o comercio no
    * reconocido). NO es `false`: decirle "todavía te da tiempo" a alguien
@@ -196,6 +199,10 @@ export interface OpcionesFiscales {
   clavesCombustible: string[];
   /** c_ClaveProdServ con estímulo de IEPS: SOLO diésel (LIF 2026 20-A-IV). */
   clavesDieselIeps: string[];
+  /** LISR 28-V: tope diario de alimentación. `null` = tenant sin tope
+   *  configurado, y entonces tampoco se prorratea — el MISMO interruptor con
+   *  el que el motor decide si aplica la regla (`topeAlimentacion != null`). */
+  viaticosTopeFiscalDiarioMxn: number | null;
   /** RFA 2026 regla 2.9: ¿la flota califica a la facilidad del 15%?
    *  true = declaró dedicación exclusiva + régimen; false = declaró que NO;
    *  undefined = sin declarar. AUDITORÍA 14, ALTO: sin esto el panel ofrecía
@@ -215,6 +222,10 @@ export function opcionesDe(cfg: LikidaConfig): OpcionesFiscales {
     efectivoTopeMxn: cfg.estimulos.efectivoTopeMxn,
     clavesCombustible: cfg.hidrocarburos.claves,
     clavesDieselIeps: cfg.estimulos.clavesDieselIeps,
+    // `?? null` y no un default: si la config del tenant perdió el tope, el
+    // motor tampoco lo aplica (lee con `!= null`) — inventar $750 aquí haría
+    // que el panel prorratee un tope que la liquidación no aplicó.
+    viaticosTopeFiscalDiarioMxn: cfg.estimulos.viaticosTopeFiscalDiarioMxn ?? null,
     // AUDITORÍA 14, ALTO: el panel ofrecía el 15% a flotas no elegibles. La
     // declaración de la flota (al registrarse) llega hasta aquí.
     elegible15: (f15 && f15.dedicacionExclusivaCarga !== undefined && f15.regimenElegible !== undefined)
@@ -226,7 +237,8 @@ export function opcionesDe(cfg: LikidaConfig): OpcionesFiscales {
 // ── Deducibilidad por comprobante ──────────────────────────────────────────
 
 export type CausaPerdida =
-  /** El comercio ya no acepta facturar: la deducción ya no se recupera. */
+  /** El PORTAL del comercio cerró su plazo (política de nivel 6, no la ley):
+   *  el derecho legal de exigir la factura vive todo el ejercicio. */
   | 'plazo_vencido'
   /** El emisor canceló el CFDI. */
   | 'cfdi_cancelado'
@@ -246,7 +258,8 @@ export type CausaPerdida =
 export type Gravedad =
   /** El dinero ya no se recupera. */
   | 'perdida'
-  /** Depende de algo que todavía puede moverse (el 15%, una aclaración). */
+  /** Depende de algo que todavía puede moverse (el 15%, una aclaración, la
+   *  Conciliación de Factura del SAT). */
   | 'en_riesgo'
   /** Con una gestión se recupera: pedir la factura antes de que venza. */
   | 'recuperable';
@@ -261,11 +274,19 @@ export interface Causa {
 }
 
 const TITULOS: Record<CausaPerdida, Omit<Causa, 'causa'>> = {
+  // AUD3 FI-A2, ALTO: esto era `gravedad: 'perdida'` y el KPI lo sumaba a
+  // "monto perdido". La ficha `normas/politica-portales-plazos.yaml`
+  // (jerarquía 6) dice lo contrario: el plazo del portal "tiene CERO fuerza
+  // legal" y "el plazo LEGAL para pedir factura es todo el ejercicio" — y el
+  // motor, sobre el mismo ticket, imprime "legalmente puedes exigirlo dentro
+  // del ejercicio" (engine.ts, rama vencida). Dar por perdida una deducción
+  // que la Conciliación de Factura recupera es confundir nivel 6 con
+  // obligación fiscal: el error más caro del dominio (normas/README.md).
   plazo_vencido: {
-    gravedad: 'perdida',
-    titulo: 'Plazo de facturación vencido',
+    gravedad: 'en_riesgo',
+    titulo: 'Plazo del comercio vencido',
     norma: 'LISR 27-III',
-    detalle: 'El comercio ya no acepta timbrarlo. Sin CFDI no ampara deducción y el IVA no se acredita.',
+    detalle: 'El portal del comercio cerró su plazo — política del comercio, no la ley. El derecho legal vive todo el ejercicio: recuperarlo exige pedir la factura directo al emisor (Conciliación de Factura del SAT). Sin CFDI al cierre, no ampara deducción ni acredita IVA.',
   },
   cfdi_cancelado: {
     gravedad: 'perdida',
@@ -343,7 +364,7 @@ export function causasDe(g: GastoFiscal, o: OpcionesFiscales): Causa[] {
 
   if (!g.cfdiUuid) {
     // `plazoVencido === null` es "no se sabe": se trata como recuperable —el
-    // camino que le pide a alguien que lo revise— en vez de darlo por perdido.
+    // camino que le pide a alguien que lo revise— en vez de darlo por vencido.
     if (g.plazoVencido === true) push('plazo_vencido');
     else push('sin_cfdi');
   }
@@ -372,9 +393,13 @@ export function causasDe(g: GastoFiscal, o: OpcionesFiscales): Causa[] {
  * primero lo que ya no se recupera, luego lo que está en riesgo, al final lo
  * que basta con gestionar.
  */
+// `plazo_vencido` bajó del grupo de pérdidas al de riesgo (AUD3 FI-A2): un
+// ticket sin CFDI con el portal cerrado cuesta una gestión ante el emisor,
+// no el dinero — así que una pérdida dura (efectivo sobre el tope) le gana
+// la dominancia.
 const ORDEN: CausaPerdida[] = [
-  'efos', 'cfdi_cancelado', 'plazo_vencido', 'efectivo_sobre_tope',
-  'efos_indeterminado', 'combustible_efectivo', 'sin_cfdi',
+  'efos', 'cfdi_cancelado', 'efectivo_sobre_tope',
+  'efos_indeterminado', 'plazo_vencido', 'combustible_efectivo', 'sin_cfdi',
 ];
 
 export function causaDominante(g: GastoFiscal, o: OpcionesFiscales): Causa | null {
@@ -487,10 +512,17 @@ export interface ResumenFiscal {
   sinCfdi: number;
   /**
    * IVA acreditable que se puede DOCUMENTAR: `iva_traslado` de comprobantes
-   * con CFDI vigente, emisor limpio y gasto deducible (LIVA 5).
+   * con CFDI vigente, emisor limpio y gasto deducible (LIVA 5). En erogaciones
+   * PARCIALMENTE deducibles (alimentación sobre el tope de LISR 28-V) entra
+   * solo la proporción deducible — LIVA 5-I, el mismo criterio del motor.
    */
   ivaAcreditable: number;
-  /** IVA desglosado que NO se acredita, con el motivo ya contado en perdidas. */
+  /**
+   * IVA desglosado que NO se acredita: el de comprobantes que no lo sostienen
+   * (motivo ya contado en perdidas) MÁS la porción no deducible del IVA de los
+   * viáticos sobre el tope. Acreditable + no acreditable siguen sumando todo
+   * el IVA desglosado — el contralor lo cruza con una calculadora.
+   */
   ivaNoAcreditable: number;
   /**
    * Comprobantes CON CFDI pero SIN desglose de IVA leído. Su IVA existe en el
@@ -543,6 +575,25 @@ export function resumirFiscal(gastos: GastoFiscal[], o: OpcionesFiscales): Resum
   let conCfdi = 0, conCfdiSinDesglose = 0, casetasSinSubTotal = 0;
   let porValidar = 0, vigentes = 0, cancelados = 0;
 
+  // AUDITORÍA 4, E4: esto sumaba el IVA COMPLETO de un viático que el motor
+  // acreditaba en proporción al tope de LISR 28-V (LIVA 5-I: "en la proporción
+  // en la que dichas erogaciones sean deducibles"). Sobre $900 con tope de
+  // $750: el panel decía 100% donde la liquidación decía 83.3%. El criterio
+  // es EL MISMO módulo que usa el motor (`cuadre/tope_alimentacion.ts`), no
+  // una réplica. El tope es por día Y POR BENEFICIARIO: este panel mira un
+  // periodo con muchos viajes, así que se parte por viaje —la liquidación es
+  // de un solo operador— antes de aplicar el criterio, igual que el motor.
+  const proporciones = new Map<string, number>();
+  if (o.viaticosTopeFiscalDiarioMxn != null) {
+    const porViaje = new Map<string, GastoFiscal[]>();
+    for (const g of gastos) porViaje.set(g.viajeId, [...(porViaje.get(g.viajeId) ?? []), g]);
+    for (const delViaje of porViaje.values()) {
+      for (const [id, p] of proporcionAlimentacionPorGasto(delViaje, o.viaticosTopeFiscalDiarioMxn)) {
+        proporciones.set(id, p);
+      }
+    }
+  }
+
   for (const g of gastos) {
     gastoTotal += g.monto;
     if (g.cfdiUuid) {
@@ -553,8 +604,15 @@ export function resumirFiscal(gastos: GastoFiscal[], o: OpcionesFiscales): Resum
       if (g.ivaTraslado === null) conCfdiSinDesglose += 1;
     }
     if (g.ivaTraslado !== null && g.ivaTraslado > 0) {
-      if (ivaSostenible(g, o)) ivaAcreditable += g.ivaTraslado;
-      else ivaNoAcreditable += g.ivaTraslado;
+      if (ivaSostenible(g, o)) {
+        const proporcion = Math.max(0, Math.min(1, proporciones.get(g.id) ?? 1));
+        ivaAcreditable += g.ivaTraslado * proporcion;
+        // El resto del traslado existe en el papel y NO se acredita: va a la
+        // otra cubeta para que las dos sigan sumando el IVA desglosado.
+        ivaNoAcreditable += g.ivaTraslado * (1 - proporcion);
+      } else {
+        ivaNoAcreditable += g.ivaTraslado;
+      }
     }
     // El IEPS del diésel exige pago electrónico y NO tiene la válvula del 15%
     // que la RFA 2.9 concede para ISR: la facilidad salva la deducción, no el
@@ -761,19 +819,27 @@ export async function getGastosFiscales(
   // El contexto del viaje va en una segunda consulta y no en un join anidado:
   // el `select` con relación de PostgREST no pagina el lado embebido, así que
   // en una flota grande el join silenciosamente devuelve menos de lo que hay.
+  //
+  // Y el reemplazo tenía EL MISMO techo por el otro lado (auditoría de escala
+  // 15k): un `.in('id', viajeIds)` con miles de ids también se recorta a 1,000
+  // en silencio — con 15,000 viajes/mes, todo gasto cuyo viaje pasara del
+  // corte salía SIN folio y SIN operador en la pantalla del contador, sin
+  // marca alguna. `traerPorIds` parte en tandas que no pueden tocar el techo.
   const viajeIds = Array.from(new Set(filas.map((f) => f.viaje_id as string).filter(Boolean)));
   const contexto = new Map<string, { folio: string | null; operador: string | null }>();
-  if (viajeIds.length) {
-    const res = await supabaseAdmin()
+  const viajes = await traerPorIds(
+    viajeIds,
+    (tanda) => supabaseAdmin()
       .from('viaje')
       .select('id, folio, operador:operador_id(nombre)')
       .eq('tenant_id', tenantId)
-      .in('id', viajeIds);
-    for (const v of exigir(res, 'getGastosFiscales.viaje') ?? []) {
-      const op = v.operador as { nombre?: string } | Array<{ nombre?: string }> | null;
-      const nombre = Array.isArray(op) ? (op[0]?.nombre ?? null) : (op?.nombre ?? null);
-      contexto.set(v.id as string, { folio: (v.folio as string) || null, operador: nombre });
-    }
+      .in('id', tanda),
+    'getGastosFiscales.viaje',
+  );
+  for (const v of viajes) {
+    const op = v.operador as { nombre?: string } | Array<{ nombre?: string }> | null;
+    const nombre = Array.isArray(op) ? (op[0]?.nombre ?? null) : (op?.nombre ?? null);
+    contexto.set(v.id as string, { folio: (v.folio as string) || null, operador: nombre });
   }
 
   return filas.map((f) => {

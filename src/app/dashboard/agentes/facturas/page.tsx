@@ -7,6 +7,9 @@ import { mandatoFiscalAceptado, modoEfectivo } from '@/lib/likida/facturacion/mo
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
 import { VistaAgenteFacturas } from './vista';
+import { SeccionNotificaciones } from '../seccion-notificaciones';
+import { FichaCorridas } from '../ficha-corridas';
+import { ultimasCorridas } from '@/lib/likida/agentes/corridas';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,9 +37,11 @@ export default async function PaginaAgenteFacturas({
 
   // Sin catch: base caída = página caída, no una lista vacía que afirma
   // "todo facturado" estando ciega. El contador degrada solo (null = se dice).
-  const [tickets, conCfdi] = await Promise.all([
+  const [tickets, conCfdi, corridas] = await Promise.all([
     getPorFacturar(tenantId),
     contarConCfdi(tenantId),
+    // La ficha de corridas (B3): null = no se pudo leer, y la ficha lo dice.
+    ultimasCorridas(tenantId, 'facturas').catch(() => null),
   ]);
 
   const emite = modoEfectivo(
@@ -90,5 +95,17 @@ export default async function PaginaAgenteFacturas({
     redirect(`/dashboard/agentes/facturas${sufijo}`);
   }
 
-  return <VistaAgenteFacturas tickets={tickets} extra={{ conCfdi, emite }} marcarFacturada={marcarFacturada} />;
+  return (
+    <VistaAgenteFacturas
+      tickets={tickets}
+      extra={{ conCfdi, emite }}
+      marcarFacturada={marcarFacturada}
+      notificaciones={
+        <>
+          <FichaCorridas corridas={corridas} />
+          <SeccionNotificaciones tenantId={tenantId} agenteId="facturas" />
+        </>
+      }
+    />
+  );
 }

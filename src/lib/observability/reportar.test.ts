@@ -80,6 +80,50 @@ describe('reportar — el evento tiene que salir antes de que la invocación se 
     expect(new Set(huellas).size).toBe(2);
   });
 
+  // ── AUD3 OP-A1: 216 fallos del cron = 1 issue = 1 notificación ────────────
+  // Sentry solo notifica cuando NACE un issue. Con fingerprint [msg, nivel],
+  // el fallo de la flota B caía en el issue viejo de la flota A y nadie se
+  // enteraba. El tenant llega ya redactado como huella FNV estable (`id:…`),
+  // así que puede ir en el fingerprint sin exponer el UUID.
+  it('dos tenants fallando con el MISMO msg son DOS issues (OP-A1)', async () => {
+    vi.stubEnv('SENTRY_DSN', 'https://algo@sentry.io/1');
+    const { reportar, flushObservabilidad } = await import('./sentry');
+
+    reportar('error', 'wa.sendText', { tenant: 'id:9f2c1a4b77de', status: 401 });
+    reportar('error', 'wa.sendText', { tenant: 'id:0a1b2c3d4e5f', status: 401 });
+    await flushObservabilidad();
+
+    const huellas = sdk.captureMessage.mock.calls.map((c) => JSON.stringify((c[1] as { fingerprint?: string[] }).fingerprint));
+    expect(new Set(huellas).size).toBe(2);
+  });
+
+  it('causas distintas son issues distintos aunque la flota sea la misma (OP-A1)', async () => {
+    // Un 190 (token vencido) y un 131030 (fuera de la lista de pruebas) tienen
+    // arreglos completamente distintos: agrupados, el segundo se lee "ya lo vi".
+    vi.stubEnv('SENTRY_DSN', 'https://algo@sentry.io/1');
+    const { reportar, flushObservabilidad } = await import('./sentry');
+
+    reportar('error', 'wa.sendTemplate', { tenantId: 'id:9f2c1a4b77de', codigo: 190 });
+    reportar('error', 'wa.sendTemplate', { tenantId: 'id:9f2c1a4b77de', codigo: 131030 });
+    await flushObservabilidad();
+
+    const huellas = sdk.captureMessage.mock.calls.map((c) => JSON.stringify((c[1] as { fingerprint?: string[] }).fingerprint));
+    expect(new Set(huellas).size).toBe(2);
+  });
+
+  it('sin tenant ni causa en el meta, el fingerprint sigue siendo [msg, nivel]', async () => {
+    // Los eventos que no traen discriminadores (startup, avisos globales) no
+    // cambian de cubo con este arreglo: cero issues duplicados retroactivos.
+    vi.stubEnv('SENTRY_DSN', 'https://algo@sentry.io/1');
+    const { reportar, flushObservabilidad } = await import('./sentry');
+
+    reportar('error', 'startup.observabilidad', { err: 'SENTRY_DSN ausente' });
+    await flushObservabilidad();
+
+    const [, ctx] = sdk.captureMessage.mock.calls[0] as [string, { fingerprint?: string[] }];
+    expect(ctx.fingerprint).toEqual(['startup.observabilidad', 'error']);
+  });
+
   it('sin DSN, flushObservabilidad no lanza ni carga nada', async () => {
     vi.stubEnv('SENTRY_DSN', '');
     const { flushObservabilidad } = await import('./sentry');
@@ -182,5 +226,51 @@ describe('avisarObservabilidad — arrancar sin observabilidad tiene que DECIRSE
 
     const todo = [...err.mock.calls, ...log.mock.calls].map((c) => String(c[0])).join('\n');
     expect(todo).not.toContain('startup.observabilidad');
+  });
+});
+
+describe('codigoDeError — el discriminador estable de causa (auditoría 4, D2)', () => {
+  // Pura y sin SDK: se prueba directo. Lo que fija es el contrato del
+  // fingerprint: misma causa = mismo código (una corrida no abre un issue
+  // nuevo), causa distinta = código distinto (la causa nueva SÍ notifica).
+
+  it('la misma causa da el mismo código, corrida tras corrida', async () => {
+    const { codigoDeError } = await import('./sentry');
+    const a = codigoDeError(new Error('fetch failed'));
+    const b = codigoDeError(new Error('fetch failed'));
+    expect(a).toBe(b);
+    expect(a).toMatch(/^err:[0-9a-f]{12}$/);
+  });
+
+  it('un UUID o un timestamp en el mensaje NO cambian el código', async () => {
+    const { codigoDeError } = await import('./sentry');
+    const a = codigoDeError(new Error('viaje 3f9c2a1b-77de-4e10-9a2b-0c1d2e3f4a5b sin cerrar tras 1723612345000 ms'));
+    const b = codigoDeError(new Error('viaje 9e8d7c6b-5a49-4382-b1c0-d9e8f7a6b5c4 sin cerrar tras 1723698745000 ms'));
+    expect(a).toBe(b);
+  });
+
+  it('causas distintas dan códigos distintos — incluidos dos HTTP status', async () => {
+    const { codigoDeError } = await import('./sentry');
+    expect(codigoDeError(new Error('HTTP 500'))).not.toBe(codigoDeError(new Error('HTTP 503')));
+    expect(codigoDeError(new Error('token vencido'))).not.toBe(codigoDeError(new Error('tabla no existe')));
+  });
+
+  it('si el error trae `code` (PostgREST, Node, Meta), ese manda', async () => {
+    const { codigoDeError } = await import('./sentry');
+    // La forma del error POR VALOR de supabase-js: no es un Error, es un objeto.
+    expect(codigoDeError({ message: 'relation "x" does not exist', code: '42P01' })).toBe('42P01');
+    expect(codigoDeError({ message: 'token vencido', code: 190 })).toBe('190');
+  });
+
+  it('entra al fingerprint por la puerta que discriminadores ya lee', async () => {
+    vi.stubEnv('SENTRY_DSN', 'https://algo@sentry.io/1');
+    const { reportar, codigoDeError, flushObservabilidad } = await import('./sentry');
+
+    reportar('error', 'cron.purgar.falló', { error: 'a', codigo: codigoDeError(new Error('causa A')) });
+    reportar('error', 'cron.purgar.falló', { error: 'b', codigo: codigoDeError(new Error('causa B')) });
+    await flushObservabilidad();
+
+    const huellas = sdk.captureMessage.mock.calls.map((c) => JSON.stringify((c[1] as { fingerprint?: string[] }).fingerprint));
+    expect(new Set(huellas).size).toBe(2);
   });
 });

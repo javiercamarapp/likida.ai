@@ -85,3 +85,44 @@ Cerrados antes en serie por el orquestador: TC-A1 (8066054+366b66d).
 3. Aplicar migración de aviso si H la dejó preparada (+ bloque verificación).
 4. Fase 3+5 de la skill: tablero.html (mirado) + 00-SINTESIS.md con las 12 notas recalificadas y el porqué; commit.
 5. DIRECTIVA: continuar el plan — F7 (chasis: pantalla Conexiones con salud MEDIDA, /seguridad verdadera, identidad por agente; intake por correo = solo diseño honesto sin infra) y F8 (lo técnico preparable; timbrado y pricing son decisiones de Javier ya pactadas). Objetivo declarado: las 8 fases hoy.
+
+## RESULTADOS DE LOS FIXERS (cosechados ~04:15, 14-ago)
+Los 8 reportaron. 24 de 25 ALTOS cerrados por ellos; 1 rebotó al orquestador:
+
+| Fixer | Hallazgos | Estado | Commits |
+|---|---|---|---|
+| A | AG-A2/A3/A4 | CERRADOS | d20d1a5, dfcb300, 7690d6a |
+| B | AG-A1 | CERRADO | b938aad |
+| C | PR-A1/A2/A3 | CERRADOS | 91216dd, eb4ccd8, 3d1bc4a |
+| D | FE-A1/A2 | CERRADOS | 676513d, 8f28f61 |
+| E | FI-A1/A2 | CERRADOS | b4905b5, 6e8a3dc |
+| F | OP-A1/A2 | CERRADOS | 8efcb1b, 3e7296c |
+| G | BE-A1/A3/A4 | CERRADOS | b024160, ac5ad33 (mig 0092 APLICADA + verificación 67), 266d117 |
+| G | BE-A2 | BLOQUEADO-POR-DUEÑO → fixer BE-A2 dedicado lanzado (claim atómico del pendiente en despacho_wa) | — |
+| H | LEG-A1 | CERRADO (sin migración: versionAviso es hash del contenido) | 7a1be66 |
+
+Del orquestador, además: TC-A1 (8066054+366b66d), los 2 comentarios stale de AG-A1
+(82bff9a), y F7 completa: núcleo ac93904, cableado 39e0435, rentabilidad c4e80d5.
+
+### Hallazgos laterales NUEVOS (de G; verificar y proponer en síntesis, NO arreglados)
+1. `importarViajes` inserta `operador_id: null` para filas sin operador amarrado,
+   pero la columna es NOT NULL (0001) → el lote entero truena. Falla RUIDOSA
+   (se reporta el error), no corrupción — pero mata el import histórico.
+2. Import histórico vs 0029: dos viajes `abiertos` del mismo operador en un
+   archivo chocan con `uq_viaje_abierto_por_operador` → lote falla con reporte.
+3. Los textos de /seguridad citan "más de 3,000 pruebas" — VERIFICAR contra el
+   conteo real de la suite en la integración; si no aguanta, corregir el texto.
+
+## CIERRE FINAL (14-ago, ~08:35) — TODO TERMINADO Y EN PRODUCCIÓN
+- 31/31 críticos+altos cerrados + BE-A2 (306047d) + 2 laterales del importador (17dd02b).
+- Las 8 fases del plan construidas; F7 completa (Conexiones, /seguridad, Rentabilidad
+  y cobranza, diseños de intake-correo y API); F8 = docs/comercial/f8-encendidos.md
+  (3 interruptores de Javier: primer cliente, pricing D6, mandar propuesta Innovativos).
+- Deploy d68c9b0 [deploy] → Ready en Vercel, VERIFICADO MIRANDO app.likida.ai/seguridad.
+  Las env vars LIKIDA_* ya estaban en producción (Javier, 2 días antes).
+- Suite al cierre: 3,236 passed | 1 skipped · tsc/eslint/build limpios · todo pusheado.
+- Gaps vs Handle (orden de valor): sección Pruebas del agente, reglas de re-contacto
+  en Cobranza, vigencias con pills, marca en el PDF, personalización del chat,
+  intake-correo/API (diseñados). Quedan 43 medios + 29 bajos propuestos en esta carpeta.
+- BLOQUEADO: cruzar CONOCIMIENTO/Plaud — Desktop sigue con TCC (Operation not
+  permitted); Javier debe dar Acceso total al disco a la Terminal o mover las carpetas.
