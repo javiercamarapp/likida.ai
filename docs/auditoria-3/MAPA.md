@@ -1,73 +1,136 @@
-# MAPA — auditoría 3 (14-ago-2026)
+# MAPA — auditoría 3 (15-ago-2026)
 
-## PASE 2 — continuación en la nube (14-ago, tarde)
+## PASE 3 — continuación en la nube sobre la MISMA rama y el MISMO PR
 
-La ronda 3 arrancó en local de madrugada y **murió antes de escribir los 12
-reportes**: en `docs/auditoria-3/` solo quedaron `MAPA.md` y
-`00-ESTADO-RONDA.md`. Los 6 CRÍTICOS **sí** se arreglaron y **sí** están en
-`master` (commits `c8bd2ac`, `444492a`, `b31460c`, `54e0648`, `bb7e228`,
-`bc3c6c3`) más el alto TC-A1 (`8066054`, `366b66d`). Los **25 ALTOS siguen
-abiertos** — los 8 fixers en paralelo que anuncia `00-ESTADO-RONDA.md` nunca
-dejaron commit.
+Esta ronda **no abre PR nuevo**. Continúa sobre `claude/auditoria-3` (PR #13),
+que seguía abierto. Ya hay seis PRs de auditoría encimados sin merge; abrir un
+séptimo es exactamente el modo de falla que la regla de continuación existe para
+evitar.
 
-Por eso este pase relanza **los 12 rubros**: sus archivos no existen, y un
-rubro sin archivo es un rubro sin auditar. La lista de altos heredados vive en
-`00-ESTADO-RONDA.md` líneas 50-64 — **verifícalos primero contra el código de
-hoy y márcalos REINCIDENTE si siguen vivos.**
+**Lo que cambió y por qué se relanzan los doce rubros:** la rama traía los
+reportes del pase 2 escritos contra el commit `815d8cb`. Desde ahí `master`
+avanzó **81 commits / 380 archivos / +54,356 líneas**, y este pase empezó
+mergeando `master` a la rama (commit `01f270e`). Los reportes del pase 2
+describen un árbol que ya no existe: **cada rubro tiene código nuevo**, así que
+los doce se relanzan. No es repetición, es que el objeto auditado cambió.
 
-Diferencias de correr en la nube:
-- La compuerta es `npm test` + `npx tsc --noEmit` + `npm run lint`. **NO** hay
-  `npm run build`: no existen credenciales de Supabase/OpenRouter/Facturapi.
-- Los arreglos van a la rama `claude/auditoria-3` y salen como PR, nunca a
-  `master`.
+### Lo que llegó de master desde el pase 2 (el foco de esta ronda)
 
-## Línea base REAL de esta ronda (corrida hoy, antes de auditar)
+Ordenado por lo que más superficie nueva abre:
 
-- `npx vitest run` → **261 archivos, 3,161 pruebas verdes, 1 skipped**
-- `npx tsc --noEmit` → limpio
-- `npx eslint src/` → 0 errores, 22 warnings (unused-vars en tests, preexistentes)
-- `npm run build` → exit 0
-- Migraciones aplicadas hasta la **0091**; `supabase/verificaciones.sql` con 66 bloques (64-66 de esta semana, con corrida real anotada)
+- **Carta Porte** (`e7b1b1f`): clasificador, los 37 campos por responsable y el
+  validador → `src/app/dashboard/carta-porte/`. Superficie fiscal NUEVA.
+- **El lado del ingreso** (`a0350ae`, `fbab061`, `17f0242`, `fd5c7cb`):
+  `factura_emitida` y `pago_recibido` **ya tienen escritor**; `unidad` e
+  `ingreso_flete` entran por las TRES puertas de creación de viajes; clientes,
+  tarifas, libro del viaje. **Ojo con CLAUDE.md**: la línea de "nadie las
+  escribe" quedó obsoleta y ya se corrigió (`62f2d66`).
+- **API pública consumible** (`5f1da5b`, `82f55a0`, `d6d7823`, `b0decdb`,
+  `44e624c`): llaves de API por flota (`dashboard/llaves-api/`), idempotencia
+  **durable** (mig. 0098), folio ocupado con otro contenido → 409, OpenAPI ya no
+  miente sobre solo-lectura. `src/app/api/v1/`.
+- **Correo transaccional** (`e674817`, `0b3ffde`, `a2268d6`, `74adcb6`,
+  `606e12d`): Resend, `src/lib/correo/` (12 archivos), webhook de correo con
+  tope de adjuntos, Resend en el anexo de subencargados. Superficie LEGAL nueva
+  (transferencia a tercero).
+- **Buzón, cofre y purga** (`9155398`, `73bbbb8`): intake por correo, secretos,
+  purga — y una purga de la 0098 que **era llamable por `anon` desde internet**
+  (arreglada; verificar que no quede otra).
+- **Alertas y observabilidad** (`f7d6981`, `836bea5`, `d098310`):
+  `src/lib/observability/` (7 archivos), notificaciones en los seis agentes,
+  cierre de corrida. El rubro de operabilidad tiene material nuevo real.
+- **Legal E1–E5** (`67f785d`, `1eb65c5`, `8269012`): derecho de oposición
+  honrable, fichas que ya no mienten sobre el código, **retención** que corre
+  (mig. 0104).
+- **Agentes B1–B8** (`fcf490a`, `934149a`, `28eec66`, `585b099`, `3010eba`):
+  Peajes ya es agente, escalado se emite, corridas con historial, estrategia
+  editable, "mándate una prueba", `cola_atorada`, el piso de una hora.
+- **/admin rediseñado** (`71b5f76`, `c2911d0`, `d25b93e`, `36aa0e5`): la consola
+  que opera, zona de vendedores, sidebar abierto, **el asistente de IA de /admin
+  ya no existe** (borrado), y el cierre de escala 15k (mig. 0111 índices).
+- **D6** (`fbfbeec`): el dueño invita a su propio contralor — alta de usuarios
+  sin pasar por Javier. Superficie de SEGURIDAD nueva.
+- **Ensayo 14-ago** (`441eb86`): el demo corría con la **validación de receptor
+  APAGADA**. Leer ese commit antes de calificar fiscal.
+- **Migraciones**: del 0092 al **0111**. Las nuevas incluyen 0098 (idempotencia),
+  0104 (retención), 0105 (vendedores), 0106–0109 (peajes/talacha/proveedor/firma),
+  0110 (interruptores), 0111 (índices de escala).
+- **`normas/`**: 23 fichas (eran 21).
 
-**NO corras `npm test` ni `npm run build` tú: la línea base ya corrió y 12 suites en paralelo tumban la máquina. Lee, busca (grep), y cita.**
+## Línea base REAL de este pase (corrida hoy sobre el árbol mergeado)
 
-## Desde la auditoría 2 (28-jul): 583 commits, ~896 archivos
+```
+npx tsc --noEmit -p .   → LIMPIO (exit 0)
+npx vitest run          → ver 00-SINTESIS.md (corrida al cierre)
+npm run lint            → ver 00-SINTESIS.md
+npm run build           → NO SE CORRE en la nube (sin credenciales)
+```
 
-Lo grande, en orden:
-- **Rediseño v3 del panel** (12-13 ago): sidebar Handle por categorías (`dashboard/rutas.ts`), tema claro/sistema/oscuro (`[data-theme]` + `.tema-neutro`), patrón page/vista en todas las páginas nuevas.
-- **Chat "Chatea con tus datos"**: agente real con tools de solo lectura (`lib/agents/analista.ts`, `chat-tools.ts`), historial persistente (0088), streaming NDJSON con secuencia de tools visible, lector universal de archivos.
-- **Despacho** (`dashboard/despacho/`): crear/asignar/avisar/reavisar/alta de operador.
-- **HOY (14-ago), el foco de esta ronda — los seis agentes:**
-  1. `dashboard/agentes/liquidacion` (v2, 13-ago)
-  2. `dashboard/agentes/facturas` (v2 + mesa del jefe, 13-ago)
-  3. `dashboard/agentes/cobranza` + motor `lib/likida/agentes/cobranza{,_pura}.ts` (0089)
-  4. `dashboard/agentes/conductores` + `lib/likida/hitos_viaje.ts` (0090) + `lib/likida/despacho_wa.ts` (el jefe despacha por WA) + cableado NUEVO en `processor.ts` (rama oficina ~402-470 y hitos ~1545)
-  5. `dashboard/agentes/peajes` (ingesta de XML consolidado por pantalla, sobre `intake/consolidado.ts`)
-  6. `dashboard/agentes/proveedores` + `lib/likida/proveedores.ts` (0091) + `api/export/facturas-proveedor`
-- **Registro** (F2): `dashboard/{viajes,operadores,huerfanos}` + alertas en `inicio-contenido.tsx` + `repo.ts` (huérfanos de flota, ~l.375-470).
-- **Mapa** (F3): `dashboard/mapa/` (geometría horneada `mexico-geo.ts`, `lib/likida/geo/ciudades.ts`).
-- **Kit PoC**: `lib/likida/importar_viajes.ts` (import CSV/Excel SIN avisos de WhatsApp), `lib/likida/peajes/desglose.ts`.
-- **Arreglado hoy mismo (contexto para modelo de datos):** la FK compuesta de la 0075 dejó DOS relaciones en 5 pares de tablas; tres embeds sin alias cayeron con "more than one relationship" (página de cobranza, cron de escalación, aviso de cierre). Commits `2e59040` y `566a962`. Verificar que no haya más.
-- Cron unificado `api/cron/escalar` corre escalación + `ejecutarCobranzaGlobal`. Facturación automática (`api/cron/facturar`) sin cambios grandes.
-- **Muertos esta semana:** `recordatorio_comprobacion.ts` (supersedido por 0089), `/dashboard/viajes/nuevo` (vive en Despacho).
+**INFRA — leer antes de culpar al código:** `npm ci` **falla** en este entorno.
+`package.json:38` pide `xlsx` desde `https://cdn.sheetjs.com/...`, y la política
+de red del contenedor deniega ese host (403 en el CONNECT; solo
+`registry.npmjs.org` está permitido). npm revierte y deja `node_modules/`
+**vacío**. Para poder correr la compuerta se instaló `xlsx@0.18.5` desde el
+registry de npm — **es una desviación del lockfile, no del repo**, y no se
+commitea. Confundir esto con un rubro sin hallazgos es el fallo más caro de una
+corrida desatendida.
+
+**NO corras `npm test` ni `npm run build` tú: la línea base ya corrió y 12
+suites en paralelo tumban la máquina. Lee, busca (grep), y cita.**
+
+## Hallazgos abiertos que hereda este pase
+
+El pase 2 cerró **PARCIAL**: 12 rubros calificados, tablero mirado, **1 de 11
+críticos cerrado** (FE-C1, `649f248`) y **10 pendientes con su escenario
+escrito**. Están en `00-SINTESIS.md`. Cada auditor los verifica PRIMERO contra el
+árbol de hoy — muchos pudieron morir con los 81 commits de master, y decir cuáles
+murieron es lo que justifica subir una nota:
+
+| ID | Qué es | Dónde lo dejó el pase 2 |
+|---|---|---|
+| FE-C1 | El chat contesta con heurístico local cuando el agente falla | **CERRADO** `649f248` |
+| BE-C1 | El import del TMS se roba el viaje vivo del chofer | `importar_viajes.ts:207-217` × `conv.ts:164-181` |
+| DAT-C1 | `viaje.operador_id` NOT NULL y tres caminos escriben NULL | `0001_init.sql:49` × `importar_viajes.ts:215`, `operacion.ts:566`, `:126` |
+| FI-C1 | Elegibilidad RFA 2.9 desde la clave SAT equivocada | `administracion.ts:115-116` vs `normas/rfa-2026-2.9.yaml` |
+| AG-C1 | Cierre parcial: la liquidación cierra, el operador oye "se me trabó" | processor / conv |
+| ARQ-C1 | "Viajes en curso" contado sobre 100 filas junto a un conteo exacto | KPIs del dashboard |
+| OP-C1 | 100% de fallos → HTTP 200 y nivel `info` | cron |
+| PR-C1 | La prueba de `enLotes` es decoración (verde contra un bucle serial) | `lotes.test.ts` |
+| REND-C1 | La escalación corre sin reloj y se come los 120s del cron | cron escalar |
+| REND-C2 | "Ejecutar ahora" de Cobranza: hasta 500 mensajes en serie | agentes/cobranza |
+| REND-C3 | El cruce del consolidado sigue sin reloj | intake/consolidado |
+
+Además quedaron **43 altos, 42 medios y 29 bajos** propuestos en los archivos de
+rubro del pase 2 (están en git; el pase 3 los sobrescribe, la historia los
+conserva).
 
 ## Dónde está todo
 
-- Panel del CLIENTE: `src/app/dashboard/**` (todo filtrado a tenant; roles: superadmin, flota_admin, contador, encargado; el chofer NO tiene login — solo WhatsApp).
-- Consola de Javier: `src/app/admin/**` (cruza tenants a propósito vía `lib/admin/negocio.ts`).
-- Motores: `src/lib/likida/**` (cuadre/ es PURO; formato de cifras SOLO en `lib/formato.ts` — hay prueba guardián).
-- WhatsApp: `api/webhook/whatsapp/route.ts` → `processor.ts` (~2,300 líneas, el corazón).
-- Visibilidad por rol: `lib/auth/visibilidad.ts` (área por ruta; `dinero_por_area.test.ts` escanea que operación no pinte pesos). Permisos de acción: `lib/auth/permisos.ts`.
-- Normas fiscales: `normas/*.yaml` (fuente de verdad; el fiscal las abre y transcribe).
+- Panel del CLIENTE: `src/app/dashboard/**` (todo filtrado a tenant; roles:
+  superadmin, flota_admin, contador, encargado; el chofer NO tiene login — solo
+  WhatsApp).
+- Consola de Javier: `src/app/admin/**` (cruza tenants a propósito vía
+  `lib/admin/negocio.ts`).
+- Motores: `src/lib/likida/**` (cuadre/ es PURO; formato de cifras SOLO en
+  `lib/formato.ts` — hay prueba guardián).
+- WhatsApp: `api/webhook/whatsapp/route.ts` → `processor.ts` (el corazón).
+- Visibilidad por rol: `lib/auth/visibilidad.ts`; permisos de acción:
+  `lib/auth/permisos.ts`.
+- Correo: `src/lib/correo/**` (Resend). Observabilidad: `src/lib/observability/**`.
+- Normas fiscales: `normas/*.yaml` (fuente de verdad; el fiscal las abre y
+  transcribe).
 
 ## Qué NO tocar / reglas duras del repo
 
-- **NADIE edita código en fase de auditoría** — encuentras y calificas; el orquestador arregla.
+- **NADIE edita código en fase de auditoría** — encuentras y calificas; el
+  orquestador arregla.
 - `pruebas-manuales/*.prueba.ts` NO se corren (pago real).
-- Nunca inventar cifras; rótulos verdaderos; fallar cerrado y decirlo — los hallazgos que violen esto pesan doble.
-- El candado del timbrado (`facturacion/modo.ts`) está APAGADO a propósito (decisión de negocio: se enciende al primer cliente). No es hallazgo.
-- `posicion`, `geocerca`, `cliente`, `unidad`, `tarifa`, `factura_emitida`, `cotizacion` existen y están VACÍAS a propósito (F7 del plan). Pantallas que las declaren honestas ≠ hallazgo; pantallas que finjan datos SÍ.
-
-## Hallazgos abiertos heredados
-
-En este formato: ninguno (primera ronda con la skill). El ancla cualitativa vieja es `docs/conocimiento/40-auditoria-codigo.md` (ola 2, 27-jul) — buena parte ya se atacó; si algo de ahí sigue vivo en tu rubro, repórtalo como REINCIDENTE citando la línea actual.
+- Nunca inventar cifras; rótulos verdaderos; fallar cerrado y decirlo — los
+  hallazgos que violen esto pesan doble.
+- El candado del timbrado (`facturacion/modo.ts`) está APAGADO a propósito
+  (decisión de negocio: se enciende al primer cliente). No es hallazgo.
+- La base entera está en CERO (0 viajes) porque **no hay clientes todavía**, no
+  porque falte código. Pantallas que declaren el vacío honestamente ≠ hallazgo;
+  pantallas que finjan datos SÍ.
+- `factura_emitida`, `pago_recibido`, `posicion` y `geocerca`: las dos primeras
+  YA tienen escritor desde esta semana; las dos últimas no. Ver CLAUDE.md.
