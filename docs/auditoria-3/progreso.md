@@ -39,10 +39,42 @@ npm run build         → NO SE CORRE en la nube (sin credenciales)
 - `—` Doce auditores lanzados en un solo mensaje, contexto fresco, un rubro cada
   uno, ninguno toca código.
 
+- `—` Los doce entregaron. **134 hallazgos: 13 C · 46 A · 42 M · 33 B.**
+- `—` Verificación del orquestador ANTES de anotar: se abrieron los archivos de
+  los críticos heredados. **DAT-C1 del pase 2 resultó MUERTO** (`17dd02b` manda
+  las filas sin operador a `sinOperador` y nunca las inserta,
+  `importar_viajes.ts:327,385`), y **BE-C1 medio muerto** (el pre-chequeo de
+  ocupados en `:376-405` mató el robo del viaje vivo; la raíz sigue).
+- `12e5f0a` Los doce reportes de rubro en disco.
+
 ## Arreglos
 
-(se llena conforme entran; uno por commit, citando el ID del hallazgo)
+Uno por commit, citando el ID. Prueba roja primero, verde después, suite
+completa entre uno y otro.
+
+- `285d5e3` **DAT-C1 (CRÍTICO) — CERRADO.** `agentes` entra a la lista blanca de
+  `config_tenant_valida` (mig. `0112`, dos líneas de diff contra la 0085) +
+  guardián `config_llaves_db.test.ts`. Comprobado ROJO quitando la migración y
+  verde devolviéndola, no de memoria. Suite: 330 archivos / 4,504 verdes.
+  La 0112 entra a `EXENTAS` de `migraciones_verificadas.test.ts` con el mismo
+  criterio que la 0082/0083/0085 (si falta, revienta ruidoso, no en silencio).
+- `86fb450` **FI-C1 (CRÍTICO, reincidente 3ª ronda) — CERRADO.** La RFA 2.9 se
+  decide con 624 (Coordinados), no con 601. Ancla `rfa29_regimenes.test.ts`
+  contra el TEXTO de la ficha: roja antes en tres aserciones, verde después.
+  Suite: 331 archivos / 4,509 verdes. tsc limpio, eslint 0 errores.
+  Fuera de alcance a propósito: `lib/saas/fiscal.ts:20-26` tampoco ofrece el
+  624, pero es el CFDI de la suscripción — otro camino, queda como hallazgo.
+- `—` **Se paró en dos, no en tres.** Con 13 críticos sobre la mesa, cerrar dos
+  con ancla real vale más que dejar seis a medias — es el error que el pase 1
+  de esta ronda ya pagó. Los 11 restantes quedan PENDIENTES con escenario.
 
 ## Cierre
 
-(RESULTADO.md, tablero, síntesis, push y actualización del PR #13)
+- `—` `package.json` y `package-lock.json` RESTAURADOS: la desviación de `xlsx`
+  no se commitea. `git status` sin rastro de ella.
+- `—` Tablero pintado, capturado **y mirado**: se contaron los 12 rubros, se
+  cuadró cada nota contra la síntesis y los totales por severidad (13/46/42/33
+  = 134). Se recapturó dos veces por recorte de contenido.
+- `—` `00-SINTESIS.md` con las doce notas, el delta y el porqué de cada
+  movimiento. `RESULTADO.md` con la línea de estado.
+- `—` Push a `claude/auditoria-3` y actualización del cuerpo del PR #13.
