@@ -24,3 +24,6 @@ Estado de cada hallazgo VERIFICADO de la pasada experta, tras el aplicador con g
 ## Cómo correrlo de nuevo
 - Auditoría completa: `npm run auditoria` (ronda nueva con AUDIT_RONDA=N)
 - Aplicar fixes con gate: `AUDIT_AUTOFIX=1 npm run auditoria`
+
+## Fallo PRE-EXISTENTE en suite (ajeno a este trabajo)
+- `src/lib/agents/analista_prompt.test.ts > cifras solo de tools…` — el test exige la frase "promedios propios, extrapolaciones" que ya no está en el prompt del analista; falla igual con y sin mis cambios (verificado con git stash). Reparación: sincronizar test con el prompt actual o reincorporar la frase.
