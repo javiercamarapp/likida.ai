@@ -2,133 +2,142 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<title>Auditoría 3 — Likida</title>
+<title>Likida — Auditoría 3, pase 3</title>
 <style>
   :root{
-    --bg:#0e1013; --card:#161a1f; --line:#262c34; --tx:#e8eaed; --muted:#9aa3ad;
-    --faint:#6b747e; --baja:#e5484d; --sube:#30a46c; --igual:#8b949e;
-    --crit:#e5484d; --alto:#f5a524; --medio:#8b949e; --bajo:#4b535c;
+    --bg:#0e1116; --panel:#161b22; --linea:#242c37; --txt:#e6edf3; --tenue:#8b949e;
+    --ok:#2ea043; --alto:#d29922; --crit:#f85149; --medio:#58a6ff; --bajo:#6e7681;
+    --sube:#3fb950; --baja:#f85149; --igual:#8b949e;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--tx);
-    font:14px/1.5 ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;padding:32px}
-  .wrap{max-width:1040px;margin:0 auto}
-  h1{font-size:24px;margin:0 0 4px;letter-spacing:-.02em}
-  .sub{color:var(--muted);margin:0 0 24px;font-size:13px}
-  .fila{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:24px}
-  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;
-    padding:14px 18px;min-width:150px;flex:1}
-  .kpi .n{font-size:28px;font-weight:600;letter-spacing:-.02em;
-    font-variant-numeric:tabular-nums}
-  .kpi .r{color:var(--muted);font-size:12px;margin-top:2px}
-  table{width:100%;border-collapse:collapse;background:var(--card);
-    border:1px solid var(--line);border-radius:12px;overflow:hidden}
-  th,td{padding:9px 14px;text-align:left;border-bottom:1px solid var(--line);
-    font-size:13px}
-  th{color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;
-    letter-spacing:.06em;background:#12161a}
-  tr:last-child td{border-bottom:0}
-  .num{text-align:right;font-variant-numeric:tabular-nums}
-  .baja{color:var(--baja);font-weight:600}
-  .sube{color:var(--sube);font-weight:600}
-  .igual{color:var(--igual)}
-  .sev{display:inline-block;min-width:20px;text-align:center;
-    font-variant-numeric:tabular-nums}
-  .c{color:var(--crit);font-weight:600}
-  .a{color:var(--alto)}
-  .m{color:var(--medio)}
-  .b{color:var(--bajo)}
-  h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;
-    color:var(--muted);margin:28px 0 10px;font-weight:500}
-  .ok{color:var(--sube)} .no{color:var(--faint)}
-  .nota{color:var(--faint);font-size:12px;margin-top:10px}
-  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;
-    color:var(--muted)}
+  body{margin:0;background:var(--bg);color:var(--txt);
+    font:14px/1.5 ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;padding:28px}
+  h1{font-size:20px;margin:0 0 2px}
+  .sub{color:var(--tenue);font-size:13px;margin-bottom:20px}
+  .fila{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+  .caja{background:var(--panel);border:1px solid var(--linea);border-radius:10px;padding:14px 16px;flex:1;min-width:150px}
+  .caja .et{color:var(--tenue);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+  .caja .n{font-size:26px;font-weight:650;margin-top:4px}
+  .mini{font-size:12px;color:var(--tenue);margin-top:2px}
+  table{width:100%;border-collapse:collapse;background:var(--panel);
+    border:1px solid var(--linea);border-radius:10px;overflow:hidden}
+  th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--linea);font-size:13px;vertical-align:top}
+  th{background:#1b2129;color:var(--tenue);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+  tr:last-child td{border-bottom:none}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .sube{color:var(--sube)} .baja{color:var(--baja)} .igual{color:var(--igual)}
+  .pill{display:inline-block;padding:1px 6px;border-radius:9px;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
+  .pc{background:rgba(248,81,73,.16);color:var(--crit)}
+  .pa{background:rgba(210,153,34,.16);color:var(--alto)}
+  .pm{background:rgba(88,166,255,.14);color:var(--medio)}
+  .pb{background:rgba(110,118,129,.18);color:#9aa4b1}
+  .razon{color:var(--tenue);font-size:12px}
+  h2{font-size:14px;margin:26px 0 10px;color:var(--tenue);text-transform:uppercase;letter-spacing:.06em}
+  .serie{background:var(--panel);border:1px solid var(--linea);border-radius:10px;padding:16px}
+  .compuerta{display:flex;gap:10px;flex-wrap:wrap}
+  .ok{border-left:3px solid var(--ok)}
+  .warn{border-left:3px solid var(--alto)}
+  ol{margin:0;padding-left:20px} li{margin-bottom:7px;font-size:13px}
+  .cerrado{color:var(--sube);font-weight:600}
+  .pend{color:var(--alto);font-weight:600}
+  code{background:#1b2129;padding:1px 5px;border-radius:4px;font-size:12px}
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <h1>Auditoría 3 — pase 2</h1>
-  <p class="sub">14-ago-2026 · corrida desatendida en la nube · doce rubros, contexto fresco, ninguno tocó código</p>
+<h1>Likida — Auditoría 3 · pase 3</h1>
+<div class="sub">15-ago-2026 · corrida desatendida en la nube · rama <code>claude/auditoria-3</code> · PR #13 · ronda de CONTINUACIÓN (no se abrió PR nuevo)</div>
 
-  <div class="fila">
-    <div class="kpi"><div class="n baja">5.3</div><div class="r">global (antes 5.7) &nbsp;▼0.4</div></div>
-    <div class="kpi"><div class="n">125</div><div class="r">hallazgos verificados</div></div>
-    <div class="kpi"><div class="n c">11</div><div class="r">críticos · 1 cerrado</div></div>
-    <div class="kpi"><div class="n">12</div><div class="r">de 12 rubros auditados</div></div>
-  </div>
-
-  <h2>Los doce rubros</h2>
-  <table>
-    <thead><tr>
-      <th>Rubro</th><th class="num">Antes</th><th class="num">Hoy</th><th class="num">Δ</th>
-      <th>Razón del movimiento</th>
-      <th class="num">C</th><th class="num">A</th><th class="num">M</th><th class="num">B</th>
-    </tr></thead>
-    <tbody>
-      <tr><td>Fiscal</td><td class="num">6.5</td><td class="num">3.5</td><td class="num baja">▼3</td><td>mirada más profunda</td><td class="num c">1</td><td class="num a">1</td><td class="num m">5</td><td class="num b">1</td></tr>
-      <tr><td>Frontend</td><td class="num">7</td><td class="num">5</td><td class="num baja">▼2</td><td>mirada más profunda</td><td class="num c">1</td><td class="num a">3</td><td class="num m">4</td><td class="num b">4</td></tr>
-      <tr><td>Agéntico</td><td class="num">6</td><td class="num">5</td><td class="num baja">▼1</td><td>deuda que cobró factura</td><td class="num c">1</td><td class="num a">7</td><td class="num m">2</td><td class="num b">0</td></tr>
-      <tr><td>Seguridad</td><td class="num">8</td><td class="num">7</td><td class="num baja">▼1</td><td>mirada más profunda</td><td class="num c">0</td><td class="num a">1</td><td class="num m">3</td><td class="num b">5</td></tr>
-      <tr><td>Pruebas</td><td class="num">6</td><td class="num">5</td><td class="num baja">▼1</td><td>deuda que cobró factura</td><td class="num c">1</td><td class="num a">5</td><td class="num m">3</td><td class="num b">2</td></tr>
-      <tr><td>Modelo de datos</td><td class="num">6</td><td class="num">5</td><td class="num baja">▼1</td><td>mirada más profunda</td><td class="num c">1</td><td class="num a">3</td><td class="num m">5</td><td class="num b">6</td></tr>
-      <tr><td>Backend y API</td><td class="num">5</td><td class="num">5</td><td class="num igual">=</td><td>subió y bajó lo mismo</td><td class="num c">1</td><td class="num a">4</td><td class="num m">4</td><td class="num b">2</td></tr>
-      <tr><td>Tool calling</td><td class="num">7</td><td class="num">7</td><td class="num igual">=</td><td>la fuga reapareció al lado</td><td class="num c">0</td><td class="num a">1</td><td class="num m">3</td><td class="num b">2</td></tr>
-      <tr><td>Rendimiento y costo</td><td class="num">4</td><td class="num">4</td><td class="num igual">=</td><td>deuda que cobró factura</td><td class="num c">3</td><td class="num a">6</td><td class="num m">6</td><td class="num b">2</td></tr>
-      <tr><td>Arquitectura</td><td class="num">4</td><td class="num">5</td><td class="num sube">▲1</td><td>se atacó y subió</td><td class="num c">1</td><td class="num a">4</td><td class="num m">3</td><td class="num b">1</td></tr>
-      <tr><td>Operabilidad y DX</td><td class="num">5</td><td class="num">6</td><td class="num sube">▲1</td><td>se atacó y subió</td><td class="num c">1</td><td class="num a">4</td><td class="num m">4</td><td class="num b">3</td></tr>
-      <tr><td>Legal</td><td class="num">4</td><td class="num">5.5</td><td class="num sube">▲1.5</td><td>se atacó y subió</td><td class="num c">0</td><td class="num a">4</td><td class="num m">4</td><td class="num b">1</td></tr>
-    </tbody>
-  </table>
-  <p class="nota">Suma 63.0 / 12 = <strong>5.25 → 5.3</strong>. Seis rubros bajan, tres suben, tres se quedan. Ningún rubro se movió sin una de las tres razones escritas.</p>
-
-  <h2>Serie histórica del global</h2>
-  <table>
-    <thead><tr><th>Ronda</th><th>Fecha</th><th class="num">Global</th><th class="num">Δ</th><th>Qué la movió</th></tr></thead>
-    <tbody>
-      <tr><td>Auditoría 2</td><td>28-jul-2026</td><td class="num">6.2</td><td class="num igual">—</td><td>línea base con los 11 ejes</td></tr>
-      <tr><td>Auditoría 3 · pase 1</td><td>14-ago, madrugada</td><td class="num">5.7</td><td class="num baja">▼0.5</td><td>seis agentes nuevos entraron sin ronda</td></tr>
-      <tr><td>Auditoría 3 · pase 2</td><td>14-ago, tarde</td><td class="num">5.3</td><td class="num baja">▼0.4</td><td>notas infladas + arreglos a medio camino</td></tr>
-    </tbody>
-  </table>
-
-  <h2>Los once críticos</h2>
-  <table>
-    <thead><tr><th>ID</th><th>Qué se rompe</th><th>Estado</th></tr></thead>
-    <tbody>
-      <tr><td><code>FE-C1</code></td><td>El chat contesta con un heurístico local cuando el agente falla, y no lo dice</td><td class="ok">cerrado · 649f248</td></tr>
-      <tr><td><code>BE-C1</code></td><td>El import del TMS se roba el viaje vivo del chofer</td><td class="no">pendiente</td></tr>
-      <tr><td><code>DAT-C1</code></td><td><code>viaje.operador_id</code> es NOT NULL y tres caminos escriben NULL</td><td class="no">pendiente</td></tr>
-      <tr><td><code>FI-C1</code></td><td>La RFA 2.9 se deriva de la clave SAT equivocada, en las dos direcciones</td><td class="no">pendiente</td></tr>
-      <tr><td><code>AG-C1</code></td><td>Cierre parcial: cerrado en la base, «se me trabó» para el operador</td><td class="no">pendiente</td></tr>
-      <tr><td><code>ARQ-C1</code></td><td>«Viajes en curso» se cuenta sobre 100 filas junto a un conteo exacto</td><td class="no">pendiente</td></tr>
-      <tr><td><code>OP-C1</code></td><td>100% de fallos de cobranza → HTTP 200 y nivel <code>info</code></td><td class="no">pendiente</td></tr>
-      <tr><td><code>PR-C1</code></td><td>La prueba de <code>enLotes</code> es decoración: pasa con la función revertida</td><td class="no">pendiente</td></tr>
-      <tr><td><code>REND-C1</code></td><td>La escalación corre sin reloj y se come el cron entero</td><td class="no">pendiente</td></tr>
-      <tr><td><code>REND-C2</code></td><td>«Ejecutar ahora» manda hasta 500 mensajes en serie, sin <code>maxDuration</code></td><td class="no">pendiente</td></tr>
-      <tr><td><code>REND-C3</code></td><td>El cruce del consolidado sigue sin reloj; ventana de corrupción abierta</td><td class="no">pendiente</td></tr>
-    </tbody>
-  </table>
-
-  <h2>Compuerta — árbol final de <code>claude/auditoria-3</code></h2>
-  <table>
-    <thead><tr><th>Comando</th><th>Salida real</th><th>Estado</th></tr></thead>
-    <tbody>
-      <tr><td><code>npm test</code></td><td>269 archivos · 3,182 verdes · 1 skip</td><td class="ok">verde</td></tr>
-      <tr><td><code>npx tsc --noEmit -p .</code></td><td>sin salida</td><td class="ok">limpio</td></tr>
-      <tr><td><code>npm run lint</code></td><td>0 errores · 25 warnings</td><td class="ok">verde</td></tr>
-      <tr><td><code>npm run build</code></td><td>no se corre en la nube — pide Supabase, OpenRouter, Facturapi y Upstash</td><td class="no">no aplica</td></tr>
-    </tbody>
-  </table>
-
-  <p class="nota">
-    El pase 1 de esta ronda dio 6 críticos por cerrados ✅ en disco. Los auditores
-    de este pase encontraron que cuatro de esas rutas siguen abiertas por el otro
-    extremo — y una de las pruebas que los anclaba pasa con la función revertida.
-    Esa es la razón de fondo de la bajada, y vale más que el número.
-  </p>
-
+<div class="fila">
+  <div class="caja"><div class="et">Global — recolección</div><div class="n">5.4 <span class="sube" style="font-size:15px">▲0.1</span></div><div class="mini">pase 2: 5.3</div></div>
+  <div class="caja"><div class="et">Global — cierre</div><div class="n">5.5</div><div class="mini">tras cerrar 2 críticos con ancla</div></div>
+  <div class="caja"><div class="et">Rubros auditados</div><div class="n">12 / 12</div><div class="mini">contexto fresco, uno por rubro</div></div>
+  <div class="caja"><div class="et">Hallazgos</div><div class="n">134</div><div class="mini">13 C · 46 A · 42 M · 33 B</div></div>
+  <div class="caja"><div class="et">Críticos cerrados</div><div class="n">2 / 13</div><div class="mini">11 pendientes con escenario</div></div>
 </div>
+
+<h2>Los doce rubros</h2>
+<table>
+  <thead><tr>
+    <th>Rubro</th><th class="num">Pase 2</th><th class="num">Hoy</th><th class="num">Δ</th>
+    <th>Razón del movimiento</th><th class="num">C / A / M / B</th>
+  </tr></thead>
+  <tbody>
+    <tr><td>Frontend</td><td class="num">5</td><td class="num">6</td><td class="num sube">▲1</td><td class="razon">se atacó y subió — FE-C1 sigue cerrado y no reabrió con los 81 commits</td><td class="num"><span class="pill pc">0</span> <span class="pill pa">3</span> <span class="pill pm">3</span> <span class="pill pb">4</span></td></tr>
+    <tr><td>Backend y API</td><td class="num">5</td><td class="num">6</td><td class="num sube">▲1</td><td class="razon">se atacó y subió — el robo del viaje vivo murió; queda la raíz</td><td class="num"><span class="pill pc">1</span> <span class="pill pa">4</span> <span class="pill pm">4</span> <span class="pill pb">2</span></td></tr>
+    <tr><td>Agéntico</td><td class="num">5</td><td class="num">3</td><td class="num baja">▼2</td><td class="razon">mirada más profunda — el código no cambió, la nota anterior estaba inflada</td><td class="num"><span class="pill pc">3</span> <span class="pill pa">3</span> <span class="pill pm">2</span> <span class="pill pb">1</span></td></tr>
+    <tr><td>Tool calling</td><td class="num">7</td><td class="num">7</td><td class="num igual">=</td><td class="razon">la regla <code>properties:{}</code> aguantó las once tools nuevas</td><td class="num"><span class="pill pc">0</span> <span class="pill pa">2</span> <span class="pill pm">4</span> <span class="pill pb">3</span></td></tr>
+    <tr><td>Seguridad</td><td class="num">7</td><td class="num">7</td><td class="num igual">=</td><td class="razon">dos CVE murieron; los puntos de una sola capa siguen intactos</td><td class="num"><span class="pill pc">0</span> <span class="pill pa">3</span> <span class="pill pm">6</span> <span class="pill pb">7</span></td></tr>
+    <tr><td>Fiscal</td><td class="num">3.5</td><td class="num">3</td><td class="num baja">▼0.5</td><td class="razon">mirada más profunda — Carta Porte entró sin arnés normativo</td><td class="num"><span class="pill pc">1</span> <span class="pill pa">5</span> <span class="pill pm">2</span> <span class="pill pb">2</span></td></tr>
+    <tr><td>Legal</td><td class="num">5.5</td><td class="num">6</td><td class="num sube">▲0.5</td><td class="razon">se atacó y subió — LEG-C1 cerrado y sin recaída</td><td class="num"><span class="pill pc">0</span> <span class="pill pa">5</span> <span class="pill pm">4</span> <span class="pill pb">2</span></td></tr>
+    <tr><td>Arquitectura</td><td class="num">5</td><td class="num">4</td><td class="num baja">▼1</td><td class="razon">deuda que cobró factura — 380 archivos en una semana duplicaron la verdad</td><td class="num"><span class="pill pc">1</span> <span class="pill pa">4</span> <span class="pill pm">4</span> <span class="pill pb">4</span></td></tr>
+    <tr><td>Pruebas</td><td class="num">5</td><td class="num">6</td><td class="num sube">▲1</td><td class="razon">se atacó y subió — el rojo de cobertura cerró midiendo, no aflojando</td><td class="num"><span class="pill pc">0</span> <span class="pill pa">5</span> <span class="pill pm">4</span> <span class="pill pb">2</span></td></tr>
+    <tr><td>Operabilidad</td><td class="num">6</td><td class="num">7</td><td class="num sube">▲1</td><td class="razon">se atacó y subió — D1–D3 cablearon alertas de verdad</td><td class="num"><span class="pill pc">2</span> <span class="pill pa">4</span> <span class="pill pm">4</span> <span class="pill pb">3</span></td></tr>
+    <tr><td>Rendimiento</td><td class="num">4</td><td class="num">4</td><td class="num igual">=</td><td class="razon">mirada más profunda — la familia "sin reloj" sigue entera, 3ª ronda</td><td class="num"><span class="pill pc">4</span> <span class="pill pa">4</span> <span class="pill pm">2</span> <span class="pill pb">1</span></td></tr>
+    <tr><td>Modelo de datos</td><td class="num">5</td><td class="num">6</td><td class="num sube">▲1</td><td class="razon">se atacó y subió — 0098–0111 son de las mejores migraciones del repo</td><td class="num"><span class="pill pc">1</span> <span class="pill pa">4</span> <span class="pill pm">3</span> <span class="pill pb">2</span></td></tr>
+  </tbody>
+</table>
+
+<h2>Serie histórica de la nota global</h2>
+<div class="serie">
+  <svg viewBox="0 0 720 190" width="100%" height="190" role="img" aria-label="Serie histórica de la nota global">
+    <line x1="46" y1="150" x2="700" y2="150" stroke="#242c37"/>
+    <line x1="46" y1="20" x2="700" y2="20" stroke="#1b2129" stroke-dasharray="3 3"/>
+    <text x="36" y="154" fill="#8b949e" font-size="10" text-anchor="end">0</text>
+    <text x="36" y="24" fill="#8b949e" font-size="10" text-anchor="end">10</text>
+    <polyline fill="none" stroke="#58a6ff" stroke-width="2"
+      points="90,66.2 212,71.4 334,84.1 456,55.7 578,81.5 668,79.0"/>
+    <g fill="#58a6ff">
+      <circle cx="90" cy="66.2" r="4"/><circle cx="212" cy="71.4" r="4"/>
+      <circle cx="334" cy="84.1" r="4"/><circle cx="456" cy="55.7" r="4"/>
+      <circle cx="578" cy="81.5" r="4"/><circle cx="668" cy="79.0" r="5" fill="#3fb950"/>
+    </g>
+    <g fill="#e6edf3" font-size="12" text-anchor="middle" font-weight="600">
+      <text x="90" y="56">6.4</text><text x="212" y="61">6.2</text><text x="334" y="74">5.7</text>
+      <text x="456" y="46">7.1</text><text x="578" y="71">5.3</text><text x="668" y="68" fill="#3fb950">5.4</text>
+    </g>
+    <g fill="#8b949e" font-size="10" text-anchor="middle">
+      <text x="90" y="168">aud. 1</text><text x="212" y="168">aud. 2</text>
+      <text x="334" y="168">a3 recol.</text><text x="456" y="168">a3 cierre</text>
+      <text x="578" y="168">a3 pase 2</text><text x="668" y="168">a3 pase 3</text>
+    </g>
+  </svg>
+  <div class="razon" style="margin-top:6px">El 7.1 de la aud. 3 fue el cierre del pase 1 sobre 31 arreglos del mismo día; el pase 2 lo corrigió a 5.3 al encontrar que cuatro de esos seis críticos tenían la ruta abierta por el otro extremo. La serie sube cuando se ataca y baja cuando se mira mejor — las dos cosas son señal.</div>
+</div>
+
+<h2>Compuerta — salida real sobre el árbol final</h2>
+<div class="fila compuerta">
+  <div class="caja ok"><div class="et">npm test</div><div class="n" style="font-size:19px">4,509 ✓</div><div class="mini">331 archivos · 1 skip · exit 0</div></div>
+  <div class="caja ok"><div class="et">tsc --noEmit</div><div class="n" style="font-size:19px">limpio</div><div class="mini">exit 0</div></div>
+  <div class="caja ok"><div class="et">npm run lint</div><div class="n" style="font-size:19px">0 errores</div><div class="mini">23 warnings (unused-vars en tests)</div></div>
+  <div class="caja warn"><div class="et">npm run build</div><div class="n" style="font-size:19px">n/a</div><div class="mini">no se corre en la nube (sin credenciales)</div></div>
+  <div class="caja warn"><div class="et">npm ci</div><div class="n" style="font-size:19px">INFRA</div><div class="mini">cdn.sheetjs.com bloqueado por política de red</div></div>
+</div>
+
+<h2>Los trece críticos y su estado</h2>
+<div class="serie">
+<ol>
+  <li><span class="cerrado">CERRADO</span> · <b>DAT-C1</b> — <code>tenant.config.agentes</code> no estaba en la lista blanca de la base: la estrategia por flota <b>nunca</b> se pudo guardar. Mig. <code>0112</code> + guardián. <code>285d5e3</code></li>
+  <li><span class="cerrado">CERRADO</span> · <b>FI-C1</b> (reincidente 3ª ronda) — la RFA 2.9 se decidía con el 601 en vez del 624; fallaba en las dos direcciones. <code>86fb450</code></li>
+  <li><span class="pend">PENDIENTE</span> · <b>AG-C1</b> (reincidente) — cierre parcial: la liquidación cierra, el operador oye «se me trabó» y su reenvío cae en «no tienes viaje abierto». <code>processor.ts:2276</code></li>
+  <li><span class="pend">PENDIENTE</span> · <b>AG-C2</b> — el sondeo de migraciones libera el mutex de un viaje que se está liquidando. <code>startup.ts:63-70</code></li>
+  <li><span class="pend">PENDIENTE</span> · <b>AG-C3</b> — el kill switch de 5 de los 7 agentes no lo lee nadie, y «Ejecutar ahora» se salta el único cableado. El comentario de <code>cobranza/page.tsx:105</code> afirma lo contrario. <b>Verificado por el orquestador.</b></li>
+  <li><span class="pend">PENDIENTE</span> · <b>BE-C1</b> (reincidente, medio cerrado) — el histórico importado sigue naciendo <code>abierto</code>. <code>importar_viajes.ts:425</code></li>
+  <li><span class="pend">PENDIENTE</span> · <b>ARQ-C1</b> — la contribución mezcla ingreso de N viajes con costo de TODOS, y el rótulo afirma lo contrario. <code>comercial.ts:140-145</code></li>
+  <li><span class="pend">PENDIENTE</span> · <b>OP-C1</b> (reincidente) — 100 % de fallos sin excepción → HTTP 200 y nivel <code>info</code>. <code>cron/escalar/route.ts:90</code></li>
+  <li><span class="pend">PENDIENTE</span> · <b>OP-C2</b> — Cobranza cierra su propio incidente con un éxito falso. <code>agentes/cobranza.ts:387</code></li>
+  <li><span class="pend">PENDIENTE</span> · <b>REND-C1</b> (reincidente 3ª ronda) — la escalación sola se come 3.5× el <code>maxDuration</code> del cron. <code>escalar_viaje.ts:260</code></li>
+  <li><span class="pend">PENDIENTE</span> · <b>REND-C2</b> — el reloj de Cobranza mide desde su arranque, no desde el de la invocación. <code>agentes/cobranza.ts:363</code></li>
+  <li><span class="pend">PENDIENTE</span> · <b>REND-C3</b> (reincidente) — «Ejecutar ahora» de Cobranza no recibió el reloj que sí recibió el cron. <code>cobranza/page.tsx:108</code></li>
+  <li><span class="pend">PENDIENTE</span> · <b>REND-C4</b> — el barrido de Peajes es un bucle serial de hasta 2,000 UPDATE sin reloj ni <code>maxDuration</code>. <code>consolidado.ts:649-720</code></li>
+</ol>
+<div class="razon" style="margin-top:10px"><b>PR-C1 bajó a ALTO</b> por el propio auditor de pruebas, con razón escrita: confirmó que las 3 <code>it</code> de <code>lotes.test.ts</code> siguen verdes contra un bucle serial, pero la función hoy es correcta — lo que existe es una regresión silenciosa habilitada, no dinero mal hoy.</div>
+</div>
+
+<h2>Lo que no se hizo, y por qué</h2>
+<div class="serie razon">
+Once críticos quedan <b>pendientes con su escenario escrito</b>. Con trece sobre la mesa se prefirió cerrar dos <i>de verdad</i> —prueba que reproduce en rojo, arreglo, verde, suite completa, commit atómico— antes que dejar seis a medias: es exactamente el patrón que el pase 1 de esta ronda ya pagó, cuando dio seis por cerrados y el pase 2 encontró cuatro con la ruta abierta por el otro extremo. Los dos elegidos son los que rompen una regla dura del producto: uno hacía que una pantalla no pudiera guardar <b>nunca</b>, y el otro imprimía una elegibilidad fiscal equivocada citando una regla verificada.
+</div>
+
 </body>
 </html>
