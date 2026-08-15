@@ -1,0 +1,177 @@
+{
+  "ronda": 5,
+  "tope": 3.5,
+  "filas": [
+    {
+      "t": "2026-08-15T21:31:41.606Z",
+      "ronda": 5,
+      "quien": "auditor-frontend",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 4118,
+      "tokOut": 2690,
+      "cost": 0.006588
+    },
+    {
+      "t": "2026-08-15T21:32:09.148Z",
+      "ronda": 5,
+      "quien": "auditor-agentico",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 4384,
+      "tokOut": 3093,
+      "cost": 0.00459795
+    },
+    {
+      "t": "2026-08-15T21:32:39.909Z",
+      "ronda": 5,
+      "quien": "auditor-backend",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 4377,
+      "tokOut": 13594,
+      "cost": 0.00194057052
+    },
+    {
+      "t": "2026-08-15T21:32:43.940Z",
+      "ronda": 5,
+      "quien": "auditor-seguridad",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 4269,
+      "tokOut": 2299,
+      "cost": 0.003857145
+    },
+    {
+      "t": "2026-08-15T21:32:53.352Z",
+      "ronda": 5,
+      "quien": "auditor-tool-calling",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 4301,
+      "tokOut": 12262,
+      "cost": 0.00175260652
+    },
+    {
+      "t": "2026-08-15T21:33:01.755Z",
+      "ronda": 5,
+      "quien": "auditor-fiscal",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 4158,
+      "tokOut": 3397,
+      "cost": 0.007928625
+    },
+    {
+      "t": "2026-08-15T21:33:06.252Z",
+      "ronda": 5,
+      "quien": "auditor-legal",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 4051,
+      "tokOut": 3235,
+      "cost": 0.00758475
+    },
+    {
+      "t": "2026-08-15T21:33:45.729Z",
+      "ronda": 5,
+      "quien": "auditor-arquitectura",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 4264,
+      "tokOut": 9496,
+      "cost": 0.0015953616
+    },
+    {
+      "t": "2026-08-15T21:33:55.022Z",
+      "ronda": 5,
+      "quien": "auditor-rendimiento",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 4239,
+      "tokOut": 529,
+      "cost": 0.000537283
+    },
+    {
+      "t": "2026-08-15T21:34:06.486Z",
+      "ronda": 5,
+      "quien": "auditor-operabilidad",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 4228,
+      "tokOut": 10370,
+      "cost": 0.0017128048
+    },
+    {
+      "t": "2026-08-15T21:34:10.490Z",
+      "ronda": 5,
+      "quien": "auditor-pruebas",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 4220,
+      "tokOut": 11752,
+      "cost": 0.0019018664
+    },
+    {
+      "t": "2026-08-15T21:34:35.552Z",
+      "ronda": 5,
+      "quien": "auditor-rendimiento",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 4323,
+      "tokOut": 2901,
+      "cost": 0.002582247
+    },
+    {
+      "t": "2026-08-15T21:35:17.782Z",
+      "ronda": 5,
+      "quien": "auditor-datos",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 4229,
+      "tokOut": 12317,
+      "cost": 0.00175521332
+    },
+    {
+      "t": "2026-08-15T21:37:24.328Z",
+      "ronda": 5,
+      "quien": "auditor-seguridad",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 4374,
+      "tokOut": 5159,
+      "cost": 0.00639102
+    },
+    {
+      "t": "2026-08-15T21:38:35.846Z",
+      "ronda": 5,
+      "quien": "auditor-arquitectura",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 4369,
+      "tokOut": 18664,
+      "cost": 0.00583758
+    },
+    {
+      "t": "2026-08-15T21:39:37.079Z",
+      "ronda": 5,
+      "quien": "sintesis",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 24788,
+      "tokOut": 6156,
+      "cost": 0.08632
+    },
+    {
+      "t": "2026-08-15T22:02:58.222Z",
+      "ronda": 5,
+      "quien": "fixer-Fiscal facts keeper",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 226,
+      "tokOut": 1036,
+      "cost": 0.00202725
+    },
+    {
+      "t": "2026-08-15T22:03:24.164Z",
+      "ronda": 5,
+      "quien": "fixer-Logic bugfixer",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 300,
+      "tokOut": 2246,
+      "cost": 0.00208452
+    },
+    {
+      "t": "2026-08-15T22:04:05.166Z",
+      "ronda": 5,
+      "quien": "fixer-Logic bugfixer",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 318,
+      "tokOut": 3000,
+      "cost": 0.00274833
+    }
+  ]
+}
