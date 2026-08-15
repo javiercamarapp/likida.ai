@@ -59,6 +59,29 @@ async function anotar(
 
 // ── 1. Dar de alta una flota ───────────────────────────────────────────────
 
+/**
+ * Claves de `c_RegimenFiscal` que la RFA 2026 regla 2.9 admite para la
+ * facilidad del 15% de diésel en efectivo.
+ *
+ * La ficha `normas/rfa-2026-2.9.yaml` está `verificado_fuente_primaria` y su
+ * texto exige tributar «conforme al Título II, Capítulo VII o Título IV,
+ * Capítulo II, Sección I de la Ley del ISR». Traducido al catálogo del SAT:
+ *
+ * - Título II, Capítulo VII = **624, Coordinados**.
+ * - Título IV, Capítulo II, Sección I = **612, PF con actividades
+ *   empresariales y profesionales**.
+ *
+ * El **601 (General de Ley Personas Morales) NO es un coordinado**: es el
+ * régimen de una PM del Título II en general, y la regla acota al Capítulo VII.
+ * Tenerlo aquí fallaba en las dos direcciones — le concedía la facilidad a
+ * quien no la tiene y se la negaba al coordinado que sí, que además ni
+ * siquiera podía elegirse en el alta.
+ *
+ * Se exporta para que el arnés pueda atarlo contra la ficha: es una cifra
+ * fiscal y el producto la imprime.
+ */
+export const REGIMENES_ELEGIBLES_RFA_2_9 = ['624', '612'];
+
 export interface NuevaFlota {
   nombre: string;
   rfc?: string;
@@ -112,14 +135,7 @@ export async function crearFlota(
   }
 
   const admin = supabaseAdmin();
-  // RFA 2026 regla 2.9: el régimen se captura como el código SAT REAL
-  // (tenant.regimen_fiscal — la columna que la facturación ya lee) y la
-  // elegibilidad se DERIVA de él: los códigos 601 (General de Ley PM —
-  // coordinados) y 612 (PF con actividades empresariales) son los dos títulos
-  // que la regla admite. El booleano `dedicacionExclusivaCarga` se guarda en
-  // la config (el otro requisito, que el alta ya pregunta).
-  const REGIMENES_ELEGIBLES = ['601', '612'];
-  const regimenElegible = f.regimenFiscal ? REGIMENES_ELEGIBLES.includes(f.regimenFiscal) : undefined;
+  const regimenElegible = f.regimenFiscal ? REGIMENES_ELEGIBLES_RFA_2_9.includes(f.regimenFiscal) : undefined;
   const facilidad15 = (typeof f.dedicacionExclusivaCarga === 'boolean' && regimenElegible !== undefined)
     ? {
         facilidadCombustibleEfectivo: {
