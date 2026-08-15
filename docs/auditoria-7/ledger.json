@@ -1306,6 +1306,15 @@
       "tokIn": 20401,
       "tokOut": 7284,
       "cost": 0.084314
+    },
+    {
+      "t": "2026-08-15T22:21:23.475Z",
+      "ronda": 7,
+      "quien": "fixer-Logic bugfixer-backend",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 2240,
+      "tokOut": 414,
+      "cost": 0.00133458
     }
   ]
 }
