@@ -1315,6 +1315,96 @@
       "tokIn": 2240,
       "tokOut": 414,
       "cost": 0.00133458
+    },
+    {
+      "t": "2026-08-15T22:22:11.357Z",
+      "ronda": 7,
+      "quien": "fixer-Logic bugfixer-backend",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 2240,
+      "tokOut": 1842,
+      "cost": 0.001638268
+    },
+    {
+      "t": "2026-08-15T22:22:30.316Z",
+      "ronda": 7,
+      "quien": "fixer-Dup unifier-backend",
+      "modelo": "openai/gpt-5.6-luna",
+      "tokIn": 4752,
+      "tokOut": 2148,
+      "cost": 0.001882725
+    },
+    {
+      "t": "2026-08-15T22:22:53.717Z",
+      "ronda": 7,
+      "quien": "fixer-Logic bugfixer-tool-calling",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 5583,
+      "tokOut": 1562,
+      "cost": 0.003787545
+    },
+    {
+      "t": "2026-08-15T22:23:11.419Z",
+      "ronda": 7,
+      "quien": "fixer-Dup unifier-tool-calling",
+      "modelo": "openai/gpt-5.6-luna",
+      "tokIn": 5110,
+      "tokOut": 2355,
+      "cost": 0.002051675
+    },
+    {
+      "t": "2026-08-15T22:23:28.155Z",
+      "ronda": 7,
+      "quien": "fixer-Useless-test pruner-tool-calling",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 3400,
+      "tokOut": 2199,
+      "cost": 0.0005349428
+    },
+    {
+      "t": "2026-08-15T22:23:36.049Z",
+      "ronda": 7,
+      "quien": "fixer-Security sealer-seguridad",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 892,
+      "tokOut": 473,
+      "cost": 0.00443
+    },
+    {
+      "t": "2026-08-15T22:23:39.089Z",
+      "ronda": 7,
+      "quien": "fixer-Fiscal facts keeper-fiscal",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 1678,
+      "tokOut": 337,
+      "cost": 0.001261125
+    },
+    {
+      "t": "2026-08-15T22:23:55.258Z",
+      "ronda": 7,
+      "quien": "fixer-Logic bugfixer-legal",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 2974,
+      "tokOut": 1356,
+      "cost": 0.00247341
+    },
+    {
+      "t": "2026-08-15T22:24:23.656Z",
+      "ronda": 7,
+      "quien": "fixer-Logic bugfixer-legal",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 2917,
+      "tokOut": 2500,
+      "cost": 0.003443895
+    },
+    {
+      "t": "2026-08-15T22:24:28.066Z",
+      "ronda": 7,
+      "quien": "fixer-Dup unifier-legal",
+      "modelo": "openai/gpt-5.6-luna",
+      "tokIn": 4762,
+      "tokOut": 324,
+      "cost": 0.000789575
     }
   ]
 }
