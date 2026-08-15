@@ -1,64 +1,48 @@
-# Progreso — auditoría 3, pase 2 (nube, 14-ago-2026)
+# Progreso — auditoría 3, pase 3 (15-ago-2026, corrida desatendida en la nube)
 
-Una línea por acción, con su sha. Se escribe MIENTRAS avanza.
+Una línea por acción, con su sha. Se escribe MIENTRAS avanza, no al cerrar.
 
-## Fase 0 — anclaje
+## Anclaje
 
-- `INFRA` — el contenedor llegó con `node_modules/` **vacío**: `vitest`, `eslint`
-  y `@types/node` no resolvían. La primera corrida de la compuerta falló por eso,
-  no por el código. `npm ci` → exit 0. Anotado como INFRA, no como hallazgo.
-- Rama `claude/auditoria-3` creada sobre `815d8cb` (= `origin/master`). Árbol
-  limpio al arrancar → **autofix ENCENDIDO**.
-- Compuerta real (tras `npm ci`), 14-ago 11:08:
-  - `npm test` → **268 archivos, 3,177 pruebas verdes, 1 skip** — exit 0
-  - `npx tsc --noEmit -p .` → **limpio**, exit 0
-  - `npm run lint` → **0 errores, 25 warnings** (`no-unused-vars` en tests)
-  - `npm run build` → **NO se corre en la nube** (pide Supabase/OpenRouter/
-    Facturapi/Upstash; su fallo no diría nada del código).
-- Estado heredado del pase 1 (madrugada, en local): los **6 CRÍTICOS cerrados y
-  pusheados a master** (`c8bd2ac`, `444492a`, `b31460c`, `54e0648`, `bb7e228`,
-  `bc3c6c3`) + el alto TC-A1 (`8066054`, `366b66d`). Los **12 reportes de rubro
-  nunca se escribieron** y los 8 fixers de altos **nunca dejaron commit**.
+- `—` Árbol LIMPIO al arrancar (`git status` sin cambios). Autofix HABILITADO.
+- `—` HEAD llegó detached desde `master` (`36aa0e5`). Clon **shallow** (depth 50);
+  hubo que `git fetch --deepen=200` para encontrar la base común.
+- `—` **Decisión de tamaño de ronda: CONTINUACIÓN.** `gh` no existe en este
+  entorno; se listaron los PR con la herramienta MCP de GitHub. Hay **seis** PR
+  de auditoría abiertos; el vivo de esta ronda es **#13 · `claude/auditoria-3`**.
+  No se abre PR nuevo.
+- `01f270e` Merge de `origin/master` (81 commits, 380 archivos, +54,356 líneas) a
+  la rama. Conflictos SOLO en `docs/auditoria-3/*` (add/add: pase 1 en master vs
+  pase 2 en la rama); se resolvieron tomando la versión de la rama (pase 2, la
+  más profunda). **Cero conflictos en código.**
+- `INFRA` `npm ci` **falla** en este contenedor: `package.json:38` pide `xlsx`
+  desde `https://cdn.sheetjs.com/...` y la política de red deniega ese host
+  (403 en el CONNECT; el proxy solo permite `registry.npmjs.org`). npm revierte
+  y deja `node_modules/` vacío — la primera corrida de la compuerta falló por
+  esto, **no por el repo**. Workaround: `xlsx@0.18.5` desde el registry de npm.
+  Es una desviación del lockfile que **no se commitea**; `package.json` y
+  `package-lock.json` se restauran antes de cerrar.
+- `c086464` MAPA del pase 3 en disco: qué llegó de master, la línea base y los
+  11 críticos heredados con su estado.
 
-## Fase 1 — los doce auditores
+### Compuerta al anclaje (salida real, sobre el árbol mergeado)
 
-Lanzados en paralelo, contexto fresco, un archivo cada uno.
+```
+npx vitest run        → 329 archivos, 4,502 pruebas, 1 skipped   exit 0
+npx tsc --noEmit -p . → limpio                                    exit 0
+npm run lint          → 0 errores, 23 warnings (unused-vars)      exit 0
+npm run build         → NO SE CORRE en la nube (sin credenciales)
+```
 
-Los 12 entregaron. 125 hallazgos: 11 C · 43 A · 42 M · 29 B.
+## Auditoría
 
-## Fase 2 — verificación adversarial (orquestador, abriendo el archivo)
+- `—` Doce auditores lanzados en un solo mensaje, contexto fresco, un rubro cada
+  uno, ninguno toca código.
 
-- `FE-C1` **CONFIRMADO** — `chat.tsx:521-523`: el ternario cae a
-  `responder(q, kpis, acred)` con `resp.ok` true y sin `bloques`.
-- `BE-C1` **CONFIRMADO** — `conv.ts:164-181` ordena por `created_at desc` sin
-  filtrar `avisado_en`; `importar_viajes.ts:207-217` inserta `estatus:'abierto'`
-  con el operador amarrado.
-- `DAT-C1` **CONFIRMADO** — `0001_init.sql:49` es `not null` y **ninguna**
-  migración posterior lo altera (barrido de `supabase/migrations/`).
-- `FI-C1` **CONFIRMADO en la ficha** — `normas/rfa-2026-2.9.yaml:11` transcribe
-  "Título II, Capítulo VII o Título IV, Capítulo II, Sección I" y la ficha está
-  `verificado_fuente_primaria` (l.27).
-- `FE-A1` heredado **REFUTADO** por su propio auditor (guardarraíl en
-  `engine.ts:276-279` + migración `0070`). Entra como descartado.
+## Arreglos
 
-## Fase 4 — arreglos
+(se llena conforme entran; uno por commit, citando el ID del hallazgo)
 
-- `649f248` — **FE-C1 (CRÍTICO) CERRADO**. Prueba primero
-  (`src/app/dashboard/chat.test.tsx`, roja: el módulo no exportaba nada) →
-  `respuestaDelTurno(ok, d)` pura y exportada, `responder()` retirada, props
-  `kpis`/`acred` y sus dos consultas de dinero fuera → verde.
-  **Ancla comprobada, no asumida:** con el cuerpo del arreglo revertido a la
-  respuesta fabricada, 4 de los 5 casos se ponen rojos; restaurado, los 5 verdes.
-  Suite completa después: 269 archivos / 3,182 verdes / 1 skip · tsc limpio ·
-  eslint 0 errores.
-- Los otros 10 críticos quedan **pendientes con escenario escrito**. No se
-  arreglaron a ciegas: el pase 1 hizo eso y este pase encontró cuatro de sus
-  rutas abiertas por el otro extremo.
+## Cierre
 
-## Fase 3 y 5 — cierre
-
-- `tablero.html` + `tablero.png` — capturado con Chromium headless
-  (`--force-prefers-reduced-motion`) y **mirado**: 12 rubros contados, notas
-  cuadradas contra la síntesis, 11 críticos, compuerta verde.
-- `00-SINTESIS.md` con las doce notas, el delta y el porqué de cada movimiento.
-- `RESULTADO.md`: PARCIAL.
+(RESULTADO.md, tablero, síntesis, push y actualización del PR #13)
