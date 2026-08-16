@@ -1,0 +1,492 @@
+{
+  "ronda": 13,
+  "tope": 4.5,
+  "filas": [
+    {
+      "t": "2026-08-16T02:28:25.361Z",
+      "ronda": 13,
+      "quien": "auditor-backend",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 3419,
+      "tokOut": 98,
+      "cost": 0.0004358536
+    },
+    {
+      "t": "2026-08-16T02:28:26.016Z",
+      "ronda": 13,
+      "quien": "auditor-frontend",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 2830,
+      "tokOut": 130,
+      "cost": 0.001305
+    },
+    {
+      "t": "2026-08-16T02:28:26.313Z",
+      "ronda": 13,
+      "quien": "auditor-agentico",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 3555,
+      "tokOut": 151,
+      "cost": 0.001456931
+    },
+    {
+      "t": "2026-08-16T02:28:27.222Z",
+      "ronda": 13,
+      "quien": "auditor-backend",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 4772,
+      "tokOut": 170,
+      "cost": 0.0002590784
+    },
+    {
+      "t": "2026-08-16T02:28:27.860Z",
+      "ronda": 13,
+      "quien": "auditor-frontend",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 3099,
+      "tokOut": 36,
+      "cost": 0.001229625
+    },
+    {
+      "t": "2026-08-16T02:28:28.589Z",
+      "ronda": 13,
+      "quien": "auditor-agentico",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 5199,
+      "tokOut": 134,
+      "cost": 0.000887313
+    },
+    {
+      "t": "2026-08-16T02:28:29.054Z",
+      "ronda": 13,
+      "quien": "auditor-backend",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 6205,
+      "tokOut": 197,
+      "cost": 0.0002740808
+    },
+    {
+      "t": "2026-08-16T02:28:29.407Z",
+      "ronda": 13,
+      "quien": "auditor-frontend",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 4411,
+      "tokOut": 18,
+      "cost": 0.001687875
+    },
+    {
+      "t": "2026-08-16T02:28:30.378Z",
+      "ronda": 13,
+      "quien": "auditor-backend",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 6703,
+      "tokOut": 94,
+      "cost": 0.0001217832
+    },
+    {
+      "t": "2026-08-16T02:28:30.593Z",
+      "ronda": 13,
+      "quien": "auditor-agentico",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 10122,
+      "tokOut": 116,
+      "cost": 0.00229535
+    },
+    {
+      "t": "2026-08-16T02:28:31.003Z",
+      "ronda": 13,
+      "quien": "auditor-frontend",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 5377,
+      "tokOut": 34,
+      "cost": 0.002080125
+    },
+    {
+      "t": "2026-08-16T02:28:31.663Z",
+      "ronda": 13,
+      "quien": "auditor-backend",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 8879,
+      "tokOut": 87,
+      "cost": 0.0003366552
+    },
+    {
+      "t": "2026-08-16T02:28:32.472Z",
+      "ronda": 13,
+      "quien": "auditor-agentico",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 14620,
+      "tokOut": 86,
+      "cost": 0.002072456
+    },
+    {
+      "t": "2026-08-16T02:28:32.580Z",
+      "ronda": 13,
+      "quien": "auditor-frontend",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 5996,
+      "tokOut": 32,
+      "cost": 0.0023085
+    },
+    {
+      "t": "2026-08-16T02:28:33.300Z",
+      "ronda": 13,
+      "quien": "auditor-backend",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 12895,
+      "tokOut": 128,
+      "cost": 0.000611828
+    },
+    {
+      "t": "2026-08-16T02:28:34.418Z",
+      "ronda": 13,
+      "quien": "auditor-agentico",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 18501,
+      "tokOut": 86,
+      "cost": 0.001828131
+    },
+    {
+      "t": "2026-08-16T02:28:34.469Z",
+      "ronda": 13,
+      "quien": "auditor-frontend",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 7986,
+      "tokOut": 37,
+      "cost": 0.00172425
+    },
+    {
+      "t": "2026-08-16T02:28:34.849Z",
+      "ronda": 13,
+      "quien": "auditor-backend",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 15413,
+      "tokOut": 89,
+      "cost": 0.0004090184
+    },
+    {
+      "t": "2026-08-16T02:28:36.315Z",
+      "ronda": 13,
+      "quien": "auditor-agentico",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 22477,
+      "tokOut": 86,
+      "cost": 0.001845995
+    },
+    {
+      "t": "2026-08-16T02:28:36.338Z",
+      "ronda": 13,
+      "quien": "auditor-backend",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 18863,
+      "tokOut": 77,
+      "cost": 0.0005374264
+    },
+    {
+      "t": "2026-08-16T02:28:36.357Z",
+      "ronda": 13,
+      "quien": "auditor-frontend",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 9230,
+      "tokOut": 40,
+      "cost": 0.00219435
+    },
+    {
+      "t": "2026-08-16T02:28:37.737Z",
+      "ronda": 13,
+      "quien": "auditor-backend",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 21084,
+      "tokOut": 88,
+      "cost": 0.0003948448
+    },
+    {
+      "t": "2026-08-16T02:28:37.912Z",
+      "ronda": 13,
+      "quien": "auditor-frontend",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 10230,
+      "tokOut": 28,
+      "cost": 0.00388875
+    },
+    {
+      "t": "2026-08-16T02:28:38.744Z",
+      "ronda": 13,
+      "quien": "auditor-agentico",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 24440,
+      "tokOut": 131,
+      "cost": 0.001027354
+    },
+    {
+      "t": "2026-08-16T02:28:39.118Z",
+      "ronda": 13,
+      "quien": "auditor-backend",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 25220,
+      "tokOut": 88,
+      "cost": 0.000657776
+    },
+    {
+      "t": "2026-08-16T02:28:39.595Z",
+      "ronda": 13,
+      "quien": "auditor-frontend",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 10301,
+      "tokOut": 31,
+      "cost": 0.0012422625
+    },
+    {
+      "t": "2026-08-16T02:28:40.531Z",
+      "ronda": 13,
+      "quien": "auditor-backend",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 29128,
+      "tokOut": 88,
+      "cost": 0.0006429248
+    },
+    {
+      "t": "2026-08-16T02:28:40.982Z",
+      "ronda": 13,
+      "quien": "auditor-agentico",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 28291,
+      "tokOut": 86,
+      "cost": 0.001890365
+    },
+    {
+      "t": "2026-08-16T02:28:41.348Z",
+      "ronda": 13,
+      "quien": "auditor-frontend",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 11387,
+      "tokOut": 27,
+      "cost": 0.0016399875
+    },
+    {
+      "t": "2026-08-16T02:28:43.239Z",
+      "ronda": 13,
+      "quien": "auditor-agentico",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 32034,
+      "tokOut": 87,
+      "cost": 0.001807744
+    },
+    {
+      "t": "2026-08-16T02:28:43.294Z",
+      "ronda": 13,
+      "quien": "auditor-frontend",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 12104,
+      "tokOut": 40,
+      "cost": 0.0019339125
+    },
+    {
+      "t": "2026-08-16T02:28:44.188Z",
+      "ronda": 13,
+      "quien": "auditor-backend",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 32649,
+      "tokOut": 428,
+      "cost": 0.0006866552
+    },
+    {
+      "t": "2026-08-16T02:28:44.956Z",
+      "ronda": 13,
+      "quien": "auditor-frontend",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 12764,
+      "tokOut": 26,
+      "cost": 0.002156175
+    },
+    {
+      "t": "2026-08-16T02:28:46.314Z",
+      "ronda": 13,
+      "quien": "auditor-backend",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 35533,
+      "tokOut": 147,
+      "cost": 0.000537572
+    },
+    {
+      "t": "2026-08-16T02:28:46.419Z",
+      "ronda": 13,
+      "quien": "auditor-agentico",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 35740,
+      "tokOut": 154,
+      "cost": 0.00187688
+    },
+    {
+      "t": "2026-08-16T02:28:46.736Z",
+      "ronda": 13,
+      "quien": "auditor-frontend",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 13972,
+      "tokOut": 37,
+      "cost": 0.0012868875
+    },
+    {
+      "t": "2026-08-16T02:28:49.185Z",
+      "ronda": 13,
+      "quien": "auditor-agentico",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 38120,
+      "tokOut": 146,
+      "cost": 0.001303956
+    },
+    {
+      "t": "2026-08-16T02:28:51.685Z",
+      "ronda": 13,
+      "quien": "auditor-agentico",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 40531,
+      "tokOut": 87,
+      "cost": 0.001307523
+    },
+    {
+      "t": "2026-08-16T02:28:53.972Z",
+      "ronda": 13,
+      "quien": "auditor-agentico",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 40649,
+      "tokOut": 90,
+      "cost": 0.000257143
+    },
+    {
+      "t": "2026-08-16T02:28:59.278Z",
+      "ronda": 13,
+      "quien": "auditor-frontend",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 2745,
+      "tokOut": 1933,
+      "cost": 0.00465375
+    },
+    {
+      "t": "2026-08-16T02:29:01.340Z",
+      "ronda": 13,
+      "quien": "auditor-tool-calling",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 3563,
+      "tokOut": 206,
+      "cost": 0.0004862536
+    },
+    {
+      "t": "2026-08-16T02:29:03.015Z",
+      "ronda": 13,
+      "quien": "auditor-tool-calling",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 5310,
+      "tokOut": 137,
+      "cost": 0.0003075968
+    },
+    {
+      "t": "2026-08-16T02:29:04.755Z",
+      "ronda": 13,
+      "quien": "auditor-tool-calling",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 9996,
+      "tokOut": 165,
+      "cost": 0.0007256144
+    },
+    {
+      "t": "2026-08-16T02:29:05.549Z",
+      "ronda": 13,
+      "quien": "auditor-backend",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 3004,
+      "tokOut": 1739,
+      "cost": 0.00090748
+    },
+    {
+      "t": "2026-08-16T02:29:06.308Z",
+      "ronda": 13,
+      "quien": "auditor-tool-calling",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 15941,
+      "tokOut": 112,
+      "cost": 0.0008932952
+    },
+    {
+      "t": "2026-08-16T02:29:07.844Z",
+      "ronda": 13,
+      "quien": "auditor-tool-calling",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 19651,
+      "tokOut": 86,
+      "cost": 0.0005975816
+    },
+    {
+      "t": "2026-08-16T02:29:07.923Z",
+      "ronda": 13,
+      "quien": "auditor-seguridad",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 3496,
+      "tokOut": 93,
+      "cost": 0.001380806
+    },
+    {
+      "t": "2026-08-16T02:29:09.393Z",
+      "ronda": 13,
+      "quien": "auditor-tool-calling",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 23330,
+      "tokOut": 126,
+      "cost": 0.0005969936
+    },
+    {
+      "t": "2026-08-16T02:29:10.156Z",
+      "ronda": 13,
+      "quien": "auditor-seguridad",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 4069,
+      "tokOut": 162,
+      "cost": 0.000420123
+    },
+    {
+      "t": "2026-08-16T02:29:10.926Z",
+      "ronda": 13,
+      "quien": "auditor-tool-calling",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 26222,
+      "tokOut": 108,
+      "cost": 0.0004875472
+    },
+    {
+      "t": "2026-08-16T02:29:13.570Z",
+      "ronda": 13,
+      "quien": "auditor-seguridad",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 10117,
+      "tokOut": 203,
+      "cost": 0.002755377
+    },
+    {
+      "t": "2026-08-16T02:29:15.624Z",
+      "ronda": 13,
+      "quien": "auditor-seguridad",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 13805,
+      "tokOut": 123,
+      "cost": 0.001750121
+    },
+    {
+      "t": "2026-08-16T02:29:17.425Z",
+      "ronda": 13,
+      "quien": "auditor-seguridad",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 16609,
+      "tokOut": 55,
+      "cost": 0.001309437
+    },
+    {
+      "t": "2026-08-16T02:29:19.150Z",
+      "ronda": 13,
+      "quien": "auditor-seguridad",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 18839,
+      "tokOut": 89,
+      "cost": 0.001094315
+    }
+  ]
+}
