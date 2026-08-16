@@ -58,7 +58,7 @@ Causa raíz probable: no hay frontera entre "dato que una tool leyó de la base"
 sin marcar cuál de sus campos es contenido no confiable.
 
 ### [ALTO] `proponer_accion` deja que el modelo elija la palanca en texto libre, y el `efecto` de la previsualización no cambia con ella
-`src/lib/agents/copiloto.ts:58-68` (el schema) × `copiloto-acciones.ts:36-39` × `copiloto.tsx:223`
+`src/lib/agents/copiloto.ts:58-67` (el schema, `objetivo` en `:62`) × `copiloto-acciones.ts:36-39` × `src/app/admin/copiloto.tsx:223`
 
 Escenario: `objetivo` está declarado `{ type: 'string' }` **sin enum**, aunque
 el enum ya existe y es exactamente el que el ejecutor valida
@@ -416,12 +416,12 @@ modelo.** Ninguna acepta `tenant_id`, `flota`, `rfc` ni fragmento de consulta.
 | 10-12 | `serie_gasto`, `serie_liquidado`, `top_rutas` | `chat-tools.ts:149,164,179` | `PARAM_MODO` enum ×3 | ventana, no dato |
 | 13 | `proyectar_serie` | `chat-tools.ts:216` | 2 enums cerrados | qué serie + ventana |
 | 14 | `entregar_respuesta` | `analista.ts:202-234` | strings libres | **salida**; revalidada en `:50-112` |
-| 15-19 | `metrica_negocio`, `conteos_plataforma`, `bandeja`, `guardia`, `metrica_norte` | `copiloto-tools.ts:58,86,97,126,147` | `SIN_PARAMS` | cross-tenant por diseño (superadmin) |
-| 20-23 | `estado_agentes`, `pipeline_ventas`, `cobranza_saas`, `costo_por_fase_modelo` | `copiloto-tools.ts:172,224,257,276` | `SIN_PARAMS` | cross-tenant por diseño |
+| 15-19 | `metrica_negocio`, `conteos_plataforma`, `bandeja`, `guardia`, `metrica_norte` | `copiloto-tools.ts:58,85,97,125,146` | `SIN_PARAMS` | cross-tenant por diseño (superadmin) |
+| 20-23 | `estado_agentes`, `pipeline_ventas`, `cobranza_saas`, `costo_por_fase_modelo` | `copiloto-tools.ts:171,224,256,276` | `SIN_PARAMS` | cross-tenant por diseño |
 | 24 | `traza_corrida` | `copiloto-tools.ts:197-203` | `id: string` | **acepta dato del modelo**; uuid validado antes de tocar la base (`:209`) |
 | 25 | `bitacora` | `copiloto-tools.ts:292-297` | `filtro: string` | **acepta dato del modelo**; saneado a `[a-z0-9._:-]` en `bitacora.ts:51` |
-| 26 | `proponer_accion` | `copiloto.ts:58-68` | `accion` enum + **`objetivo` y `motivo` strings libres** | **el único cuyo parámetro decide un efecto** — ver ALTO |
-| 27 | `entregar_respuesta_admin` | `copiloto.ts:102-132` | array de bloques | **salida**; revalidada por `validarBloques` |
+| 26 | `proponer_accion` | `copiloto.ts:58-67` | `accion` enum + **`objetivo` y `motivo` strings libres** | **el único cuyo parámetro decide un efecto** — ver ALTO |
+| 27 | `entregar_respuesta_admin` | `copiloto.ts:101-132` | array de bloques | **salida**; revalidada por `validarBloques` |
 
 Lo que sí quedó bien en la superficie nueva:
 
@@ -462,7 +462,7 @@ Lo que sí quedó bien en la superficie nueva:
   camino**; abierto en `generateStructured` y en el Copiloto (ver MEDIOs).
 - **`bandeja` no colapsa `null` a `0`**: `copiloto-tools.ts:104-106` enumera las
   fuentes ciegas por nombre y el system prompt obliga a decirlas
-  (`copiloto.ts:162`). `metrica_norte` (`:159-161`) devuelve `sinHumanoHoy: null`
+  (`copiloto.ts:162`). `metrica_norte` (`copiloto-tools.ts:154-161`) devuelve `sinHumanoHoy: null`
   cuando el numerador no se pudo leer, en vez de restar contra un hueco.
 - **`bandeja` y `guardia` sí recortan `detalle`** — la descripción de una talacha
   y el nombre del emisor de un CFDI de proveedor NO cruzan a OpenRouter
