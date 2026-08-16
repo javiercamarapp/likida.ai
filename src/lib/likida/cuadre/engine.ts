@@ -160,7 +160,22 @@ export function copiasDeComprobante(gastos: Gasto[]): Map<string, string> {
   const originalDe = new Map<string, string>();
   for (const g of gastos) {
     if (g.cfdiUuid) {
-      const u = g.cfdiUuid.toLowerCase();
+      // POR `(uuid, cfdiOrden)`, NO POR EL UUID SOLO.
+      //
+      // Un CFDI ampara N gastos: es el caso que la mig. 0065 diseñó para CAPUFE
+      // —"ocho casetas de un viaje = ocho filas de `gasto` y UN `cfdi_uuid`"—,
+      // que por eso agregó `cfdi_orden` (1..N, `default 1`) y movió el índice
+      // único a `(tenant_id, cfdi_uuid, cfdi_orden)`.
+      //
+      // Deduplicando por el UUID a secas, las siete casetas que seguían a la
+      // primera salían marcadas como copias suyas: $7,000 de un lote de ocho a
+      // $1,000 desaparecían del total comprobado, del deducible y de la base del
+      // estímulo de peaje, y se le cobraban al operador como diferencia.
+      //
+      // El duplicado de verdad —dos fotos del mismo XML— no se pierde: ambas
+      // filas nacen con el `default 1`, comparten llave, y la segunda sigue
+      // siendo copia de la primera.
+      const u = `${g.cfdiUuid.toLowerCase()}|${g.cfdiOrden ?? 1}`;
       const previo = vistoUuid.get(u);
       if (previo) originalDe.set(g.id, previo);
       else vistoUuid.set(u, g.id);

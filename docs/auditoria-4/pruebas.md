@@ -101,6 +101,13 @@ cuando el número dejó de ser único, más una regla de lint apagada que convie
 el duplicado en un error de `tsc` en vez de en un error de lint que se vería al
 escribirlo.
 
+> **Estado al cierre de este reporte (16-ago, 11:35 UTC):** mientras escribía,
+> el orquestador renombró `0112_config_llave_agentes.sql` → `0121_…` y ajustó
+> el mapa; `npx tsc --noEmit -p .` vuelve a dar **exit 0**. El hallazgo queda
+> escrito porque lo que lo permitió sigue en pie: la suite verde no puede ver
+> un `tsc` rojo, `no-dupe-keys` sigue apagada, y la red de migraciones sigue
+> indexando por un número que dejó de ser único.
+
 ---
 
 ### [ALTO] `wa_pendientes.ts` al 2.9%: el buffer durable del apagado no tiene una sola prueba que lo ejecute

@@ -38,6 +38,13 @@ export interface Gasto {
   rfcEmisor?: string;
   rfcReceptor?: string;    // debe ser el RFC de la empresa (no el chofer)
   cfdiUuid?: string;
+  /**
+   * 1..N dentro del MISMO `cfdiUuid` (mig. 0065). Un CFDI de CAPUFE ampara N
+   * casetas: son N gastos distintos, no N−1 copias. `default 1` en la base, así
+   * que dos filas del mismo comprobante comparten `(uuid, orden)` y siguen
+   * detectándose como copias.
+   */
+  cfdiOrden?: number;
   imagenUrl?: string;
   imgHash?: string;        // SHA-256 del contenido de la foto (dedup de reenvíos)
   ocrConfianza?: number;   // 0–1

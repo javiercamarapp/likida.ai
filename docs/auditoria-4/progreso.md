@@ -41,3 +41,8 @@ npm run build         → NO SE CORRE en la nube (sin credenciales)
   renumera a `0121_config_llave_agentes.sql` (siguiente libre) y la llave
   duplicada de `EXENTAS` pasa a `'0121'`. Rojo comprobado ANTES (TS1117 en la
   línea base), verde después: `tsc` exit 0, suite 348/4,652 verdes.
+- `FIX A4-FIS-C1` — un CFDI que ampara N casetas ya no se lee como N−1 copias.
+  Rojo comprobado ANTES (`expected 1000 to be 8000` en el lote de ocho casetas
+  de $1,000), verde después. Suite 349 archivos / 4,657 verdes, `tsc` exit 0,
+  lint limpio. Tres archivos: el tipo, el `select` de `getGastos` y la llave del
+  dedup.
