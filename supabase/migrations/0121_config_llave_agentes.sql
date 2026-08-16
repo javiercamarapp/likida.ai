@@ -1,4 +1,4 @@
--- 0112 — `agentes` faltaba en la lista blanca de config_tenant_valida (DAT-C1).
+-- 0121 — `agentes` faltaba en la lista blanca de config_tenant_valida (DAT-C1).
 --
 -- `config_tenant_valida()` corre en un CHECK en CADA insert/update de `tenant`
 -- (`0026_tenant_config_esquema.sql:336`) y su "Regla 2: nada de llaves

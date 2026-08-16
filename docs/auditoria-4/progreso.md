@@ -37,3 +37,7 @@ npm run build         → NO SE CORRE en la nube (sin credenciales)
   quedó con la llave `'0112'` DOS veces en `EXENTAS`. `vitest` pasa igual — el
   segundo literal pisa al primero en silencio — y solo `tsc` lo caza.
   Se arregla en la fase 4; el diario deja la línea base roja escrita.
+- `FIX A4-DAT-C1` — colisión de número 0112 resuelta: la migración del pase 3 se
+  renumera a `0121_config_llave_agentes.sql` (siguiente libre) y la llave
+  duplicada de `EXENTAS` pasa a `'0121'`. Rojo comprobado ANTES (TS1117 en la
+  línea base), verde después: `tsc` exit 0, suite 348/4,652 verdes.

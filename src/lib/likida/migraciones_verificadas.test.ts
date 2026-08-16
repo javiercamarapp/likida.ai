@@ -58,7 +58,12 @@ const EXENTAS: Record<string, string> = {
   '0083': 'redefine config_tenant_valida exigiendo la FORMA de la facilidad: si falta, una config con "sí" en la llave revienta ruidoso en el UPDATE del tenant.',
   '0084': 'RPC sumar_combustible_ejercicio: si falta, getAcumuladoCombustible lanza ruidoso en el primer cuadre (el RPC no existe). El resultado se prueba en TS contra el esquema de migraciones.',
   '0085': 'redefine config_tenant_valida: la 0083 asignaba jsonb a una variable record (crash "anonymous composite types") en cada UPDATE de tenant con la facilidad declarada. El bloque 61 de verificaciones.sql reproduce el escenario exacto (update con facilidad en config).',
-  '0112': 'redefine config_tenant_valida agregando `agentes` a la lista blanca (DAT-C1, auditoría 3 pase 3) — mismo criterio que la 0082, 0083 y 0085: si la migración falta, guardar la estrategia de agentes revienta RUIDOSO en el UPDATE del tenant con el error de "llave que CuadraConfig no conoce", que es exactamente el bug que cierra. No hay garantía silenciosa que solo la base pueda demostrar. Lo que sí se puede comprobar sin base —que la lista blanca y las llaves de primer nivel del tipo no vuelvan a divergir, en los dos sentidos— es el guardián `config_llaves_db.test.ts`.',
+  // Nació como `0112` en el pase 3 de la auditoría 3, y `master` traía OTRA
+  // 0112 (`0112_agregados_rpc.sql`). El merge del pase 4 dejó dos archivos
+  // reclamando el mismo número y este mapa con la llave `'0112'` DOS veces: el
+  // segundo literal pisaba al primero en silencio y `vitest` pasaba igual —
+  // solo `tsc` lo cazó (TS1117). Renumerada a `0121`, que es el siguiente libre.
+  '0121': 'redefine config_tenant_valida agregando `agentes` a la lista blanca (DAT-C1, auditoría 3 pase 3) — mismo criterio que la 0082, 0083 y 0085: si la migración falta, guardar la estrategia de agentes revienta RUIDOSO en el UPDATE del tenant con el error de "llave que CuadraConfig no conoce", que es exactamente el bug que cierra. No hay garantía silenciosa que solo la base pueda demostrar. Lo que sí se puede comprobar sin base —que la lista blanca y las llaves de primer nivel del tipo no vuelvan a divergir, en los dos sentidos— es el guardián `config_llaves_db.test.ts`.',
   '0001': 'esquema base: si falta, no arranca nada. Un bloque no aporta información que el primer INSERT no dé.',
   '0003': 'tabla de costos de LLM: telemetría. No hay garantía que romper.',
   '0004': 'columna de config fiscal. El bloque 7 (0026) sí comprueba lo que importa: que esa config no pueda apagar un tope de dinero.',
