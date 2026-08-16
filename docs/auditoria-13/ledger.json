@@ -2863,6 +2863,24 @@
       "tokIn": 21756,
       "tokOut": 8601,
       "cost": 0.094926
+    },
+    {
+      "t": "2026-08-16T03:03:11.262Z",
+      "ronda": 13,
+      "quien": "fixer-Fiscal facts keeper-fiscal",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 1463,
+      "tokOut": 325,
+      "cost": 0.001158
+    },
+    {
+      "t": "2026-08-16T03:03:44.077Z",
+      "ronda": 13,
+      "quien": "fixer-Logic bugfixer-legal",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 2861,
+      "tokOut": 2500,
+      "cost": 0.003419535
     }
   ]
 }
