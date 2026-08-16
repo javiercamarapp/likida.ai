@@ -46,3 +46,11 @@ npm run build         → NO SE CORRE en la nube (sin credenciales)
   de $1,000), verde después. Suite 349 archivos / 4,657 verdes, `tsc` exit 0,
   lint limpio. Tres archivos: el tipo, el `select` de `getGastos` y la llave del
   dedup.
+- `TABLERO` — `tablero.html` pintado y **mirado** (`tablero.png`, 1280×2000).
+  Primera captura salió con las barras de la serie histórica invisibles (altura
+  en % dentro de un flex column sin altura definida); corregido a píxeles y
+  recapturado. Contados 12 rubros; las notas cuadran con la síntesis.
+- `CIERRE` — `verificacion.md`, `00-SINTESIS.md` y `RESULTADO.md` escritos.
+  Compuerta final: 349 archivos / 4,657 verdes, `tsc` limpio, lint 0/0.
+- `PENDIENTE a propósito` — A4-OP-C2: arreglo de una línea, patrón correcto en
+  `escalar_viaje.ts:392`, pero sin arnés que lo reproduzca en rojo no se toca.
