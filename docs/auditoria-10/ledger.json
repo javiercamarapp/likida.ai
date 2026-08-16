@@ -1,0 +1,1203 @@
+{
+  "ronda": 10,
+  "tope": 6.5,
+  "filas": [
+    {
+      "t": "2026-08-15T23:11:36.461Z",
+      "ronda": 10,
+      "quien": "rutina-crash-fuzzer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 875,
+      "tokOut": 234,
+      "cost": 0.002962
+    },
+    {
+      "t": "2026-08-15T23:11:38.483Z",
+      "ronda": 10,
+      "quien": "rutina-crash-fuzzer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 4021,
+      "tokOut": 123,
+      "cost": 0.007628
+    },
+    {
+      "t": "2026-08-15T23:11:40.503Z",
+      "ronda": 10,
+      "quien": "rutina-crash-fuzzer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 8248,
+      "tokOut": 128,
+      "cost": 0.011312
+    },
+    {
+      "t": "2026-08-15T23:11:56.009Z",
+      "ronda": 10,
+      "quien": "rutina-crash-fuzzer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 11820,
+      "tokOut": 100,
+      "cost": 0.024048
+    },
+    {
+      "t": "2026-08-15T23:12:00.693Z",
+      "ronda": 10,
+      "quien": "rutina-crash-fuzzer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 15360,
+      "tokOut": 187,
+      "cost": 0.014178
+    },
+    {
+      "t": "2026-08-15T23:12:06.995Z",
+      "ronda": 10,
+      "quien": "rutina-crash-fuzzer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 19185,
+      "tokOut": 173,
+      "cost": 0.016368
+    },
+    {
+      "t": "2026-08-15T23:12:13.823Z",
+      "ronda": 10,
+      "quien": "rutina-crash-fuzzer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 26244,
+      "tokOut": 164,
+      "cost": 0.024864
+    },
+    {
+      "t": "2026-08-15T23:12:20.054Z",
+      "ronda": 10,
+      "quien": "rutina-crash-fuzzer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 29476,
+      "tokOut": 92,
+      "cost": 0.020144
+    },
+    {
+      "t": "2026-08-15T23:12:26.239Z",
+      "ronda": 10,
+      "quien": "rutina-crash-fuzzer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 30832,
+      "tokOut": 174,
+      "cost": 0.018548
+    },
+    {
+      "t": "2026-08-15T23:12:49.397Z",
+      "ronda": 10,
+      "quien": "rutina-crash-fuzzer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 35766,
+      "tokOut": 214,
+      "cost": 0.026736
+    },
+    {
+      "t": "2026-08-15T23:12:55.878Z",
+      "ronda": 10,
+      "quien": "rutina-crash-fuzzer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 40747,
+      "tokOut": 293,
+      "cost": 0.029684
+    },
+    {
+      "t": "2026-08-15T23:13:01.944Z",
+      "ronda": 10,
+      "quien": "rutina-crash-fuzzer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 46974,
+      "tokOut": 508,
+      "cost": 0.03594
+    },
+    {
+      "t": "2026-08-15T23:13:09.086Z",
+      "ronda": 10,
+      "quien": "rutina-crash-fuzzer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 54562,
+      "tokOut": 522,
+      "cost": 0.041984
+    },
+    {
+      "t": "2026-08-15T23:13:10.989Z",
+      "ronda": 10,
+      "quien": "rutina-ant-shipper",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 503,
+      "tokOut": 140,
+      "cost": 0.000451125
+    },
+    {
+      "t": "2026-08-15T23:13:12.411Z",
+      "ronda": 10,
+      "quien": "rutina-ant-shipper",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 772,
+      "tokOut": 23,
+      "cost": 0.000332625
+    },
+    {
+      "t": "2026-08-15T23:13:14.308Z",
+      "ronda": 10,
+      "quien": "rutina-ant-shipper",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 1783,
+      "tokOut": 35,
+      "cost": 0.00073425
+    },
+    {
+      "t": "2026-08-15T23:13:15.481Z",
+      "ronda": 10,
+      "quien": "rutina-ant-shipper",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 2550,
+      "tokOut": 32,
+      "cost": 0.00101625
+    },
+    {
+      "t": "2026-08-15T23:13:16.677Z",
+      "ronda": 10,
+      "quien": "rutina-ant-shipper",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 2952,
+      "tokOut": 32,
+      "cost": 0.001167
+    },
+    {
+      "t": "2026-08-15T23:13:17.875Z",
+      "ronda": 10,
+      "quien": "rutina-ant-shipper",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 2993,
+      "tokOut": 18,
+      "cost": 0.001156125
+    },
+    {
+      "t": "2026-08-15T23:13:19.079Z",
+      "ronda": 10,
+      "quien": "rutina-ant-shipper",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 3021,
+      "tokOut": 32,
+      "cost": 0.001192875
+    },
+    {
+      "t": "2026-08-15T23:13:20.357Z",
+      "ronda": 10,
+      "quien": "rutina-ant-shipper",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 4235,
+      "tokOut": 16,
+      "cost": 0.001618125
+    },
+    {
+      "t": "2026-08-15T23:13:21.834Z",
+      "ronda": 10,
+      "quien": "rutina-ant-shipper",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 4471,
+      "tokOut": 32,
+      "cost": 0.001736625
+    },
+    {
+      "t": "2026-08-15T23:13:23.155Z",
+      "ronda": 10,
+      "quien": "rutina-ant-shipper",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 5653,
+      "tokOut": 35,
+      "cost": 0.0021855
+    },
+    {
+      "t": "2026-08-15T23:13:24.504Z",
+      "ronda": 10,
+      "quien": "rutina-ant-shipper",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 6704,
+      "tokOut": 36,
+      "cost": 0.0025815
+    },
+    {
+      "t": "2026-08-15T23:13:25.845Z",
+      "ronda": 10,
+      "quien": "rutina-ant-shipper",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 7298,
+      "tokOut": 37,
+      "cost": 0.002806125
+    },
+    {
+      "t": "2026-08-15T23:13:27.238Z",
+      "ronda": 10,
+      "quien": "rutina-ant-shipper",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 8167,
+      "tokOut": 34,
+      "cost": 0.001812825
+    },
+    {
+      "t": "2026-08-15T23:13:28.763Z",
+      "ronda": 10,
+      "quien": "rutina-logic-simplifier",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 472,
+      "tokOut": 125,
+      "cost": 0.000411375
+    },
+    {
+      "t": "2026-08-15T23:13:29.818Z",
+      "ronda": 10,
+      "quien": "rutina-logic-simplifier",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 540,
+      "tokOut": 16,
+      "cost": 0.0002325
+    },
+    {
+      "t": "2026-08-15T23:13:30.961Z",
+      "ronda": 10,
+      "quien": "rutina-logic-simplifier",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 805,
+      "tokOut": 19,
+      "cost": 0.0003375
+    },
+    {
+      "t": "2026-08-15T23:13:32.227Z",
+      "ronda": 10,
+      "quien": "rutina-logic-simplifier",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 2197,
+      "tokOut": 23,
+      "cost": 0.000867
+    },
+    {
+      "t": "2026-08-15T23:13:33.525Z",
+      "ronda": 10,
+      "quien": "rutina-logic-simplifier",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 3039,
+      "tokOut": 34,
+      "cost": 0.001203375
+    },
+    {
+      "t": "2026-08-15T23:13:36.680Z",
+      "ronda": 10,
+      "quien": "rutina-logic-simplifier",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 4225,
+      "tokOut": 38,
+      "cost": 0.001655625
+    },
+    {
+      "t": "2026-08-15T23:13:38.068Z",
+      "ronda": 10,
+      "quien": "rutina-logic-simplifier",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 6253,
+      "tokOut": 40,
+      "cost": 0.002419875
+    },
+    {
+      "t": "2026-08-15T23:13:39.665Z",
+      "ronda": 10,
+      "quien": "rutina-logic-simplifier",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 8771,
+      "tokOut": 40,
+      "cost": 0.00202695
+    },
+    {
+      "t": "2026-08-15T23:13:41.115Z",
+      "ronda": 10,
+      "quien": "rutina-logic-simplifier",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 11118,
+      "tokOut": 40,
+      "cost": 0.0015574125
+    },
+    {
+      "t": "2026-08-15T23:13:42.637Z",
+      "ronda": 10,
+      "quien": "rutina-logic-simplifier",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 13735,
+      "tokOut": 40,
+      "cost": 0.0025293375
+    },
+    {
+      "t": "2026-08-15T23:13:44.289Z",
+      "ronda": 10,
+      "quien": "rutina-logic-simplifier",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 17439,
+      "tokOut": 40,
+      "cost": 0.0025545
+    },
+    {
+      "t": "2026-08-15T23:13:47.093Z",
+      "ronda": 10,
+      "quien": "rutina-logic-simplifier",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 20425,
+      "tokOut": 39,
+      "cost": 0.0023092125
+    },
+    {
+      "t": "2026-08-15T23:13:48.735Z",
+      "ronda": 10,
+      "quien": "rutina-logic-simplifier",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 21350,
+      "tokOut": 34,
+      "cost": 0.0026487375
+    },
+    {
+      "t": "2026-08-15T23:13:50.330Z",
+      "ronda": 10,
+      "quien": "rutina-logic-bugfixer",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 957,
+      "tokOut": 57,
+      "cost": 0.000245021
+    },
+    {
+      "t": "2026-08-15T23:13:51.756Z",
+      "ronda": 10,
+      "quien": "rutina-logic-bugfixer",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 1252,
+      "tokOut": 45,
+      "cost": 0.000197258
+    },
+    {
+      "t": "2026-08-15T23:13:53.138Z",
+      "ronda": 10,
+      "quien": "rutina-logic-bugfixer",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 1355,
+      "tokOut": 46,
+      "cost": 0.000077285
+    },
+    {
+      "t": "2026-08-15T23:13:54.522Z",
+      "ronda": 10,
+      "quien": "rutina-logic-bugfixer",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 1631,
+      "tokOut": 46,
+      "cost": 0.000197345
+    },
+    {
+      "t": "2026-08-15T23:13:56.026Z",
+      "ronda": 10,
+      "quien": "rutina-logic-bugfixer",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 1889,
+      "tokOut": 49,
+      "cost": 0.000146537
+    },
+    {
+      "t": "2026-08-15T23:13:57.450Z",
+      "ronda": 10,
+      "quien": "rutina-logic-bugfixer",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 3122,
+      "tokOut": 49,
+      "cost": 0.00057246
+    },
+    {
+      "t": "2026-08-15T23:13:58.953Z",
+      "ronda": 10,
+      "quien": "rutina-logic-bugfixer",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 4355,
+      "tokOut": 112,
+      "cost": 0.000666681
+    },
+    {
+      "t": "2026-08-15T23:14:00.783Z",
+      "ronda": 10,
+      "quien": "rutina-logic-bugfixer",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 5602,
+      "tokOut": 69,
+      "cost": 0.000619556
+    },
+    {
+      "t": "2026-08-15T23:14:02.754Z",
+      "ronda": 10,
+      "quien": "rutina-logic-bugfixer",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 8049,
+      "tokOut": 90,
+      "cost": 0.001205327
+    },
+    {
+      "t": "2026-08-15T23:14:04.642Z",
+      "ronda": 10,
+      "quien": "rutina-logic-bugfixer",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 12055,
+      "tokOut": 90,
+      "cost": 0.001843617
+    },
+    {
+      "t": "2026-08-15T23:14:06.886Z",
+      "ronda": 10,
+      "quien": "rutina-logic-bugfixer",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 16017,
+      "tokOut": 90,
+      "cost": 0.001855391
+    },
+    {
+      "t": "2026-08-15T23:14:08.732Z",
+      "ronda": 10,
+      "quien": "rutina-logic-bugfixer",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 19815,
+      "tokOut": 90,
+      "cost": 0.001795825
+    },
+    {
+      "t": "2026-08-15T23:14:10.622Z",
+      "ronda": 10,
+      "quien": "rutina-logic-bugfixer",
+      "modelo": "deepseek/deepseek-v4-pro-0813",
+      "tokIn": 23890,
+      "tokOut": 91,
+      "cost": 0.00191284
+    },
+    {
+      "t": "2026-08-15T23:14:12.856Z",
+      "ronda": 10,
+      "quien": "rutina-dup-unifier",
+      "modelo": "openai/gpt-5.6-luna",
+      "tokIn": 458,
+      "tokOut": 146,
+      "cost": 0.0001334
+    },
+    {
+      "t": "2026-08-15T23:14:15.948Z",
+      "ronda": 10,
+      "quien": "rutina-dup-unifier",
+      "modelo": "openai/gpt-5.6-luna",
+      "tokIn": 4337,
+      "tokOut": 263,
+      "cost": 0.00069985
+    },
+    {
+      "t": "2026-08-15T23:14:19.647Z",
+      "ronda": 10,
+      "quien": "rutina-dup-unifier",
+      "modelo": "openai/gpt-5.6-luna",
+      "tokIn": 12325,
+      "tokOut": 252,
+      "cost": 0.00119334
+    },
+    {
+      "t": "2026-08-15T23:14:27.784Z",
+      "ronda": 10,
+      "quien": "rutina-dup-unifier",
+      "modelo": "openai/gpt-5.6-luna",
+      "tokIn": 19196,
+      "tokOut": 663,
+      "cost": 0.001380195
+    },
+    {
+      "t": "2026-08-15T23:14:31.651Z",
+      "ronda": 10,
+      "quien": "rutina-dup-unifier",
+      "modelo": "openai/gpt-5.6-luna",
+      "tokIn": 22463,
+      "tokOut": 209,
+      "cost": 0.000726005
+    },
+    {
+      "t": "2026-08-15T23:14:37.567Z",
+      "ronda": 10,
+      "quien": "rutina-dup-unifier",
+      "modelo": "openai/gpt-5.6-luna",
+      "tokIn": 23585,
+      "tokOut": 406,
+      "cost": 0.00060875
+    },
+    {
+      "t": "2026-08-15T23:14:41.506Z",
+      "ronda": 10,
+      "quien": "rutina-dup-unifier",
+      "modelo": "openai/gpt-5.6-luna",
+      "tokIn": 24131,
+      "tokOut": 216,
+      "cost": 0.00043397
+    },
+    {
+      "t": "2026-08-15T23:14:51.031Z",
+      "ronda": 10,
+      "quien": "rutina-dup-unifier",
+      "modelo": "openai/gpt-5.6-luna",
+      "tokIn": 24853,
+      "tokOut": 953,
+      "cost": 0.00090363
+    },
+    {
+      "t": "2026-08-15T23:14:52.042Z",
+      "ronda": 10,
+      "quien": "rutina-dead-code-removal",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 949,
+      "tokOut": 92,
+      "cost": 0.0000777238
+    },
+    {
+      "t": "2026-08-15T23:14:54.386Z",
+      "ronda": 10,
+      "quien": "rutina-dead-code-removal",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 1295,
+      "tokOut": 289,
+      "cost": 0.0001284878
+    },
+    {
+      "t": "2026-08-15T23:14:55.856Z",
+      "ronda": 10,
+      "quien": "rutina-dead-code-removal",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 1457,
+      "tokOut": 235,
+      "cost": 0.00010409364
+    },
+    {
+      "t": "2026-08-15T23:14:57.677Z",
+      "ronda": 10,
+      "quien": "rutina-dead-code-removal",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 1795,
+      "tokOut": 269,
+      "cost": 0.00010384668
+    },
+    {
+      "t": "2026-08-15T23:14:59.064Z",
+      "ronda": 10,
+      "quien": "rutina-dead-code-removal",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 4003,
+      "tokOut": 167,
+      "cost": 0.00028346892
+    },
+    {
+      "t": "2026-08-15T23:15:00.718Z",
+      "ronda": 10,
+      "quien": "rutina-dead-code-removal",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 4846,
+      "tokOut": 324,
+      "cost": 0.00020829704
+    },
+    {
+      "t": "2026-08-15T23:15:02.933Z",
+      "ronda": 10,
+      "quien": "rutina-dead-code-removal",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 7460,
+      "tokOut": 400,
+      "cost": 0.00053853744
+    },
+    {
+      "t": "2026-08-15T23:15:06.754Z",
+      "ronda": 10,
+      "quien": "rutina-dead-code-removal",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 9342,
+      "tokOut": 629,
+      "cost": 0.00050237152
+    },
+    {
+      "t": "2026-08-15T23:15:08.644Z",
+      "ronda": 10,
+      "quien": "rutina-dead-code-removal",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 13989,
+      "tokOut": 216,
+      "cost": 0.00094713276
+    },
+    {
+      "t": "2026-08-15T23:15:10.078Z",
+      "ronda": 10,
+      "quien": "rutina-dead-code-removal",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 15222,
+      "tokOut": 207,
+      "cost": 0.00101643248
+    },
+    {
+      "t": "2026-08-15T23:15:11.872Z",
+      "ronda": 10,
+      "quien": "rutina-dead-code-removal",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 17037,
+      "tokOut": 231,
+      "cost": 0.00114423428
+    },
+    {
+      "t": "2026-08-15T23:15:14.700Z",
+      "ronda": 10,
+      "quien": "rutina-dead-code-removal",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 18382,
+      "tokOut": 398,
+      "cost": 0.00128751224
+    },
+    {
+      "t": "2026-08-15T23:15:19.272Z",
+      "ronda": 10,
+      "quien": "rutina-dead-code-removal",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 18815,
+      "tokOut": 614,
+      "cost": 0.00096752068
+    },
+    {
+      "t": "2026-08-15T23:15:20.450Z",
+      "ronda": 10,
+      "quien": "rutina-useless-pruner",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 951,
+      "tokOut": 92,
+      "cost": 0.00004976244
+    },
+    {
+      "t": "2026-08-15T23:15:21.535Z",
+      "ronda": 10,
+      "quien": "rutina-useless-pruner",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 1332,
+      "tokOut": 162,
+      "cost": 0.00008550304
+    },
+    {
+      "t": "2026-08-15T23:15:22.790Z",
+      "ronda": 10,
+      "quien": "rutina-useless-pruner",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 5454,
+      "tokOut": 191,
+      "cost": 0.00037225104
+    },
+    {
+      "t": "2026-08-15T23:15:24.740Z",
+      "ronda": 10,
+      "quien": "rutina-useless-pruner",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 10890,
+      "tokOut": 179,
+      "cost": 0.0007013664
+    },
+    {
+      "t": "2026-08-15T23:15:26.578Z",
+      "ronda": 10,
+      "quien": "rutina-useless-pruner",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 16853,
+      "tokOut": 256,
+      "cost": 0.00116314044
+    },
+    {
+      "t": "2026-08-15T23:15:28.529Z",
+      "ronda": 10,
+      "quien": "rutina-useless-pruner",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 20251,
+      "tokOut": 203,
+      "cost": 0.00138897164
+    },
+    {
+      "t": "2026-08-15T23:15:31.495Z",
+      "ronda": 10,
+      "quien": "rutina-useless-pruner",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 23977,
+      "tokOut": 366,
+      "cost": 0.00166693884
+    },
+    {
+      "t": "2026-08-15T23:15:35.526Z",
+      "ronda": 10,
+      "quien": "rutina-useless-pruner",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 28003,
+      "tokOut": 513,
+      "cost": 0.00196329084
+    },
+    {
+      "t": "2026-08-15T23:15:41.925Z",
+      "ronda": 10,
+      "quien": "rutina-useless-pruner",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 29051,
+      "tokOut": 1206,
+      "cost": 0.00186332692
+    },
+    {
+      "t": "2026-08-15T23:15:45.308Z",
+      "ronda": 10,
+      "quien": "rutina-useless-pruner",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 31438,
+      "tokOut": 443,
+      "cost": 0.00218932784
+    },
+    {
+      "t": "2026-08-15T23:15:49.023Z",
+      "ronda": 10,
+      "quien": "rutina-useless-pruner",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 34702,
+      "tokOut": 171,
+      "cost": 0.00237591984
+    },
+    {
+      "t": "2026-08-15T23:15:55.089Z",
+      "ronda": 10,
+      "quien": "rutina-useless-pruner",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 35776,
+      "tokOut": 950,
+      "cost": 0.0006879208
+    },
+    {
+      "t": "2026-08-15T23:16:00.044Z",
+      "ronda": 10,
+      "quien": "rutina-useless-pruner",
+      "modelo": "deepseek/deepseek-v4-flash-0731",
+      "tokIn": 39418,
+      "tokOut": 876,
+      "cost": 0.00111024984
+    },
+    {
+      "t": "2026-08-15T23:16:02.525Z",
+      "ronda": 10,
+      "quien": "rutina-shipped-inliner",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 472,
+      "tokOut": 147,
+      "cost": 0.000452625
+    },
+    {
+      "t": "2026-08-15T23:16:03.907Z",
+      "ronda": 10,
+      "quien": "rutina-shipped-inliner",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 654,
+      "tokOut": 37,
+      "cost": 0.000314625
+    },
+    {
+      "t": "2026-08-15T23:16:05.105Z",
+      "ronda": 10,
+      "quien": "rutina-shipped-inliner",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 1766,
+      "tokOut": 35,
+      "cost": 0.000727875
+    },
+    {
+      "t": "2026-08-15T23:16:06.740Z",
+      "ronda": 10,
+      "quien": "rutina-shipped-inliner",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 2442,
+      "tokOut": 36,
+      "cost": 0.00098325
+    },
+    {
+      "t": "2026-08-15T23:16:08.275Z",
+      "ronda": 10,
+      "quien": "rutina-shipped-inliner",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 3196,
+      "tokOut": 35,
+      "cost": 0.001264125
+    },
+    {
+      "t": "2026-08-15T23:16:09.774Z",
+      "ronda": 10,
+      "quien": "rutina-shipped-inliner",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 3925,
+      "tokOut": 20,
+      "cost": 0.001509375
+    },
+    {
+      "t": "2026-08-15T23:16:11.461Z",
+      "ronda": 10,
+      "quien": "rutina-shipped-inliner",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 5011,
+      "tokOut": 17,
+      "cost": 0.001911
+    },
+    {
+      "t": "2026-08-15T23:16:15.160Z",
+      "ronda": 10,
+      "quien": "rutina-shipped-inliner",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 6300,
+      "tokOut": 395,
+      "cost": 0.003103125
+    },
+    {
+      "t": "2026-08-15T23:16:18.711Z",
+      "ronda": 10,
+      "quien": "rutina-flaky-fixer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 825,
+      "tokOut": 173,
+      "cost": 0.002496
+    },
+    {
+      "t": "2026-08-15T23:16:21.717Z",
+      "ronda": 10,
+      "quien": "rutina-flaky-fixer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 3635,
+      "tokOut": 141,
+      "cost": 0.006964
+    },
+    {
+      "t": "2026-08-15T23:16:25.043Z",
+      "ronda": 10,
+      "quien": "rutina-flaky-fixer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 6119,
+      "tokOut": 182,
+      "cost": 0.007954
+    },
+    {
+      "t": "2026-08-15T23:16:28.403Z",
+      "ronda": 10,
+      "quien": "rutina-flaky-fixer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 10131,
+      "tokOut": 192,
+      "cost": 0.01239
+    },
+    {
+      "t": "2026-08-15T23:16:39.057Z",
+      "ronda": 10,
+      "quien": "rutina-flaky-fixer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 18960,
+      "tokOut": 577,
+      "cost": 0.026214
+    },
+    {
+      "t": "2026-08-15T23:16:47.381Z",
+      "ronda": 10,
+      "quien": "rutina-flaky-fixer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 28801,
+      "tokOut": 462,
+      "cost": 0.031958
+    },
+    {
+      "t": "2026-08-15T23:17:07.244Z",
+      "ronda": 10,
+      "quien": "rutina-flaky-fixer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 39046,
+      "tokOut": 836,
+      "cost": 0.039908
+    },
+    {
+      "t": "2026-08-15T23:17:25.214Z",
+      "ronda": 10,
+      "quien": "rutina-flaky-fixer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 47000,
+      "tokOut": 925,
+      "cost": 0.04099
+    },
+    {
+      "t": "2026-08-15T23:17:48.749Z",
+      "ronda": 10,
+      "quien": "rutina-flaky-fixer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 53393,
+      "tokOut": 1244,
+      "cost": 0.043786
+    },
+    {
+      "t": "2026-08-15T23:18:24.638Z",
+      "ronda": 10,
+      "quien": "rutina-flaky-fixer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 62620,
+      "tokOut": 2065,
+      "cost": 0.057566
+    },
+    {
+      "t": "2026-08-15T23:19:06.512Z",
+      "ronda": 10,
+      "quien": "rutina-flaky-fixer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 66588,
+      "tokOut": 2573,
+      "cost": 0.054726
+    },
+    {
+      "t": "2026-08-15T23:20:02.631Z",
+      "ronda": 10,
+      "quien": "rutina-flaky-fixer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 72613,
+      "tokOut": 3202,
+      "cost": 0.064598
+    },
+    {
+      "t": "2026-08-15T23:20:28.012Z",
+      "ronda": 10,
+      "quien": "rutina-flaky-fixer",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 78589,
+      "tokOut": 1532,
+      "cost": 0.057506
+    },
+    {
+      "t": "2026-08-15T23:20:29.496Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-improver",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 443,
+      "tokOut": 104,
+      "cost": 0.000361125
+    },
+    {
+      "t": "2026-08-15T23:20:30.445Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-improver",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 511,
+      "tokOut": 16,
+      "cost": 0.000221625
+    },
+    {
+      "t": "2026-08-15T23:20:31.486Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-improver",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 776,
+      "tokOut": 20,
+      "cost": 0.0003285
+    },
+    {
+      "t": "2026-08-15T23:20:32.619Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-improver",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 1591,
+      "tokOut": 28,
+      "cost": 0.000649125
+    },
+    {
+      "t": "2026-08-15T23:20:33.805Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-improver",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 2741,
+      "tokOut": 33,
+      "cost": 0.00108975
+    },
+    {
+      "t": "2026-08-15T23:20:35.021Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-improver",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 3833,
+      "tokOut": 23,
+      "cost": 0.0014805
+    },
+    {
+      "t": "2026-08-15T23:20:36.470Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-improver",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 4165,
+      "tokOut": 31,
+      "cost": 0.00162
+    },
+    {
+      "t": "2026-08-15T23:20:37.803Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-improver",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 5136,
+      "tokOut": 34,
+      "cost": 0.00198975
+    },
+    {
+      "t": "2026-08-15T23:20:39.165Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-improver",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 5207,
+      "tokOut": 33,
+      "cost": 0.0020145
+    },
+    {
+      "t": "2026-08-15T23:20:40.370Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-improver",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 5277,
+      "tokOut": 23,
+      "cost": 0.002022
+    },
+    {
+      "t": "2026-08-15T23:20:42.135Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-improver",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 6186,
+      "tokOut": 29,
+      "cost": 0.002374125
+    },
+    {
+      "t": "2026-08-15T23:20:43.418Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-improver",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 7098,
+      "tokOut": 25,
+      "cost": 0.002708625
+    },
+    {
+      "t": "2026-08-15T23:20:45.005Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-improver",
+      "modelo": "google/gemini-3.7-flash",
+      "tokIn": 8068,
+      "tokOut": 33,
+      "cost": 0.0017799
+    },
+    {
+      "t": "2026-08-15T23:20:48.692Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-police",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 808,
+      "tokOut": 177,
+      "cost": 0.002486
+    },
+    {
+      "t": "2026-08-15T23:20:54.586Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-police",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 3182,
+      "tokOut": 309,
+      "cost": 0.008026
+    },
+    {
+      "t": "2026-08-15T23:20:57.566Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-police",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 4767,
+      "tokOut": 152,
+      "cost": 0.005838
+    },
+    {
+      "t": "2026-08-15T23:21:04.478Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-police",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 9032,
+      "tokOut": 318,
+      "cost": 0.012868
+    },
+    {
+      "t": "2026-08-15T23:21:15.976Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-police",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 12284,
+      "tokOut": 626,
+      "cost": 0.014884
+    },
+    {
+      "t": "2026-08-15T23:21:27.426Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-police",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 15705,
+      "tokOut": 666,
+      "cost": 0.017166
+    },
+    {
+      "t": "2026-08-15T23:21:38.075Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-police",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 19560,
+      "tokOut": 620,
+      "cost": 0.019416
+    },
+    {
+      "t": "2026-08-15T23:21:53.392Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-police",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 24091,
+      "tokOut": 963,
+      "cost": 0.024776
+    },
+    {
+      "t": "2026-08-15T23:22:24.445Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-police",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 29040,
+      "tokOut": 1804,
+      "cost": 0.032808
+    },
+    {
+      "t": "2026-08-15T23:22:54.093Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-police",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 34282,
+      "tokOut": 1734,
+      "cost": 0.035576
+    },
+    {
+      "t": "2026-08-15T23:23:37.591Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-police",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 37851,
+      "tokOut": 2567,
+      "cost": 0.03984
+    },
+    {
+      "t": "2026-08-15T23:24:22.580Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-police",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 40183,
+      "tokOut": 2655,
+      "cost": 0.039656
+    },
+    {
+      "t": "2026-08-15T23:25:22.080Z",
+      "ronda": 10,
+      "quien": "rutina-abstraction-police",
+      "modelo": "x-ai/grok-4.6",
+      "tokIn": 42715,
+      "tokOut": 3460,
+      "cost": 0.046094
+    }
+  ]
+}
