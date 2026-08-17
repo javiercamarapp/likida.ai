@@ -24,6 +24,7 @@ import { ahoraMs } from '@/lib/saludo';
 import { TZ_MX } from '@/lib/formato';
 import { TOOLS_COPILOTO_LECTURA } from './copiloto-tools';
 import { CATALOGO_ACCIONES, accionDelCatalogo } from './copiloto-acciones';
+import { INTERRUPTORES } from '@/lib/likida/interruptores';
 import './copiloto-tools'; // registra las tools 🟢 al importar
 
 /** La previsualización de una acción gateada — la interfaz la pinta con
@@ -59,7 +60,7 @@ registerTool('proponer_accion', {
         type: 'object',
         properties: {
           accion: { type: 'string', enum: CATALOGO_ACCIONES.map((a) => a.id) },
-          objetivo: { type: 'string', description: "A qué se aplica (ej. 'agente:cobranza')." },
+          objetivo: { type: 'string', enum: [...INTERRUPTORES], description: 'Interruptor del catálogo. Nunca texto libre.' },
           motivo: { type: 'string', description: 'El motivo que Javier dio, en sus palabras. Vacío si no dio ninguno.' },
         },
         required: ['accion', 'objetivo'],
@@ -71,12 +72,20 @@ registerTool('proponer_accion', {
     const a = args as { accion?: unknown; objetivo?: unknown; motivo?: unknown };
     const cat = accionDelCatalogo(String(a.accion ?? ''));
     if (!cat) return { ok: false, error: 'esa acción no está en el catálogo' };
+    const objetivo = String(a.objetivo ?? '').trim();
+    // AUD5 TC-A2: el modelo no elige una palanca en texto libre. Solo
+    // nombres del catálogo de interruptores (`global`, `agente:cobranza`…).
+    if (cat.id === 'apagar_agente' || cat.id === 'encender_agente' || cat.id === 'correr_agente_ahora') {
+      if (!(INTERRUPTORES as readonly string[]).includes(objetivo)) {
+        return { ok: false, error: `objetivo no está en el catálogo: usa uno de ${INTERRUPTORES.join(', ')}` };
+      }
+    }
     const bloque: BloqueAccion = {
       tipo: 'accion',
       accion: cat.id,
       gateo: cat.gateo,
       implementada: cat.implementada,
-      objetivo: String(a.objetivo ?? '').slice(0, 80),
+      objetivo: objetivo.slice(0, 80),
       efecto: cat.efecto,
       revertir: cat.revertir,
       motivoSugerido: typeof a.motivo === 'string' && a.motivo.trim() ? a.motivo.trim().slice(0, 300) : null,

@@ -217,7 +217,25 @@ function puntoEnCirculo(r: number, anguloDeg: number): [number, number] {
  *  rebanada calculadas directo desde el mismo ángulo no tiene ese punto de
  *  falla: no hay costura que desalinear. */
 function pathRebanada(anguloIni: number, anguloFin: number): string {
-  const largeArc = anguloFin - anguloIni > 180 ? 1 : 0;
+  // AUD5 FE-A2: un arco de 360° con extremos iguales no pinta nada en SVG.
+  // Un solo segmento al 100% usa dos semicírculos (el large-arc no cubre 360).
+  const span = anguloFin - anguloIni;
+  if (span >= 359.5) {
+    const [xOa, yOa] = puntoEnCirculo(RADIO_OUT, anguloIni);
+    const [xOb, yOb] = puntoEnCirculo(RADIO_OUT, anguloIni + 180);
+    const [xIb, yIb] = puntoEnCirculo(RADIO_IN, anguloIni + 180);
+    const [xIa, yIa] = puntoEnCirculo(RADIO_IN, anguloIni);
+    return [
+      `M ${xOa} ${yOa}`,
+      `A ${RADIO_OUT} ${RADIO_OUT} 0 1 1 ${xOb} ${yOb}`,
+      `A ${RADIO_OUT} ${RADIO_OUT} 0 1 1 ${xOa} ${yOa}`,
+      `L ${xIa} ${yIa}`,
+      `A ${RADIO_IN} ${RADIO_IN} 0 1 0 ${xIb} ${yIb}`,
+      `A ${RADIO_IN} ${RADIO_IN} 0 1 0 ${xIa} ${yIa}`,
+      'Z',
+    ].join(' ');
+  }
+  const largeArc = span > 180 ? 1 : 0;
   const [xOi, yOi] = puntoEnCirculo(RADIO_OUT, anguloIni);
   const [xOf, yOf] = puntoEnCirculo(RADIO_OUT, anguloFin);
   const [xIf, yIf] = puntoEnCirculo(RADIO_IN, anguloFin);

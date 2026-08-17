@@ -148,10 +148,11 @@ describe('la sobrecarga ambigua de guardar_liquidacion_tx', () => {
 // cuenta doble en el comprobado y su IVA se acredita por duplicado.
 describe('el arranque dice TODO lo que falta, no lo primero', () => {
   it('con dos migraciones ausentes, reporta las dos', async () => {
-    rpc.mockResolvedValueOnce({ error: { code: 'PGRST202', message: 'no try_lock_viaje' } })  // 0005
-       .mockResolvedValueOnce({ error: null })                                                // unlock
-       .mockResolvedValueOnce({ error: { code: 'PGRST202', message: 'no intake_delta' } })     // 0011
-       .mockResolvedValue({ error: null });
+    rpc.mockImplementation(async (nombre: string) => {
+      if (nombre === 'try_lock_viaje') return { error: { code: 'PGRST202', message: 'no try_lock_viaje' } };
+      if (nombre === 'intake_delta') return { error: { code: 'PGRST202', message: 'no intake_delta' } };
+      return { error: null };
+    });
     await verificarMigracionesCriticas();
 
     const mensajes = error.mock.calls.map((c) => (c[1] as { msg: string }).msg).join(' | ');

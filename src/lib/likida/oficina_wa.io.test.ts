@@ -29,7 +29,10 @@ vi.mock('./operacion', () => ({
   getTableroOperacion: async () => ({ viajesActivos: 3, sinUnidad: 1, podPendientes: 2 }),
 }));
 vi.mock('@/lib/meta/client', () => ({
-  sendDocument: async (tel: string, url: string, nombre: string) => { enviado.push({ tel, url, nombre }); return 'wamid-1'; },
+  sendDocument: async (tel: string, url: string, nombre: string) => {
+    enviado.push({ tel, url, nombre });
+    return { ok: true as const, id: 'wamid-1' };
+  },
 }));
 const analista = vi.fn(async (_o: unknown) => ({ bloques: [{ tipo: 'texto', texto: 'Van bien.' }] }));
 vi.mock('@/lib/agents/analista', () => ({ ejecutarAnalista: (o: unknown) => analista(o) }));

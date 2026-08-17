@@ -519,6 +519,6 @@ export async function reabrirViaje(
     await anotar(tenantId, 'viaje.reabierto', 'viaje', viajeId, { folio, pdfPerdido }, actor);
     return { pdfPerdido };
   } finally {
-    await releaseViajeLock(viajeId);
+    if (lock !== 'sin_lock') await releaseViajeLock(viajeId);
   }
 }

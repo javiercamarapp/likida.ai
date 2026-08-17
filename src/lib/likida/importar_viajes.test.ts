@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { interpretarFilasViajes, leerCifraImportada, leerFechaImportada } from './importar_viajes';
+import { interpretarFilasViajes, leerCifraImportada, leerFechaImportada, estatusDeImportacion } from './importar_viajes';
 
 // Solo el motor PURO: la inserción por lotes y el dedup contra la base son
 // el patrón de siempre (folios existentes se consultan y se saltan).
@@ -40,6 +40,22 @@ describe('leerFechaImportada', () => {
     expect(leerFechaImportada('13/13/2026')).toBe('ilegible');
     expect(leerFechaImportada('agosto')).toBe('ilegible');
     expect(leerFechaImportada('')).toBeNull();
+  });
+});
+
+describe('AUD5 BE-C1: estatusDeImportacion — el histórico no nace abierto', () => {
+  it('fecha de ayer (o más vieja) entra liquidado: no se come la foto de hoy', () => {
+    expect(estatusDeImportacion('2026-01-15', '2026-08-17')).toBe('liquidado');
+    expect(estatusDeImportacion('2026-08-16', '2026-08-17')).toBe('liquidado');
+  });
+
+  it('fecha de hoy o futura sigue abierto: es un viaje vivo', () => {
+    expect(estatusDeImportacion('2026-08-17', '2026-08-17')).toBe('abierto');
+    expect(estatusDeImportacion('2026-08-20', '2026-08-17')).toBe('abierto');
+  });
+
+  it('sin fecha no se adivina un viaje vivo: liquidado, fail-closed', () => {
+    expect(estatusDeImportacion(null, '2026-08-17')).toBe('liquidado');
   });
 });
 

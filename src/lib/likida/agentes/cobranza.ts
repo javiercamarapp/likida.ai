@@ -337,7 +337,10 @@ export async function ejecutarCobranza(
  *  el resto es margen para la escalación que corre antes y el arranque. */
 export const PLAZO_COBRANZA_GLOBAL_MS = 90_000;
 
-export async function ejecutarCobranzaGlobal(ahora: Date = new Date()): Promise<{ tenants: number; contactados: number; cortadosPorReloj: number; fallos: string[] }> {
+export async function ejecutarCobranzaGlobal(
+  ahora: Date = new Date(),
+  opts: { venceEn?: number } = {},
+): Promise<{ tenants: number; contactados: number; cortadosPorReloj: number; fallos: string[] }> {
   // `traerTodo` y no el `.limit(1000)` que vivía aquí — que estaba EXACTAMENTE
   // en el tope de PostgREST, donde "hay 1,000" y "hay 90,000" son
   // indistinguibles (auditoría de escala 15k). Un solo cliente de 500
@@ -359,7 +362,10 @@ export async function ejecutarCobranzaGlobal(ahora: Date = new Date()): Promise<
   // camiones los envíos seriales nunca cabían en el maxDuration y el proceso
   // moría a la mitad, con claims consumidos. Ahora corta limpio, dice
   // cuántos quedaron, y la corrida de la siguiente hora los levanta.
-  const venceEn = Date.now() + PLAZO_COBRANZA_GLOBAL_MS;
+  // AUD5 REND-C2: el reloj lo pone quien invocó (el cron comparte 120s con
+  // escalar). Si no viene, se usa el plazo propio — no se estrena DESPUÉS
+  // de que escalar ya gastó el presupuesto.
+  const venceEn = opts.venceEn ?? (Date.now() + PLAZO_COBRANZA_GLOBAL_MS);
 
   const total = { tenants: tenants.length, contactados: 0, cortadosPorReloj: 0, fallos: [] as string[] };
   // Cómo le fue a CADA flota que sí alcanzó turno. El aviso se manda al final
@@ -383,7 +389,11 @@ export async function ejecutarCobranzaGlobal(ahora: Date = new Date()): Promise<
       total.contactados += r.contactados;
       total.cortadosPorReloj += r.cortadosPorReloj;
       total.fallos.push(...r.fallos);
-      corridas.set(t, null);
+      // AUD5 OP-C2: cero contactados y N fallos NO es éxito. `null` cierra
+      // el incidente del cliente como "nada que avisar".
+      corridas.set(t, r.contactados === 0 && r.fallos.length > 0
+        ? new Error(r.fallos[0] ?? 'cobranza sin envíos')
+        : null);
       paraBitacora.push({ tenant: t, inicio: inicioFlota, fin: new Date(), contactados: r.contactados, fallos: r.fallos.length });
     } catch (e) {
       total.fallos.push(`${t}: ${e instanceof Error ? e.message : 'corrida fallida'}`);

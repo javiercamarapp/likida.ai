@@ -104,8 +104,11 @@ export interface InboundMessage {
  * separado: que falle el INSERT no debe callar el aviso al jefe, y viceversa.
  * Nunca lanza — el llamador confirma al chofer pase lo que pase.
  */
-async function registrarUbicacionChofer(op: ResolvedOperador, viajeId: string, lat: number, lng: number): Promise<void> {
+async function registrarUbicacionChofer(
+  op: ResolvedOperador, viajeId: string, lat: number, lng: number,
+): Promise<{ registrada: boolean; avisado: boolean }> {
   const admin = supabaseAdmin();
+  let registrada = false;
   try {
     const { data: viaje, error } = await admin.from('viaje')
       .select('unidad_id, origen, destino').eq('id', viajeId).eq('tenant_id', op.tenantId).maybeSingle();
@@ -113,26 +116,27 @@ async function registrarUbicacionChofer(op: ResolvedOperador, viajeId: string, l
     if (viaje?.unidad_id) {
       const { error: eIns } = await admin.from('posicion').insert({
         tenant_id: op.tenantId, unidad_id: viaje.unidad_id, lat, lng,
-        // El pin de WhatsApp se mide al mandarlo — no hay lote que reordenar.
         medida_en: new Date().toISOString(), proveedor: 'whatsapp',
       });
       if (eIns) throw new Error(eIns.message);
+      registrada = true;
     } else {
-      // Sin unidad no hay dónde colgarla (la tabla la exige) — se dice en el
-      // log, no se inventa una unidad ni se calla el aviso al jefe.
       logger.warn('ubicacion.sin_unidad', { viaje: viajeId });
     }
   } catch (e) {
     logger.error('ubicacion.insert', { viaje: viajeId, err: e instanceof Error ? e.message : String(e) });
   }
+  let avisado = false;
   try {
     const jefe = await telefonoJefeDe(op.tenantId);
     if (jefe) {
-      await sendText(jefe, `📍 ${op.nombre} compartió su ubicación en ruta.\nhttps://maps.google.com/?q=${lat},${lng}`);
+      const envio = await sendText(jefe, `📍 ${op.nombre} compartió su ubicación en ruta.\nhttps://maps.google.com/?q=${lat},${lng}`);
+      avisado = envio != null;
     }
   } catch (e) {
     logger.error('ubicacion.aviso_jefe', { viaje: viajeId, err: e instanceof Error ? e.message : String(e) });
   }
+  return { registrada, avisado };
 }
 
 /**
@@ -415,12 +419,14 @@ function pareceCierre(texto: string): boolean {
   return /^\s*(listo|ya est[aá]|ya qued[óo]|ya no tengo m[áa]s|(ya\s+)?termin[éeoó]|(ya\s+)?acab[éeoó]|cierra|cerrar|eso es todo|es todo)(?!\p{L})/iu.test(texto);
 }
 
-export async function processInbound(msg: InboundMessage): Promise<void> {
+/** `duplicado` = el claim ya existía y este turno NO trabajó. Quien drena
+ *  la bandeja NO puede sellar eso como procesado (AUD5 BE-C2). */
+export async function processInbound(msg: InboundMessage): Promise<void | 'duplicado' | 'fallo'> {
   // Idempotencia: si Meta reintenta el webhook, no re-procesar (no duplicar gasto).
   const claim = msg.waMessageId ? await claimMessage(msg.waMessageId) : 'nuevo';
   if (claim === 'duplicado') {
     logger.info('wa.duplicate', { id: msg.waMessageId });
-    return;
+    return 'duplicado';
   }
   if (claim === 'indeterminado') {
     // NO se abandona el turno. Meta ya recibió su 200 en `route.ts` y no
@@ -1769,7 +1775,7 @@ export async function processInbound(msg: InboundMessage): Promise<void> {
           // 1.8: conservar el XML crudo (CFF 30). Best-effort.
           await saveCfdiXmlRaw(op.tenantId, xml.uuid, gastoId, xmlText!);
         } finally {
-          await releaseViajeLock(viajeId);
+          if (xmlLock !== 'sin_lock') await releaseViajeLock(viajeId);
         }
       } finally {
         await intakeDelta(viajeId, -1); // libera el contador pase lo que pase
@@ -1785,8 +1791,15 @@ export async function processInbound(msg: InboundMessage): Promise<void> {
     // best-effort menos la confirmación: perder el INSERT es malo, dejarlo sin
     // respuesta creyendo que nadie la vio es peor.
     if (msg.type === 'location' && typeof msg.lat === 'number' && typeof msg.lng === 'number') {
-      await registrarUbicacionChofer(op, viajeId, msg.lat, msg.lng);
-      await say('📍 Recibida tu ubicación — queda registrada en tu viaje y ya se la pasé a tu jefe.');
+      const u = await registrarUbicacionChofer(op, viajeId, msg.lat, msg.lng);
+      // AUD5 AG-A1: no afirmar lo que no pasó. Talacha ya distingue `avisado`.
+      if (u.registrada && u.avisado) {
+        await say('📍 Recibida tu ubicación — queda registrada en tu viaje y ya se la pasé a tu jefe.');
+      } else if (u.registrada && !u.avisado) {
+        await say('📍 Recibí tu ubicación y quedó en tu viaje. NO le pude avisar a tu jefe — márcale directo.');
+      } else {
+        await say('📍 Recibí tu pin. No pude guardarlo en el viaje (falta la unidad o falló la base). Márcale a tu jefe directo.');
+      }
       return;
     }
 
@@ -2087,8 +2100,11 @@ export async function processInbound(msg: InboundMessage): Promise<void> {
     // se libera el claim para que el mensaje no quede atascado. No resuelve
     // "el segundo mensaje se contesta", pero sí "el operador sabe que no se
     // perdió, y puede volver a mandarlo".
-    if (await acquireViajeLock(viajeId, { maxWaitMs: reloj.acotar(12_000) })) {
-      lockedViaje = viajeId;
+    const lockViaje = await acquireViajeLock(viajeId, { maxWaitMs: reloj.acotar(12_000) });
+    if (lockViaje) {
+      // Solo se libera lo que se TOMÓ. `sin_lock` (RPC ausente / error
+      // persistente) no tiene lease: unlock_viaje borraría el de otro (AUD5 AG-C2).
+      if (lockViaje !== 'sin_lock') lockedViaje = viajeId;
     } else {
       logger.warn('viaje.lock_ocupado_abandona', { viaje: viajeId, tenant: op.tenantId, restanteMs: reloj.restante() });
       try {
@@ -2243,7 +2259,9 @@ export async function processInbound(msg: InboundMessage): Promise<void> {
       // el cierre como válido, vinculando costos y armando el resumen REAL del motor.
       // FLAG (HARD RULE 3): default off = comportamiento actual EXACTO (mensaje de
       // error, sin cierre). Se recomienda ON para el demo (ver REPORTE_NOCHE).
-      const recuperar = process.env.LIKIDA_RECUPERAR_CIERRE_PARCIAL === '1';
+      // AUD5 AG-C1: default ON. El huérfano (liq cerrada + "se trabó") es
+      // peor que recuperar de más. Se apaga solo con `=0`.
+      const recuperar = process.env.LIKIDA_RECUPERAR_CIERRE_PARCIAL !== '0';
       const parcial = e instanceof PartialExecutionError ? e.partialToolCalls : null;
 
       // LO QUE SE GASTÓ ANTES DE CAERSE TAMBIÉN SE PAGÓ. Esta rama nunca llamaba
@@ -2596,6 +2614,8 @@ export async function processInbound(msg: InboundMessage): Promise<void> {
         ? 'No pude consultar tus datos en este momento 😕 No es que no estés registrado: es que la conexión falló. Vuelve a intentarlo en un minuto.'
         : 'Perdón, se me trabó tantito. ¿Me reenvías tu último mensaje? 🙏';
     try { await sendText(msg.from, aviso); } catch { /* best-effort */ }
+    // AUD5 OP-C1: el catch tragaba y los drenadores sellaban «procesado».
+    return 'fallo';
   } finally {
     if (lockedViaje) await releaseViajeLock(lockedViaje);
   }

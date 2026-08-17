@@ -4,7 +4,7 @@ import { requireSessionTenant } from '@/lib/auth/guard';
 import { puedeVerRuta, puedeVerArea } from '@/lib/auth/visibilidad';
 import {
   colaCobranza, bitacoraCobranza, leerConfigCobranza, guardarConfigCobranza,
-  ejecutarCobranza, dentroDeVentana,
+  ejecutarCobranza, dentroDeVentana, PLAZO_COBRANZA_GLOBAL_MS,
 } from '@/lib/likida/agentes/cobranza';
 import { logger } from '@/lib/logger';
 import { registrarCorrida, ultimasCorridas, type CorridaRegistrada } from '@/lib/likida/agentes/corridas';
@@ -104,7 +104,12 @@ export default async function PaginaAgenteCobranza({
     // `ignorarVentana`: el humano que aprieta ES la autorización de contactar
     // fuera de horario. Un agente pausado no corre ni a mano (lo dice el motor).
     const inicio = new Date();
-    const resultado = await ejecutarCobranza(tenantId, new Date(), { ignorarVentana: true });
+    // AUD5 REND-C3: el botón también tiene reloj. Sin venceEn se come el
+    // maxDuration de la server action y deja claims a medias.
+    const resultado = await ejecutarCobranza(tenantId, new Date(), {
+      ignorarVentana: true,
+      venceEn: Date.now() + PLAZO_COBRANZA_GLOBAL_MS,
+    });
     // La bitácora de corridas (B3). `registrarCorrida` nunca lanza.
     await registrarCorrida(tenantId, 'cobranza', {
       inicio,

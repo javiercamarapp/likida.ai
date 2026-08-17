@@ -29,13 +29,13 @@ describe('acquireViajeLock', () => {
 
   it('lo consigue a la primera', async () => {
     rpc.mockResolvedValue(ok);
-    expect(await acquireViajeLock('v1')).toBe(true);
+    expect(await acquireViajeLock('v1')).toBe('tomado');
     expect(rpc).toHaveBeenCalledTimes(1);
   });
 
   it('ocupado: reintenta y lo consigue cuando se libera', async () => {
     rpc.mockResolvedValueOnce(ocupado).mockResolvedValue(ok);
-    expect(await acquireViajeLock('v1', { maxWaitMs: 2000 })).toBe(true);
+    expect(await acquireViajeLock('v1', { maxWaitMs: 2000 })).toBe('tomado');
     expect(rpc).toHaveBeenCalledTimes(2);
   });
 
@@ -44,11 +44,12 @@ describe('acquireViajeLock', () => {
     expect(await acquireViajeLock('v1', { maxWaitMs: 300 })).toBe(false);
   });
 
-  it('RPC AUSENTE: abre de inmediato — reintentar no la hace aparecer', async () => {
+  it('RPC AUSENTE: abre de inmediato SIN lease — reintentar no la hace aparecer', async () => {
     // La 0005 no está aplicada. Bloquear aquí dejaría al operador sin respuesta
     // por un problema de despliegue, y el arranque ya falla ruidoso por esto.
+    // `sin_lock` (no `tomado`): unlock_viaje no debe correr (AUD5 AG-C2).
     rpc.mockResolvedValue(ausente);
-    expect(await acquireViajeLock('v1', { maxWaitMs: 5000 })).toBe(true);
+    expect(await acquireViajeLock('v1', { maxWaitMs: 5000 })).toBe('sin_lock');
     expect(rpc).toHaveBeenCalledTimes(1);
     expect(errorLog).toHaveBeenCalled();
   });
@@ -56,15 +57,16 @@ describe('acquireViajeLock', () => {
   it('error TRANSITORIO: reintenta en vez de abrir de golpe', async () => {
     // Un timeout no significa que el lock esté libre. Significa que no se supo.
     rpc.mockResolvedValueOnce(transitorio).mockResolvedValue(ok);
-    expect(await acquireViajeLock('v1', { maxWaitMs: 2000 })).toBe(true);
+    expect(await acquireViajeLock('v1', { maxWaitMs: 2000 })).toBe('tomado');
     expect(rpc).toHaveBeenCalledTimes(2);
   });
 
-  it('transitorio que no cede: acaba abriendo, pero después de intentarlo', async () => {
+  it('transitorio que no cede: acaba abriendo SIN lease, después de intentarlo', async () => {
     // Se abre para no dejar al operador colgado, pero solo tras agotar la
     // ventana — no en el primer tropiezo — y queda registrado como ERROR.
+    // `sin_lock`: el finally del processor NO llama unlock (AUD5 AG-C2).
     rpc.mockResolvedValue(transitorio);
-    expect(await acquireViajeLock('v1', { maxWaitMs: 400 })).toBe(true);
+    expect(await acquireViajeLock('v1', { maxWaitMs: 400 })).toBe('sin_lock');
     expect(rpc.mock.calls.length).toBeGreaterThan(1);
     expect(errorLog).toHaveBeenCalled();
   });

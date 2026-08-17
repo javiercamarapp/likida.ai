@@ -6,6 +6,7 @@ import { resolverOperadorPorNombre, OperadorNombreAmbiguo } from './crear_viaje_
 import { ConsultaFallida } from './conv';
 import { validarIngreso } from './ingreso_viaje';
 import { DatoInvalido } from './errores';
+import { TZ_MX } from '@/lib/formato';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // IMPORTADOR DE VIAJES (kit del PoC, 14-ago-2026) — el export del TMS del
@@ -27,6 +28,25 @@ import { DatoInvalido } from './errores';
 // "creados: 0", no un segundo "creados: 200" (auditoría 3, BE-A3). Un folio
 // vacío no se puede dedupear — se rechaza la fila, no se adivina.
 // ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * AUD5 BE-C1. El importador no adivina un cierre fiscal, pero SÍ decide si
+ * el viaje queda vivo: `getOpenViaje` se come la siguiente foto del chofer
+ * si el histórico nace `abierto`. Fecha de hoy o futura = vivo. Todo lo
+ * demás (pasado o sin fecha) entra `liquidado` para no ocupar el unique
+ * 0029 ni interceptar comprobantes.
+ */
+export function estatusDeImportacion(
+  fechaInicio: string | null,
+  hoyIso: string,
+): 'abierto' | 'liquidado' {
+  if (!fechaInicio) return 'liquidado';
+  return fechaInicio >= hoyIso ? 'abierto' : 'liquidado';
+}
+
+function hoyIsoMx(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: TZ_MX }).format(new Date());
+}
 
 export interface FilaViajeImportada {
   folio: string;
@@ -422,7 +442,7 @@ export async function importarViajes(tenantId: string, filas: FilaViajeImportada
       // TMS es un cero MEDIDO y tiene que entrar a la medición como tal.
       ingreso_flete: f.ingresoFlete ?? null,
       km_recorridos: f.kmRecorridos ?? null,
-      estatus: 'abierto',
+      estatus: estatusDeImportacion(f.fechaInicio, hoyIsoMx()),
     }));
     // Upsert que IGNORA duplicados contra `viaje_folio_unico` (0092): el que
     // pierde la carrera de dos submits concurrentes no truena ni duplica —

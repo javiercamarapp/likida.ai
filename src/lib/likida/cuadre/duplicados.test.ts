@@ -72,3 +72,33 @@ describe('copias por folio con ceros a la izquierda', () => {
     expect(copias.get('b')).toBe('a');
   });
 });
+
+// AUD5 FIS-C1 — N casetas de CAPUFE comparten UN CFDI (mig. 0065, cfdi_orden).
+// Colapsar por UUID solo declara duplicadas líneas que la ley trata como
+// distintas. Sin orden, el UUID sigue siendo la regla dura (regresión de arriba).
+describe('AUD5 FIS-C1: un CFDI CAPUFE con N líneas no son copias', () => {
+  it('mismo UUID y cfdiOrden distinto: las N casetas sobreviven', () => {
+    const copias = copiasDeComprobante([
+      { ...g(), id: 'caseta-1', concepto: 'caseta', cfdiUuid: 'CAPUFE-UUID', cfdiOrden: 1, monto: 120 },
+      { ...g(), id: 'caseta-2', concepto: 'caseta', cfdiUuid: 'CAPUFE-UUID', cfdiOrden: 2, monto: 85 },
+      { ...g(), id: 'caseta-3', concepto: 'caseta', cfdiUuid: 'CAPUFE-UUID', cfdiOrden: 3, monto: 210 },
+    ] as Gasto[]);
+    expect(copias.size, 'ninguna línea del consolidado es copia de otra').toBe(0);
+  });
+
+  it('mismo UUID y MISMO cfdiOrden: eso sí es la foto repetida', () => {
+    const copias = copiasDeComprobante([
+      { ...g(), id: 'a', cfdiUuid: 'CAPUFE-UUID', cfdiOrden: 1 },
+      { ...g(), id: 'b', cfdiUuid: 'CAPUFE-UUID', cfdiOrden: 1 },
+    ] as Gasto[]);
+    expect(copias.get('b')).toBe('a');
+  });
+
+  it('sin cfdiOrden el UUID solo sigue colapsando — no se afloja el dedup viejo', () => {
+    const copias = copiasDeComprobante([
+      { ...g(), id: 'a', cfdiUuid: 'U-1' },
+      { ...g(), id: 'b', cfdiUuid: 'u-1' },
+    ] as Gasto[]);
+    expect(copias.get('b')).toBe('a');
+  });
+});

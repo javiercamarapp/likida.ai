@@ -130,28 +130,24 @@ export interface Rentabilidad {
  * bien y están mal: el anticipo es lo que la empresa le ADELANTA al operador,
  * no lo que le paga el cliente.
  */
-export async function getRentabilidad(tenantId: string): Promise<Rentabilidad> {
-  const admin = supabaseAdmin();
-  const [viajes, liqs] = await Promise.all([
-    traerTodo<{ ingreso_flete: unknown }>(
-      (d, h) => admin.from('viaje').select('ingreso_flete')
-        .eq('tenant_id', tenantId).order('id').range(d, h),
-      'getRentabilidad.viaje',
-    ),
-    traerTodo<{ total_comprobado: unknown }>(
-      (d, h) => admin.from('liquidacion').select('total_comprobado')
-        .eq('tenant_id', tenantId).order('id').range(d, h),
-      'getRentabilidad.liquidacion',
-    ),
-  ]);
-
+/** AUD5 ARQ-C1. Puro: el costo solo cuenta liquidaciones de viajes CON ingreso. */
+export function rentabilidadDe(
+  viajes: Array<{ id: string; ingreso_flete: unknown }>,
+  liqs: Array<{ viaje_id: string; total_comprobado: unknown }>,
+): Rentabilidad {
+  const conIngresoIds = new Set<string>();
   let ingreso = 0, conIngreso = 0, sinIngreso = 0;
   for (const v of viajes) {
     if (v.ingreso_flete == null) sinIngreso++;
-    else { ingreso += Number(v.ingreso_flete); conIngreso++; }
+    else {
+      ingreso += Number(v.ingreso_flete);
+      conIngreso++;
+      conIngresoIds.add(v.id);
+    }
   }
-  const costoComprobado = liqs.reduce((s, l) => s + Number(l.total_comprobado ?? 0), 0);
-
+  const costoComprobado = liqs.reduce((s, l) => (
+    conIngresoIds.has(l.viaje_id) ? s + Number(l.total_comprobado ?? 0) : s
+  ), 0);
   return {
     ingreso: round2(ingreso),
     costoComprobado: round2(costoComprobado),
@@ -160,6 +156,23 @@ export async function getRentabilidad(tenantId: string): Promise<Rentabilidad> {
     viajesConIngreso: conIngreso,
     viajesSinIngreso: sinIngreso,
   };
+}
+
+export async function getRentabilidad(tenantId: string): Promise<Rentabilidad> {
+  const admin = supabaseAdmin();
+  const [viajes, liqs] = await Promise.all([
+    traerTodo<{ id: string; ingreso_flete: unknown }>(
+      (d, h) => admin.from('viaje').select('id, ingreso_flete')
+        .eq('tenant_id', tenantId).order('id').range(d, h),
+      'getRentabilidad.viaje',
+    ),
+    traerTodo<{ viaje_id: string; total_comprobado: unknown }>(
+      (d, h) => admin.from('liquidacion').select('viaje_id, total_comprobado')
+        .eq('tenant_id', tenantId).order('id').range(d, h),
+      'getRentabilidad.liquidacion',
+    ),
+  ]);
+  return rentabilidadDe(viajes, liqs);
 }
 
 // ── Cobranza ───────────────────────────────────────────────────────────────

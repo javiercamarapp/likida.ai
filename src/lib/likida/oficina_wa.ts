@@ -115,7 +115,8 @@ export async function mandarInformePdf(cuenta: CuentaInforme, telefono: string):
   const firma = await acotada(supabaseAdmin().storage.from('liquidaciones').createSignedUrl(path, 300), 'informe.firmar');
   if (firma.error || !firma.data?.signedUrl) throw new Error(`informe.firmar: ${firma.error?.message ?? 'sin URL'}`);
   const enviado = await sendDocument(telefono, firma.data.signedUrl, `informe-operacion.pdf`, 'Tu informe de operación 📊');
-  if (!enviado) throw new Error('informe.envio: WhatsApp no aceptó el documento');
+  // AUD5 AG-A2: sendDocument devuelve un objeto; `!enviado` es código muerto.
+  if (!enviado.ok) throw new Error(`informe.envio: ${enviado.error}`);
   return 'Ahí te va tu informe en PDF 📊 — cifras del sistema de este momento.';
 }
 

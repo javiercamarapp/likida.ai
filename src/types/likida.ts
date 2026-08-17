@@ -38,6 +38,10 @@ export interface Gasto {
   rfcEmisor?: string;
   rfcReceptor?: string;    // debe ser el RFC de la empresa (no el chofer)
   cfdiUuid?: string;
+  /** Índice de la línea dentro de un CFDI consolidado (mig. 0065). Distingue
+   *  N casetas de CAPUFE que comparten un UUID. Sin él, el dedup por UUID
+   *  las declara copias. */
+  cfdiOrden?: number;
   imagenUrl?: string;
   imgHash?: string;        // SHA-256 del contenido de la foto (dedup de reenvíos)
   ocrConfianza?: number;   // 0–1

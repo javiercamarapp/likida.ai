@@ -415,7 +415,16 @@ function rpcAusente(error: { code?: string; message?: string }): boolean {
  * última foto haya guardado su gasto. Reintenta con backoff hasta maxWaitMs;
  * devuelve false si no logró el lease (otro after() lo tiene vigente).
  */
-export async function acquireViajeLock(viajeId: string, opts?: { ttlMs?: number; maxWaitMs?: number }): Promise<boolean> {
+/**
+ * `tomado` — este proceso tiene el lease y DEBE llamar releaseViajeLock.
+ * `sin_lock` — se procede sin lease (RPC ausente o error persistente). NO
+ *   llamar release: unlock_viaje no tiene dueño y borraría el lease de otro
+ *   (AUD5 AG-C2).
+ * `false` — otro tiene el lease vigente; no proceder.
+ */
+export type ResultadoLock = 'tomado' | 'sin_lock' | false;
+
+export async function acquireViajeLock(viajeId: string, opts?: { ttlMs?: number; maxWaitMs?: number }): Promise<ResultadoLock> {
   const ttlMs = opts?.ttlMs ?? 60_000;
   const maxWaitMs = opts?.maxWaitMs ?? 12_000;
   const admin = supabaseAdmin();
@@ -424,7 +433,7 @@ export async function acquireViajeLock(viajeId: string, opts?: { ttlMs?: number;
   let ultimoError: { code?: string; message?: string } | null = null;
   for (;;) {
     const { data, error } = await admin.rpc('try_lock_viaje', { p_viaje: viajeId, p_ttl_ms: ttlMs });
-    if (!error && data === true) return true;
+    if (!error && data === true) return 'tomado';
     if (error) {
       ultimoError = error;
       // Se distingue el error PERMANENTE del TRANSITORIO. Antes los dos abrían
@@ -435,10 +444,10 @@ export async function acquireViajeLock(viajeId: string, opts?: { ttlMs?: number;
       // bloquear dejaría al operador sin respuesta por un problema de
       // despliegue. Se abre — con ERROR, no warn, porque es la protección de
       // doble cierre — y el arranque ya falla ruidoso por esto
-      // (ver instrumentation.ts).
+      // (ver instrumentation.ts). NO se toma el lease: no hay qué liberar.
       if (rpcAusente(error)) {
         logger.error('viaje.lock_rpc_ausente', { code: error.code, msg: error.message });
-        return true;
+        return 'sin_lock';
       }
       // TRANSITORIO (timeout, pool agotado, 503): un error no significa que el
       // lock esté libre, significa que no se supo. Abrir de golpe deja correr
@@ -450,11 +459,11 @@ export async function acquireViajeLock(viajeId: string, opts?: { ttlMs?: number;
     if (Date.now() - start >= maxWaitMs) {
       // Se agotó la ventana. Ocupado de verdad → false (otro lo tiene, y ese
       // otro va a responder). Fallando todo el rato → se abre para no dejar al
-      // operador colgado, pero después de haberlo intentado, no al primer
-      // tropiezo, y queda como ERROR.
+      // operador colgado, pero DESPUÉS de haberlo intentado, y SIN lease que
+      // liberar (AUD5 AG-C2: unlock sin dueño borra el de otro).
       if (ultimoError) {
         logger.error('viaje.lock_error_persistente', { code: ultimoError.code, msg: ultimoError.message });
-        return true;
+        return 'sin_lock';
       }
       return false;
     }

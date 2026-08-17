@@ -252,13 +252,20 @@ export async function POST(req: NextRequest) {
           if (!claim) return; // el cron (u otra entrega) ya lo tiene.
           try {
             const r = await processInbound(claim.evento);
-            if (r === 'duplicado') {
-              const wamid = (claim.evento as { waMessageId?: string }).waMessageId;
-              if (wamid) {
-                const { releaseMessageClaim } = await import('@/lib/likida/conv');
-                await releaseMessageClaim(wamid);
+            if (r === 'duplicado' || r === 'fallo') {
+              if (r === 'duplicado') {
+                const wamid = (claim.evento as { waMessageId?: string }).waMessageId;
+                if (wamid) {
+                  const { releaseMessageClaim } = await import('@/lib/likida/conv');
+                  await releaseMessageClaim(wamid);
+                }
               }
-              await anotarFalloPendiente(f.id, 'claim huérfano: el mensaje se tomó y no se terminó');
+              await anotarFalloPendiente(
+                f.id,
+                r === 'duplicado'
+                  ? 'claim huérfano: el mensaje se tomó y no se terminó'
+                  : 'processInbound falló y no se sella como procesado',
+              );
               return;
             }
             await marcarPendienteProcesado(f.id);

@@ -202,6 +202,8 @@ export async function escalarViajesSinAceptar(args: {
    */
   telefonoJefePorTenant?: Record<string, string>;
   ahora?: Date;
+  /** AUD5 REND-C1: corte en epoch ms. Sin esto 100 viajes × 4 envíos no caben. */
+  venceEn?: number;
 } = {}): Promise<ResultadoEscalacion> {
   // ── B4: el corte de horas es ESTRATEGIA de cada flota ────────────────────
   // La consulta global trae candidatos desde el PISO configurable (1 h) y el
@@ -258,6 +260,10 @@ export async function escalarViajesSinAceptar(args: {
   };
 
   for (const v of viajes) {
+    if (args.venceEn !== undefined && Date.now() >= args.venceEn) {
+      logger.warn('escalacion.corte_por_reloj', { sinReclamar: viajes.length - viajes.indexOf(v) });
+      break;
+    }
     // 0) RECLAMAR, ANTES DE MANDAR CUALQUIER MENSAJE. Si el UPDATE condicional
     //    no devuelve esta fila, otra corrida la ganó entre la lectura de arriba
     //    y este punto — no se reintenta ningún mensaje y no cuenta como

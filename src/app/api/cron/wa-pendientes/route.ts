@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { processInbound } from '@/lib/likida/processor';
 import { estaApagado } from '@/lib/likida/interruptores';
+import { releaseMessageClaim } from '@/lib/likida/conv';
 import {
   pendientesPorDrenar, reclamarPendiente, marcarPendienteProcesado,
   anotarFalloPendiente, cartasMuertas,
@@ -71,15 +72,38 @@ export async function GET(req: Request) {
   let procesados = 0;
   let fallidos = 0;
   let huboFalloDeCron = false;
+  // AUD5 REND-C5: el lote no estrena 120s por mensaje. Un reloj para todos.
+  const venceEn = Date.now() + (maxDuration - 10) * 1000;
   try {
     const lote = await pendientesPorDrenar(LOTE);
     // EN SERIE a propósito: el orden de llegada importa (una caption que
     // completa la foto anterior) y el motor ya paraleliza por dentro.
     for (const p of lote) {
+      if (Date.now() >= venceEn) {
+        logger.warn('cron.wa_pendientes.corte_por_reloj', { sinDrenar: lote.length - lote.indexOf(p) });
+        break;
+      }
       const claim = await reclamarPendiente(p.id, p.intentos);
       if (!claim) continue; // otra corrida lo tomó — resultado esperado
       try {
-        await processInbound(claim.evento);
+        const r = await processInbound(claim.evento);
+        if (r === 'duplicado' || r === 'fallo') {
+          // AUD5 BE-C2 / OP-C1: no se trabajó (o se tragó el error). Sellar
+          // pierde el comprobante. El claim huérfano se suelta; el fallo
+          // ya liberó el suyo en processInbound.
+          if (r === 'duplicado') {
+            const wamid = (claim.evento as { waMessageId?: string }).waMessageId;
+            if (wamid) await releaseMessageClaim(wamid);
+          }
+          fallidos++;
+          await anotarFalloPendiente(
+            claim.id,
+            r === 'duplicado'
+              ? 'claim huérfano: el mensaje se tomó y no se terminó'
+              : 'processInbound falló y no se sella como procesado',
+          );
+          continue;
+        }
         await marcarPendienteProcesado(claim.id);
         procesados++;
       } catch (e) {

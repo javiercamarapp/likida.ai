@@ -9,8 +9,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 //  · las cartas muertas se gritan al operador.
 // ═══════════════════════════════════════════════════════════════════════════
 
-const processInbound = vi.fn<(...a: unknown[]) => Promise<void>>(async () => {});
+const processInbound = vi.fn<(...a: unknown[]) => Promise<void | 'duplicado'>>(async () => {});
 vi.mock('@/lib/likida/processor', () => ({ processInbound: (...a: unknown[]) => processInbound(...a) }));
+vi.mock('@/lib/likida/conv', () => ({ releaseMessageClaim: vi.fn(async () => {}) }));
 
 const estaApagado = vi.fn(async () => false);
 vi.mock('@/lib/likida/interruptores', () => ({ estaApagado }));
@@ -79,6 +80,18 @@ describe('el drenado', () => {
     expect(await r.json()).toMatchObject({ corrio: true, procesados: 2, fallidos: 0 });
     expect(processInbound).toHaveBeenCalledTimes(2);
     expect(marcarPendienteProcesado).toHaveBeenCalledTimes(2);
+  });
+
+  it('AUD5 BE-C2: processInbound que vuelve duplicado NO se sella — el claim se tomó y el trabajo no', async () => {
+    pendientesPorDrenar.mockResolvedValue([{ id: 'wamid.huerfano', intentos: 0 }]);
+    processInbound.mockResolvedValue('duplicado');
+    const r = await GET(peticion('Bearer secreto-de-prueba'));
+    expect(r.status).toBe(500);
+    expect(marcarPendienteProcesado).not.toHaveBeenCalled();
+    expect(anotarFalloPendiente).toHaveBeenCalledWith(
+      'wamid.huerfano',
+      expect.stringMatching(/duplicado|hu[eé]rfano|claim/i),
+    );
   });
 
   it('un evento que falla anota su error, NO se sella, y el cron sale 500 — nunca verde con fallos', async () => {

@@ -7,6 +7,7 @@ import { EstadoVacio } from '@/app/admin/ui/kit';
 import { CalendarHeatmap, HBars } from '@/app/admin/ui/graficas';
 import { Dona } from '@/app/admin/charts';
 import { BarraPagina } from '../../resumen-visual';
+import { etiquetaEstatus } from '../../estatus';
 
 /** Cómo se lee cada tipo de diferencia del motor en la dona. Un tipo nuevo
  *  cae al reemplazo genérico, nunca a texto vacío. */
@@ -299,11 +300,16 @@ function Kpi({ titulo, valor, nota, tono }: { titulo: string; valor: string; not
   );
 }
 
-const ESTATUS: Record<string, { rotulo: string; fg: string; bg: string }> = {
-  cuadrada: { rotulo: 'Cuadrada', fg: 'var(--ok)', bg: 'var(--okbg)' },
-  con_diferencias: { rotulo: 'Con diferencias', fg: 'var(--bad)', bg: 'var(--badbg)' },
-  revisar: { rotulo: 'Por revisar', fg: 'var(--warn)', bg: 'var(--warnbg)' },
-};
+/** AUD5 FE-A3: un solo mapa. `etiquetaEstatus` es la fuente; aquí solo se
+ *  deriva el fondo. Invertir severidad entre lista y detalle era el bug. */
+function estiloEstatus(estatus: string): { rotulo: string; fg: string; bg: string } {
+  const e = etiquetaEstatus(estatus);
+  const bg = e.color.includes('ok') ? 'var(--okbg)'
+    : e.color.includes('warn') ? 'var(--warnbg)'
+    : e.color.includes('bad') ? 'var(--badbg)'
+    : 'var(--canvas)';
+  return { rotulo: e.label, fg: e.color, bg };
+}
 
 function TablaLiqs({ filas, sufijo, conVer }: { filas: LiqRow[]; sufijo: string; conVer?: boolean }) {
   return (
@@ -321,7 +327,7 @@ function TablaLiqs({ filas, sufijo, conVer }: { filas: LiqRow[]; sufijo: string;
         </thead>
         <tbody>
           {filas.map((l) => {
-            const e = ESTATUS[l.estatus] ?? { rotulo: l.estatus, fg: 'var(--muted)', bg: 'var(--canvas)' };
+            const e = estiloEstatus(l.estatus);
             return (
               <tr key={l.id} className="border-t" style={{ borderColor: 'var(--line2)' }}>
                 <td className="py-2 font-medium">{l.folio}</td>

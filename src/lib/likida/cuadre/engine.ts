@@ -160,10 +160,15 @@ export function copiasDeComprobante(gastos: Gasto[]): Map<string, string> {
   const originalDe = new Map<string, string>();
   for (const g of gastos) {
     if (g.cfdiUuid) {
+      // AUD5 FIS-C1: un CFDI consolidado (CAPUFE) trae N líneas con el MISMO
+      // UUID y `cfdi_orden` 1..N. Colapsar solo por UUID declara duplicadas
+      // casetas que la 0065 diseñó para compartir comprobante. Sin orden, el
+      // UUID solo sigue siendo la regla dura (foto repetida del mismo XML).
       const u = g.cfdiUuid.toLowerCase();
-      const previo = vistoUuid.get(u);
+      const llave = g.cfdiOrden != null ? `${u}|${g.cfdiOrden}` : u;
+      const previo = vistoUuid.get(llave);
       if (previo) originalDe.set(g.id, previo);
-      else vistoUuid.set(u, g.id);
+      else vistoUuid.set(llave, g.id);
       continue;
     }
     if (g.folio) {

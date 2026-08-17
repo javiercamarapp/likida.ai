@@ -62,12 +62,15 @@ export async function verificarMigracionesCriticas(): Promise<void> {
     // caro que este archivo existe para evitar).
     const { data: viajeReal } = await admin.from('viaje').select('id').limit(1);
     if (viajeReal?.[0]?.id) {
-      const { error } = await admin.rpc('try_lock_viaje', { p_viaje: viajeReal[0].id, p_ttl_ms: 1 });
+      const { data: tomado, error } = await admin.rpc('try_lock_viaje', { p_viaje: viajeReal[0].id, p_ttl_ms: 1 });
       if (error) {
         reportarProbe(error, 'FALTA la migración 0005 (try_lock_viaje / unique(viaje_id)): la protección de doble liquidación NO está activa. Corre `supabase db push`.');
         faltan = true;
       }
-      await admin.rpc('unlock_viaje', { p_viaje: viajeReal[0].id }); // liberar el lock de prueba
+      // AUD5 AG-C2: unlock_viaje no tiene dueño. Solo se libera si ESTE probe
+      // tomó el lease. Si otro proceso lo tiene (data === false), borrar la
+      // fila le roba el mutex a un "listo" en vuelo.
+      if (tomado === true) await admin.rpc('unlock_viaje', { p_viaje: viajeReal[0].id });
     } else {
       // Base vacía: sin viajes no hay doble liquidación que proteger; el unique
       // `viaje_lock_pkey` sí se verifica en el bloque de índices de abajo.

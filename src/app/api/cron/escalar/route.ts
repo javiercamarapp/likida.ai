@@ -88,6 +88,10 @@ export async function GET(req: Request) {
   // "verdes" sin que Vercel ni Sentry levantaran la mano. Un motor caído =
   // 500, para que la plataforma cuente el cron como FALLIDO.
   let huboFallo = false;
+  // AUD5 REND-C1/C2: UN reloj para los dos motores. 10s de margen para el
+  // return y las alertas. Quien llega segundo hereda lo que queda, no 90s
+  // nuevos.
+  const venceEn = Date.now() + (maxDuration - 10) * 1000;
 
   // El primer motor ES el Agente de Conductores —`escalar_viaje.ts` registra
   // sus corridas como 'conductores' desde la B3—, así que tiene su propia
@@ -101,7 +105,7 @@ export async function GET(req: Request) {
     resultado.aceptacion = { saltado: 'interruptor agente:conductores' };
   } else {
     try {
-      const r = await escalarViajesSinAceptar();
+      const r = await escalarViajesSinAceptar({ venceEn });
       logger.info('cron.escalar.ok', { ...r });
       resultado.aceptacion = r;
     } catch (e) {
@@ -126,7 +130,7 @@ export async function GET(req: Request) {
     resultado.comprobacion = { saltado: 'interruptor agente:cobranza' };
   } else {
     try {
-      const r = await ejecutarCobranzaGlobal();
+      const r = await ejecutarCobranzaGlobal(new Date(), { venceEn });
       logger.info('cron.cobranza.ok', { ...r });
       resultado.comprobacion = r;
     } catch (e) {

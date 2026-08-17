@@ -209,7 +209,7 @@ export default async function PaginaAgentePeajes({
 
     const inicio = new Date();
     try {
-      const resumen = await barrerPorConciliar(tenantId);
+      const resumen = await barrerPorConciliar(tenantId, { venceEn: Date.now() + 50_000 });
       // La bitácora de corridas (B3). `registrarCorrida` nunca lanza.
       await registrarCorrida(tenantId, 'peajes', {
         inicio,

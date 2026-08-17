@@ -570,7 +570,10 @@ function mismosCandidatos(a: CandidatoConciliacion[], b: CandidatoConciliacion[]
  * llegó después del XML JAMÁS se puede elegir a mano — el hueco que este
  * barrido existe para cerrar.
  */
-export async function barrerPorConciliar(tenantId: string): Promise<ResumenBarrido> {
+export async function barrerPorConciliar(
+  tenantId: string,
+  opts: { venceEn?: number } = {},
+): Promise<ResumenBarrido> {
   // 1) La cola completa del tenant. Error de lectura LANZA: "no hay nada que
   //    barrer" y "no pude leer la cola" llevan a acuses opuestos. El límite es
   //    explícito porque PostgREST recorta a 1,000 en silencio (CLAUDE.md); el
@@ -647,6 +650,10 @@ export async function barrerPorConciliar(tenantId: string): Promise<ResumenBarri
   }
 
   for (const [xmlId, filasGrupo] of grupos) {
+    if (opts.venceEn !== undefined && Date.now() >= opts.venceEn) {
+      logger.warn('peajes.barrido.corte_por_reloj', { tenant: tenantId });
+      break;
+    }
     filasGrupo.sort((a, b) => Number(a.indice) - Number(b.indice));
     const uuid = uuidPorXmlId.get(xmlId) ?? null;
     const resultados = conciliarLineas(filasGrupo.map(lineaDesdeFila), disponibles);
