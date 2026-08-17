@@ -35,7 +35,7 @@ const OPTS: OpcionesFiscales = {
 function gasto(over: Partial<GastoFiscal> = {}): GastoFiscal {
   return {
     id: 'g1', viajeId: 'v1', concepto: 'diesel', monto: 1000,
-    fecha: '2026-07-15', folio: 'A1', rfcEmisor: 'AAA010101AAA',
+    fecha: '2026-07-15', folio: 'A1', rfcEmisor: 'AAA010101AAA', rfcReceptor: null,
     cfdiUuid: 'uuid-1', cfdiValido: null, estadoSat: 'vigente',
     efos: false, efosRevisar: null, formaPago: '03',
     subTotal: null, ivaTraslado: null, iepsTraslado: null,
@@ -309,6 +309,23 @@ describe('resumirPerdidas', () => {
 // ── Panel fiscal ───────────────────────────────────────────────────────────
 
 describe('resumirFiscal', () => {
+  it('AUD5→7: CFDI timbrado a un TERCERO no acredita IVA', () => {
+    const r = resumirFiscal([
+      gasto({ id: 'ajeno', rfcReceptor: 'TERCERO800101XY1', ivaTraslado: 160 }),
+      gasto({ id: 'propio', rfcReceptor: 'FLOTA010101AA1', ivaTraslado: 80 }),
+    ], { ...OPTS, rfcEmpresa: 'FLOTA010101AA1' });
+    expect(r.ivaAcreditable).toBe(80);
+    expect(r.ivaNoAcreditable).toBe(160);
+  });
+
+  it('AUD5→7: caseta en efectivo no entra a la base del estímulo de peaje', () => {
+    const r = resumirFiscal([
+      gasto({ concepto: 'caseta', formaPago: '01', subTotal: 1000, ivaTraslado: 160 }),
+      gasto({ concepto: 'caseta', formaPago: '04', subTotal: 400, ivaTraslado: 64 }),
+    ], OPTS);
+    expect(r.subTotalCasetas).toBe(400);
+  });
+
   it('solo acredita el IVA de comprobantes que lo sostienen', () => {
     const r = resumirFiscal([
       gasto({ id: 'ok', ivaTraslado: 160 }),

@@ -90,6 +90,7 @@ const EXENTAS: Record<string, string> = {
   '0122': 'dos altas declarativas sin garantía nueva de base: la FILA del redactor en agente_definicion (el patrón FK-como-catálogo ya lo verifica el bloque 91 de la 0116) y la extensión del dominio del CHECK de interruptor — mismo caso que la 0044/0115: que basura sigue rechazada lo prueba el CHECK recreado (bloque de la 0110), y que agente:redactor se acepta se prueba en TS (redactor.test.ts: el kill switch frena al agente).',
   '0118': 'tabla `prospecto_contacto` con FKs y CHECKs de dominio que rebotan RUIDOSO (23514/23503, no corrupción silenciosa) y deny-all idéntico al de sus hermanas 0116/0117, cuyo patrón ya verifican los bloques 91-92. La garantía de USO (la cadencia no se duplica: consultar el historial antes de contactar) es de código, y se prueba en TS (cola.test.ts: marcarEnviada registra el contacto).',
   '0134': 'tablas eval_caso/eval_corrida/eval_resultado (conjunto dorado del analista). RLS deny-all, CHECKs de tipo que rebotan ruidoso, sin invariante de dinero. El claim de re-examen (prompt_hash) se demuestra en TS cuando exista el runner; la base solo guarda el examen.',
+  '0136': 'trigger pago_no_excede_total: FOR UPDATE sobre factura_emitida + rechazo 23514 si pagado+abono > total. La garantía la impone Postgres en cada INSERT/UPDATE; el camino de aplicación se prueba en facturacion_escritura (evaluarAbono). Un bloque DO$$ exigiría sembrar factura+pagos contra la base real, que esta suite no abre.',
 };
 
 const migraciones = readdirSync(DIR)

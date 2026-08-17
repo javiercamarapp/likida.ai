@@ -148,6 +148,7 @@ export const RUTA_DE_DIFERENCIA: Record<TipoDiferencia, RutaDeAviso> = {
   efectivo_sobre_15: 'decision',        // el excedente del 15% del ejercicio NO es deducible
   efectivo_no_elegible: 'decision',     // la flota no califica a la facilidad → no deducible
   complemento_no_verificable: 'panel', // lo resuelve el chofer reenviando el XML, no el jefe
+  peaje_sin_electronico: 'panel',      // el chofer pagó en ventanilla: no hay estímulo, no hay decisión
 };
 
 /**

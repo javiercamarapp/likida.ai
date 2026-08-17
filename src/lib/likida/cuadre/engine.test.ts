@@ -330,6 +330,23 @@ describe('cuadrarViaje', () => {
     expect(r.ivaAcreditable).toBe(160);
   });
 
+  it('AUD5→7: caseta en EFECTIVO (01) no genera estímulo — RMF 9.1.8 fr. III', () => {
+    const r = cuadrarViaje({
+      viajeId: 'peaje-ef', anticipo: 1160, politica, estimulos: EST,
+      gastos: [g({ concepto: 'caseta', monto: 1160, cfdiUuid: 'u', xmlVerificado: true, formaPago: '01', subTotal: 1000, ivaTraslado: 160 })],
+    });
+    expect(r.peajeAcreditable).toBe(0);
+    expect(r.diferencias.some((d) => d.tipo === 'peaje_sin_electronico')).toBe(true);
+  });
+
+  it('AUD5→7: caseta sin forma de pago no afirma el estímulo', () => {
+    const r = cuadrarViaje({
+      viajeId: 'peaje-na', anticipo: 1160, politica, estimulos: EST,
+      gastos: [g({ concepto: 'caseta', monto: 1160, cfdiUuid: 'u', xmlVerificado: true, subTotal: 1000, ivaTraslado: 160 })],
+    });
+    expect(r.peajeAcreditable).toBe(0);
+  });
+
   // Ticket 5 (Cd. Juárez, franja fronteriza): IVA al 8%. El acreditable es el
   // importe LEÍDO del comprobante, NUNCA recomputado con 16%.
   it('IVA 8% fronterizo: se acredita el importe leído, no se recomputa al 16%', () => {

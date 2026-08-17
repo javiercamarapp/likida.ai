@@ -62,6 +62,7 @@ export const NORMA_POR_DIFERENCIA: Partial<Record<TipoDiferencia, string[]>> = {
   // verifica—, pero la norma que respalda ESE aviso sí existe y el agente debe
   // poder citarla al explicarlo.
   permiso_cre_no_verificable: ['lisr-27-fr-III', 'rfa-2026-2.9'],
+  peaje_sin_electronico: ['rmf-2026-9.1.8'],
 };
 
 /**

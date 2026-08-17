@@ -54,6 +54,12 @@ describe('la política de Likida', () => {
     expect(P).toMatch(/Falta capturar la razón social/);
   });
 
+  it('AUD5→7: el censo de prospectos está nombrado y tiene camino ARCO', () => {
+    expect(P).toMatch(/Censo de prospectos/);
+    expect(P).toMatch(/Likida es responsable/);
+    expect(P).toMatch(/ejecutor que anonimiza/);
+  });
+
   it('el silencio no cuenta como aceptar una transferencia futura', () => {
     expect(P).toMatch(/No hacer nada al leer esto no cuenta/);
   });

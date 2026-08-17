@@ -99,7 +99,8 @@ export type TipoDiferencia =
   | 'combustible_efectivo_dentro15' // efectivo DENTRO del 15% del ejercicio y flota elegible → deducible, con el contador a la vista
   | 'efectivo_sobre_15'      // efectivo que EXCEDE el 15% del ejercicio → el excedente no deducible
   | 'efectivo_no_elegible'   // flota declaró que NO califica (dedicación o régimen) → el efectivo no se deduce (LISR 27-III)
-  | 'oposicion_titular';     // el operador ejerció su oposición a la decisión automatizada (LFPDPPP 26-II) → una persona DEBE cerrar esta liquidación
+  | 'oposicion_titular'      // el operador ejerció su oposición a la decisión automatizada (LFPDPPP 26-II) → una persona DEBE cerrar esta liquidación
+  | 'peaje_sin_electronico'; // caseta pagada en efectivo o sin medio: RMF 9.1.8 fr. III no da el 50%
 
 /** Una diferencia detectada por el Módulo 2 (Cuadre). */
 export interface Diferencia {

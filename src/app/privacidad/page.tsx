@@ -59,6 +59,7 @@ const SECCIONES: SeccionLegal[] = [
       `Tu **nombre**, tu **correo** y tu **teléfono**.`,
       `Los **datos fiscales de tu empresa** que captures para que el sistema pueda validar facturas a su nombre: RFC, razón social, domicilio fiscal, régimen.`,
       `**Registros técnicos de uso**: cuándo entras al panel, qué liquidaciones consultas y los errores que produce el sistema mientras lo usas.`,
+      `**Censo de prospectos (Likida es responsable, no encargada):** nombre de contacto, correo, teléfono y empresa de personas que aparecen en directorios públicos o que un vendedor carga. Ese tratamiento no es por cuenta de una flota: es de Likida, para contactarlas sobre el producto.`,
       `**No se tratan datos sensibles**, ni se piden datos bancarios o de tarjeta.`,
     ],
   },
@@ -106,7 +107,7 @@ const SECCIONES: SeccionLegal[] = [
     fundamento: 'LFPDPPP art. 15 fr. V · art. 7 último párrafo',
     parrafos: [
       `Tienes derecho a **Acceder** a tus datos, **Rectificarlos**, **Cancelarlos** y **Oponerte** a un uso concreto; y a revocar tu consentimiento en cualquier momento.`,
-      `**Cómo:** escribe a **${RESPONSABLE.contacto}** con tu nombre, un medio para contestarte, copia de una identificación oficial, y qué datos son y qué pides que se haga con ellos.`,
+      `**Cómo:** escribe a **${RESPONSABLE.contacto}** con tu nombre, un medio para contestarte, copia de una identificación oficial, y qué datos son y qué pides que se haga con ellos. Si tus datos están en el **censo de prospectos**, dilo: hay un ejecutor que anonimiza nombre, correo y teléfono (la empresa publicada se conserva; no es un dato de una persona).`,
       `**Plazos de la ley:** 20 días hábiles para contestarte y 15 días hábiles más para hacerlo efectivo si procede. Es gratuito; solo puede haber costo de envío o copia.`,
       `Si no te contestamos o la respuesta no te satisface, puedes acudir a la autoridad garante en materia de protección de datos personales.`,
     ],

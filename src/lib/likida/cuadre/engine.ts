@@ -1009,8 +1009,20 @@ export function cuadrarViaje(input: CuadreInput): Omit<Liquidacion, 'id' | 'crea
     const proporcion = Math.max(0, Math.min(1, proporcionDeducible.get(g.id) ?? 1));
 
     if ((g.ivaTraslado ?? 0) > 0) ivaAcreditable += (g.ivaTraslado as number) * proporcion;
-    // Peaje (1.6): 50% del SubTotal (sin IVA) de casetas.
-    if (g.concepto === 'caseta' && (g.subTotal ?? 0) > 0) peajeAcreditable += (g.subTotal as number) * peajeFactor;
+    // Peaje (1.6): 50% del SubTotal (sin IVA) de casetas. RMF 2026 9.1.8
+    // fr. III: solo TAG o sistema electrónico. Efectivo en ventanilla no
+    // genera estímulo aunque haya factura. Sin forma de pago no se afirma.
+    if (g.concepto === 'caseta' && (g.subTotal ?? 0) > 0) {
+      const electronico = !!g.formaPago && g.formaPago !== '01';
+      if (electronico) peajeAcreditable += (g.subTotal as number) * peajeFactor;
+      else {
+        diferencias.push({
+          tipo: 'peaje_sin_electronico',
+          concepto: g.concepto, monto: 0, gastoId: g.id,
+          nota: 'Caseta sin pago electrónico (TAG/tarjeta/transferencia). La RMF 2026 regla 9.1.8 fr. III no concede el estímulo del 50%.',
+        });
+      }
+    }
     // IEPS de DIÉSEL (7): el estímulo (LIF 2026 art. 20, ap. A) es SOLO diésel — NO
     // gasolina. Se identifica por la clave de producto del SAT (15101505).
     const clavesDiesel = input.estimulos?.clavesDieselIeps ?? [];

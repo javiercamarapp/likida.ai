@@ -40,7 +40,7 @@ function viajeReal(): Gasto[] {
         rfcReceptor: 'TIN950101AB0', subTotal: 3862, ivaTraslado: 618, iepsTraslado: 720, estadoSat: 'vigente' }),
     // Una caseta timbrada (para que el estímulo de peaje entre)
     g({ concepto: 'caseta', monto: 1160, fecha: '2026-05-01', cfdiUuid: 'uuid-c1', xmlVerificado: true,
-        rfcReceptor: 'TIN950101AB0', subTotal: 1000, ivaTraslado: 160, estadoSat: 'vigente' }),
+        formaPago: '04', rfcReceptor: 'TIN950101AB0', subTotal: 1000, ivaTraslado: 160, estadoSat: 'vigente' }),
   ];
   // Once casetas sueltas (lo normal: tickets sin timbrar)
   for (let i = 0; i < 11; i++) {

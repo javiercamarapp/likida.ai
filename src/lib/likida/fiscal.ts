@@ -72,6 +72,8 @@ export interface GastoFiscal {
   tipoComprobante: string | null;
   xmlVerificado: boolean | null;
   ocrConfianza: number | null;
+  /** RFC receptor del CFDI. Sin él no se puede afirmar que el IVA es de la flota. */
+  rfcReceptor: string | null;
   /** Contexto que el contador pide para poder ir a buscar el papel. */
   viajeFolio: string | null;
   operadorNombre: string | null;
@@ -208,6 +210,8 @@ export interface OpcionesFiscales {
    *  undefined = sin declarar. AUDITORÍA 14, ALTO: sin esto el panel ofrecía
    *  la válvula a flotas que el motor declara no elegibles. */
   elegible15?: boolean;
+  /** RFC de la flota. Sin él el panel no afirma IVA (mismo criterio del motor). */
+  rfcEmpresa?: string;
 }
 
 /**
@@ -231,6 +235,7 @@ export function opcionesDe(cfg: LikidaConfig): OpcionesFiscales {
     elegible15: (f15 && f15.dedicacionExclusivaCarga !== undefined && f15.regimenElegible !== undefined)
       ? (f15.dedicacionExclusivaCarga === true && f15.regimenElegible === true)
       : undefined,
+    rfcEmpresa: cfg.empresa?.rfc,
   };
 }
 
@@ -566,6 +571,16 @@ function ivaSostenible(g: GastoFiscal, o: OpcionesFiscales): boolean {
   // facilidad del 15% (RFA 2.9) solo salva la deducción de ISR, y el motor ya
   // lo niega (SIN_ACREDITAMIENTO). El panel afirmaba IVA sobre esos CFDIs.
   if (g.formaPago === '01' && esCombustible(g, o)) return false;
+  // AUD5→7: LIVA 5 sigue a la deducibilidad. CFDI a un RFC ajeno no es
+  // deducible (CFF 29 / motor `rfc_receptor`) y no acredita IVA.
+  if (o.rfcEmpresa) {
+    const norm = (s: string) => s.toUpperCase().replace(/[^A-ZÑ&0-9]/g, '');
+    const empresa = norm(o.rfcEmpresa);
+    if (empresa === 'XAXX010101000') return false;
+    if (!g.rfcReceptor || norm(g.rfcReceptor) !== empresa) return false;
+  } else if (g.rfcReceptor) {
+    return false;
+  }
   return true;
 }
 
@@ -621,7 +636,10 @@ export function resumirFiscal(gastos: GastoFiscal[], o: OpcionesFiscales): Resum
       iepsDieselDocumentado += g.iepsTraslado;
     }
     if (g.concepto === 'caseta') {
-      if (g.subTotal !== null) subTotalCasetas += g.subTotal;
+      const electronico = !!g.formaPago && g.formaPago !== '01';
+      if (!electronico) {
+        /* RMF 9.1.8 fr. III: no entra a la base del estímulo. */
+      } else if (g.subTotal !== null) subTotalCasetas += g.subTotal;
       else casetasSinSubTotal += 1;
     }
   }
@@ -774,7 +792,7 @@ interface FilaCruda {
 // convierte en un `string` cualquiera y el builder degrada a
 // `GenericStringError[]`, que ya no encaja con `traerTodo`. Se ve feo en una
 // línea y es lo que hace que el tipo de la fila siga siendo comprobable.
-const COLUMNAS = 'id, viaje_id, concepto, monto, fecha, folio, rfc_emisor, cfdi_uuid, cfdi_valido, estado_sat, efos, efos_revisar, forma_pago, sub_total, iva_traslado, ieps_traslado, clave_prod_serv, tipo_comprobante, xml_verificado, ocr_confianza, ocr_extra';
+const COLUMNAS = 'id, viaje_id, concepto, monto, fecha, folio, rfc_emisor, rfc_receptor, cfdi_uuid, cfdi_valido, estado_sat, efos, efos_revisar, forma_pago, sub_total, iva_traslado, ieps_traslado, clave_prod_serv, tipo_comprobante, xml_verificado, ocr_confianza, ocr_extra';
 
 const num = (v: unknown): number | null => (v === null || v === undefined ? null : Number(v));
 const bool = (v: unknown): boolean | null => (v === null || v === undefined ? null : Boolean(v));
@@ -886,6 +904,7 @@ export async function getGastosFiscales(
       fecha: (f.fecha as string) || null,
       folio: (f.folio as string) || null,
       rfcEmisor: (f.rfc_emisor as string) || null,
+      rfcReceptor: (f.rfc_receptor as string) || null,
       cfdiUuid,
       cfdiValido: bool(f.cfdi_valido),
       estadoSat: (f.estado_sat as string) || null,

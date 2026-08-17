@@ -62,6 +62,7 @@ import {
 } from '@/lib/likida/conv';
 import { registrarCosto, registrarCostoWhatsApp, faseDeModelo, vincularCostosALiquidacion } from '@/lib/likida/costos';
 import { sendText, sendButtons, sendDocument, downloadMediaAsDataUrl, downloadMediaAsText } from '@/lib/meta/client';
+import { alertarOperador } from '@/lib/observability/alerta';
 import {
   decidirAcuse, mensajeConfirmar, mensajeRefoto, esPeticionDeFoto,
   mensajeCorregir, mensajeConfirmado, leerBoton, mensajeDemasiadasDudas,
@@ -2614,6 +2615,12 @@ export async function processInbound(msg: InboundMessage): Promise<void | 'dupli
         ? 'No pude consultar tus datos en este momento 😕 No es que no estés registrado: es que la conexión falló. Vuelve a intentarlo en un minuto.'
         : 'Perdón, se me trabó tantito. ¿Me reenvías tu último mensaje? 🙏';
     try { await sendText(msg.from, aviso); } catch { /* best-effort */ }
+    // AUD5→7: el camino del dinero avisa al operador del sistema. Nunca lanza.
+    await alertarOperador('processInbound', {
+      error: e instanceof Error ? e.message : String(e),
+      codigo: ambiguo ? 'operador_ambiguo' : noSePudoConsultar ? 'consulta_fallida' : 'processInbound.fail',
+      tenant: ctxTenant, viaje: ctxViaje, cerroSinEntregar: ctxCerro,
+    });
     // AUD5 OP-C1: el catch tragaba y los drenadores sellaban «procesado».
     return 'fallo';
   } finally {
