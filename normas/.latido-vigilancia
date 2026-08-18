@@ -1,29 +1,81 @@
-fecha_corrida: 2026-08-16 21:30
-ultimo_dia_barrido: 2026-08-16
-rango_intentado: 2026-08-16 (barrido diario vespertino; el backlog 24-jul..16-ago quedo cubierto por la corrida de la manana)
-notas_revisadas: 0 titulos — domingo SIN edicion del DOF
-notas_por_edicion: {matutina: no_hubo, vespertina: no_hubo, extraordinaria: no_hubo}
+fecha_corrida: 2026-08-17 21:30
+ultimo_dia_barrido: 2026-08-17
+rango_intentado: 2026-08-17 (barrido diario de las 21:30, con las ediciones del dia ya publicadas)
+notas_revisadas: 59 titulos con texto (70 registros = 11 banners de seccion + 41 avisos judiciales + 18 notas sustantivas)
+notas_por_edicion: {matutina: 70, vespertina: no_hubo, extraordinaria: no_hubo}
 fichas_disparadas: 0
-etag_sat: '"6a7e7528-387cd"'
-etag_sat_check: sin recheck esta corrida (cadencia semanal jue/vie; baseline del 16-ago vigente)
+etag_sat: '"6a7e751d-387cd"'
+sha256_lista_pdfs_sat: fb5daad664ecf826deae353784014110e5acf47d545f3798fdfc44264dbea10a  # 110 enlaces PDF, 43 anticipadas/modificaciones
+etag_sat_check: >
+  Recheck hecho hoy fuera de cadencia (la semanal es jue/vie) y ARROJO UN
+  HALLAZGO DE METODO: el ETag de sat.gob.mx NO sirve como senal de cambio.
+  Baseline 16-ago '"6a7e7528-387cd"' vs hoy '"6a7e751d-387cd"': los dos
+  decodifican al MISMO archivo con mtimes 11 segundos aparte (14-ago 01:53:44
+  vs 01:53:33) y tamano identico (0x387cd = 231,373 bytes). Es jitter de
+  granja de servidores, no publicacion nueva. Un ETag que oscila solo dispara
+  falsas alarmas cada semana, y una alarma que miente se acaba ignorando —
+  el mismo dano que la ceguera. DESDE HOY el baseline es
+  sha256_lista_pdfs_sat (hash de la lista ordenada de enlaces PDF): cambia
+  si y solo si aparece o desaparece un documento.
 deriva_ley_check: no_aplica_no_es_dia_1_trimestre
-estado: "OK — sin edicion dominical, verificado con cruce anti-silencio"
+estado: "OK — sin cambios del dominio en el DOF, verificado con cruce anti-silencio"
 detalle: >
-  Barrido diario de las 21:30 desde la sesion local (egress OK). SIDOF
-  respondio: diarios/porFecha/16-08-2026 devuelve 404 NOT_FOUND y
-  notas/16-08-2026 devuelve 200 con los tres arreglos vacios — ambas
-  senales coinciden en "no hubo diario hoy". No es fallo del API: la fecha
-  de control (viernes 14-ago) responde 200 con matutina y vespertina. Es
-  domingo, dia no habil; el canario de "0 notas en dia habil = fallo" no
-  aplica. Cero titulos que filtrar, cero fichas tocadas. La corrida de la
-  manana de hoy (backlog 24-jul..16-ago, 21 coincidencias, 4 cuotas IEPS
-  capturadas en normas/datos/cuota-ieps-diesel.yaml) sigue siendo el
-  ultimo barrido con contenido.
-sin_verificar_esta_corrida: nada pendiente del dia; las 23 fichas siguen en su estado (esta rutina no sube a verificado — eso exige lectura humana firmada).
+  DOF del 17-ago (lunes): SOLO edicion matutina, seccion unica, 520 paginas.
+  Cruce anti-silencio en verde y coherente: diarios/porFecha/17-08-2026
+  devuelve 200 con Matutina poblada (codDiario 329125) y Vespertina y
+  Extraordinaria en null; notas/17-08-2026 devuelve 70 notas matutinas y
+  cero en las otras dos. Las dos senales coinciden. El canario de "dia habil
+  con 0 notas = fallo" NO se dispara: es dia habil y SI hubo contenido.
+  Los 59 titulos con texto se cruzaron por script (no a ojo) contra el
+  diccionario de disparadores — IEPS, ISR, IVA, CFF, LIF, RMF, carta porte,
+  CFDI, RFA, autotransporte, peaje, UMA, datos personales, Anexo, Nota
+  Aclaratoria, Fe de erratas y 15 mas, normalizando acentos: CERO
+  coincidencias. La unica pieza fiscal-adyacente del dia se abrio igual en
+  vez de descartarla por el titulo: el Acuerdo de la SHCP de participaciones
+  federales de julio (codNota 5796402, 34 paginas) menciona IEPS y diesel 14
+  y 8 veces, pero es el informe mensual de lo que se REPARTE a los estados
+  por IEPS art. 2o-A fraccion II via Ley de Coordinacion Fiscal art. 4o-A —
+  reporta recaudacion, no mueve la cuota de diesel (LIEPS 2o-I-D-1-c) ni el
+  estimulo ni ninguna deduccion. Tambien se descarto el INPC de INEGI
+  (codNota 5796421): sus 67 "cuota" son articulos de la canasta (boletos de
+  cine, servicios medicos, agua). Es lunes: el acuerdo semanal de cuotas
+  IEPS de diesel no toca hoy, y la vigente (15-21 ago, estimulo 5.0874 /
+  disminuida 2.2760, codNota 5796377) YA cubre la fecha de hoy.
+hallazgo_ventana_anticipada: >
+  El recheck del minisitio destapo algo que el ETag por si solo no habria
+  contado: la lista trae 2aRM_RMF_2026-Sexta_version_anticipada_130082026.pdf
+  — SEGUNDA Resolucion de Modificaciones a la RMF 2026, sexta version
+  anticipada, fechada 13-ago-2026, viva en el Portal del SAT SIN haber
+  pasado por el DOF. Es exactamente la ventana ciega que documenta la skill
+  (la 1a RM vivio 4 meses y medio en el portal con efectos juridicos). Se
+  leyo INTEGRA hoy, no se dio por leida: adiciona a la regla 11.7.3
+  (Calculo del precio base del diesel) las fracciones XIV a XIX, que restan
+  0.92, 0.88, 0.88, 0.89, 0.89 y 0.92 pesos por litro los dias 9, 16, 23 y
+  30 de julio y 6 y 13 de agosto. Surte efectos por la regla 1.3 tercer
+  parrafo.
+  IMPACTO EN LIKIDA: NINGUNO, y esta comprobado, no supuesto. 11.7.3 opera
+  sobre un INSUMO del calculo de la SHCP, cuyo efecto ya viene incorporado
+  en la cuota que se publica cada viernes — la regla operativa ya escrita en
+  cuota-ieps-diesel.yaml es consumir SIEMPRE la cuota publicada y JAMAS
+  recalcular desde la metodologia. Se verifico ademas contra el codigo: no
+  hay 11.7.3 ni 0.92/0.88/0.89 en ninguna parte, y 7.3634 solo aparece en
+  comentarios de engine.ts:1021 y sus dos pruebas. Cero cambios de codigo.
+  NO ES NUEVO DE HOY: el archivo ya estaba en el portal al baseline de ayer
+  (Last-Modified 14-ago 01:53). Lo nuevo es que hasta hoy nadie lo habia
+  CRUZADO contra las fichas — el baseline del 16-ago era la primera captura
+  y no tenia contra que diffear.
+sin_verificar_esta_corrida: >
+  Las 23 fichas siguen en su estado (esta rutina solo puede marcar
+  contradicho; subir a verificado exige lectura humana firmada). Sigue sin
+  leerse contra las fichas el resto de las 43 anticipadas/modificaciones del
+  minisitio: hoy solo se abrio la 2aRM por ser la mas reciente.
 accion_requerida: >
-  1) La routine de la nube sigue ciega por su proxy: mover la cadencia diaria
-  a un entorno con egress (launchd local, como el Cazador) o pedir el host en
-  la allowlist. 2) Cablear el motor a cuota-ieps-diesel.yaml para calcular el
-  estimulo en pesos (hoy el panel muestra litros — honesto pero incompleto).
-  3) Barrido historico de cuotas anterior al 25-jul si el estimulo debe
-  calcularse retroactivo.
+  1) Cablear el motor a cuota-ieps-diesel.yaml para calcular el estimulo en
+  pesos (hoy el panel muestra litros — honesto pero incompleto). 2) Barrido
+  historico de cuotas anterior al 25-jul si el estimulo debe calcularse
+  retroactivo. 3) Las fichas NO tienen el bloque `vigilancia:` ni
+  `hash_texto_vigente` que describe la skill: hoy el cruce se hace contra un
+  diccionario global, asi que una publicacion se atribuye al dominio pero no
+  a UNA ficha concreta. Implementarlo es lo que convertiria una alerta en
+  radio de impacto automatico. 4) Leer las 42 anticipadas restantes contra
+  las fichas, una vez, para cerrar la ventana historica.
