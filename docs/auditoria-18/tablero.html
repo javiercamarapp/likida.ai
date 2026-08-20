@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Auditoría 18 — Likida</title>
+<style>
+  :root{
+    --tinta:#12151a; --papel:#f6f4ef; --tenue:#6b7280; --linea:#dcd7cc;
+    --caja:#fffdf9; --critico:#b3261e; --alto:#c2620f; --medio:#8a7420; --bajo:#5b6470;
+    --bien:#1f6b47;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:40px 28px;background:var(--papel);color:var(--tinta);
+       font:16px/1.5 ui-serif,Georgia,"Times New Roman",serif}
+  .hoja{max-width:1040px;margin:0 auto}
+  h1{font-size:30px;margin:0 0 4px;letter-spacing:-.02em}
+  .sub{color:var(--tenue);font-size:14px;margin-bottom:26px}
+  .fila{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:26px}
+  .tarjeta{flex:1 1 190px;background:var(--caja);border:1px solid var(--linea);
+           border-radius:9px;padding:14px 16px}
+  .rot{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--tenue)}
+  .cifra{font-size:32px;font-weight:600;letter-spacing:-.02em;margin-top:4px}
+  .pie{font-size:12px;color:var(--tenue);margin-top:2px}
+  .aviso{background:#fff8e6;border:1px solid #e5d5a8;border-left:4px solid #b9932f;
+         border-radius:7px;padding:14px 16px;margin-bottom:26px;font-size:14px}
+  .aviso > b:first-child{display:block;margin-bottom:5px;font-size:15px}
+  table{width:100%;border-collapse:collapse;background:var(--caja);
+        border:1px solid var(--linea);border-radius:9px;overflow:hidden;font-size:14px}
+  th{background:#efece5;text-align:left;padding:9px 12px;font-size:11px;
+     text-transform:uppercase;letter-spacing:.07em;color:#4b5563;font-weight:600}
+  td{padding:9px 12px;border-top:1px solid var(--linea);vertical-align:top}
+  td.n{font-weight:700;font-size:17px;text-align:center;width:52px}
+  td.sd{text-align:center;color:var(--tenue);width:78px;font-size:12px}
+  .barra{height:7px;background:#e6e2d9;border-radius:4px;overflow:hidden;width:104px}
+  .barra i{display:block;height:100%;background:var(--tinta)}
+  h2{font-size:17px;margin:30px 0 10px;padding-bottom:5px;border-bottom:1px solid var(--linea)}
+  .sev{display:inline-block;min-width:20px;padding:1px 7px;border-radius:9px;
+       font-size:12px;font-weight:700;color:#fff;font-family:ui-sans-serif,system-ui}
+  .c{background:var(--critico)} .a{background:var(--alto)}
+  .m{background:var(--medio)} .b{background:var(--bajo)}
+  .ok{color:var(--bien);font-weight:600}
+  ul{margin:8px 0 0;padding-left:20px} li{margin-bottom:7px}
+  code{font:13px ui-monospace,Menlo,Consolas,monospace;background:#eeebe3;
+       padding:1px 5px;border-radius:4px}
+  .nota{font-size:13px;color:var(--tenue);margin-top:8px}
+</style>
+</head>
+<body>
+<div class="hoja">
+
+  <h1>Auditoría 18 — Likida</h1>
+  <div class="sub">20-ago-2026 · en la nube, desatendida · <code>master</code> @ <code>8d608a4</code> · doce rubros de doce</div>
+
+  <div class="fila">
+    <div class="tarjeta"><div class="rot">Global</div><div class="cifra">6.1</div><div class="pie">suma 73 / 12 rubros</div></div>
+    <div class="tarjeta"><div class="rot">Delta</div><div class="cifra" style="color:var(--tenue)">n/d</div><div class="pie">sin línea base válida</div></div>
+    <div class="tarjeta"><div class="rot">Hallazgos</div><div class="cifra">83</div><div class="pie">5 · 30 · 30 · 18</div></div>
+    <div class="tarjeta"><div class="rot">Arreglados</div><div class="cifra ok">3</div><div class="pie">1 crítico, 2 altos</div></div>
+    <div class="tarjeta"><div class="rot">Compuerta</div><div class="cifra ok">verde</div><div class="pie">5,050 pruebas · tsc · lint</div></div>
+  </div>
+
+  <div class="aviso">
+    <b>Este tablero no tiene flechas, y es a propósito.</b>
+    La ronda 17 (global 4.2) vive sobre una historia <b>sin ancestro común</b> con
+    <code>master</code>: raíces <code>a3c9978</code> y <code>36432e4</code>, dos linajes
+    distintos en el mismo repositorio. Restar 4.2 de 6.1 publicaría una mejora que nadie
+    hizo. El 6.1 es una <b>línea base nueva</b>. Además, a los doce auditores se les
+    entregó por error el ancla de la auditoría 2, así que la columna «antes» de cada
+    archivo de rubro no es comparable — sus hallazgos sí lo son: cada uno está atado a
+    <code>archivo:línea</code> leído hoy.
+  </div>
+
+  <h2>Los doce rubros</h2>
+  <table>
+    <tr><th>Rubro</th><th>Nota</th><th></th><th>Crít</th><th>Alto</th><th>Lo que la sostiene</th></tr>
+    <tr><td>Frontend</td><td class="n">6</td><td><div class="barra"><i style="width:60%"></i></div></td><td class="sd">0</td><td class="sd">4</td><td>Un selector rotula cinco ventanas distintas; «Histórico» enseña 52 semanas de dinero</td></tr>
+    <tr><td>Backend y API</td><td class="n">7</td><td><div class="barra"><i style="width:70%"></i></div></td><td class="sd">0</td><td class="sd">4</td><td>Concurrencia con prueba propia; las pruebas verifican la forma de la llamada, no el comportamiento de la base</td></tr>
+    <tr><td>Sistema agéntico</td><td class="n">5</td><td><div class="barra"><i style="width:50%"></i></div></td><td class="sd">0</td><td class="sd">4</td><td>El ciclo del chofer vale 7; la mitad nueva se cableó sin las mismas reglas</td></tr>
+    <tr><td>Tool calling</td><td class="n">7</td><td><div class="barra"><i style="width:70%"></i></div></td><td class="sd">0</td><td class="sd">1</td><td><code>properties: {}</code> intacto en todo WhatsApp y el chat; las 14 tools nuevas del copiloto sin prueba de invariante</td></tr>
+    <tr><td>Seguridad</td><td class="n">7</td><td><div class="barra"><i style="width:70%"></i></div></td><td class="sd">0</td><td class="sd">1</td><td>Ningún CVE explotable, descartados uno por uno; ninguna ruta de <code>/dashboard</code> cruza tenants</td></tr>
+    <tr><td>Cumplimiento fiscal</td><td class="n">7</td><td><div class="barra"><i style="width:70%"></i></div></td><td class="sd">0</td><td class="sd">2</td><td>El crítico histórico cerrado: el estímulo se entrega en litros. La deuda viva se concentró en el peaje</td></tr>
+    <tr><td>Cumplimiento legal</td><td class="n">6</td><td><div class="barra"><i style="width:60%"></i></div></td><td class="sd">1</td><td class="sd">2</td><td>El carril del operador vale 8; el Cerebro manda nombres de personas a un modelo externo sin aviso</td></tr>
+    <tr><td>Arquitectura</td><td class="n">5</td><td><div class="barra"><i style="width:50%"></i></div></td><td class="sd">1</td><td class="sd">2</td><td>El mapa gemelo canónico está cerrado y el motor es puro; 17 escritores a mano de bitácora</td></tr>
+    <tr><td>Pruebas</td><td class="n">6</td><td><div class="barra"><i style="width:60%"></i></div></td><td class="sd">0</td><td class="sd">3</td><td>Mutación real: 4 rojas / 2 verdes. Las verdes son ausencia de prueba, no pruebas flojas</td></tr>
+    <tr><td>Operabilidad y DX</td><td class="n">7</td><td><div class="barra"><i style="width:70%"></i></div></td><td class="sd">0</td><td class="sd">3</td><td>Observabilidad cableada de verdad; ninguna alerta empujada en el camino del dinero</td></tr>
+    <tr><td>Rendimiento y costo</td><td class="n">4</td><td><div class="barra"><i style="width:40%"></i></div></td><td class="sd">2</td><td class="sd">3</td><td>Un mensaje solo cabe (91.3s/120). Nadie había sumado la ráfaga (124.6s) ni el cron (623s)</td></tr>
+    <tr><td>Modelo de datos</td><td class="n">6</td><td><div class="barra"><i style="width:60%"></i></div></td><td class="sd">1</td><td class="sd">1</td><td>Dominios y unicidades cuadran letra por letra; el aislamiento vive en la aplicación, no en la base</td></tr>
+  </table>
+
+  <h2>Arreglado, con prueba que lo reproduce</h2>
+  <ul>
+    <li><span class="sev c">C</span> <b>Una factura que AMPARA N casetas se contaba como una sola.</b>
+      8 casetas de $250 de una consolidada de CAPUFE → comprobado <b>$250 de $2,000</b>,
+      siete diferencias <code>duplicado</code>, y el operador acusado de duplicar.
+      <code>ebefdfa</code> — la prueba da $250 sin el arreglo.</li>
+    <li><span class="sev a">A</span> <b>El informe en PDF se acusaba como entregado aunque Meta lo rechazara.</b>
+      <code>if (!enviado)</code> sobre un objeto siempre truthy. <code>4f25078</code>.</li>
+    <li><span class="sev a">A</span> <b>El sondeo de arranque borraba el lease del viaje que otro proceso cerraba.</b>
+      Lo levantaron dos auditores por separado. <code>e1b9474</code>.</li>
+  </ul>
+
+  <h2>Lo que NO se arregló, y por qué</h2>
+  <ul>
+    <li><span class="sev c">C</span> <b>El 50% de peaje se acredita sobre casetas pagadas en EFECTIVO</b> —
+      <code>engine.ts:1008</code> no lee <code>formaPago</code>. Caseta de $928 en ventanilla:
+      el papel imprime <b>$400.00</b>, la RMF 9.1.8 fr. III dice <b>$0.00</b>.
+      Gatearlo exige decidir qué hacer con <code>'99 · Por definir'</code>: es una decisión
+      de producto con dinero, no un parche de madrugada.</li>
+    <li><span class="sev c">C</span> <b>El nombre del decisor de un prospecto va a un modelo externo sin aviso que lo cubra.</b>
+      El arreglo es un aviso de privacidad, no código.</li>
+    <li><span class="sev c">C</span> <b>El presupuesto es por mensaje; el <code>maxDuration</code> es por invocación.</b>
+      Ráfaga 124.6s y cron 623s contra 120. El arreglo correcto es un lease con TTL: diseño.</li>
+    <li><span class="sev a">A</span> <b>El pie del PDF invita a subir la base del peaje «13.8%»</b> contra el
+      texto literal de la 9.1.8 fr. IV — y el porcentaje además está invertido (es 16%).
+      Es texto fiscal impreso; su redacción es del dueño.</li>
+  </ul>
+
+  <h2>Convergencias</h2>
+  <ul>
+    <li><b>Tres auditores</b> (agéntico + backend + rendimiento): un mensaje muerto a media
+      ráfaga queda sellado como procesado por su propio claim. La bandeja durable afirma
+      por escrito que el comprobante se procesó.</li>
+    <li><b>Dos</b> (backend + seguridad): <code>/api/dashboard/ingesta</code> gasta visión sin
+      techo y sin registrar un centavo en <code>llm_costo</code>.</li>
+    <li><b>Dos</b> (agéntico + operabilidad): el mutex del arranque — <b>arreglado</b>.</li>
+    <li><b>Dos</b> (arquitectura + datos): el <code>cfdi_orden</code> — <b>arreglado</b>.</li>
+  </ul>
+
+  <div class="nota">
+    Compuerta sobre el árbol final, dos corridas: 388 archivos, 5,050 pruebas, 1 saltada;
+    <code>tsc</code> limpio; <code>eslint</code> 0 errores y 5 avisos. Un rojo intermitente
+    se observó una vez y no se reprodujo en las dos corridas siguientes: no se cuenta ni
+    como verde ni como rojo. Sin <code>npm run build</code>: pide credenciales que en la
+    nube no existen.
+  </div>
+
+</div>
+</body>
+</html>
