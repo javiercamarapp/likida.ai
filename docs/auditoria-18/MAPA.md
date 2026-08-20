@@ -18,7 +18,17 @@ Se escriben aquí porque callarlas es lo que infla una nota:
    reportes de esta ronda entran con `git add -f`. **Es una decisión del dueño, no
    la cambié**: la propuesta de quitar esa línea va en el PR, para que la decida él.
 
-3. **No hay línea base válida para este árbol, y por eso esta ronda NO reporta
+3. **El árbol auditado es `8d608a4`, cuatro commits DETRÁS de `master`.** Mi ref
+   local de `master` estaba viejo y no lo verifiqué contra el remoto hasta el
+   cierre: `origin/master` estaba en `553bee7`. **NO quedaron auditados** esos
+   cuatro commits: los dos arreglos del magic link (`4de8f20`, `1f6253f`, que
+   crean `src/lib/auth/motivo_login.ts` y `reenvio_enlace.ts`), el README nuevo
+   y «un fajo es un mensaje» (`553bee7`, que toca `processor.ts`). La rama sí se
+   mergeó con `master` al cerrar y la compuerta se volvió a correr en verde
+   (390 archivos, 5,085 pruebas), pero **el ojo de los doce auditores no pasó por
+   ahí**. Es el primer pendiente de la ronda 19.
+
+4. **No hay línea base válida para este árbol, y por eso esta ronda NO reporta
    delta.** La ronda 17 (13-ago, global 4.2) sí existe y está completa, pero vive
    sobre una historia **sin ancestro común** con `master`: su raíz es
    `a3c9978 "Scaffold inicial de Cuadra"` y la de `master` es `36432e4`. Son dos

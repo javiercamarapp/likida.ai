@@ -12,6 +12,9 @@ rama `claude/auditoria-18`
 - Compuerta final verde, dos corridas: 388 archivos, 5,050 pruebas, 1 saltada;
   `tsc` limpio; `eslint` 0 errores.
 - Tablero renderizado y mirado (`tablero.png`).
+- **Salvedad:** se auditó `8d608a4`, cuatro commits detrás de `master`. Los dos
+  arreglos de login, el README y «un fajo es un mensaje» NO fueron auditados.
+  La rama se mergeó con `master` y la compuerta quedó verde (5,085 pruebas).
 
 Pendientes que necesitan decisión del dueño, no más código: el 50% de peaje
 sobre casetas en efectivo, el aviso que cubra los datos de prospectos, y el

@@ -25,6 +25,20 @@ número que no le corresponde. **Sus hallazgos siguen siendo válidos**: cada un
 está anclado a `archivo:línea` leído hoy. Lo que no vale es su columna de delta.
 Corregirlo cuesta una ronda: al ancla de mañana hay que darle este 6.1.
 
+## Lo que esta ronda NO alcanzó a mirar
+
+El árbol auditado es **`8d608a4`, cuatro commits detrás de `master`** (`553bee7`):
+mi ref local estaba viejo. Quedaron **sin auditar** los dos arreglos del magic
+link (`motivo_login.ts`, `reenvio_enlace.ts` — nacen en esos commits), el README
+y «un fajo es un mensaje» sobre `processor.ts`. La rama se mergeó con `master` al
+cerrar y la compuerta quedó verde encima (390 archivos, 5,085 pruebas), pero eso
+dice que no rompí nada, **no** que alguien haya revisado ese código. Primer
+pendiente de la ronda 19.
+
+Y una corrección mía: durante la ronda creí que esos cuatro commits vivían solo
+en el contenedor y los empujé a `claude/rescate-trabajo-sin-rama`. **Era falso**
+—estaban en `origin/master` desde siempre—; esa rama sobra y se puede borrar.
+
 ## Las tres correcciones de anclaje
 
 Están en el `MAPA.md` con detalle. En corto: esta ronda es la **18** y no la 6
