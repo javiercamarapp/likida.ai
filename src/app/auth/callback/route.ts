@@ -7,16 +7,25 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { supabaseServer } from '@/lib/supabase/server';
 import { getSessionTenant } from '@/lib/auth/session';
 import { puertaDeEntrada } from '@/lib/auth/visibilidad';
+import { aParametro, motivoDeIntercambio, motivoSinCode } from '@/lib/auth/motivo_login';
+import { reenviarEnlaceCaducado } from '@/lib/auth/reenvio_enlace';
 
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get('code');
   const next = req.nextUrl.searchParams.get('next');
   const destinoExplicito = next && next.startsWith('/dashboard') ? next : null;
 
+  // Con qué se vuelve a /login si esto no acaba en sesión. Empieza en el
+  // motivo que Supabase pegó al redirect cuando rechazó el token ANTES de
+  // emitir un code (enlace ya usado o caducado → `error_code=otp_expired`);
+  // si el code sí llegó, el canje de abajo lo puede refinar.
+  let motivo = motivoSinCode(req.nextUrl.searchParams.get('error_code'));
+
   if (code) {
     try {
       const sb = await supabaseServer();
       const { error } = await sb.auth.exchangeCodeForSession(code);
+      if (error) motivo = motivoDeIntercambio(error);
       if (!error) {
         // Sin `next` explícito, superadmin aterriza en SU consola (/admin),
         // no en el panel del tenant demo — antes de esto no tenía a dónde
@@ -41,5 +50,24 @@ export async function GET(req: NextRequest) {
       // de login más importante
     }
   }
-  return NextResponse.redirect(new URL('/login?error=1', req.url));
+
+  // Enlace ya usado o caducado: antes de mandar a la persona a teclear su
+  // correo otra vez, se intenta reenviarle uno nuevo solo (los frenos —uno
+  // cada 5 min, mismo límite por IP que el formulario— viven en el módulo).
+  // Si el reenvío mismo falla raro, se degrada al mensaje de caducado: este
+  // camino jamás puede empeorar un login que ya falló.
+  if (motivo === 'caducado') {
+    try {
+      const reenvio = await reenviarEnlaceCaducado(destinoExplicito ?? '/dashboard');
+      if (reenvio === 'reenviado') {
+        return NextResponse.redirect(new URL('/login?enviado=1&reenviado=1', req.url));
+      }
+      if (reenvio === 'reciente') {
+        return NextResponse.redirect(new URL('/login?error=caducado_reciente', req.url));
+      }
+    } catch {
+      // sin red ni Supabase no hay reenvío — el mensaje de caducado basta
+    }
+  }
+  return NextResponse.redirect(new URL(`/login?error=${aParametro(motivo)}`, req.url));
 }
