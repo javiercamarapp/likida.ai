@@ -123,8 +123,28 @@ describe('processInbound — el dueño que maneja es chofer Y oficina', () => {
 
     expect(atenderDespachoOficina).toHaveBeenCalledWith(
       { tenantId: 't1', rol: 'flota_admin' }, TEL, 'nuevo viaje para Juan, Puebla a Monterrey',
+      expect.any(Date), { reengancharPendiente: false },
     );
     expect(salientes[0]).toContain('Voy a crear este viaje');
+  });
+
+  // AGEN-C2-1 / BACK-C2-2 (auditoría 18-c2): el desempate por viaje abierto
+  // tiene que llegarle al DESPACHO, no solo al analista. Con `getOpenViaje`
+  // devolviendo 'v1' (en ruta, el default de este arnés), un pendiente vivo se
+  // quedaba con el «listo» del chofer y la liquidación no corría.
+  it('CON VIAJE ABIERTO el despacho recibe reengancharPendiente:false', async () => {
+    await processInbound(msg('listo'));
+    expect(atenderDespachoOficina).toHaveBeenCalledWith(
+      expect.anything(), TEL, 'listo', expect.any(Date), { reengancharPendiente: false },
+    );
+  });
+
+  it('SIN viaje abierto el despacho conserva el reenganche', async () => {
+    getOpenViaje.mockResolvedValue(null);
+    await processInbound(msg('listo'));
+    expect(atenderDespachoOficina).toHaveBeenCalledWith(
+      expect.anything(), TEL, 'listo', expect.any(Date), { reengancharPendiente: true },
+    );
   });
 
   it('«¿cómo van?» le contesta el informe, no el camino del chofer', async () => {

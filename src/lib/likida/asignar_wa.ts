@@ -235,6 +235,8 @@ export async function atenderAsignacionOficina(
   telefono: string,
   texto: string,
   ahora: Date = new Date(),
+  /** Mismo desempate que en `despacho_wa.ts`: en ruta, el texto es del chofer. */
+  opciones: { reengancharPendiente?: boolean } = {},
 ): Promise<string | null> {
   if (!texto?.trim() || !cuenta.tenantId) return null;
 
@@ -295,6 +297,7 @@ export async function atenderAsignacionOficina(
     // Ni sí ni no: una petición NUEVA (de asignación) reemplaza a la
     // pendiente; cualquier otra cosa re-enseña lo que está en juego.
     if (!interpretarAsignacion(texto)) {
+      if (opciones.reengancharPendiente === false) return null;
       return `Tengo esta asignación esperando tu confirmación:\n\n${resumenDePendiente(pendiente)}`;
     }
   }

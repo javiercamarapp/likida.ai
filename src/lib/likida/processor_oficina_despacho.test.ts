@@ -99,6 +99,11 @@ describe('processInbound — la rama de oficina despacha', () => {
       { tenantId: 't1', rol: 'flota_admin' },
       '5215550000001',
       'nuevo viaje para Juan, Puebla a Monterrey',
+      // El desempate de AGEN-C2-1 viaja en los dos últimos argumentos. Por esta
+      // rama —oficina pura, sin viaje abierto que disputar— el reenganche del
+      // pendiente se conserva: aquí «listo» no es de nadie más.
+      expect.any(Date),
+      { reengancharPendiente: true },
     );
     expect(salientes).toHaveLength(1);
     expect(salientes[0]).toContain('Voy a crear este viaje');

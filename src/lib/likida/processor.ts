@@ -444,7 +444,7 @@ async function atenderTextoOficina(
   cuenta: CuentaOficina,
   from: string,
   texto: string,
-  opciones: { incluirPreguntaLibre: boolean },
+  opciones: { incluirPreguntaLibre: boolean; enRuta?: boolean },
 ): Promise<boolean> {
   // La talacha va PRIMERO: el botón `tal_si:<uuid>` responde a una pregunta
   // concreta que le mandamos, y con un viaje pendiente de despacho ese módulo
@@ -474,6 +474,7 @@ async function atenderTextoOficina(
   try {
     const rDespacho = await atenderDespachoOficina(
       { tenantId: cuenta.tenantId, rol: cuenta.rol }, from, texto,
+      new Date(), { reengancharPendiente: !opciones.enRuta },
     );
     if (rDespacho) {
       logger.info('oficina.despacho', { user: cuenta.userId, rol: cuenta.rol });
@@ -490,6 +491,7 @@ async function atenderTextoOficina(
   try {
     const rAsignacion = await atenderAsignacionOficina(
       { tenantId: cuenta.tenantId, rol: cuenta.rol }, from, texto,
+      new Date(), { reengancharPendiente: !opciones.enRuta },
     );
     if (rAsignacion) {
       logger.info('oficina.asignacion', { user: cuenta.userId, rol: cuenta.rol });
@@ -762,7 +764,13 @@ export async function processInbound(msg: InboundMessage): Promise<void> {
           // «ya llegué» y «listo», que son con los que se cierra un viaje. Sin
           // viaje abierto no hay nada de ruta que decir y la pregunta es del
           // dueño. Lo que ningún reconocedor reclame sigue su camino intacto.
-          && await atenderTextoOficina(cuentaPropia, msg.from, msg.text, { incluirPreguntaLibre: !viajeId })) {
+          // `enRuta` lleva el MISMO desempate al despacho y a la asignación
+          // (auditoría 18-c2, AGEN-C2-1 / BACK-C2-2): apagar solo al analista
+          // dejaba que un pendiente de confirmación vivo se quedara con el
+          // «listo» del chofer durante los 30 min de su vigencia, y con él la
+          // liquidación que ese «listo» venía a cerrar.
+          && await atenderTextoOficina(cuentaPropia, msg.from, msg.text,
+            { incluirPreguntaLibre: !viajeId, enRuta: Boolean(viajeId) })) {
         return;
       }
     }
