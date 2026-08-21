@@ -46,3 +46,8 @@ Una línea por acción, con su sha cuando la hay. Se escribe MIENTRAS avanza.
 | 35 | Tablero `tablero-c2.html` renderizado y **mirado**: se corrigieron dos defectos (chips de severidad partidos en dos líneas, pie cortado) y se recapturó | `tablero-c2.png` |
 | 36 | Compuerta final: 393 archivos, 5,134 pruebas, 1 saltada; `tsc` limpio; `eslint` 0 errores / 5 avisos | verde |
 | 37 | Síntesis `00-SINTESIS-c2.md` y `RESULTADO.md` escritos. Global 4.8 (−1.3), ninguna nota subió | — |
+| 38 | Push a `claude/auditoria-18` (fast-forward, sin force) y PR #34 actualizado — no se abrió PR nuevo | `d95e44f` |
+| 39 | **CI rompió el job de Postgres efímero, y fue mío**: el bloque 111 midió bien las 8 cosas, pero mi literal `(esperado …)` decía 50 donde ese caso da 75, y `correr-verificaciones.mjs` usa ese literal de oráculo | detectado en CI |
+| 40 | Arreglado y transcrita la salida real dentro del bloque. **Job de Postgres → verde** en las dos corridas | `9fab6f1` |
+| 41 | CI final del PR: `verificar` **verde** (2/2), `Migraciones + aislamiento (Postgres efímero)` **verde** (2/2), GitGuardian y Vercel verdes | verde |
+| 42 | Siguen rojos `dependency-review` y `Analizar (JavaScript/TypeScript)` (CodeQL). **NO son del diff**: los dos dicen literal que la función no está habilitada en el repo — «Dependency review is not supported on this repository» y «Code scanning is not enabled for this repository… CodeQL job status was configuration error». Es un ajuste en Settings → Code security, no código | INFRA / ajuste del dueño |

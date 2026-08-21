@@ -34,3 +34,9 @@ Lo que necesita decisión del dueño, no más código:
 4. Los dos fiscales que la ronda 18 ya había dejado propuestos siguen idénticos:
    el 50% de peaje sobre casetas en efectivo (`engine.ts:1021`) y el pie del PDF
    con «13.8%» (`acreditable.ts:47-49`, y el número correcto es 16%).
+
+CI del PR sobre `9fab6f1`: `verificar` verde (2/2), `Migraciones + aislamiento
+(Postgres efímero)` verde (2/2), GitGuardian y Vercel verdes. Siguen rojos
+`dependency-review` y CodeQL, los dos por configuración del repo («no está
+habilitado en este repositorio»), no por el diff — es un ajuste en Settings →
+Code security.

@@ -187,6 +187,25 @@ Al arrancar, **roja** (arriba). Al cerrar, verde sobre el árbol final:
 `npx tsc --noEmit` limpio. `npx eslint src/` 0 errores, 5 avisos (los mismos de
 la línea base).
 
+### El CI del PR, y un error mío que el CI cachó
+
+`verificar` **verde** (2/2) y `Migraciones + aislamiento (Postgres efímero)`
+**verde** (2/2) sobre `9fab6f1`.
+
+Ese segundo job me corrigió y vale la pena escribirlo: el bloque 111 que escribí
+para CONT-1 no lo podía correr aquí (no hay base), y al llegar a CI **midió bien
+las ocho cosas** pero falló porque mi literal `(esperado …)` decía `50` en la
+posición de `viajes`, cuando ese caso —«Coordinador de Liquidaciones» (+50) con
+25 unidades (+25)— da **75**. `correr-verificaciones.mjs` usa ese literal como
+oráculo, así que un rótulo falso rompe la build, que es exactamente lo que debe
+pasar. Corregido en `9fab6f1`, con la salida real transcrita dentro del bloque.
+
+**Dos checks siguen rojos y NO son del diff**: `dependency-review` («Dependency
+review is not supported on this repository») y `Analizar (JavaScript/TypeScript)`
+(«Code scanning is not enabled for this repository… CodeQL job status was
+configuration error»). Los dos son un ajuste en Settings → Code security del
+repo, no código, y fallarían igual en cualquier PR. No los toqué.
+
 **El rojo intermitente que la ronda 18 dejó pendiente no reapareció**: cuatro
 corridas completas de la suite en esta ronda, ninguna con un rojo distinto al de
 `migraciones_verificadas`. El auditor de pruebas sí levantó la lista de pruebas
