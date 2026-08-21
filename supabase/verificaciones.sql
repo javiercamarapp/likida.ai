@@ -5485,6 +5485,11 @@ begin
     values ('zzz-verif-aux-mesa', 'Auxiliar administrativo Mesa de Control')
     returning necesidad_pct into n_aux_mesa;
 
-  raise exception E'DERIVADAS_0140_0142_0143  generadas-stored=%  escritura-rebota=%  financiera=%  viajes=%  aux-solo=%  aux-mesa=%  recalcula=%  negativo-rebota=%   (esperado 3 / t / 25 / 50 / 25 / 50 / t / t)',
+  -- `viajes` es 75 y no 50: es «Coordinador de Liquidaciones» (+50) CON 25
+  -- unidades (+25), leído ANTES de bajarle la flota a 5. Lo confirmó la
+  -- primera corrida del bloque contra el Postgres efímero de CI, 21-ago-2026:
+  --   generadas-stored=3  escritura-rebota=t  financiera=25  viajes=75
+  --   aux-solo=25  aux-mesa=50  recalcula=t  negativo-rebota=t
+  raise exception E'DERIVADAS_0140_0142_0143  generadas-stored=%  escritura-rebota=%  financiera=%  viajes=%  aux-solo=%  aux-mesa=%  recalcula=%  negativo-rebota=%   (esperado 3 / t / 25 / 75 / 25 / 50 / t / t)',
     generadas, escritura_rebota, n_financiera, n_viajes, n_aux_solo, n_aux_mesa, recalcula, negativo_rebota;
 end $$;
