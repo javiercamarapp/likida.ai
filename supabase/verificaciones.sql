@@ -5412,3 +5412,79 @@ begin
   raise exception E'CALIDAD_0139  auto-rebota=%  fantasma-rebota=%  indices=%   (esperado t / t / t)',
     auto_rebota, fantasma_rebota, indices;
 end $$;
+-- ── 111. Las columnas derivadas del prospecto se calculan solas y nadie las escribe (mig. 0140 + 0142 + 0143) ──
+-- La 0140 declara por escrito que `similitud_icp_pct` y `necesidad_pct` "nunca
+-- las escribe un agente, nunca se desincronizan". Esa es exactamente una
+-- garantía que SOLO la base puede demostrar: si mañana alguien las convierte en
+-- columnas normales, el código sigue compilando, las pruebas de TS siguen
+-- verdes, y un agente empieza a guardar "73%" adivinado — la precisión falsa
+-- contra la que existe la regla de "nunca inventar una cifra". Y la 0142 y la
+-- 0143 corrigieron la fórmula DROPEANDO y recreando la columna: hay que
+-- comprobar que las filas viejas quedaron recalculadas con la fórmula nueva y
+-- no conviviendo con la vieja.
+-- (a) las tres son GENERATED ... STORED; (b) escribir `necesidad_pct` a mano
+-- REBOTA (428C9); (c) "Analista de Liquidaciones de Pagos" da 25 y no 50 —el
+-- arreglo de la 0143—; (d) "Coordinador de Liquidaciones" con 25 unidades da 75;
+-- (e) "Auxiliar Administrativo" a secas da 25 —el arreglo de la 0142— y con
+-- "Mesa de Control" da 50; (f) al cambiar `num_unidades` las dos columnas se
+-- recalculan solas; (g) el check de `num_unidades` negativo rebota.
+--   (esperado 3 / t / 25 / 75 / 25 / 50 / t / t — exactos)
+do $$
+declare
+  generadas int;
+  escritura_rebota boolean := false;
+  n_financiera int;
+  n_viajes int;
+  n_aux_solo int;
+  n_aux_mesa int;
+  recalcula boolean := false;
+  negativo_rebota boolean := false;
+  v_id uuid;
+  v_sim_antes int;
+  v_sim_despues int;
+begin
+  select count(*) into generadas
+    from pg_attribute a
+    join pg_class c on c.oid = a.attrelid
+    join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public' and c.relname = 'prospecto'
+     and a.attname in ('similitud_icp_pct', 'necesidad_pct', 'viajes_mes_estimado')
+     and a.attgenerated = 's';
+
+  insert into public.prospecto (empresa, vacante, num_unidades)
+    values ('zzz-verif-derivadas', 'Coordinador de Liquidaciones', 25)
+    returning id, similitud_icp_pct into v_id, v_sim_antes;
+
+  begin
+    update public.prospecto set necesidad_pct = 99 where id = v_id;
+  exception when others then
+    if sqlstate = '428C9' then escritura_rebota := true; end if;
+  end;
+
+  select necesidad_pct into n_viajes from public.prospecto where id = v_id;
+
+  update public.prospecto set num_unidades = 5 where id = v_id;
+  select similitud_icp_pct into v_sim_despues from public.prospecto where id = v_id;
+  recalcula := (v_sim_antes = 45 and v_sim_despues = 25);
+
+  begin
+    update public.prospecto set num_unidades = -1 where id = v_id;
+  exception when check_violation then
+    negativo_rebota := true;
+  end;
+
+  insert into public.prospecto (empresa, vacante)
+    values ('zzz-verif-financiera', 'Analista de Liquidaciones de Pagos')
+    returning necesidad_pct into n_financiera;
+
+  insert into public.prospecto (empresa, vacante)
+    values ('zzz-verif-aux-solo', 'Auxiliar Administrativo')
+    returning necesidad_pct into n_aux_solo;
+
+  insert into public.prospecto (empresa, vacante)
+    values ('zzz-verif-aux-mesa', 'Auxiliar administrativo Mesa de Control')
+    returning necesidad_pct into n_aux_mesa;
+
+  raise exception E'DERIVADAS_0140_0142_0143  generadas-stored=%  escritura-rebota=%  financiera=%  viajes=%  aux-solo=%  aux-mesa=%  recalcula=%  negativo-rebota=%   (esperado 3 / t / 25 / 50 / 25 / 50 / t / t)',
+    generadas, escritura_rebota, n_financiera, n_viajes, n_aux_solo, n_aux_mesa, recalcula, negativo_rebota;
+end $$;
