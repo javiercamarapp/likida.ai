@@ -1,7 +1,37 @@
-# MAPA — auditoría 18 (20-ago-2026)
+# MAPA — auditoría 18 (20-ago-2026 · continuación 21-ago-2026)
 
 Corrida **desatendida, en la nube** (routine de Claude Code). Rama `claude/auditoria-18`
 sobre `master` en `8d608a4`. Árbol limpio al arrancar → autofix habilitado.
+
+## CONTINUACIÓN — 21-ago-2026
+
+El PR #34 sigue **abierto**, así que esta corrida NO abre ronda nueva: continúa la 18
+sobre la misma rama. `master` avanzó de `553bee7` a **`d432e89`** (9 commits,
+**53 archivos, +3,691/−297** en `src/`, `supabase/`, `normas/`) y ese delta es lo que
+se audita hoy, junto con **los cuatro commits que la ronda 18 confesó no haber mirado**
+(magic link `motivo_login.ts`/`reenvio_enlace.ts`, README, «un fajo es un mensaje»
+sobre `processor.ts`). Árbol limpio al arrancar → autofix habilitado.
+
+**El delta, por foco** (lo que cada auditor debe abrir primero):
+
+- **Dueño que maneja** (`d432e89`): `processor.ts` reescrito en 314 líneas — un mismo
+  número de WhatsApp es chofer Y oficina; `administracion.ts`, `saas/fiscal.ts`
+  (flota nueva nace pudiendo facturar), `admin/flotas/page.tsx`.
+- **Piloto de visión** (`feb0f6b`, PR #36): `facturacion/adaptadores/piloto_vision.ts`
+  (381 líneas nuevas) — un robot que opera portales sin mapeo escrito, con visión;
+  `playwright_base.ts`, `pagina_playwright.ts`, `adaptadores/registro.ts`,
+  `api/cron/facturar/route.ts`, `llm/models.ts`.
+- **Cuenta de portal compartida** (`169c3f6`, PR #35): `conectores/portales_facturacion.ts`
+  (121 líneas nuevas, credenciales), `facturacion/cuentas.ts`, `enrutar.ts`,
+  `al_vuelo.ts`, `conectores/tipos.ts`.
+- **Cerebro de prospectos** (`0bfb51c`, `0f6fa31`): `admin/mapa-prospectos/[id]/detalle.tsx`
+  (280 líneas nuevas), `cerebro.tsx`, `lib/admin/prospectos-mapa.ts`,
+  `api/admin/mapa-prospectos/mensaje/route.ts`, migraciones **0140** y **0141**.
+  Aquí vive el CRÍTICO legal que quedó abierto en la ronda 18.
+- **Aviso de facturación** (`686b8f4`): `facturacion/avisar.ts`.
+- **Esquema**: migraciones **0140–0143** (`necesidad_pct` cambia dos veces de fórmula).
+
+**Inventario actualizado:** migraciones **140** (última `0143_necesidad_pct_excluye_liquidacion_financiera.sql`).
 
 ## Tres correcciones de anclaje, y son el hallazgo de proceso de la ronda
 
