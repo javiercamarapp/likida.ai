@@ -58,3 +58,33 @@ Fuera de alcance del arreglo `d0e9844`, anotado en el commit y en `fiscal-c3.md`
 numerador del 15% vive también en SQL (`sumar_combustible_ejercicio`, `0112:151`,
 `0084:19`) y sigue filtrando `forma_pago = '01'`. Pide una migración y aquí no hay base
 para verificarla.
+
+## CI del PR sobre `2cf6b06`
+
+| Check | Resultado |
+|---|---|
+| `verificar` | **verde** (2/2) |
+| `Migraciones + aislamiento (Postgres efímero)` | **verde** (2/2) |
+| GitGuardian · Vercel Preview | verde |
+| `dependency-review` | **rojo — NO es del diff** |
+| `Analizar (JavaScript/TypeScript)` (CodeQL) | **rojo — NO es del diff** |
+
+`dependency-review` lo confirmé leyendo el log de hoy, literal:
+
+```
+##[error]Dependency review is not supported on this repository. Please ensure that
+Dependency graph is enabled along with GitHub Advanced Security, see
+https://github.com/javiercamarapp/likida.ai/settings/security_analysis
+```
+
+Falla en 9 segundos, antes de mirar una sola dependencia, y falla igual en todo commit
+del repo. **Es un ajuste en Settings → Code security**, no un cambio de código.
+
+CodeQL falló también, y falló **igual** en la pasada del 21-ago, donde el log decía «Code
+scanning is not enabled for this repository… CodeQL job status was configuration error».
+Hoy **no** re-leí su mensaje literal: lo doy por la misma causa por continuidad, no por
+verificación de esta corrida. Queda dicho.
+
+Nota de nombres: el repositorio se renombró de `likida.ai` a `cuadra`. GitHub redirige,
+así que los enlaces y los logs siguen diciendo `likida.ai` — y la API REST devuelve
+`301 Moved Permanently` en algunas rutas por el nombre viejo.
