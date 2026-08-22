@@ -219,8 +219,8 @@ export const LECTURA_RFA_29_PRORRATEO =
   'la lectura literal del "siempre que" de la regla 2.9 negaría la facilidad a TODO el combustible en efectivo ' +
   'del ejercicio — confírmela con su contador.';
 
-const NO_DEDUCIBLE_ISR: TipoDiferencia[] = ['rfc_receptor', 'cfdi_cancelado', 'cfdi_efos', 'cfdi_no_encontrado', 'complemento_hidrocarburos', 'efectivo_sobre_tope', 'efectivo_no_elegible'];
-const POR_CONFIRMAR: TipoDiferencia[] = ['combustible_efectivo', 'rfc_receptor_no_verificable', 'cfdi_pendiente', 'consumo_bar'];
+export const NO_DEDUCIBLE_ISR: TipoDiferencia[] = ['rfc_receptor', 'cfdi_cancelado', 'cfdi_efos', 'cfdi_no_encontrado', 'complemento_hidrocarburos', 'efectivo_sobre_tope', 'efectivo_no_elegible'];
+export const POR_CONFIRMAR: TipoDiferencia[] = ['combustible_efectivo', 'rfc_receptor_no_verificable', 'cfdi_pendiente', 'consumo_bar'];
 
 /**
  * LA ÚNICA definición de en qué cubeta cae un gasto. Vive aquí, exportada, para
