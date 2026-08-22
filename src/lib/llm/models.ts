@@ -17,14 +17,24 @@
 //   Costo ≈ $0.03–0.05 / liquidación.
 //
 // ⚖️ SOBERANÍA DE DATOS FISCALES (LFPDPPP, DOF 20-mar-2025): RFC y CFDI son
-//   datos personales. Todo lo que lleve RFC/CFDI va SOLO a proveedores US/EU
-//   con Zero Data Retention. El gateway fuerza ZDR con `data_collection:'deny'`
-//   en cada llamada. REGLA (16-ago-2026): TODO el stack de este repo — defaults
-//   y fallbacks — es de proveedores USA. Sin excepciones por precio.
+//   datos personales. Todo lo que lleve RFC/CFDI va SOLO a proveedores US/EU.
+//   Lo que el gateway HACE (openrouter.ts): pedir en cada llamada
+//   `provider: { data_collection: 'deny' }`, que es una PREFERENCIA DE RUTEO
+//   —OpenRouter enruta solo a proveedores que declaran no entrenar ni retener
+//   con los prompts—. NO es Zero Data Retention: ZDR se contrata por
+//   organización con cada proveedor, no se activa con una bandera por llamada,
+//   y nadie lo ha firmado con OpenRouter (anexo de subencargados, pendiente #3;
+//   docs/conocimiento/11-datos-personales.md §ZDR). El aviso de privacidad ya
+//   dice exactamente eso (auditoría 8) y este comentario dice lo mismo desde la
+//   auditoría 18 (B7): la justificación interna no puede prometer más que el
+//   texto que lee el titular. REGLA (16-ago-2026): TODO el stack de este repo
+//   — defaults y fallbacks — es de proveedores USA. Sin excepciones por precio.
 //
 // 🔌 PLAN B DEMO: OpenRouter es punto único de falla (caídas ago-2025, feb-2026).
 //   Para el demo en vivo, tener keys directas de Google/Anthropic como respaldo.
 // ═══════════════════════════════════════════════════════════════════════════
+
+import { envPuesta } from '../env';
 
 export type ModelRole = 'ocr' | 'cuadre' | 'cuadre_fallback' | 'chat' | 'chat_ligero' | 'router' | 'back_office' | 'analisis' | 'extraccion' | 'marketing' | 'codigo' | 'codigo_escritura' | 'qa' | 'piloto';
 
@@ -141,9 +151,15 @@ const ENV_KEY: Record<ModelRole, string> = {
   piloto: 'LIKIDA_MODEL_PILOTO',
 };
 
-/** Devuelve el slug del modelo para un rol, respetando override por env. */
+/** Devuelve el slug del modelo para un rol, respetando override por env.
+ *
+ * AUDITORÍA 1, CRÍTICO (Operabilidad): un override MARCADOR es truthy pero NO
+ * es un slug. El 20-ago `LIKIDA_MODEL_OCR` quedó en "[SENSITIVE]" (el enmascarado
+ * de Vercel re-guardado) y `|| DEFAULTS` no lo atrapó: OpenRouter recibió
+ * "[SENSITIVE]" como modelo → 400 → el OCR facturó cero durante horas. `envPuesta`
+ * rechaza el marcador y cae al default, que sí es un slug real. */
 export function modelFor(role: ModelRole): string {
-  return process.env[ENV_KEY[role]] || DEFAULTS[role];
+  return envPuesta(ENV_KEY[role]) ? (process.env[ENV_KEY[role]] as string) : DEFAULTS[role];
 }
 
 /** Parámetros por defecto por rol (esfuerzo de razonamiento, temperatura). */

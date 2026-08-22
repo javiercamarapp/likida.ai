@@ -13,7 +13,7 @@ import { cuadrarDesdeDB } from './cuadre/desde_db';
 // copias son dos oportunidades de que una se quede atrás.
 import { traerResumenCostoIaTenant } from './costos';
 import { filasImprimibles } from './liquidacion/omitidos';
-import { round2, TZ_MX } from '@/lib/formato';
+import { round2, hoyMx } from '@/lib/formato';
 import { logger } from '@/lib/logger';
 
 // Los dos bordes de PostgREST (error por valor, y el recorte silencioso a
@@ -102,7 +102,7 @@ export async function getSerieComparativa(
   tenantId: string,
   ventanaDias: number,
   pasos: number,
-  hoy: string = new Date().toLocaleDateString('en-CA', { timeZone: TZ_MX }),
+  hoy: string = hoyMx(),
 ): Promise<ComparativoPeriodo[]> {
   const { data, error } = await supabaseAdmin().rpc('serie_comparativa_tenant', {
     p_tenant: tenantId,
@@ -152,7 +152,7 @@ export interface SeriesKpiCards {
  */
 export async function getSeriesKpiCards(
   tenantId: string,
-  hoy: string = new Date().toLocaleDateString('en-CA', { timeZone: TZ_MX }),
+  hoy: string = hoyMx(),
 ): Promise<SeriesKpiCards> {
   const [semanal, mensual, historico] = await Promise.all([
     getSerieComparativa(tenantId, 7, 2, hoy),
@@ -201,10 +201,32 @@ export async function getKpis(tenantId: string, ventanaDias?: number): Promise<D
 
 export interface OperadorStat {
   operadorId: string;
+  /**
+   * La ETIQUETA que se pinta, no necesariamente el nombre de la persona.
+   *
+   * AUDITORÍA 18 (A9): "Diferencias por operador" ordenaba a los choferes de
+   * mayor a menor por liquidaciones con diferencia, con su nombre, en la
+   * pantalla del patrón — una lista de sospecha nominal. El aviso integral que
+   * el operador recibió promete, entre las finalidades no necesarias (art. 15
+   * fr. III): "estadísticas de uso, SIN IDENTIFICARTE en los reportes"
+   * (privacidad.ts), y el art. 11 vigente ya no admite finalidades
+   * "compatibles o análogas": una finalidad no escrita exige consentimiento
+   * nuevo. Por defecto, entonces, aquí viene un seudónimo estable por operador
+   * ("Operador ·A3F9C1"), y el nombre real solo se entrega si quien llama pasa
+   * `{ nominal: true }` — y eso solo puede hacerlo una pantalla que haya
+   * resuelto el aviso (finalidad enunciada + rol financiero). Hoy ninguna.
+   */
   nombre: string;
   viajes: number;
   dieselTotal: number;
   diferencias: number;
+}
+
+/** Seudónimo estable por operador: el mismo id da la misma etiqueta entre
+ *  cargas, y sin la base no se vuelve al nombre. */
+export function etiquetaOperador(operadorId: string): string {
+  const hex = operadorId.replace(/-/g, '').slice(-6).toUpperCase() || '??????';
+  return `Operador ·${hex}`;
 }
 
 // ── La página del Agente de Liquidación (v2, 13-ago-2026) ──────────────────
@@ -280,12 +302,23 @@ export async function getDineroObservadoPorTipo(tenantId: string): Promise<Diner
     .sort((a, b) => b.monto - a.monto);
 }
 
-/** Rendimiento por operador (diésel total, # de diferencias) — señal operativa. */
-export async function getStatsPorOperador(tenantId: string): Promise<OperadorStat[]> {
+/**
+ * Rendimiento por operador (diésel total, # de diferencias) — señal operativa.
+ *
+ * Ver `OperadorStat.nombre`: seudonimizado salvo `{ nominal: true }`. Y el
+ * operador que ya ejerció la oposición del art. 26 fr. II
+ * (`operador.oposicion_automatizada`, mig. 0100) —a quien el motor sí honra en
+ * el cierre— NO entra en esta lista: el conteo de sus diferencias es justo la
+ * clase de señal automatizada sobre su persona a la que se opuso.
+ */
+export async function getStatsPorOperador(
+  tenantId: string,
+  opciones: { nominal?: boolean } = {},
+): Promise<OperadorStat[]> {
   const admin = supabaseAdmin();
   const [ops, gastos, viajes, liqs] = await Promise.all([
-    traerTodo<{ id: unknown; nombre: unknown }>(
-      (desde, hasta) => admin.from('operador').select('id, nombre').eq('tenant_id', tenantId).order('id').range(desde, hasta),
+    traerTodo<{ id: unknown; nombre: unknown; oposicion_automatizada?: unknown }>(
+      (desde, hasta) => admin.from('operador').select('id, nombre, oposicion_automatizada').eq('tenant_id', tenantId).order('id').range(desde, hasta),
       'getStatsPorOperador.operador',
     ),
     traerTodo<{ viaje_id: unknown; concepto: unknown; monto: unknown }>(
@@ -324,9 +357,9 @@ export async function getStatsPorOperador(tenantId: string): Promise<OperadorSta
     if (Math.abs(Number(l.diferencia ?? 0)) < 0.01) continue;
     diferenciasPorOp.set(op, (diferenciasPorOp.get(op) ?? 0) + 1);
   }
-  return ops.map((o) => ({
+  return ops.filter((o) => o.oposicion_automatizada == null).map((o) => ({
     operadorId: o.id as string,
-    nombre: o.nombre as string,
+    nombre: opciones.nominal ? (o.nombre as string) : etiquetaOperador(o.id as string),
     viajes: viajesPorOp.get(o.id as string)?.size ?? 0,
     dieselTotal: round2(dieselPorOp.get(o.id as string) ?? 0),
     diferencias: diferenciasPorOp.get(o.id as string) ?? 0,
@@ -346,10 +379,12 @@ export async function detectarAnomalias(tenantId: string): Promise<Anomalia[]> {
   // Un "0 anomalías" por fallo de lectura O por recorte silencioso de
   // PostgREST se lee como "revisamos y todo está limpio", que es la
   // afirmación más cara que puede hacer este producto.
-  const data = await traerTodo<{ viaje_id: unknown; concepto: unknown; monto: unknown; folio: unknown; cfdi_uuid: unknown }>(
+  // `cfdi_orden` viaja con el UUID (A5): sin él, las N casetas de un
+  // consolidado (0065) se acusaban como un CFDI duplicado entre viajes.
+  const data = await traerTodo<{ viaje_id: unknown; concepto: unknown; monto: unknown; folio: unknown; cfdi_uuid: unknown; cfdi_orden: unknown }>(
     (desde, hasta) => supabaseAdmin()
       .from('gasto')
-      .select('viaje_id, concepto, monto, folio, cfdi_uuid')
+      .select('viaje_id, concepto, monto, folio, cfdi_uuid, cfdi_orden')
       .eq('tenant_id', tenantId)
       .order('id')
       .range(desde, hasta),
@@ -362,6 +397,7 @@ export async function detectarAnomalias(tenantId: string): Promise<Anomalia[]> {
       monto: Number(r.monto),
       folio: (r.folio as string) || undefined,
       cfdiUuid: (r.cfdi_uuid as string) || undefined,
+      cfdiOrden: typeof r.cfdi_orden === 'number' ? r.cfdi_orden : null,
     })),
   );
 }
@@ -377,7 +413,7 @@ export async function detectarAnomalias(tenantId: string): Promise<Anomalia[]> {
 export async function getLiquidacionesPorDia(
   tenantId: string,
   ventanaDias: number = 7,
-  hoy: string = new Date().toLocaleDateString('en-CA', { timeZone: TZ_MX }),
+  hoy: string = hoyMx(),
 ): Promise<Array<{ dia: string; valor: number }>> {
   // Cota inferior GENEROSA (auditoría de escala 15k): esto traía TODO el
   // histórico de `liquidacion` para bucketear una ventana de 7/30 días — con
@@ -407,7 +443,7 @@ export async function getLiquidacionesPorDia(
   // mismo `.slice` ya se arregló en el detalle (creadoEn viaja crudo y se
   // formatea en pantalla); aquí el bucket se hace con la zona horaria real.
   const diaLocal = (iso: string): string =>
-    new Date(iso).toLocaleDateString('en-CA', { timeZone: TZ_MX });
+    hoyMx(new Date(iso));
   const porDiaMap = new Map<string, number>();
   for (const r of rows) {
     const dia = diaLocal(r.created_at as string);
@@ -470,7 +506,7 @@ export interface GastoSemanalPorCategoria {
 export async function getGastoPorSemana(
   tenantId: string,
   semanas: number = 5,
-  hoy: string = new Date().toLocaleDateString('en-CA', { timeZone: TZ_MX }),
+  hoy: string = hoyMx(),
 ): Promise<GastoSemanalPorCategoria> {
   const bloques = ultimasSemanas(semanas, hoy);
   const desdeGlobal = new Date(`${hoy}T00:00:00Z`);
@@ -523,7 +559,7 @@ export interface GastoSemanalSeries {
  *  selector único de la página ahora la mueve igual que a Actividad. */
 export async function getGastoPorSemanaSeries(
   tenantId: string,
-  hoy: string = new Date().toLocaleDateString('en-CA', { timeZone: TZ_MX }),
+  hoy: string = hoyMx(),
 ): Promise<GastoSemanalSeries> {
   const [semanal, mensual, historico] = await Promise.all([
     getGastoPorSemana(tenantId, SEMANAS_POR_MODO.semanal, hoy),
@@ -546,7 +582,7 @@ export async function getGastoPorSemanaSeries(
 export async function getLiquidadoPorSemana(
   tenantId: string,
   semanas: number = 5,
-  hoy: string = new Date().toLocaleDateString('en-CA', { timeZone: TZ_MX }),
+  hoy: string = hoyMx(),
 ): Promise<Array<{ dia: string; valor: number }>> {
   const bloques = ultimasSemanas(semanas, hoy);
   const desdeGlobal = new Date(`${hoy}T00:00:00Z`);
@@ -559,7 +595,7 @@ export async function getLiquidadoPorSemana(
     'getLiquidadoPorSemana',
   );
 
-  const diaLocalMx = (iso: string): string => new Date(iso).toLocaleDateString('en-CA', { timeZone: TZ_MX });
+  const diaLocalMx = (iso: string): string => hoyMx(new Date(iso));
   const porSemana = new Map<string, number>();
   for (const f of filas) {
     const { anio, semana } = semanaIso(diaLocalMx(f.created_at as string));
@@ -580,7 +616,7 @@ export interface LiquidadoSemanalSeries {
  *  de semanas que `getGastoPorSemanaSeries` (`SEMANAS_POR_MODO`). */
 export async function getLiquidadoPorSemanaSeries(
   tenantId: string,
-  hoy: string = new Date().toLocaleDateString('en-CA', { timeZone: TZ_MX }),
+  hoy: string = hoyMx(),
 ): Promise<LiquidadoSemanalSeries> {
   const [semanal, mensual, historico] = await Promise.all([
     getLiquidadoPorSemana(tenantId, SEMANAS_POR_MODO.semanal, hoy),
@@ -989,6 +1025,96 @@ export async function getViajes(tenantId: string, limite = 100): Promise<ViajeRo
   }));
 }
 
+/**
+ * El Registro de Viajes v2 (22-ago-2026): una PÁGINA del registro, ordenada
+ * por inicio del viaje (el más reciente arriba; sin fecha, al final) y con
+ * búsqueda por folio, origen o destino. Se pide una fila de más que
+ * `porPagina` para saber si hay otra página sin contar la tabla entera —
+ * `hayMas` es eso, no un total.
+ *
+ * La búsqueda va a la base, no sobre las 100 cargadas: si el contralor busca
+ * un folio de hace tres meses, tiene que encontrarlo aunque no esté entre
+ * los recientes. El texto entra escapado (`%`, `_` y `,` fuera), porque
+ * `.or()` de PostgREST arma el filtro en una sola cadena separada por comas.
+ */
+export type FiltroRegistro = 'todos' | 'abiertos' | 'en_cuadre' | 'liquidados' | 'escalados';
+
+export async function getViajesRegistro(
+  tenantId: string,
+  opciones: { q?: string; pagina?: number; porPagina?: number; filtro?: FiltroRegistro } = {},
+): Promise<{ filas: ViajeRow[]; hayMas: boolean }> {
+  const porPagina = Math.max(1, Math.min(100, opciones.porPagina ?? 100));
+  const pagina = Math.max(1, opciones.pagina ?? 1);
+  const desde = (pagina - 1) * porPagina;
+  let consulta = supabaseAdmin()
+    .from('viaje')
+    .select('id, folio, origen, destino, estatus, anticipo, fecha_inicio, intake_pendientes, avisado_en, aceptado_en, escalado_en, avisos_enviados, unidad_id, operador:operador_id(nombre), unidad:unidad_id(numero_economico)')
+    .eq('tenant_id', tenantId);
+  // El filtro de estatus va a la base por la misma razón que la búsqueda:
+  // filtrar en memoria sobre una página de 100 dejaría "Liquidados" con 3
+  // filas y una página 2 que sí tiene más.
+  if (opciones.filtro === 'abiertos') consulta = consulta.eq('estatus', 'abierto');
+  else if (opciones.filtro === 'en_cuadre') consulta = consulta.eq('estatus', 'en_cuadre');
+  else if (opciones.filtro === 'liquidados') consulta = consulta.eq('estatus', 'liquidado');
+  else if (opciones.filtro === 'escalados') {
+    consulta = consulta.in('estatus', ['abierto', 'en_cuadre']).not('escalado_en', 'is', null).is('aceptado_en', null);
+  }
+  const q = (opciones.q ?? '').trim().replace(/[%_,()]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (q) {
+    const patron = `%${q}%`;
+    consulta = consulta.or(`folio.ilike.${patron},origen.ilike.${patron},destino.ilike.${patron}`);
+  }
+  const res = await consulta
+    .order('fecha_inicio', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
+    .range(desde, desde + porPagina);
+  const crudas = exigir(res, 'getViajesRegistro') ?? [];
+  const hayMas = crudas.length > porPagina;
+  const filas = crudas.slice(0, porPagina).map((v) => ({
+    id: v.id as string,
+    folio: (v.folio as string) || (v.id as string).slice(0, 8),
+    origen: (v.origen as string) || null,
+    destino: (v.destino as string) || null,
+    estatus: v.estatus as string,
+    anticipo: Number(v.anticipo ?? 0),
+    operadorNombre: ((v.operador as { nombre?: string } | null)?.nombre) ?? null,
+    fechaInicio: (v.fecha_inicio as string) || null,
+    intakePendientes: Number(v.intake_pendientes ?? 0),
+    unidadId: (v.unidad_id as string) || null,
+    unidadEco: ((v.unidad as { numero_economico?: string } | null)?.numero_economico) ?? null,
+    avisadoEn: (v.avisado_en as string) || null,
+    aceptadoEn: (v.aceptado_en as string) || null,
+    escaladoEn: (v.escalado_en as string) || null,
+    avisosEnviados: Number(v.avisos_enviados ?? 0),
+  }));
+  return { filas, hayMas };
+}
+
+export interface LiquidacionDeViaje {
+  id: string; viajeId: string; estatus: string; comprobado: number; diferencia: number;
+}
+
+/** Las liquidaciones de ESTOS viajes (por `viaje_id`, no por folio: el folio
+ *  es texto libre del TMS y puede repetirse). Para la página del registro:
+ *  comprobado, diferencia y el link al detalle. Un viaje sin fila aquí no
+ *  tiene liquidación todavía y la tabla lo dice con un guion. */
+export async function getLiquidacionesDeViajes(tenantId: string, viajeIds: string[]): Promise<LiquidacionDeViaje[]> {
+  if (viajeIds.length === 0) return [];
+  const res = await supabaseAdmin()
+    .from('liquidacion')
+    .select('id, viaje_id, estatus, total_comprobado, diferencia')
+    .eq('tenant_id', tenantId)
+    .in('viaje_id', viajeIds);
+  const filas = exigir(res, 'getLiquidacionesDeViajes') ?? [];
+  return filas.map((l) => ({
+    id: l.id as string,
+    viajeId: l.viaje_id as string,
+    estatus: (l.estatus as string) || 'cuadrada',
+    comprobado: Number(l.total_comprobado ?? 0),
+    diferencia: Number(l.diferencia ?? 0),
+  }));
+}
+
 export interface DocumentoRow {
   id: string; concepto: string; monto: number; fecha: string | null; folio: string | null;
   rfcEmisor: string | null; cfdiUuid: string | null; estadoSat: string | null;
@@ -1187,7 +1313,7 @@ export interface TopRutasSeries {
  *  "todo". */
 export async function getTopRutasPorGastoSeries(
   tenantId: string, top: number = 5,
-  hoy: string = new Date().toLocaleDateString('en-CA', { timeZone: TZ_MX }),
+  hoy: string = hoyMx(),
 ): Promise<TopRutasSeries> {
   const ventanaDe = (semanas: number) => {
     const hastaD = new Date(`${hoy}T00:00:00Z`);
@@ -1293,11 +1419,35 @@ export interface LiquidacionDetalle {
   creadoEn: string;
   totalComprobado: number; totalAnticipo: number; diferencia: number;
   ieps: number; litrosDiesel: number; iva: number; peaje: number;
-  diferencias: Array<{ tipo: string; nota: string; monto: number }>;
+  diferencias: Array<{ tipo: string; nota: string; monto: number; gastoId?: string }>;
   /** `ocrExtra` viaja porque la etiqueta del renglón depende del producto
    *  impreso en el ticket: sin él el panel dice "Diésel" donde el PDF dice
-   *  "Combustible Magna" (auditoría 5, arquitectura, ALTO 1). */
-  gastos: Array<{ concepto: string; monto: number; folio?: string; ocrExtra?: Record<string, unknown>; imagenUrl?: string }>;
+   *  "Combustible Magna" (auditoría 5, arquitectura, ALTO 1).
+   *
+   *  `id` cruza el renglón con sus `diferencias` (por `gastoId`) para pintar
+   *  su estado; `fecha`, `formaPago`, `cfdiUuid` y `estadoSat` son las
+   *  columnas de la tabla del detalle v2. Todo opcional: un gasto viejo sin
+   *  XML no trae forma de pago y la celda dice "—", no "Efectivo". */
+  gastos: Array<{
+    id?: string; concepto: string; monto: number; folio?: string; fecha?: string;
+    formaPago?: string; cfdiUuid?: string; estadoSat?: string; cfdiValido?: boolean;
+    ocrExtra?: Record<string, unknown>; imagenUrl?: string;
+  }>;
+  /** La ficha del viaje que se liquidó (22-ago-2026, detalle v2): ruta,
+   *  unidad, cliente y los sellos de WhatsApp (0058/0090) para la línea de
+   *  tiempo. Todo nullable: lo que no se capturó se pinta como guion. */
+  viaje: {
+    origen: string | null; destino: string | null; fechaInicio: string | null;
+    creadoEn: string | null;
+    unidadEco: string | null; unidadPlacas: string | null; clienteNombre: string | null;
+    operadorTelefono: string | null;
+    avisadoEn: string | null; aceptadoEn: string | null;
+    llegadaEn: string | null; descargaEn: string | null; regresoEn: string | null;
+  };
+  /** Cuándo entró el primer y el último comprobante del viaje (`gasto.created_at`,
+   *  hora de recepción por WhatsApp) y cuántos hay en total, duplicados
+   *  incluidos. `null` cuando no hay ninguno. */
+  comprobantesEntre: { primero: string | null; ultimo: string | null; n: number };
   /** Cuántos comprobantes NO están en `gastos` por estar excluidos del total
    *  (duplicados y montos no positivos). `0` cuando la tabla es completa. */
   comprobantesExcluidos: number;
@@ -1318,7 +1468,7 @@ export async function getLiquidacionDetalle(id: string, tenantId: string): Promi
   const admin = supabaseAdmin();
   const res = await admin
     .from('liquidacion')
-    .select('id, viaje_id, estatus, total_comprobado, total_anticipo, diferencia, diferencias, ieps_acreditable, litros_diesel_acreditables, iva_acreditable, peaje_acreditable, created_at, pdf_url, viaje:viaje_id(folio, operador_id, operador:operador_id(nombre))')
+    .select('id, viaje_id, estatus, total_comprobado, total_anticipo, diferencia, diferencias, ieps_acreditable, litros_diesel_acreditables, iva_acreditable, peaje_acreditable, created_at, pdf_url, viaje:viaje_id(folio, origen, destino, fecha_inicio, created_at, avisado_en, aceptado_en, llegada_en, descarga_en, regreso_en, operador_id, operador:operador_id(nombre, telefono), unidad:unidad_id(numero_economico, placas), cliente:cliente_id(nombre))')
     .eq('id', id)
     .eq('tenant_id', tenantId)
     .maybeSingle();
@@ -1336,13 +1486,32 @@ export async function getLiquidacionDetalle(id: string, tenantId: string): Promi
   // normal las filas salen de la reconstrucción, que ya trae los gastos.
   const crudos = reconstruida ? null : await leerGastos(admin, tenantId, data.viaje_id as string);
   const gastos = reconstruida?.filas ?? crudos ?? [];
-  const viaje = data.viaje as { folio?: string; operador_id?: string; operador?: { nombre?: string } | null } | null;
+  const comprobantesEntre = await ventanaComprobantes(admin, tenantId, data.viaje_id as string);
+  const viaje = data.viaje as {
+    folio?: string; origen?: string | null; destino?: string | null; fecha_inicio?: string | null;
+    created_at?: string | null; avisado_en?: string | null; aceptado_en?: string | null;
+    llegada_en?: string | null; descarga_en?: string | null; regreso_en?: string | null;
+    operador_id?: string; operador?: { nombre?: string; telefono?: string | null } | null;
+    unidad?: { numero_economico?: string | null; placas?: string | null } | null;
+    cliente?: { nombre?: string | null } | null;
+  } | null;
+  const texto = (v: unknown): string | null => (typeof v === 'string' && v ? v : null);
   return {
     id: data.id as string,
     viajeId: data.viaje_id as string,
     folio: (viaje?.folio) ?? (data.id as string).slice(0, 8),
     operadorId: viaje?.operador_id ?? '',
     operadorNombre: viaje?.operador?.nombre ?? '—',
+    viaje: {
+      origen: texto(viaje?.origen), destino: texto(viaje?.destino),
+      fechaInicio: texto(viaje?.fecha_inicio), creadoEn: texto(viaje?.created_at),
+      unidadEco: texto(viaje?.unidad?.numero_economico), unidadPlacas: texto(viaje?.unidad?.placas),
+      clienteNombre: texto(viaje?.cliente?.nombre),
+      operadorTelefono: texto(viaje?.operador?.telefono),
+      avisadoEn: texto(viaje?.avisado_en), aceptadoEn: texto(viaje?.aceptado_en),
+      llegadaEn: texto(viaje?.llegada_en), descargaEn: texto(viaje?.descarga_en), regresoEn: texto(viaje?.regreso_en),
+    },
+    comprobantesEntre,
     estatus: data.estatus as string,
     creadoEn: data.created_at as string,
     totalComprobado,
@@ -1355,7 +1524,7 @@ export async function getLiquidacionDetalle(id: string, tenantId: string): Promi
     litrosDiesel: Number(data.litros_diesel_acreditables ?? 0),
     iva: Number(data.iva_acreditable ?? 0),
     peaje: Number(data.peaje_acreditable ?? 0),
-    diferencias: ((data.diferencias as Array<{ tipo: string; nota: string; monto: number }>) ?? []),
+    diferencias: ((data.diferencias as Array<{ tipo: string; nota: string; monto: number; gastoId?: string }>) ?? []),
     gastos,
     comprobantesExcluidos: reconstruida?.excluidos ?? 0,
     comprobantesCuadran: reconstruida !== null,
@@ -1379,22 +1548,52 @@ async function leerGastos(
   admin: ReturnType<typeof supabaseAdmin>,
   tenantId: string,
   viajeId: string,
-): Promise<Array<{ concepto: string; monto: number; folio?: string; ocrExtra?: Record<string, unknown>; imagenUrl?: string }>> {
+): Promise<LiquidacionDetalle['gastos']> {
   const res = await admin
     .from('gasto')
-    .select('id, concepto, monto, folio, ocr_extra, imagen_url')
+    .select('id, concepto, monto, folio, fecha, forma_pago, cfdi_uuid, estado_sat, cfdi_valido, ocr_extra, imagen_url')
     .eq('tenant_id', tenantId)
     .eq('viaje_id', viajeId)
     .order('fecha', { ascending: true, nullsFirst: false })
     .order('id', { ascending: true });
   const filas = exigir(res, 'getLiquidacionDetalle/gastos') ?? [];
   return filas.map((g) => ({
+    id: (g.id as string) || undefined,
     concepto: g.concepto as string,
     monto: Number(g.monto),
     folio: (g.folio as string) || undefined,
+    fecha: (g.fecha as string) || undefined,
+    formaPago: (g.forma_pago as string) || undefined,
+    cfdiUuid: (g.cfdi_uuid as string) || undefined,
+    estadoSat: (g.estado_sat as string) || undefined,
+    cfdiValido: g.cfdi_valido != null ? Boolean(g.cfdi_valido) : undefined,
     ocrExtra: (g.ocr_extra as Record<string, unknown>) || undefined,
     imagenUrl: (g.imagen_url as string) || undefined,
   }));
+}
+
+/**
+ * Primer y último comprobante recibido del viaje — los dos extremos de la
+ * línea de tiempo del detalle. Se lee `created_at` (hora de recepción por
+ * WhatsApp), no `fecha` (la impresa en el ticket, que el OCR puede leer mal
+ * y que no dice cuándo llegó). Cuenta TODOS los gastos del viaje, duplicados
+ * incluidos: la pregunta es "cuándo mandó cosas el chofer", no "cuántos
+ * cuentan". Si la lectura falla se lanza (fail closed, como todo aquí).
+ */
+async function ventanaComprobantes(
+  admin: ReturnType<typeof supabaseAdmin>,
+  tenantId: string,
+  viajeId: string,
+): Promise<LiquidacionDetalle['comprobantesEntre']> {
+  const res = await admin
+    .from('gasto')
+    .select('created_at')
+    .eq('tenant_id', tenantId)
+    .eq('viaje_id', viajeId)
+    .order('created_at', { ascending: true });
+  const filas = (exigir(res, 'getLiquidacionDetalle/ventana') ?? []) as Array<{ created_at?: unknown }>;
+  const sellos = filas.map((f) => f.created_at).filter((c): c is string => typeof c === 'string');
+  return { primero: sellos[0] ?? null, ultimo: sellos[sellos.length - 1] ?? null, n: filas.length };
 }
 
 /**
@@ -1442,6 +1641,10 @@ async function leerGastos(
  * $12,100.00" debajo de ninguna fila. Es el mismo criterio que ya aplica
  * `filasDeducibilidad`, y por la misma razón.
  */
+type FilaImprimibleConFiscal = {
+  formaPago?: string; cfdiUuid?: string; estadoSat?: string; cfdiValido?: boolean;
+};
+
 async function reconstruir(
   tenantId: string,
   viajeId: string,
@@ -1501,12 +1704,25 @@ async function reconstruir(
       // rutas pinten la misma tabla. Ordenar no mueve ninguna suma.
       filas: [...filas]
         .sort((x, y) => (x.fecha ?? '').localeCompare(y.fecha ?? '') || x.id.localeCompare(y.id))
-        .map((g) => ({
-          concepto: g.concepto as string,
-          monto: Number(g.monto),
-          folio: g.folio || undefined,
-          ocrExtra: g.ocrExtra,
-        })),
+        .map((g) => {
+          // Las filas del motor son `Gasto` completos disfrazados de
+          // `FilaImprimible`: se leen los campos de la tabla sin pedirlos a
+          // la base otra vez.
+          const x = g as FilaImprimibleConFiscal;
+          return {
+            id: g.id,
+            concepto: g.concepto as string,
+            monto: Number(g.monto),
+            folio: g.folio || undefined,
+            fecha: g.fecha || undefined,
+            formaPago: x.formaPago || undefined,
+            cfdiUuid: x.cfdiUuid || undefined,
+            estadoSat: x.estadoSat || undefined,
+            cfdiValido: x.cfdiValido,
+            ocrExtra: g.ocrExtra,
+            imagenUrl: g.imagenUrl,
+          };
+        }),
       excluidos: duplicados,
     };
   } catch {

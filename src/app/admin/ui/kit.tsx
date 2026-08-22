@@ -27,7 +27,9 @@ export function KpiTile({
    *  `asistente-expandible.tsx` ya usa para `main`/`asideTop`). */
   icono: React.ReactNode;
   etiqueta: string;
-  valor: number;
+  /** `null` = NO MEDIBLE (auditoría 1): pinta "—" en el encabezado en vez de un
+   *  0/0% con cara de medición. El pie lo explica con `vacio`. */
+  valor: number | null;
   formato?: FormatoPreset;
   tendencia?: number | null;
   sparkline?: number[];
@@ -46,8 +48,9 @@ export function KpiTile({
   nota?: string;
 }) {
   const reducido = usePrefersReducedMotion();
-  const mostrado = useCountUp(valor, !reducido);
+  const mostrado = useCountUp(valor ?? 0, !reducido);
   const fmt = resolverFormato(formato);
+  const noMedible = valor === null;
 
   return (
     <div className="card p-3.5" style={destacar ? { borderColor: 'var(--accent)' } : undefined}>
@@ -56,7 +59,9 @@ export function KpiTile({
           {icono}
         </div>
         <div className="min-w-0">
-          <div className="text-xl font-semibold tracking-tight tabular leading-tight">{fmt(mostrado)}</div>
+          {/* No medible → guion, nunca un 0/0% con cara de medición (auditoría 1). */}
+          <div className="text-xl font-semibold tracking-tight tabular leading-tight"
+            style={noMedible ? { color: 'var(--faint)' } : undefined}>{noMedible ? '—' : fmt(mostrado)}</div>
           {/* AUDITORÍA 10, MEDIO — `truncate` (una sola línea + "…") cortaba
               la palabra que carga el significado fiscal: "IVA acreditable
               document…" perdía justo "documentado". `line-clamp-2` deja
@@ -98,11 +103,18 @@ export function KpiTile({
  *  periodo de /dashboard. */
 export function StatCard({
   icono, etiqueta, valor, formato = 'numero', delta, deltaNota = 'vs periodo anterior', flechas, nota,
+  sinDato = 'sin dato en este periodo',
 }: {
   icono: React.ReactNode;
   etiqueta: string;
-  valor: number;
+  /** `null` = NO MEDIBLE (auditoría 1, CRÍTICO frontend): la tarjeta pinta "—"
+   *  y lo dice, en vez de colapsar a `0` un valor que el backend dejó `null` a
+   *  propósito (p. ej. costo por viaje con 0 viajes). Un $0.00 fabricado rompe
+   *  la regla #1 del producto. `0` sigue siendo un cero REAL, medido. */
+  valor: number | null;
   formato?: FormatoPreset;
+  /** El pie cuando `valor` es `null`: por qué no hay cifra. */
+  sinDato?: string;
   /** `{ pct, bueno }` — misma forma que tenía `KpiDegradado.tendencia`. */
   delta?: { pct: number; bueno: boolean } | null;
   deltaNota?: string;
@@ -113,8 +125,10 @@ export function StatCard({
   nota?: string;
 }) {
   const reducido = usePrefersReducedMotion();
-  const mostrado = useCountUp(valor, !reducido);
+  // `useCountUp` es un hook: corre SIEMPRE, aunque el valor sea no-medible.
+  const mostrado = useCountUp(valor ?? 0, !reducido);
   const fmt = resolverFormato(formato);
+  const noMedible = valor === null;
   return (
     // La anatomía EXACTA de la referencia: tarjeta blanca con una CAJA
     // INTERNA tenue (ícono + etiqueta + cifra) y el delta como línea de
@@ -129,7 +143,11 @@ export function StatCard({
           <div className="text-[13px] min-w-0 flex-1 line-clamp-2" style={{ color: 'var(--muted)' }}>{etiqueta}</div>
           {flechas}
         </div>
-        <div className="font-display text-[20px] leading-tight font-semibold tabular mt-0.5">{fmt(mostrado)}</div>
+        {/* No medible → un guion en gris, NUNCA un 0 con cara de medición. */}
+        <div className="font-display text-[20px] leading-tight font-semibold tabular mt-0.5"
+          style={noMedible ? { color: 'var(--faint)' } : undefined}>
+          {noMedible ? '—' : fmt(mostrado)}
+        </div>
       </div>
       {/* El espaciador alinea los pies en una fila de tarjetas parejas
           (`h-full`) aunque una etiqueta envuelva a dos líneas. */}
@@ -137,7 +155,12 @@ export function StatCard({
       {/* El PIE va tras un divisor PUNTEADO (dirección 16-ago-2026, ref.
           shadcn-dashboard): la textura distintiva que separa la cifra de su
           lectura secundaria. Solo existe cuando hay pie que separar. */}
-      {delta ? (
+      {noMedible ? (
+        // No hay cifra, así que tampoco hay tendencia que enseñar: se DICE por
+        // qué (auditoría 1), en vez del "0% · sin movimiento" que leía como
+        // "medí y no cambió".
+        <p className="text-xs mx-1.5 mt-1.5 pt-1.5 pb-0" style={{ borderTop: '1px dashed var(--line2)', color: 'var(--faint)' }}>{sinDato}</p>
+      ) : delta ? (
         <div className="mx-1.5 mt-1.5 pt-1.5 pb-0 text-xs flex items-baseline gap-1.5 min-w-0" style={{ borderTop: '1px dashed var(--line2)' }}>
           {/* Un 0% real (comparó y no cambió) va en gris neutro, no en verde
               ni rojo: "no se movió" no es buena ni mala noticia. */}
@@ -150,11 +173,14 @@ export function StatCard({
       ) : nota ? (
         <p className="text-xs mx-1.5 mt-1.5 pt-1.5 pb-0" style={{ borderTop: '1px dashed var(--line2)', color: 'var(--faint)' }}>{nota}</p>
       ) : delta === null ? (
-        // Se intentó comparar y no hay contra qué: el pie no se queda vacío
-        // (pedido del 12-ago), pero en gris y sin inventar dirección. Con
-        // `delta` OMITIDO (undefined) no se pinta nada — métricas sin
-        // concepto de comparativo (Diésel) van limpias, pedido del mismo día.
-        <p className="text-xs mx-1.5 mt-1.5 pt-1.5 pb-0 tabular" style={{ borderTop: '1px dashed var(--line2)', color: 'var(--faint)' }}>0% · sin movimiento</p>
+        // Se intentó comparar y no hay contra qué (`pctCambio` con base 0, o
+        // el bucket único de "histórico"): el pie no se queda vacío (pedido
+        // del 12-ago), pero DICE que no hubo comparación. AUDITORÍA 18 (A12):
+        // aquí se imprimía "0% · sin movimiento", que afirma "medí y no
+        // cambió" — justo lo que el contrato de arriba prohíbe. Con `delta`
+        // OMITIDO (undefined) no se pinta nada — métricas sin concepto de
+        // comparativo (Diésel) van limpias, pedido del mismo día.
+        <p className="text-xs mx-1.5 mt-1.5 pt-1.5 pb-0" style={{ borderTop: '1px dashed var(--line2)', color: 'var(--faint)' }}>sin periodo comparable</p>
       ) : null}
     </div>
   );

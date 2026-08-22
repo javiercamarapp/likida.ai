@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import {
   Calculator, CalendarDays, Plus, MessageCircle, Landmark, Route as RouteIcon,
-  ReceiptText, Fuel, Wallet, FileX2, FileSearch,
+  ReceiptText, Fuel, Wallet, FileX2, FileSearch, Download,
 } from 'lucide-react';
 import {
   getAcreditables, getKpis, detectarAnomalias,
@@ -16,7 +16,7 @@ import {
 } from '@/lib/likida/fiscal';
 import { getFacturacionClientes, type FacturacionClientes } from '@/lib/likida/facturacion_clientes';
 import { saludo, ahoraMs } from '@/lib/saludo';
-import { fechaMx, mxn, TZ_MX } from '@/lib/formato';
+import { fechaMx, mxn, hoyMx } from '@/lib/formato';
 import { LEYENDA_CORTA } from '@/lib/likida/cuadre/leyendas';
 import { areaDeRuta } from '@/lib/auth/visibilidad';
 import { AUTOMATIZACIONES, DINERO_FISCAL, SISTEMA, type Item } from '../rutas';
@@ -201,10 +201,22 @@ export async function InicioContador({
             <div className="flex items-center gap-2.5 shrink-0 pt-1">
               {/* El DÍA DE MÉXICO, no el UTC — mismo arreglo que el Resumen
                   del dueño (capturado el 12-ago). */}
-              <ChipFecha icono={<CalendarDays {...ICONO_BARRA} />}>{fechaMx(new Intl.DateTimeFormat('en-CA', { timeZone: TZ_MX }).format(new Date(ahoraMs())))}</ChipFecha>
+              <ChipFecha icono={<CalendarDays {...ICONO_BARRA} />}>{fechaMx(hoyMx(new Date(ahoraMs())))}</ChipFecha>
               {/* La acción primaria del contador no es despachar: es meter el
                   papel. Facturación es lectura Y captura desde la auditoría
                   4 (A1), y este botón es su puerta. */}
+              {/* AUDITORÍA 2, ALTO (proceso faltante): el CSV de liquidaciones
+                  para el ERP/Excel ya existía en /api/export/liquidaciones —bien
+                  protegido por sesión, rol (`puedeExportar`) y tenant— pero NO
+                  tenía puerta en ninguna pantalla, así que el contador no podía
+                  sacar sus datos. Un `<a download>` a esa ruta, con el `?tenant=`
+                  del sufijo del superadmin (vacío para roles reales, que usan su
+                  sesión). Es la puerta que faltaba, no un endpoint nuevo. */}
+              <a href={`/api/export/liquidaciones${sufijo}`} download
+                className="h-8 px-3 rounded-lg text-[13px] font-medium inline-flex items-center gap-1.5 shrink-0 transition-opacity hover:opacity-85 border"
+                style={{ borderColor: 'var(--line)', color: 'var(--ink)' }}>
+                <Download width={15} height={15} strokeWidth={2} /> Exportar CSV
+              </a>
               <Link href={`/dashboard/facturacion${sufijo}`}
                 className="h-8 px-3 rounded-lg text-[13px] font-medium inline-flex items-center gap-1.5 shrink-0 transition-opacity hover:opacity-85"
                 style={{ background: 'var(--marca)', color: 'var(--marca-fg)' }}>

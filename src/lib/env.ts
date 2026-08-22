@@ -41,6 +41,20 @@ export type EnvGroup = keyof typeof GROUPS;
 
 const GRUPOS = Object.keys(GROUPS) as EnvGroup[];
 
+// AUDITORÍA 1, CRÍTICO (Operabilidad): un valor MARCADOR se leía como "puesta".
+// El 20-ago seis variables de Vercel quedaron con el valor literal "[SENSITIVE]"
+// (el enmascarado del dashboard, re-guardado) y `!!process.env[k]` las daba por
+// completas — el OCR facturó cero durante horas y el health-check decía verde.
+// Un secreto, una URL o un token REALES nunca se ven así: envueltos en [..]/<..>,
+// vacíos, o una plantilla sin llenar. Se rechazan por CONTENIDO, no solo presencia.
+const MARCADOR = /^\s*(\[[^\]]*\]|<[^>]*>|tu[-_ ].*|xxx+|changeme|placeholder|your[-_ ].*)\s*$/i;
+
+/** `true` solo si la variable trae un valor REAL, no un marcador ni un hueco. */
+export function envPuesta(k: string): boolean {
+  const v = process.env[k];
+  return typeof v === 'string' && v.trim() !== '' && !MARCADOR.test(v);
+}
+
 /**
  * Qué variable falta de cada grupo. Objeto vacío = todo puesto.
  *
@@ -49,7 +63,7 @@ const GRUPOS = Object.keys(GROUPS) as EnvGroup[];
 export function faltantes(): Partial<Record<EnvGroup, string[]>> {
   const out: Partial<Record<EnvGroup, string[]>> = {};
   for (const g of GRUPOS) {
-    const sinPoner = GROUPS[g].filter((k) => !process.env[k]);
+    const sinPoner = GROUPS[g].filter((k) => !envPuesta(k));
     if (sinPoner.length) out[g] = sinPoner;
   }
   return out;
@@ -58,8 +72,33 @@ export function faltantes(): Partial<Record<EnvGroup, string[]>> {
 /** Reporte de configuración (para un health-check / panel admin). */
 export function envHealth(): Record<EnvGroup, boolean> {
   return {
-    llm: GROUPS.llm.every((k) => !!process.env[k]),
-    whatsapp: GROUPS.whatsapp.every((k) => !!process.env[k]),
-    supabase: GROUPS.supabase.every((k) => !!process.env[k]),
+    llm: GROUPS.llm.every(envPuesta),
+    whatsapp: GROUPS.whatsapp.every(envPuesta),
+    supabase: GROUPS.supabase.every(envPuesta),
   };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// URL BASE DE LA APP — UN SOLO ACCESOR (auditoría 18, A2)
+//
+// `process.env.NEXT_PUBLIC_APP_URL || 'https://app.likida.ai'` estaba copiado
+// a mano en 10 archivos y ya había divergido: `suscripcion/page.tsx` caía a
+// `''` y mandaba a Stripe una `return_url` RELATIVA, que Billing Portal
+// rechaza. El 17-ago el suelo cambió de `likida.ai` a `app.likida.ai` y hubo
+// que tocar cada copia; olvidar una no rompe el build ni ningún test.
+//
+// Este módulo no importa nada, así que sirve igual en servidor y en cliente:
+// `NEXT_PUBLIC_*` se inyecta en build en los dos bundles.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Suelo: el dominio del SOFTWARE. `likida.ai` es la landing y no tiene `/auth/callback`. */
+export const APP_URL_SUELO = 'https://app.likida.ai';
+
+/**
+ * URL base de la app, SIN barra final, lista para concatenar `/ruta`.
+ * Cae al suelo si la variable falta o trae un marcador (`[SENSITIVE]`).
+ */
+export function appUrl(): string {
+  const v = envPuesta('NEXT_PUBLIC_APP_URL') ? String(process.env.NEXT_PUBLIC_APP_URL).trim() : APP_URL_SUELO;
+  return v.replace(/\/+$/, '');
 }

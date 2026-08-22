@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { logger } from '@/lib/logger';
+import { anotarBitacora } from '@/lib/likida/bitacora_escritura';
 import { acotada } from '../presupuesto';
 import { DatoInvalido } from '../errores';
 import { cifrar, pistasDe, cofreConfigurado } from './cofre';
@@ -37,16 +37,10 @@ async function anotar(
   detalle: Record<string, unknown>,
   actor?: { id?: string; email?: string },
 ): Promise<void> {
-  const { error } = await supabaseAdmin().from('bitacora_auditoria').insert({
-    tenant_id: tenantId,
-    actor_id: actor?.id ?? null,
-    actor_email: actor?.email ?? null,
-    accion,
-    entidad: 'conector_credencial',
-    entidad_id: entidadId,
-    detalle,
-  });
-  if (error) logger.warn('conector_credencial.bitacora_no_escribio', { accion, err: error.message });
+  await anotarBitacora(
+    { tenantId, actor: actor ?? {}, accion, entidad: 'conector_credencial', entidadId, detalle },
+    { evento: 'conector_credencial.bitacora_no_escribio' },
+  );
 }
 
 /**
@@ -186,4 +180,14 @@ export async function desactivarCredencial(
   }
 
   await anotar(tenantId, 'conector_credencial.desactivada', String((data[0] as { id: unknown }).id), { conectorId }, actor);
+
+  // AUDITORÍA 1, ALTO (Legal): desactivar tiene que CORTAR EL ACCESO —es lo que
+  // promete `/terminos`—, y una credencial de portal puede tener una SESIÓN ya
+  // iniciada guardada aparte (fila `#sesion`, `sesion_portal.ts`). Si esa sesión
+  // sobrevive, el robot sigue entrando con la cookie aunque la credencial esté
+  // desactivada: el acceso NO se cortó. Se apaga junto con la credencial. El
+  // helper es idempotente y no lanza —la desactivación de la credencial ya
+  // quedó firme—; un fallo se registra y la sesión cae igual por su vigencia.
+  const { invalidarSesionPortal } = await import('../facturacion/sesion_portal');
+  await invalidarSesionPortal(tenantId, conectorId);
 }

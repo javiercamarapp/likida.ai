@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Fuel } from 'lucide-react';
-import { KpiTile, ChartCard } from './kit';
+import { KpiTile, ChartCard, StatCard } from './kit';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // AUDITORÍA 10, ALTO — `KpiTile` manda "$0.00" en el HTML servido, sea cual
@@ -89,5 +89,81 @@ describe('KpiTile y ChartCard — el rótulo ya no se corta a la mitad', () => {
     expect(html).not.toContain('truncate');
     expect(html).toContain('line-clamp-2');
     expect(html).toContain('El gasto del periodo, por su suerte fiscal');
+  });
+});
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUDITORÍA 1, CRÍTICO (Frontend) — `StatCard` colapsaba `null` a `0` y pintaba
+// "$0.00" + "0% · sin movimiento" en la primera tarjeta del Resumen cuando NO
+// había viajes que medir (costo por viaje = división indefinida). El backend
+// devuelve `null` a propósito; la UI lo tapaba con un cero con cara de medición.
+// ═══════════════════════════════════════════════════════════════════════════
+describe('KpiTile — no medible (valor null) pinta guion, no 0/0%', () => {
+  it('con valor null muestra "—" y el mensaje de `vacio`, sin "0%"', () => {
+    const html = renderToStaticMarkup(
+      <KpiTile icono={ICONO} etiqueta="Sin CFDI" valor={null} formato="porcentaje"
+        vacio="Sin comprobantes de estos conceptos todavía" />,
+    );
+    expect(html).toContain('—');
+    expect(html).toContain('Sin comprobantes de estos conceptos');
+    expect(html).not.toContain('0%');
+  });
+});
+
+describe('StatCard — no medible (valor null) NO es "$0.00"', () => {
+  it('con valor null pinta un guion y DICE por qué, sin cifra ni "sin movimiento"', () => {
+    const html = renderToStaticMarkup(
+      <StatCard icono={ICONO} etiqueta="Costo por viaje" valor={null} formato="mxn"
+        sinDato="sin viajes en el periodo" />,
+    );
+    expect(html).toContain('—');
+    expect(html).toContain('sin viajes en el periodo');
+    expect(html).not.toContain('$0.00');
+    expect(html).not.toContain('sin movimiento');
+  });
+
+  it('con un 0 REAL (medido) sigue mostrando la cifra, no el guion', () => {
+    const html = renderToStaticMarkup(
+      <StatCard icono={ICONO} etiqueta="Liquidado" valor={0} formato="mxn" />,
+    );
+    // Un 0 medido es "$0.00", no "sin dato": la distinción que el arreglo protege.
+    expect(html).toContain('$0.00');
+    expect(html).not.toContain('sin viajes en el periodo');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUDITORÍA 18, ALTO (A12) — `delta === null` es "se intentó comparar y no hay
+// contra qué" (`pctCambio(84300, 0)` → null; o el bucket único de "histórico").
+// La tarjeta imprimía "0% · sin movimiento": el contralor que NO gastó la
+// semana pasada y gastó $84,300 esta leía que su gasto no se movió.
+// ═══════════════════════════════════════════════════════════════════════════
+describe('StatCard — delta null (sin comparable) no afirma "0%"', () => {
+  it('con cifra real y delta null: ni "0%" ni "sin movimiento"; dice que no hubo comparación', () => {
+    const html = renderToStaticMarkup(
+      <StatCard icono={ICONO} etiqueta="Gasto total — últimos 7 días" valor={84300} formato="mxn" delta={null} />,
+    );
+    expect(html).toContain('$84,300.00');
+    expect(html).not.toContain('0%');
+    expect(html).not.toContain('sin movimiento');
+    expect(html).toContain('sin periodo comparable');
+  });
+
+  it('un 0% REAL (comparó y no cambió) sigue diciéndolo — no es el mismo bug al revés', () => {
+    const html = renderToStaticMarkup(
+      <StatCard icono={ICONO} etiqueta="Gasto total" valor={500} formato="mxn" delta={{ pct: 0, bueno: true }} />,
+    );
+    expect(html).toContain('0%');
+    expect(html).toContain('sin cambio vs periodo anterior');
+    expect(html).not.toContain('sin periodo comparable');
+  });
+
+  it('con delta OMITIDO no se pinta ningún pie (Diésel va limpio)', () => {
+    const html = renderToStaticMarkup(
+      <StatCard icono={ICONO} etiqueta="Diésel elegible" valor={1200} formato="litros" />,
+    );
+    expect(html).not.toContain('sin periodo comparable');
+    expect(html).not.toContain('sin movimiento');
   });
 });

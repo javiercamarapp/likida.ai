@@ -1,10 +1,11 @@
 // Resolución de operador por teléfono + estado de conversación WhatsApp.
 // El estado (últimos turnos + viaje activo) vive en wa_conversacion.estado jsonb.
 
+import { TZ_MX } from '@/lib/formato';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
 import type { TenantContext } from '@/lib/agents/types';
-import { acotada } from './presupuesto';
+import { acotada, PRESUPUESTO_WEBHOOK_MS } from './presupuesto';
 import { violaIndice } from './pg_errores';
 
 export interface ResolvedOperador {
@@ -207,7 +208,7 @@ export async function getTenantContext(tenantId: string): Promise<TenantContext>
     // Misma familia que `cuadra.mx` impreso en el pie del PDF. `marca.test.ts`
     // vigila que no vuelvan a separarse.
     agentName: 'Likida',
-    timezone: 'America/Mexico_City',
+    timezone: TZ_MX,
   };
 }
 
@@ -320,11 +321,30 @@ export interface Conversacion extends MarcasConversacion {
 }
 
 /**
- * Resultado de reclamar un mensaje. Son TRES estados, no dos: la diferencia entre
- * "ya lo procesamos" y "no pude averiguarlo" decide si el operador recibe
- * respuesta o se queda sin nada.
+ * Resultado de reclamar un mensaje. Son CUATRO estados, no dos: la diferencia
+ * entre "ya lo procesamos", "lo está procesando otro" y "no pude averiguarlo"
+ * decide si el operador recibe respuesta, si la bandeja durable lo reintenta,
+ * o si se queda sin nada.
  */
-export type Claim = 'nuevo' | 'duplicado' | 'indeterminado';
+export type Claim = 'nuevo' | 'duplicado' | 'en_curso' | 'indeterminado';
+
+/**
+ * CUÁNTO VIVE UN CLAIM SIN COMPLETARSE antes de considerarlo huérfano.
+ *
+ * AUDITORÍA 18, CRÍTICO (C5): el claim se toma en la primera línea de
+ * `processInbound` y solo se soltaba en el `catch` o en cuatro `return`
+ * tempranos. Una muerte por `maxDuration` no ejecuta ninguno: la fila quedaba
+ * tomada 30 días (la purga de la 0072), y el reintento de la bandeja durable
+ * recibía 'duplicado' —que significaba "ya hecho"— sobre un mensaje que NUNCA
+ * se procesó. Con la mig. 0149 la fila distingue reclamado de completado
+ * (`completado_en`), y un claim sin completar más viejo que este lease es de
+ * un proceso muerto: se retoma.
+ *
+ * Mayor que el `maxDuration` de la invocación a propósito: un claim más joven
+ * puede pertenecer a una invocación que sigue viva. 30s de holgura sobre 120s.
+ * El cron drena cada 5 min, así que el huérfano se retoma a la primera vuelta.
+ */
+export const LEASE_CLAIM_MS = PRESUPUESTO_WEBHOOK_MS + 30_000;
 
 /**
  * Reclama un mensaje de WhatsApp de forma atómica (idempotencia).
@@ -339,6 +359,14 @@ export type Claim = 'nuevo' | 'duplicado' | 'indeterminado';
  *
  * Ahora el caso indeterminado se distingue y lo decide el llamador, que es quien
  * sabe si lo que está en juego es dinero o una respuesta.
+ *
+ * Y cuando la fila YA EXISTE se mira qué es (auditoría 18, C5/A3/A27):
+ *   · `completado_en` puesto → 'duplicado' de verdad (ya se procesó).
+ *   · sin completar y más vieja que `LEASE_CLAIM_MS` → claim huérfano de un
+ *     proceso muerto: se RETOMA con un UPDATE anclado (atómico entre dos
+ *     corridas) y se devuelve 'nuevo'.
+ *   · sin completar y fresca → 'en_curso': otra invocación lo está procesando;
+ *     el llamador no lo procesa ni lo da por hecho, lo deja para después.
  */
 export async function claimMessage(waMessageId: string): Promise<Claim> {
   if (!waMessageId) return 'nuevo';
@@ -346,10 +374,61 @@ export async function claimMessage(waMessageId: string): Promise<Claim> {
     .from('wa_mensaje_procesado')
     .insert({ wa_message_id: waMessageId }), 'claimMessage');
   if (!error) return 'nuevo';
-  // 23505 = unique_violation → ya existía → duplicado de verdad (no reprocesar).
-  if (error.code === '23505') return 'duplicado';
+  // 23505 = unique_violation → ya existía. Falta saber si completado o huérfano.
+  if (error.code === '23505') return retomarClaimHuerfano(waMessageId);
   logger.error('wa.claim_error', { code: error.code, msg: error.message });
   return 'indeterminado';
+}
+
+async function retomarClaimHuerfano(waMessageId: string): Promise<Claim> {
+  const ahora = Date.now();
+  const { data, error } = await acotada(supabaseAdmin()
+    .from('wa_mensaje_procesado')
+    .update({ created_at: new Date(ahora).toISOString() })
+    .eq('wa_message_id', waMessageId)
+    .is('completado_en', null)
+    .lt('created_at', new Date(ahora - LEASE_CLAIM_MS).toISOString())
+    .select('wa_message_id'), 'claimMessage.retomar');
+  if (error) {
+    // No se pudo saber. NI se procesa (podría ser un duplicado real y
+    // duplicar un gasto) NI se da por hecho (podría ser el huérfano): se deja
+    // para la siguiente vuelta de la bandeja durable, que es lo único seguro.
+    logger.error('wa.claim_relectura_fallo', { id: waMessageId, code: error.code, msg: error.message });
+    return 'en_curso';
+  }
+  if ((data ?? []).length === 1) {
+    logger.warn('wa.claim_retomado', { id: waMessageId, leaseMs: LEASE_CLAIM_MS });
+    return 'nuevo';
+  }
+  const { data: fila, error: errFila } = await acotada(supabaseAdmin()
+    .from('wa_mensaje_procesado')
+    .select('completado_en')
+    .eq('wa_message_id', waMessageId)
+    .maybeSingle(), 'claimMessage.relectura');
+  if (errFila || !fila) {
+    logger.warn('wa.claim_relectura_vacia', { id: waMessageId, err: errFila?.message ?? 'sin fila' });
+    return 'en_curso';
+  }
+  return fila.completado_en ? 'duplicado' : 'en_curso';
+}
+
+/**
+ * Sella el claim como COMPLETADO: a partir de aquí 'duplicado' vuelve a
+ * significar "ya hecho". Best-effort con aviso — para cuando esto corre la
+ * respuesta ya salió; fallar aquí solo hace que un reintento futuro espere el
+ * lease en vez de rebotar de inmediato.
+ */
+export async function completarMessageClaim(waMessageId: string): Promise<void> {
+  if (!waMessageId) return;
+  try {
+    const { error } = await acotada(supabaseAdmin()
+      .from('wa_mensaje_procesado')
+      .update({ completado_en: new Date().toISOString() })
+      .eq('wa_message_id', waMessageId), 'completarMessageClaim');
+    if (error) logger.warn('wa.claim_sin_completar', { id: waMessageId, err: error.message });
+  } catch (e) {
+    logger.warn('wa.claim_sin_completar', { id: waMessageId, err: e instanceof Error ? e.message : String(e) });
+  }
 }
 
 // AUDITORÍA 8, ALTO: no lanza a propósito — para cuando esto corre, la
@@ -361,15 +440,37 @@ export async function claimMessage(waMessageId: string): Promise<Claim> {
 // menos queda un ERROR en el log — se pierde el turno, no el rastro de que se
 // perdió.
 /**
- * `marcas` OMITIDAS SE BORRAN, y es a propósito.
+ * `marcas` OMITIDAS SE BORRAN, y sigue siendo a propósito — eso NO cambió.
+ * `turns`/`intentosConfirmacion`/`cierreSinComprobantes` son las llaves de
+ * ESTE módulo, y quien guarda sin marcas es el turno normal del agente (sin
+ * pregunta nuestra pendiente): el default sigue siendo el estado limpio DE
+ * SUS PROPIAS llaves.
  *
- * El `estado` se reescribe entero (es un jsonb, no hay UPDATE parcial sin RPC),
- * así que no hay forma de "no tocar" una marca sin releer la fila —y releerla
- * abriría una carrera con las fotos, que escriben esta misma fila sin mutex—.
- * El default es el estado LIMPIO porque es el que corresponde al camino normal:
- * quien guarda sin marcas es el turno del agente, que corre justamente cuando
- * no hay ninguna pregunta nuestra pendiente de respuesta. Los atajos que sí
- * tienen algo pendiente las pasan explícitamente (ver `processor.ts`).
+ * LO QUE SÍ CAMBIÓ (auditoría 2, ronda 2 — defensa en profundidad): esta fila
+ * también la escriben `despacho_wa.ts` (`viajePendiente`) y `asignar_wa.ts`
+ * (`asignacionPendiente`) bajo la MISMA llave única (tenant, teléfono) cuando
+ * el número es a la vez chofer y oficina (dueño-que-maneja). Antes este
+ * UPDATE reemplazaba `estado` entero con solo `{turns, marcas}` — un
+ * despacho pendiente armado un instante antes desaparecía sin que el jefe se
+ * enterara, y el "sí" que mandara después no encontraba nada que confirmar.
+ *
+ * Se lee la fila (por `convId`, la misma que identifica esta conversación) y
+ * se preserva lo ajeno por debajo de lo propio: `turns` y las marcas se
+ * escriben siempre (reemplazando lo que hubiera de este módulo, que es la
+ * regla de arriba), y cualquier otra llave que ya estuviera —los pendientes
+ * de los otros dos escritores— pasa intacta. Antes esto exigía releer la
+ * fila, y releerla habría abierto una carrera con las fotos —pero las fotos
+ * no tocan `wa_conversacion.estado`, escriben `viaje.intake_pendientes`
+ * (ver `intakeDelta`/`intakePendientes` abajo): esa carrera nunca existió
+ * aquí, era una fila distinta.
+ *
+ * LA CARRERA QUE SÍ QUEDA es la misma que documentan `despacho_wa.ts` y
+ * `asignar_wa.ts`: el SELECT y el UPDATE no son un solo statement (un merge
+ * `estado || jsonb` de Postgres sí lo sería, pero exige una función RPC nueva,
+ * fuera del alcance de este fix). Se acepta por la misma razón: ventana de
+ * milisegundos, exige el mismo teléfono en dos roles y dos mensajes casi
+ * simultáneos, y lo peor que se pierde es un pendiente de despacho (se vuelve
+ * a pedir el "sí"), no un cobro ni un despacho duplicado.
  */
 export async function saveConversation(
   convId: string,
@@ -377,16 +478,31 @@ export async function saveConversation(
   viajeId: string | null,
   marcas: MarcasConversacion = {},
 ): Promise<void> {
+  // Un fallo de lectura no bloquea el guardado del turno —eso perdería la
+  // respuesta que el operador SÍ leyó, el hallazgo original de esta
+  // función—: se degrada a escribir solo las llaves propias, tal como se
+  // hacía antes de esta ronda, y queda anotado para diagnóstico.
+  const { data: filaActual, error: errLectura } = await acotada(supabaseAdmin()
+    .from('wa_conversacion')
+    .select('estado')
+    .eq('id', convId)
+    .maybeSingle(), 'saveConversation.leerEstado');
+  if (errLectura) {
+    logger.warn('conv.estado_previo_ilegible', { convId, err: errLectura.message });
+  }
+  const nuevoEstado: Record<string, unknown> = { ...((filaActual?.estado as Record<string, unknown> | null) ?? {}) };
+  nuevoEstado.turns = turns.slice(-MAX_TURNS);
+  // Solo las que valen algo: escribir `0`/`false` en cada guardado ensucia
+  // el jsonb de todas las conversaciones para no decir nada.
+  if (marcas.intentosConfirmacion) nuevoEstado.intentosConfirmacion = marcas.intentosConfirmacion;
+  else delete nuevoEstado.intentosConfirmacion;
+  if (marcas.cierreSinComprobantes) nuevoEstado.cierreSinComprobantes = true;
+  else delete nuevoEstado.cierreSinComprobantes;
+
   const { error } = await acotada(supabaseAdmin()
     .from('wa_conversacion')
     .update({
-      estado: {
-        turns: turns.slice(-MAX_TURNS),
-        // Solo las que valen algo: escribir `0`/`false` en cada guardado ensucia
-        // el jsonb de todas las conversaciones para no decir nada.
-        ...(marcas.intentosConfirmacion ? { intentosConfirmacion: marcas.intentosConfirmacion } : {}),
-        ...(marcas.cierreSinComprobantes ? { cierreSinComprobantes: true } : {}),
-      },
+      estado: nuevoEstado,
       viaje_id: viajeId,
       updated_at: new Date().toISOString(),
     })
@@ -423,7 +539,12 @@ export async function acquireViajeLock(viajeId: string, opts?: { ttlMs?: number;
   let delay = 150;
   let ultimoError: { code?: string; message?: string } | null = null;
   for (;;) {
-    const { data, error } = await admin.rpc('try_lock_viaje', { p_viaje: viajeId, p_ttl_ms: ttlMs });
+    // AUDITORÍA 2 (backend): el ÚNICO punto de espera del bucle. Sin `acotada`,
+    // un socket que Supabase acepta y no contesta se queda aquí sin volver, así
+    // que el `maxWaitMs` de abajo nunca se revisa y la función muere al
+    // `maxDuration` sin tomar el lock ni cuadrar. Con `acotada` cada intento
+    // corta en el tope de consulta y el bucle sí puede revisar su `maxWaitMs`.
+    const { data, error } = await acotada(admin.rpc('try_lock_viaje', { p_viaje: viajeId, p_ttl_ms: ttlMs }), 'acquireViajeLock');
     if (!error && data === true) return true;
     if (error) {
       ultimoError = error;

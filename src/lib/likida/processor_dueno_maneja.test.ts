@@ -117,34 +117,32 @@ describe('processInbound — el dueño que maneja es chofer Y oficina', () => {
     process.env.WHATSAPP_PHONE_NUMBER_ID = '123456789';
   });
 
-  it('despacha aunque el número esté dado de alta como operador', async () => {
+  it('SIN viaje propio abierto, despacha aunque el número sea operador', async () => {
+    getOpenViaje.mockResolvedValue(null); // el dueño no trae viaje propio: puede despachar
     atenderDespachoOficina.mockResolvedValue('Voy a crear este viaje: …');
     await processInbound(msg('nuevo viaje para Juan, Puebla a Monterrey'));
 
     expect(atenderDespachoOficina).toHaveBeenCalledWith(
       { tenantId: 't1', rol: 'flota_admin' }, TEL, 'nuevo viaje para Juan, Puebla a Monterrey',
-      expect.any(Date), { reengancharPendiente: false },
     );
     expect(salientes[0]).toContain('Voy a crear este viaje');
   });
 
-  // AGEN-C2-1 / BACK-C2-2 (auditoría 18-c2): el desempate por viaje abierto
-  // tiene que llegarle al DESPACHO, no solo al analista. Con `getOpenViaje`
-  // devolviendo 'v1' (en ruta, el default de este arnés), un pendiente vivo se
-  // quedaba con el «listo» del chofer y la liquidación no corría.
-  it('CON VIAJE ABIERTO el despacho recibe reengancharPendiente:false', async () => {
-    await processInbound(msg('listo'));
-    expect(atenderDespachoOficina).toHaveBeenCalledWith(
-      expect.anything(), TEL, 'listo', expect.any(Date), { reengancharPendiente: false },
-    );
+  // ── AUDITORÍA 1, CRÍTICO (Agéntico) ──────────────────────────────────────
+  it('CON VIAJE ABIERTO no se despacha: el «va» del chofer no confirma un viaje ajeno', async () => {
+    // getOpenViaje devuelve 'v1' por defecto. Un «va» soltado en ruta —muletilla,
+    // o respuesta a otra cosa— NO debe llegar a despacho_wa (donde esAfirmacion
+    // lo tomaría como "sí" y crearía un viaje con anticipo real).
+    atenderDespachoOficina.mockResolvedValue('NO DEBERÍA CREAR NADA');
+    await processInbound(msg('va'));
+    expect(atenderDespachoOficina).not.toHaveBeenCalled();
+    expect(salientes.join('\n')).not.toContain('NO DEBERÍA CREAR NADA');
   });
 
-  it('SIN viaje abierto el despacho conserva el reenganche', async () => {
-    getOpenViaje.mockResolvedValue(null);
-    await processInbound(msg('listo'));
-    expect(atenderDespachoOficina).toHaveBeenCalledWith(
-      expect.anything(), TEL, 'listo', expect.any(Date), { reengancharPendiente: true },
-    );
+  it('CON VIAJE ABIERTO tampoco se despacha un «nuevo viaje…»: primero cierra el suyo', async () => {
+    atenderDespachoOficina.mockResolvedValue('no debería');
+    await processInbound(msg('nuevo viaje para Juan, Puebla a Monterrey'));
+    expect(atenderDespachoOficina).not.toHaveBeenCalled();
   });
 
   it('«¿cómo van?» le contesta el informe, no el camino del chofer', async () => {
