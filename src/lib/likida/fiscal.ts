@@ -34,6 +34,9 @@ import { round2 } from '@/lib/formato';
 import { armar as armarPorFacturar } from './facturacion/pendientes';
 import { evaluarTope15, type ResultadoTope15 } from './periodo/combustible';
 import { proporcionAlimentacionPorGasto } from './cuadre/tope_alimentacion';
+// La constante vive en el motor a propósito: el panel y el motor tienen que
+// juzgar «no pagado» con el MISMO valor, o vuelven las dos cifras (FISC-C3-2).
+import { FORMA_PAGO_SIN_PAGAR } from './cuadre/engine';
 import type { LikidaConfig } from './config';
 
 // ── La fila de `gasto` leída con ojos de contador ──────────────────────────
@@ -566,6 +569,20 @@ function ivaSostenible(g: GastoFiscal, o: OpcionesFiscales): boolean {
   // facilidad del 15% (RFA 2.9) solo salva la deducción de ISR, y el motor ya
   // lo niega (SIN_ACREDITAMIENTO). El panel afirmaba IVA sobre esos CFDIs.
   if (g.formaPago === '01' && esCombustible(g, o)) return false;
+  // AUDITORÍA 18-c3, FISC-C3-2 (CRÍTICO): LIVA 5-III exige que el impuesto esté
+  // "efectivamente pagado en el mes". `'99' Por definir` = la contraprestación
+  // NO se ha pagado (RMF 2.7.1.29 fr. II), que es el caso normal de un CFDI PPD
+  // —la flota con línea de crédito en la refaccionaria—. El motor ya lo negaba
+  // (`engine.ts`, el candado de `59c02ec`); este módulo, que es el que alimenta
+  // «IVA acreditable documentado» del panel del contador, se había quedado sin
+  // él: el MISMO UUID daba $8,000 en la pantalla y $0.00 en el PDF, y el que se
+  // teclea en la declaración es el de la pantalla. Se acreditará el mes en que
+  // se pague, con su complemento de pago.
+  //
+  // Ojo con el criterio del módulo: se niega SOLO cuando la columna dice '99'.
+  // Un comprobante SIN `forma_pago` es desconocido, no impago (mismo estándar
+  // que `causasDe` y que `getAcumuladoCombustible`).
+  if (g.formaPago === FORMA_PAGO_SIN_PAGAR) return false;
   return true;
 }
 
