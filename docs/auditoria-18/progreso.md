@@ -23,8 +23,8 @@ Una línea por acción, con su sha. Se escribe **mientras** avanza, no al cerrar
 | 45 | Merge de `master` en la rama. **3 conflictos**, los tres porque la rama y `master` arreglaron el MISMO hallazgo distinto. Tomé el lado de `master` en los tres (es el más amplio y es lo que está publicado) | `673496f` |
 | 46 | **El INFRA de `xlsx` ya no aplica**: `5eca3ab` lo vendorizó en `vendor/`. `npm ci` corrió **limpio**, sin workaround y sin tocar `package.json` | resuelto |
 | 47 | Compuerta tras el merge: **2 fallos, los dos secuela de mi resolución**, no de `master` ni de la rama por separado | `1 failed \| 5,513 passed` + TS1117 |
-| 48 | Arreglo de merge: `processor_oficina_despacho.test.ts` esperaba los 2 argumentos del `reengancharPendiente` de la rama; `master` resuelve el desempate arriba, en `atenderTextoOficina`. Assertion alineada a la firma de `master` | (en `de5e7bc`) |
-| 49 | Arreglo de merge: `migraciones_verificadas.test.ts` quedó con `'0141'` **dos veces** (TS1117) — la entrada de la rama citaba un «bloque 111» que tras el merge es la RLS de `liquidacion`. Retirada la duplicada | (en `de5e7bc`) |
+| 48 | Arreglo de merge: `processor_oficina_despacho.test.ts` esperaba los 2 argumentos del `reengancharPendiente` de la rama; `master` resuelve el desempate arriba, en `atenderTextoOficina`. Assertion alineada a la firma de `master` | (en `38eef84`) |
+| 49 | Arreglo de merge: `migraciones_verificadas.test.ts` quedó con `'0141'` **dos veces** (TS1117) — la entrada de la rama citaba un «bloque 111» que tras el merge es la RLS de `liquidacion`. Retirada la duplicada | (en `38eef84`) |
 | 50 | Compuerta verde tras los dos arreglos de merge: `tsc` limpio, `eslint` 0 errores / 5 avisos (los mismos de la línea base) | verde |
 | 51 | 12 auditores relanzados en paralelo, contexto fresco, uno por rubro → `<rubro>-c3.md`. Los 12 tienen código cambiado en el delta | — |
 | 52 | Los 12 rubros entregados en `<rubro>-c3.md` | 92 hallazgos: 9 CRÍT · 33 ALTO · 33 MEDIO · 17 BAJO |
