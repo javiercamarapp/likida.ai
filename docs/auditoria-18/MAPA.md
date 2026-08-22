@@ -1,69 +1,87 @@
-# MAPA — auditoría 18 (20-ago-2026 · continuación 21-ago-2026)
+# MAPA — auditoría 18 (20-ago · continuación 21-ago · **continuación 22-ago**)
 
-Corrida **desatendida, en la nube** (routine de Claude Code). Rama `claude/auditoria-18`
-sobre `master` en `8d608a4`. Árbol limpio al arrancar → autofix habilitado.
+Corrida **desatendida, en la nube** (routine de Claude Code). Rama `claude/auditoria-18`,
+PR #34. Árbol limpio al arrancar → autofix habilitado.
 
-## CONTINUACIÓN — 21-ago-2026
+## CONTINUACIÓN 3 — 22-ago-2026 (esta ronda)
 
-El PR #34 sigue **abierto**, así que esta corrida NO abre ronda nueva: continúa la 18
-sobre la misma rama. `master` avanzó de `553bee7` a **`d432e89`** (9 commits,
-**53 archivos, +3,691/−297** en `src/`, `supabase/`, `normas/`) y ese delta es lo que
-se audita hoy, junto con **los cuatro commits que la ronda 18 confesó no haber mirado**
-(magic link `motivo_login.ts`/`reenvio_enlace.ts`, README, «un fajo es un mensaje»
-sobre `processor.ts`). Árbol limpio al arrancar → autofix habilitado.
+El PR #34 **sigue abierto**, así que esta corrida NO abre ronda nueva: continúa la 18
+sobre la misma rama. Es la tercera pasada.
 
-**El delta, por foco** (lo que cada auditor debe abrir primero):
+**Lo que cambió, y es grande.** `master` avanzó de `d432e89` a **`21630c0`**:
+**116 commits, 252 archivos, +16,055 / −1,348** en `src/`, `supabase/`, `normas/`,
+`.github/`, `docs/`. Casi todo viene de un solo PR, el **#38 (`auditoria-18-fixes`)**,
+que es una campaña de arreglo hecha **fuera de esta rama** contra los 83 hallazgos de
+`docs/auditoria-18/hallazgos.md`.
 
-- **Dueño que maneja** (`d432e89`): `processor.ts` reescrito en 314 líneas — un mismo
-  número de WhatsApp es chofer Y oficina; `administracion.ts`, `saas/fiscal.ts`
-  (flota nueva nace pudiendo facturar), `admin/flotas/page.tsx`.
-- **Piloto de visión** (`feb0f6b`, PR #36): `facturacion/adaptadores/piloto_vision.ts`
-  (381 líneas nuevas) — un robot que opera portales sin mapeo escrito, con visión;
-  `playwright_base.ts`, `pagina_playwright.ts`, `adaptadores/registro.ts`,
-  `api/cron/facturar/route.ts`, `llm/models.ts`.
-- **Cuenta de portal compartida** (`169c3f6`, PR #35): `conectores/portales_facturacion.ts`
-  (121 líneas nuevas, credenciales), `facturacion/cuentas.ts`, `enrutar.ts`,
-  `al_vuelo.ts`, `conectores/tipos.ts`.
-- **Cerebro de prospectos** (`0bfb51c`, `0f6fa31`): `admin/mapa-prospectos/[id]/detalle.tsx`
-  (280 líneas nuevas), `cerebro.tsx`, `lib/admin/prospectos-mapa.ts`,
-  `api/admin/mapa-prospectos/mensaje/route.ts`, migraciones **0140** y **0141**.
-  Aquí vive el CRÍTICO legal que quedó abierto en la ronda 18.
-- **Aviso de facturación** (`686b8f4`): `facturacion/avisar.ts`.
-- **Esquema**: migraciones **0140–0143** (`necesidad_pct` cambia dos veces de fórmula).
+Eso hace de esta la primera pasada en mucho tiempo donde *«se atacó y subió»* es una
+razón de movimiento realmente disponible. **Pero hay que verificarla, no creerla:** un
+commit que dice `fix(modelo): ... (C3, B9)` en el asunto no es prueba de que C3 esté
+cerrado. **Abre el archivo.**
 
-**Inventario actualizado:** migraciones **140** (última `0143_necesidad_pct_excluye_liquidacion_financiera.sql`).
+### Lo que el delta trae, por foco
 
-## Tres correcciones de anclaje, y son el hallazgo de proceso de la ronda
+- **Campaña de arreglos PR #38** (~70 commits `fix(...)` con ID de hallazgo en el
+  asunto). Cubre los doce rubros. Los de más superficie:
+  - **Esquema / RLS**: `93dac95` (FK compuesta `(col, tenant_id)` en 33 relaciones +
+    `wa_conversacion.tenant_id NOT NULL`), `a9d88b7` (`gasto` bajo `ve_finanzas()`,
+    dominios de `liquidacion` y `ocr_confianza`), `cd8bc70` (bucket `avatares`,
+    `duplicado_de`, `revoke` de `reservar_envio_prospecto`). **Migraciones 0144–0149**
+    y **bloques 111–121** nuevos en `supabase/verificaciones.sql`.
+  - **WhatsApp / agéntico**: `8563eb5` (presupuesto por invocación; el claim huérfano
+    ya no sella el mensaje como procesado — C4, C5, A3, A27), `f7c0b2b` (bandeja
+    durable en un viaje con techo), `c26be40` (el aviso al jefe con el PDF completo).
+  - **LLM / tool calling**: `a87a69d` (loop-guard deja pasar la tool terminal,
+    truncamiento visible, caché de lectura), `b165544` (tipos readonly),
+    `52ad486` (la sonda de visión frena por usuario y tenant y deja fila de costo).
+  - **Fiscal**: `59c02ec` (IVA acreditable exige pago efectivo, LIVA 5-III),
+    `b661d2c` (peaje y diésel exigen pago electrónico, LISR 27-III / LIF 20-A-IV),
+    `22bc9ce` (RMF 9.1.8 fr. III), `43ad24a` (pie del peaje, fr. IV),
+    `99a6b7c` (la facilidad del 15% deja de concederse al 601 — el **mismo**
+    FISC-C2-1 que esta rama arregló en `17c6343`), `cdc4555`, `480ca83`.
+  - **Legal**: `361f2dc` (el decisor del prospecto no sale al modelo, aviso público
+    `/aviso/prospectos`, purga por inactividad — cierra el C2 reincidente),
+    `3d0a232`, `3d49442`, `e8cb7a2`, `8007dc0`, `3e31569`, `6c564e6`, `ed9eeea`.
+  - **Frontend / dashboard**: `4eb6243` (cada tarjeta del Resumen rotula su ventana),
+    `3a0c8df` (StatCard deja de afirmar «0% · sin movimiento» sin comparación),
+    `efd93f7` (consulta caída ≠ «aún no hay gastos»), `c007312` (detalle v2),
+    `f6c2fa9`, `cc83926`, `33a7f40`.
+  - **Auth / seguridad**: `3232ed7` (la cookie de flota ya no se firma con la service
+    role key), `f49da77` (step-up MFA falla CERRADO), `0f24e65` (/login deja de ser
+    oráculo de enumeración), `84e8247`, `dae2e8b`.
+  - **Operabilidad**: `2fbba34`, `a36f7b4`, `b27c99f`, `cd6f472`, `36f0d13`,
+    `146aae0`, `2644c79`, y **dos workflows nuevos**
+    (`.github/workflows/auto-merge-rutina.yml`, `salud-produccion.yml`).
+  - **Arquitectura**: `efab3b3` (`appUrl()` único), `db88559`+`ffb5b47`
+    (`anotarBitacora()` canónico, 16 escritores a mano migrados), `df645b2`
+    (`hoyMx()` único), `7e91498`.
+  - **Pruebas**: ~10 commits `test(...)` que anclan puertas ya existentes
+    (`9b47db7` IDOR de export, `620e854` /vendedor, `c8afcdd`, `77c0b3b`, `0063c82`).
+  - **Deps**: `5eca3ab` — **xlsx vendorizado en `vendor/`**. Esto cerró el INFRA de
+    las dos pasadas anteriores: `npm ci` ahora corre limpio en la nube.
+- **Demo 5k** (`c1c036c`, `e8f9713`): tenant demo de 5,000 camiones para capturas,
+  `scripts/demo-5k.sql`, `docs/demo-5k.md`.
+- **Los tres arreglos que vivían solo en esta rama** (`34e2d12`, `947fd9e`, `b91484b`)
+  **ya están en `master`** por su cuenta.
 
-Se escriben aquí porque callarlas es lo que infla una nota:
+### El merge, y los tres conflictos que resolví
 
-1. **Esta ronda es la 18, no la 6.** Lo primero que escribí fue `docs/auditoria-6/`,
-   deducido del último commit que decía "Auditoría 5". Es falso: hay ramas
-   `claude/auditoria-{3,4,6,7,8,10,11,17}` en el remoto y 26 referencias a
-   "AUDITORÍA 6" dentro del código. El número se corrigió antes de publicar nada.
-   La causa raíz es la (2).
+`673496f` mergea `origin/master` (`21630c0`) en la rama. Tres conflictos, los tres
+porque **la rama y `master` arreglaron el MISMO hallazgo de formas distintas**. En los
+tres tomé el lado de `master`, y la razón importa para quien audite:
 
-2. **`.gitignore:34` ignora `docs/auditoria-*/`.** Por eso ninguna ronda deja rastro
-   en `master` y por eso no había forma de contar las rondas desde el árbol. Los
-   reportes de esta ronda entran con `git add -f`. **Es una decisión del dueño, no
-   la cambié**: la propuesta de quitar esa línea va en el PR, para que la decida él.
+| Archivo | La rama hizo | `master` hizo | Se quedó |
+|---|---|---|---|
+| `src/lib/likida/processor.ts` | `enRuta` → apaga solo el *reenganche* del pendiente | `incluirDespacho: false` → **salta despacho y asignación enteros** cuando hay viaje abierto | `master` (más amplio; subsume al de la rama) |
+| `src/lib/likida/processor_dueno_maneja.test.ts` | prueba del `enRuta` | prueba del `incluirDespacho` | `master` |
+| `supabase/verificaciones.sql` | **bloque 111** que verifica las columnas GENERADAS de 0140/0142/0143 | 0140–0143 **EXENTAS con razón escrita**, y el 111 es la RLS de `liquidacion` (0144) | `master` |
 
-3. **El árbol auditado es `8d608a4`, cuatro commits DETRÁS de `master`.** Mi ref
-   local de `master` estaba viejo y no lo verifiqué contra el remoto hasta el
-   cierre: `origin/master` estaba en `553bee7`. **NO quedaron auditados** esos
-   cuatro commits: los dos arreglos del magic link (`4de8f20`, `1f6253f`, que
-   crean `src/lib/auth/motivo_login.ts` y `reenvio_enlace.ts`), el README nuevo
-   y «un fajo es un mensaje» (`553bee7`, que toca `processor.ts`). La rama sí se
-   mergeó con `master` al cerrar y la compuerta se volvió a correr en verde
-   (390 archivos, 5,085 pruebas), pero **el ojo de los doce auditores no pasó por
-   ahí**. Es el primer pendiente de la ronda 19.
-
-4. **No hay línea base válida para este árbol, y por eso esta ronda NO reporta
-   delta.** La ronda 17 (13-ago, global 4.2) sí existe y está completa, pero vive
-   sobre una historia **sin ancestro común** con `master`: su raíz es
-   `a3c9978 "Scaffold inicial de Cuadra"` y la de `master` es `36432e4`. Son dos
-   linajes distintos en el mismo repositorio. Comparar 4.2 contra las notas de hoy
-   sería comparar dos códigos diferentes y publicar una mejora que nadie hizo.
+**Consecuencia auditable, dicha en voz alta:** el `reengancharPendiente` que la rama
+añadió a `despacho_wa.ts:238` y `asignar_wa.ts:298` **sigue en el árbol pero ya no lo
+pasa nadie** (`processor.ts:813,916` usan la forma de `master`) — es código defensivo
+sin call site. Y la verificación de base de las columnas GENERADAS de la 0140/0142/0143
+**se perdió**: hoy están exentas por escrito, no verificadas. Las dos cosas son válidas
+como hallazgo si alguien las quiere levantar.
 
 ## Producto en una línea
 
@@ -78,16 +96,15 @@ de la flota. Un error que él vea en la sala cuesta el trato.
 - `/dashboard` — panel del CLIENTE (flota_admin, contador, encargado), ~31 páginas, todas
   filtradas al tenant. Reusa los componentes de `/admin`; no hay segunda librería de UI.
 
-## Inventario
+## Inventario (22-ago, sobre `673496f`)
 
-| Cosa | Cuánto |
-|---|---|
-| Archivos `.ts`/`.tsx` en `src/` | 885 |
-| De ellos, `*.test.ts*` | 387 |
-| Líneas de código no-test en `src/` | ~105,600 |
-| Migraciones en `supabase/migrations/` | 136 (última `0139_prospecto_calidad.sql`) |
-| Fichas normativas en `normas/*.yaml` | 24 |
-| Rutas `route.ts` bajo `src/app/api/` | 40 |
+| Cosa | Cuánto | Antes (21-ago) |
+|---|---|---|
+| Archivos `.ts`/`.tsx` en `src/` | **950** | 885 |
+| De ellos, `*.test.ts*` | **430** | 387 |
+| Migraciones en `supabase/migrations/` | **146** (última `0149_wa_claim_completado.sql`) | 140 |
+| Fichas normativas en `normas/*.yaml` | **25** | 24 |
+| Rutas `route.ts` bajo `src/app/api/` | 40 | 40 |
 
 ## Dónde está cada cosa
 
@@ -107,35 +124,32 @@ de la flota. Un error que él vea en la sala cuesta el trato.
   `liquidacion/deducibilidad.ts`, `cuadre/engine.ts`, `cuadre/leyendas.ts`,
   `liquidacion/pdf.ts`, `intake/cfdi.ts`, `intake/sat.ts`, `facturacion/`.
 - **Legal / datos personales:** `src/lib/likida/privacidad.ts`, `intake/sanitizar.ts`,
-  `export/`, migraciones `*aviso_privacidad*`, todo `src/lib/llm/` (cada salida a un
-  modelo externo es una transferencia).
+  `export/`, migraciones `*aviso_privacidad*`, `src/app/aviso/prospectos/page.tsx`,
+  todo `src/lib/llm/` (cada salida a un modelo externo es una transferencia).
 - **Operabilidad:** `src/lib/observability/`, `src/lib/logger.ts`,
-  `.github/workflows/ci.yml`, `supabase/verificaciones.sql`, `scripts/seed.sh`.
+  `.github/workflows/{ci.yml,auto-merge-rutina.yml,salud-produccion.yml}`,
+  `supabase/verificaciones.sql`, `scripts/`.
+- **Facturación / piloto de visión:** `src/lib/likida/facturacion/`, en particular
+  `adaptadores/piloto_vision.ts` y `conectores/portales_facturacion.ts`.
 
-## Qué cambió desde la ronda anterior
+## Los hallazgos abiertos que traes de la pasada anterior
 
-Última ronda con rastro: **auditoría 17** (13-ago), en la rama `claude/auditoria-17` y sobre OTRO linaje (ver correcciones de anclaje arriba). El último commit de `master` que se llama a sí mismo auditoría es `0255b8c` "Auditoría 5" (17-ago).
-Desde `0255b8c` hasta `8d608a4` (18-ago) entraron **47 commits que tocan `src/`, `supabase/`
-o `normas/`**. Los focos, por número de commits que tocan el archivo:
+Están en `docs/auditoria-18/<rubro>-c2.md` (114 hallazgos: 16 CRÍT · 41 ALTO ·
+39 MEDIO · 18 BAJO) y en `docs/auditoria-18/hallazgos.md` (los 83 de la 18).
+**Los abiertos se verifican PRIMERO.** Si el PR #38 los cerró, se dice — es lo único
+que justifica subir la nota. Si siguen ahí, **REINCIDENTE**.
 
-- **Correo de acceso / magic link** (nuevo subsistema): `src/lib/correo/`
-  (`auth.ts`, `enviar.ts`, `plantilla.ts`), `src/app/api/auth/correo/route.ts`,
-  `src/app/login/page.tsx`. Es código nuevo, con el rate-limit de 2 correos/hora y el
-  reenvío automático del enlace caducado.
-- **Copiloto de admin**: `src/lib/agents/copiloto*.ts`,
-  `src/app/api/admin/copiloto/route.ts`, `src/app/admin/copiloto.tsx`. Cambió el modelo de
-  confirmación (`AdminActionIntent` en vez de un booleano del cliente).
-- **Tenant explícito del superadmin**: `src/lib/auth/{guard,visibilidad,tenant-efectivo}.ts`
-  — murió el tenant implícito; ahora hay selección explícita de flota (`AdminContext`).
-- **Cerebro / prospectos**: `src/lib/admin/prospectos-mapa.ts`, `adquisicion.ts`,
-  `src/app/api/admin/mapa-prospectos/*`.
-- **Normas**: `normas/rlisr-57.yaml`, `normas/datos/cuota-ieps-diesel.yaml`,
-  `src/lib/likida/normas/{indice,corpus}.ts`. El estímulo de diésel se recolocó en
-  LIF art. 20 apartado A fr. IV (antes citaba el art. 16).
-- **Esquema**: migraciones 0135–0139 (worker, precios live, prospecto), y 6 commits sobre
-  `supabase/verificaciones.sql`.
-- **Comprobantes / ticket**: `src/lib/likida/processor.ts` (4 commits) — "un fajo es un
-  mensaje" y el ticket sin robot ya no se pierde en silencio.
+Los 13 CRÍTICOS que quedaron abiertos el 21-ago:
+- **8 del piloto de visión** (`facturacion/adaptadores/piloto_vision.ts`), todos detrás
+  de `FACTURACION_PILOTO`, hoy apagada.
+- **2 legales**: el aviso de privacidad sin pantalla de captura
+  (`tenant.domicilio_fiscal` / `url_aviso_privacidad` / `contacto_privacidad` solo los
+  escribe `qa-motor.ts`); y el decisor del prospecto hacia un modelo externo
+  (**este último parece atacado por `361f2dc` — verifícalo**).
+- **1 de esquema**: la FK compuesta cubría 5 de 40 relaciones
+  (**`93dac95` dice cubrir 33 — verifícalo contando, no leyendo el asunto**).
+- **1 de arquitectura**: despacho y chofer se pisan la misma fila de `wa_conversacion`.
+- **1 de pruebas**: ninguna prueba corre con la palanca del piloto puesta.
 
 ## Trampas ya pisadas (no volver a levantarlas como hallazgo)
 
@@ -161,6 +175,7 @@ o `normas/`**. Los focos, por número de commits que tocan el archivo:
   ninguna tool **nueva** rompa esa regla.
 - El formato de cifras vive **solo** en `src/lib/formato.ts`; hay una prueba que falla si
   aparece `toLocaleString('es-MX')` en otro archivo.
+- `.gitignore:34` ignora `docs/auditoria-*/`; los reportes entran con `git add -f`.
 
 ## Restricciones de esta corrida (nube)
 
@@ -168,11 +183,7 @@ o `normas/`**. Los focos, por número de commits que tocan el archivo:
   `npm run build`: pide Supabase, OpenRouter, Facturapi y Upstash, que aquí no existen, y su
   fallo no dice nada del código.
 - **NO se corre `pruebas-manuales/*.prueba.ts`**: hacen llamadas reales de pago.
-- **INFRA conocida:** `npm install` limpio **falla** con 403 al bajar
-  `xlsx@0.20.3` desde `cdn.sheetjs.com` (host fuera de la política de red del entorno). Para
-  esta ronda se instaló `xlsx@0.18.5` desde el registry y se restauró `package.json`/
-  `package-lock.json` con `git checkout`, así que el árbol auditado es el de `master`. Los 3
-  consumidores de xlsx son `src/app/dashboard/viajes/page.tsx:2`,
-  `src/lib/likida/intake/desglose_peaje.ts:35` y `src/lib/likida/intake/archivo.test.ts:2`.
+- **El INFRA de xlsx ya NO aplica.** `5eca3ab` vendorizó `xlsx` en `vendor/`; esta ronda
+  corrió `npm ci` limpio, sin workaround y sin tocar `package.json`.
 - No hay `.env`, ni base, ni red hacia proveedores. Todo hallazgo se sostiene por lectura de
   código y por la suite offline.

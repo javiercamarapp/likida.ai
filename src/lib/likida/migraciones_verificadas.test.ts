@@ -101,7 +101,12 @@ const EXENTAS: Record<string, string> = {
   '0115': 'extiende el dominio de `agente_corrida_disparo_dominio` con un valor más (whatsapp), mismo caso que la 0044: que basura sigue rechazada ya lo prueba el bloque 86 (0108, que recreó el mismo constraint); que `whatsapp` se acepta se prueba en TS (tools_apagado.test.ts, la corrida del cierre).',
   '0125': 'catálogo declarativo puro: una columna modelo_rol con CHECK de dominio (que basura rebota lo prueba el patrón de CHECKs ya verificado; que los valores se aceptan lo prueba la siembra misma al aplicarse) y ~37 filas nuevas de agente_definicion en estado disenado — el patrón un-agente-es-una-FILA cuya FK/deny-all ya verifica el bloque 91 de la 0116. Sin garantía nueva de unicidad/atomicidad/permisos.',
   '0122': 'dos altas declarativas sin garantía nueva de base: la FILA del redactor en agente_definicion (el patrón FK-como-catálogo ya lo verifica el bloque 91 de la 0116) y la extensión del dominio del CHECK de interruptor — mismo caso que la 0044/0115: que basura sigue rechazada lo prueba el CHECK recreado (bloque de la 0110), y que agente:redactor se acepta se prueba en TS (redactor.test.ts: el kill switch frena al agente).',
-  '0141': 'columna nullable `prospecto.mensaje_linkedin`, hermana de mensaje_wa/mensaje_correo (0129). Mismo caso que la 0010 y la 0080: una columna de texto opcional no crea garantía que solo la base pueda demostrar — si falta, el UPDATE del redactor rebota RUIDOSO con el 42703 de PostgREST, no se corrompe nada en silencio. Y la propia migración documenta por qué NO entra al constraint `prospecto_mensajes_coherentes`: ese sigue exigiendo WhatsApp+correo y LinkedIn es opcional encima, así que tampoco cambia la garantía de coherencia que ya existe. Las que sí crean garantía nueva en este bloque de migraciones son las columnas GENERADAS de la 0140/0142/0143, y ésas tienen bloque (111).',
+  // La 0141 tenía aquí una segunda entrada, escrita por la pasada del 21-ago
+  // cuando las columnas GENERADAS de la 0140/0142/0143 iban a tener bloque
+  // propio (el 111). Al mergear `master` (22-ago) el 111 pasó a ser la RLS de
+  // `liquidacion` (0144) y las tres columnas quedaron EXENTAS con razón escrita
+  // arriba. La entrada duplicada se retiró: decía un número de bloque falso, y
+  // TypeScript la rechazaba (TS1117).
 
   '0118': 'tabla `prospecto_contacto` con FKs y CHECKs de dominio que rebotan RUIDOSO (23514/23503, no corrupción silenciosa) y deny-all idéntico al de sus hermanas 0116/0117, cuyo patrón ya verifican los bloques 91-92. La garantía de USO (la cadencia no se duplica: consultar el historial antes de contactar) es de código, y se prueba en TS (cola.test.ts: marcarEnviada registra el contacto).',
 };
