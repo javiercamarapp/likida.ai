@@ -1,52 +1,83 @@
-# Compuerta — línea base de la auditoría 18
+# La compuerta — auditoría 18
 
-Corrida el 20-ago-2026 sobre `claude/auditoria-18` @ `8d608a4` (= `master`), árbol limpio.
-En la nube: **sin `npm run build`** (pide Supabase, OpenRouter, Facturapi y Upstash, que aquí
-no existen; su fallo no diría nada del código).
+Salida real, pegada. En la nube la compuerta es `npm test` + `npx tsc --noEmit` +
+`npm run lint`. **No** se corre `npm run build`: pide Supabase, OpenRouter, Facturapi y
+Upstash, que aquí no existen, y su fallo no dice nada del código.
 
-## `npx vitest run` — VERDE
+---
 
-```
- Test Files  388 passed (388)
-      Tests  5045 passed | 1 skipped (5046)
-   Duration  90.93s
-[exited with code 0]
-```
+## Continuación 3 — 22-ago-2026
 
-Nota: 5,045 pruebas, no las "~2,880" que cita `CLAUDE.md`. La cifra crece; el documento la
-declara como no citable de memoria y tiene razón.
+### `npm ci` — limpio, y esto es noticia
 
-## `npx tsc --noEmit -p .` — VERDE
-
-Salida vacía, exit 0.
-
-## `npx eslint src/` — VERDE (0 errores, 5 avisos)
+Las dos pasadas anteriores tuvieron que hacer un workaround: `npm ci` fallaba con 403
+bajando `xlsx` desde `cdn.sheetjs.com`, host fuera de la política de red del entorno.
+`5eca3ab` lo vendorizó en `vendor/`. Esta ronda:
 
 ```
+added 644 packages in 41s
+```
+
+Sin workaround, sin tocar `package.json`. **El INFRA de las dos rondas anteriores está
+cerrado.**
+
+### Línea base, justo después del merge de `master` (`673496f`)
+
+Dos fallos, y **los dos eran secuela de mi resolución del merge**, no de `master` ni de
+la rama por separado:
+
+```
+ FAIL  src/lib/likida/processor_oficina_despacho.test.ts > processInbound — la rama de
+       oficina despacha > el texto del jefe pasa por despacho_wa y su respuesta es la que sale
+ AssertionError: expected "spy" to be called with arguments: [ { tenantId: 't1', …(1) }, …(4) ]
+   Recibido: 3 argumentos, sin  Any<Date>  ni  { reengancharPendiente: true }
+
+ Test Files  1 failed | 431 passed (432)
+      Tests  1 failed | 5513 passed | 1 skipped (5515)
+```
+
+```
+src/lib/likida/migraciones_verificadas.test.ts(104,3): error TS1117:
+An object literal cannot have multiple properties with the same name.
+```
+
+Ambos explicados y corregidos en `38eef84` (ver `MAPA.md` § «El merge, y los tres
+conflictos que resolví»).
+
+### Compuerta tras el arreglo del merge — VERDE
+
+```
+ Test Files  432 passed (432)
+      Tests  5514 passed | 1 skipped (5515)
+   Duration  86.48s
+```
+
+```
+$ npx tsc --noEmit -p .
+(sin salida)
+```
+
+```
+$ npm run lint
+> eslint src/
+
 src/app/dashboard/mi-perfil/page.tsx
-  248:19  warning  Using `<img>` could result in slower LCP ...  @next/next/no-img-element
+  248:19  warning  Using `<img>` could result in slower LCP …  @next/next/no-img-element
 src/lib/admin/evals.io.test.ts
-  9:12  warning  'tabla' is defined but never used  @typescript-eslint/no-unused-vars
+  9:12  warning  'tabla' is defined but never used …
 src/lib/admin/qa-storage.test.ts
-  7:20  warning  'BUCKET_QA_EVIDENCIA' is defined but never used  @typescript-eslint/no-unused-vars
+  7:20  warning  'BUCKET_QA_EVIDENCIA' is defined but never used …
 src/lib/agents/copiloto-tools.test.ts
-  99:10  warning  'readdirSync' is defined but never used  @typescript-eslint/no-unused-vars
+  99:10  warning  'readdirSync' is defined but never used …
 src/lib/worker/llaves.test.ts
-  9:12  warning  'tabla' is defined but never used  @typescript-eslint/no-unused-vars
+  9:12  warning  'tabla' is defined but never used …
 
 ✖ 5 problems (0 errors, 5 warnings)
-[exited with code 0]
 ```
 
-## INFRA — lo que no se pudo correr aquí, y no cuenta como hallazgo de código
+Los 5 avisos son los mismos de la línea base de las dos pasadas anteriores.
 
-- **`npm install` limpio falla.** `package.json:45` fija `xlsx` a
-  `https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz`; ese host está fuera de la política de
-  red del entorno y devuelve `403 Forbidden` en el CONNECT. Para levantar la compuerta se
-  instaló `xlsx@0.18.5` desde el registry y se restauraron `package.json` y
-  `package-lock.json` con `git checkout`, de modo que el árbol auditado es exactamente el de
-  `master`. Esto es INFRA para la corrida, pero es también materia legítima del rubro de
-  operabilidad: un proyecto que no se instala detrás de una política de red restringida no se
-  instala en un CI endurecido ni en la máquina de un cliente enterprise.
-- **Sin `.env`, sin Supabase, sin OpenRouter, sin red hacia proveedores.** Todo hallazgo de
-  esta ronda se sostiene por lectura de código y por la suite offline.
+**Crecimiento de la suite:** 393 archivos / 5,135 pruebas (21-ago) → **432 archivos /
+5,515 pruebas** (22-ago). +39 archivos, +380 pruebas, casi todas del PR #38.
+Que la suite crezca no es lo mismo que que cubra: eso lo mide el auditor de pruebas
+rompiendo funciones a propósito.
