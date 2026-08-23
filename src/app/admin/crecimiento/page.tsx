@@ -33,16 +33,22 @@ export const dynamic = 'force-dynamic';
  * tesis de la página — solo cambian de glass-panel a tarjeta.
  */
 export default async function CrecimientoPage() {
-  const r = await getResumenNegocio();
-  // El embudo de ADQUISICIÓN sí es real desde la 0105: los prospectos del
-  // censo por estado del kanban. Cae por su lado a null y se DICE — un
-  // embudo vacío por base caída afirmaría que no hay pipeline.
-  const prospectos = await listarProspectos().catch(() => null);
-  // Costo por lead + alertas de adquisición (panel-de-adquisicion §2/§5):
-  // cae por su lado a null y se DICE.
-  const adquisicion = await getAdquisicion(ahoraMs()).catch(() => null);
-  // El control de campañas (0123, §4) — leer y pausar; jamás crear ni subir.
-  const campanas = await listarCampanas().catch(() => null);
+  // FE-14 (22-ago-2026): las cuatro se pedían EN SERIE —cuatro viajes a la
+  // base sumados en el reloj de la página— sin que ninguna dependiera de la
+  // anterior. Salen juntas; cada una conserva su propio catch, o sea su
+  // propia leyenda honesta.
+  const [r, prospectos, adquisicion, campanas] = await Promise.all([
+    getResumenNegocio(),
+    // El embudo de ADQUISICIÓN sí es real desde la 0105: los prospectos del
+    // censo por estado del kanban. Cae por su lado a null y se DICE — un
+    // embudo vacío por base caída afirmaría que no hay pipeline.
+    listarProspectos().catch(() => null),
+    // Costo por lead + alertas de adquisición (panel-de-adquisicion §2/§5):
+    // cae por su lado a null y se DICE.
+    getAdquisicion(ahoraMs()).catch(() => null),
+    // El control de campañas (0123, §4) — leer y pausar; jamás crear ni subir.
+    listarCampanas().catch(() => null),
+  ]);
   const integracionAds = estadoIntegracionAds();
 
   async function accionPausarCampana(id: string): Promise<AccionCampana> {
@@ -184,7 +190,9 @@ export default async function CrecimientoPage() {
               )}
               <div className="card p-4">
                 <TituloSeccion>Costo por lead, por fuente</TituloSeccion>
-                <table className="w-full text-[12.5px] mt-2">
+                {/* FE-19: scrollea dentro de su tarjeta, no estira la página. */}
+                <div className="overflow-x-auto mt-2">
+                <table className="w-full text-[12.5px]">
                   <thead>
                     <tr className="text-left border-b" style={{ borderColor: 'var(--line)' }}>
                       <th className="py-1.5 text-[11px] uppercase font-semibold" style={{ color: 'var(--muted)' }}>Fuente</th>
@@ -207,6 +215,7 @@ export default async function CrecimientoPage() {
                     ))}
                   </tbody>
                 </table>
+                </div>
                 {adquisicion.sinFuenteDeDatos.length > 0 && (
                   <p className="text-[11px] mt-2 m-0" style={{ color: 'var(--faint)' }}>
                     Alertas del blueprint sin fuente de datos todavía: {adquisicion.sinFuenteDeDatos.map((s) => `${s.alerta} (${s.falta})`).join(' · ')}.

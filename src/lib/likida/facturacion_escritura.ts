@@ -26,6 +26,12 @@
 //  · EL SALDO NO SE GUARDA: lo deriva la vista `factura_saldo`. Aquí solo se
 //    decide el ESTATUS, y `pagada` se escribe únicamente cuando la suma de
 //    pagos cubre el total.
+//  · UNA FACTURA SE IDENTIFICA POR SERIE + FOLIO + EJERCICIO (RES-22, mig.
+//    0166). La 0049 dejó el consecutivo en `(tenant_id, folio)` y la 0158 le
+//    sumó `(tenant_id, upper(folio))`: ninguno miraba la serie ni el año, así
+//    que la flota que reinicia folios cada 1 de enero —lo normal en México—
+//    no podía capturar su cobranza. La 0166 sustituye los dos por
+//    `(tenant_id, upper(coalesce(serie,'')), upper(folio), año de la fecha)`.
 //
 // El `tenant_id` viene SIEMPRE por argumento desde la sesión del servidor, y
 // toda escritura sobre fila existente se ancla con `.eq('tenant_id', …)` Y
@@ -48,6 +54,8 @@ export interface FacturaCruda {
   fecha: string;
   subtotal: string;
   iva: string;
+  /** La SERIE del CFDI (0166, RES-22). Vacía = la flota no usa series. */
+  serie: string;
   folio: string;
   cfdiUuid: string;
   viajeIds: string[];
@@ -59,6 +67,7 @@ export interface FacturaValida {
   subtotal: number;
   iva: number;
   total: number;
+  serie: string | null;
   folio: string | null;
   cfdiUuid: string | null;
   estatus: 'borrador' | 'emitida';
@@ -98,6 +107,36 @@ function montoTecleado(crudo: string, campo: string, opciones: { obligatorio: bo
   return n;
 }
 
+/** Tope del atributo `Serie` del CFDI 4.0 en el SAT, y el del CHECK de la 0166. */
+const SERIE_MAX = 25;
+
+/**
+ * La SERIE, normalizada IGUAL que se compara (RES-22, mig. 0166).
+ *
+ * `factura_serie_btrim` (0166) exige que la serie guardada esté sin espacios
+ * de sobra y nunca vacía, con el mismo criterio que la 0158 (DAT-36) le puso
+ * al folio: si el texto guardado no es el texto comparado, «A », «A» y «» son
+ * tres series para la base y una sola para la flota. Aquí se hace la
+ * normalización; el CHECK es la red por si algún día entra por otro camino.
+ *
+ * Vacía → NULL, que en `factura_folio_unico` entra como `coalesce(serie,'')`:
+ * todas las facturas sin serie comparten consecutivo, que es lo que significa
+ * «no uso series».
+ */
+function normalizarSerie(crudo: string): string | null {
+  const s = crudo.trim();
+  if (s === '') return null;
+  if (s.length > SERIE_MAX) {
+    throw new DatoInvalido(`La serie no puede pasar de ${SERIE_MAX} caracteres: es el tope del atributo Serie del CFDI.`);
+  }
+  // Un salto de línea o un tabulador PEGADOS DE UN EXCEL sobreviven al trim de
+  // los extremos si van en medio, y no existen en ninguna serie del SAT.
+  if (/\s/.test(s)) {
+    throw new DatoInvalido('La serie no lleva espacios: cópiala tal como aparece en el CFDI (por ejemplo «A» o «FAC»).');
+  }
+  return s;
+}
+
 export function validarFactura(c: FacturaCruda): FacturaValida {
   if (!esUuidValido(c.clienteId)) {
     throw new DatoInvalido('Elige el cliente de la lista. Si no aparece, dalo de alta primero en Clientes.');
@@ -116,6 +155,7 @@ export function validarFactura(c: FacturaCruda): FacturaValida {
 
   const folio = c.folio.trim() === '' ? null : c.folio.trim();
   if (folio !== null && folio.length > 40) throw new DatoInvalido('El folio no puede pasar de 40 caracteres.');
+  const serie = normalizarSerie(c.serie);
 
   let cfdiUuid: string | null = null;
   if (c.cfdiUuid.trim() !== '') {
@@ -137,7 +177,7 @@ export function validarFactura(c: FacturaCruda): FacturaValida {
     if (!viajeIds.includes(id)) viajeIds.push(id);
   }
 
-  return { clienteId: c.clienteId, fecha, subtotal, iva, total, folio, cfdiUuid, estatus: cfdiUuid ? 'emitida' : 'borrador', viajeIds };
+  return { clienteId: c.clienteId, fecha, subtotal, iva, total, serie, folio, cfdiUuid, estatus: cfdiUuid ? 'emitida' : 'borrador', viajeIds };
 }
 
 export interface PagoCrudo {
@@ -175,6 +215,33 @@ export function validarPago(c: PagoCrudo): PagoValido {
  * `sumarDias` y esto son las dos reglas que el contralor va a cruzar contra su
  * papel; el resto de `registrarPago` es plomería.
  */
+export type MotivoRechazoAbono = 'cancelada' | 'borrador' | 'pagada' | 'sobrepago';
+
+/**
+ * La redacción de cada rechazo, en UN solo lugar.
+ *
+ * Existe porque desde la 0159 el veredicto lo da la base (`registrar_pago_tx`,
+ * bajo el `for update` de la factura) y el texto lo escribe TypeScript. Si cada
+ * uno redactara el suyo, el contralor vería dos mensajes distintos para el
+ * mismo rechazo según por dónde entrara — y el de la base, además, sin el monto
+ * formateado en pesos.
+ */
+export function mensajeRechazoAbono(motivo: MotivoRechazoAbono, saldo: number, monto: number): string {
+  switch (motivo) {
+    case 'cancelada':
+      return 'Esa factura está cancelada: no se le abonan pagos.';
+    case 'borrador':
+      return 'Esa factura sigue en borrador. Márcala como emitida (con su UUID) antes de registrarle pagos: un cobro sin CFDI es lo que el contralor no puede cruzar.';
+    case 'pagada':
+      return 'Esa factura ya está saldada. Si el cliente pagó de más, eso se aclara con él, no capturándolo aquí.';
+    case 'sobrepago':
+      return (
+        `Ese pago (${mxn(monto)}) rebasa el saldo de la factura (${mxn(saldo)}). ` +
+        'Revisa el monto; si el cliente de verdad pagó de más, se aclara con una nota de crédito, no capturando de más aquí.'
+      );
+  }
+}
+
 export function evaluarAbono(
   f: { estatus: string; total: number; pagado: number },
   monto: number,
@@ -182,26 +249,13 @@ export function evaluarAbono(
   // El `+ 0` mata el `-0` que deja la resta binaria: un saldo de "-$0.00" en
   // un mensaje es la clase de cifra que hace dudar de todas las demás.
   const saldo = Math.round((f.total - f.pagado) * 100) / 100 + 0;
-  if (f.estatus === 'cancelada') {
-    return { rechazo: 'Esa factura está cancelada: no se le abonan pagos.', saldo, quedaSaldada: false };
-  }
-  if (f.estatus === 'borrador') {
-    return {
-      rechazo: 'Esa factura sigue en borrador. Márcala como emitida (con su UUID) antes de registrarle pagos: un cobro sin CFDI es lo que el contralor no puede cruzar.',
-      saldo, quedaSaldada: false,
-    };
-  }
-  if (f.estatus === 'pagada') {
-    return { rechazo: 'Esa factura ya está saldada. Si el cliente pagó de más, eso se aclara con él, no capturándolo aquí.', saldo, quedaSaldada: false };
-  }
-  if (monto > saldo + 0.005) {
-    return {
-      rechazo:
-        `Ese pago (${mxn(monto)}) rebasa el saldo de la factura (${mxn(saldo)}). ` +
-        'Revisa el monto; si el cliente de verdad pagó de más, se aclara con una nota de crédito, no capturando de más aquí.',
-      saldo, quedaSaldada: false,
-    };
-  }
+  const rechazar = (motivo: MotivoRechazoAbono) =>
+    ({ rechazo: mensajeRechazoAbono(motivo, saldo, monto), saldo, quedaSaldada: false });
+
+  if (f.estatus === 'cancelada') return rechazar('cancelada');
+  if (f.estatus === 'borrador') return rechazar('borrador');
+  if (f.estatus === 'pagada') return rechazar('pagada');
+  if (monto > saldo + 0.005) return rechazar('sobrepago');
   return { rechazo: null, saldo, quedaSaldada: monto >= saldo - 0.005 };
 }
 
@@ -219,13 +273,48 @@ async function anotar(
   );
 }
 
-/** Los índices únicos de la 0049, dichos en palabras de quien capturó. */
-function traducirChoque(mensaje: string): DatoInvalido | null {
+/** El contexto del choque, para que el mensaje diga QUÉ se comparó. */
+export interface LlaveFolio {
+  serie: string | null;
+  folio: string | null;
+  /** `YYYY-MM-DD`. NULL cuando quien traduce el choque no la tiene a mano
+   *  (`marcarEmitida` sella una fila que ya existe y cuya fecha no viaja en el
+   *  formulario): entonces el mensaje dice «ese mismo ejercicio» en vez de
+   *  inventar un año, que es la regla de la casa. */
+  fecha: string | null;
+}
+
+/**
+ * El folio duplicado, dicho con la llave COMPLETA contra la que se comparó.
+ *
+ * RES-22 (auditoría prod) · Desde la 0166 el consecutivo es
+ * `(tenant_id, upper(coalesce(serie,'')), upper(folio), año de la fecha)`, no
+ * `(tenant_id, folio)`. El mensaje viejo —«Ya tienes registrada una factura con
+ * ese folio»— mandaba a buscar una factura que podía ser de otra serie o de
+ * otro ejercicio, y para colmo era cierto: la base tampoco las distinguía.
+ * Ahora sí las distingue, y el mensaje nombra las tres dimensiones para que
+ * quien capturó sepa dónde está la gemela en vez de adivinar.
+ */
+export function mensajeFolioRepetido(k: LlaveFolio): string {
+  const ejercicio = k.fecha === null ? 'ese mismo ejercicio' : `el ejercicio ${k.fecha.slice(0, 4)}`;
+  const donde = k.serie === null ? 'sin serie' : `de la serie «${k.serie}»`;
+  return (
+    `Ya tienes registrada una factura con el folio «${k.folio ?? ''}» ${donde} en ${ejercicio}. ` +
+    'El folio se compara por flota, serie y año (sin distinguir mayúsculas), así que el mismo folio en OTRA serie o en OTRO ejercicio sí cabe: ' +
+    'revisa que la serie y la fecha sean las de este CFDI. Si la factura anterior está cancelada, su folio sigue ocupado — es un consecutivo fiscal, no una lista de pendientes.'
+  );
+}
+
+/** Los índices únicos de la 0049 y la 0166, dichos en palabras de quien capturó. */
+function traducirChoque(mensaje: string, llave: LlaveFolio): DatoInvalido | null {
   if (mensaje.includes('factura_cfdi_unico')) {
     return new DatoInvalido('Ese folio fiscal (UUID) ya está registrado en otra factura tuya. El mismo CFDI no se registra dos veces: el saldo del cliente saldría al doble.');
   }
+  if (mensaje.includes('factura_serie_btrim')) {
+    return new DatoInvalido('La serie no puede ir vacía ni con espacios: cópiala tal como aparece en el CFDI, o déjala en blanco si tu flota no usa series.');
+  }
   if (mensaje.includes('factura_folio_unico')) {
-    return new DatoInvalido('Ya registraste una factura con ese folio. Búscala en la lista en vez de capturarla otra vez.');
+    return new DatoInvalido(mensajeFolioRepetido(llave));
   }
   return null;
 }
@@ -284,6 +373,9 @@ export async function crearFactura(
     // cuando la factura ampara EXACTAMENTE un viaje (el caso común y el que
     // `libro_viaje.ts:599` lee directo).
     viaje_id: f.viajeIds.length === 1 ? f.viajeIds[0] : null,
+    // RES-22 (0166): la serie es la mitad que le faltaba al folio. NULL cuando
+    // la flota no usa series, y así entra al índice como `coalesce(serie,'')`.
+    serie: f.serie,
     folio: f.folio,
     cfdi_uuid: f.cfdiUuid,
     fecha: f.fecha,
@@ -296,7 +388,7 @@ export async function crearFactura(
   }).select('id').single(), 'crearFactura');
 
   if (error) {
-    const choque = traducirChoque(error.message);
+    const choque = traducirChoque(error.message, { serie: f.serie, folio: f.folio, fecha: f.fecha });
     if (choque) throw choque;
     throw new Error(`crearFactura: ${error.message}`);
   }
@@ -305,19 +397,37 @@ export async function crearFactura(
   const facturaId = String(id);
 
   // ── Las ligas a los viajes ───────────────────────────────────────────────
-  // PostgREST no da transacciones: si las ligas fallan, se intenta deshacer el
-  // alta y se reporta el fallo COMPLETO. Una factura sin sus ligas contaría el
+  // PostgREST no da transacciones: si las ligas fallan, se compensa el alta y
+  // se reporta el fallo COMPLETO. Una factura sin sus ligas contaría el
   // ingreso sin decir de qué viajes salió — peor que pedir que se recapture.
+  //
+  // LA COMPENSACIÓN CANCELA, NO BORRA (auditoría 18, DAT-27). Era un
+  // `.delete()`, y un DELETE sobre `factura_emitida` es exactamente lo que la
+  // 0158 dejó de permitir a la ligera: la FK de `pago_recibido` pasó a NO
+  // ACTION para que borrar una factura no se lleve por delante los abonos
+  // registrados. Esta factura acaba de nacer y no tiene abonos —el borrado
+  // habría funcionado— pero la asimetría es la que enseña: un folio que
+  // existió y se fue no deja rastro de haber existido, y en un consecutivo
+  // fiscal eso es justo lo que no se hace. `cancelada` es un estatus del
+  // dominio (0049) y la fila queda contando la verdad: se intentó, no se
+  // completó.
+  //
+  // CONSECUENCIA VISIBLE: recapturar la MISMA factura con la misma serie, el
+  // mismo folio y el mismo ejercicio choca ahora contra `factura_folio_unico`
+  // (la fila cancelada sigue ahí) y `traducirChoque` lo dice con su mensaje de
+  // folio repetido. Antes se podía reintentar a ciegas; ahora hay que mirar la
+  // cancelada y decidir. Que la cancelada siga ocupando su lugar es
+  // deliberado (0166): es un consecutivo fiscal, no una lista de pendientes.
   if (f.viajeIds.length > 0) {
     const { error: errLigas } = await supabaseAdmin().from('factura_viaje')
       .insert(f.viajeIds.map((v) => ({ factura_id: facturaId, viaje_id: v })));
     if (errLigas) {
       const { error: errDeshacer } = await supabaseAdmin().from('factura_emitida')
-        .delete().eq('id', facturaId).eq('tenant_id', tenantId);
+        .update({ estatus: 'cancelada' }).eq('id', facturaId).eq('tenant_id', tenantId);
       if (errDeshacer) {
         logger.error('facturacion.alta_a_medias', {
           tenantId, facturaId,
-          msg: `La factura quedó creada SIN sus ligas a viajes y no se pudo deshacer: ${errDeshacer.message}. Revisar a mano.`,
+          msg: `La factura quedó creada SIN sus ligas a viajes y no se pudo cancelar: ${errDeshacer.message}. Revisar a mano.`,
         });
       }
       throw new Error(`crearFactura: no se pudieron ligar los viajes: ${errLigas.message}`);
@@ -339,7 +449,7 @@ export async function crearFactura(
 export async function marcarEmitida(
   tenantId: string,
   facturaId: string,
-  sello: { folio: string; cfdiUuid: string },
+  sello: { serie?: string; folio: string; cfdiUuid: string },
   actor?: { id?: string; email?: string },
 ): Promise<void> {
   if (!esUuidValido(facturaId)) throw new DatoInvalido('No se reconoce esa factura. Recarga la pantalla.');
@@ -350,21 +460,66 @@ export async function marcarEmitida(
   const folio = sello.folio.trim() === '' ? undefined : sello.folio.trim();
   if (folio !== undefined && folio.length > 40) throw new DatoInvalido('El folio no puede pasar de 40 caracteres.');
 
+  // RES-22 (0166) · LA SERIE VIAJA CON EL FOLIO O NO VIAJA.
+  // El sello llega del CFDI ya timbrado, y ahí serie y folio son UNA sola
+  // identificación. Si esta función escribiera el folio y dejara la serie como
+  // estaba, la factura sellada quedaría diciendo «serie B, folio 1» cuando el
+  // PAC timbró «A-1»: el consecutivo de la 0166 se calcularía sobre una serie
+  // que no es la del papel. `undefined` (el campo ni se manda) deja la serie
+  // intacta; una cadena vacía la BORRA a propósito, para la flota que timbró
+  // sin serie un borrador que sí la traía.
+  const serie = sello.serie === undefined ? undefined : normalizarSerie(sello.serie);
+
   const { data, error } = await acotada(supabaseAdmin().from('factura_emitida').update({
     cfdi_uuid: uuid,
     estatus: 'emitida',
     ...(folio !== undefined ? { folio } : {}),
+    ...(serie !== undefined ? { serie } : {}),
   }).eq('id', facturaId).eq('tenant_id', tenantId).eq('estatus', 'borrador').select('id'), 'marcarEmitida');
 
   if (error) {
-    const choque = traducirChoque(error.message);
+    // La fecha de la factura no viaja en este formulario y NO se adivina: el
+    // mensaje dice «ese mismo ejercicio» en vez de inventar un año.
+    const choque = traducirChoque(error.message, { serie: serie ?? null, folio: folio ?? null, fecha: null });
     if (choque) throw choque;
     throw new Error(`marcarEmitida: ${error.message}`);
   }
   if (!Array.isArray(data) || data.length === 0) {
     throw new DatoInvalido('Esa factura no está en borrador en tu flota: puede que ya esté emitida o cancelada. Recarga la pantalla.');
   }
-  await anotar(tenantId, 'factura.emitida', 'factura_emitida', facturaId, { cfdiUuid: uuid, folio: folio ?? null }, actor);
+  await anotar(tenantId, 'factura.emitida', 'factura_emitida', facturaId, {
+    cfdiUuid: uuid, folio: folio ?? null, ...(serie !== undefined ? { serie } : {}),
+  }, actor);
+}
+
+// ── Los SQLSTATE propios de `registrar_pago_tx` (0159) ─────────────────────
+//
+// Código propio y no un 23505, por la misma razón que el `CU001` de la 0036: lo
+// que hay que hacer es distinto. Un rechazo de regla se le cuenta al contralor
+// con sus palabras; cualquier otra cosa es un error y se grita.
+const FACTURA_FUERA_DE_FLOTA = 'CU010';
+const ABONO_RECHAZADO = 'CU011';
+
+/** El motivo y el saldo que manda la base, convertidos en el mensaje de siempre. */
+function traducirErrorDelPago(error: { code?: string; message?: string }, monto: number): Error {
+  if (error.code === FACTURA_FUERA_DE_FLOTA) {
+    return new DatoInvalido('Esa factura no está en tu flota. Recarga la pantalla.');
+  }
+  if (error.code === ABONO_RECHAZADO) {
+    const leido = /motivo=([a-z]+)\s+saldo=(-?[\d.]+)/.exec(error.message ?? '');
+    if (leido) {
+      return new DatoInvalido(
+        mensajeRechazoAbono(leido[1] as MotivoRechazoAbono, Number(leido[2]), monto),
+      );
+    }
+    // Un CU011 que no se puede leer sigue siendo un rechazo de negocio: se
+    // rechaza igual, sin inventar la cifra que no llegó.
+    return new DatoInvalido('Ese pago no se puede registrar contra esa factura. Revisa el estatus y el saldo antes de volver a intentarlo.');
+  }
+  // Todo lo demás —incluido el RPC ausente y el tope de consulta de `acotada`—
+  // es un error de verdad: nada de tragárselo como si la factura tuviera la
+  // culpa.
+  return new Error(`registrarPago: ${error.message}`);
 }
 
 /**
@@ -381,55 +536,38 @@ export async function registrarPago(
   p: PagoValido,
   actor?: { id?: string; email?: string },
 ): Promise<void> {
-  const { data: fac, error: errF } = await acotada(
-    supabaseAdmin().from('factura_emitida').select('id, total, estatus')
-      .eq('id', p.facturaId).eq('tenant_id', tenantId).maybeSingle(),
-    'registrarPago.factura',
-  );
-  if (errF) throw new Error(`registrarPago: no se pudo leer la factura: ${errF.message}`);
-  if (!fac) throw new DatoInvalido('Esa factura no está en tu flota. Recarga la pantalla.');
-  const factura = fac as { id: string; total: number; estatus: string };
+  // ── DAT-05 · EL SALDO SE LEE CON LA FACTURA TRABADA, NO ANTES ────────────
+  //
+  // Esto eran cuatro viajes a la base: leer la factura, sumar los pagos,
+  // decidir aquí, insertar. Entre el segundo y el cuarto cabe otra petición —
+  // y a 50k viajes con dos pestañas abiertas, cabe. Dos abonos de $10,000
+  // simultáneos sobre un saldo de $11,600 pasaban LOS DOS, porque cada uno leyó
+  // $0 pagados: $20,000 cobrados contra $11,600 y `factura_saldo` en negativo,
+  // sin un solo error en el log.
+  //
+  // `registrar_pago_tx` (0159) hace lo mismo con la factura tomada `for
+  // update`: el segundo abono suma DESPUÉS del primero y ve el saldo de verdad.
+  // El estatus `pagada` entra en la misma transacción, así que también
+  // desaparece el estado "el pago quedó registrado pero la factura no pasó a
+  // pagada" que este archivo tenía que avisar a gritos.
+  //
+  // La decisión de dinero sigue siendo la de `evaluarAbono` —las mismas cuatro
+  // reglas, en el mismo orden, ahora también en SQL (bloque 131 de
+  // verificaciones.sql las corre contra Postgres)— y la REDACCIÓN sigue siendo
+  // de aquí: la base manda el motivo y el saldo, `mensajeRechazoAbono` escribe.
+  const { data, error } = await acotada(supabaseAdmin().rpc('registrar_pago_tx', {
+    p_tenant: tenantId,
+    p_factura: p.facturaId,
+    p_fecha: p.fecha,
+    p_monto: p.monto,
+    p_metodo: p.metodo,
+    p_referencia: p.referencia,
+  }), 'registrarPago');
 
-  // La suma de pagos se lee COMPLETA: una factura no acumula miles de abonos,
-  // y el tope de PostgREST (1,000 filas) queda lejísimos de cualquier caso real.
-  const { data: pagos, error: errP } = await acotada(
-    supabaseAdmin().from('pago_recibido').select('monto')
-      .eq('factura_id', p.facturaId).eq('tenant_id', tenantId),
-    'registrarPago.pagos',
-  );
-  if (errP) throw new Error(`registrarPago: no se pudieron leer los pagos previos: ${errP.message}`);
-  const pagado = (pagos ?? []).reduce((s, r) => s + Number((r as { monto: unknown }).monto ?? 0), 0);
+  if (error) throw traducirErrorDelPago(error, p.monto);
 
-  const abono = evaluarAbono({ estatus: factura.estatus, total: Number(factura.total), pagado }, p.monto);
-  if (abono.rechazo) throw new DatoInvalido(abono.rechazo);
-
-  const { data, error } = await acotada(supabaseAdmin().from('pago_recibido').insert({
-    tenant_id: tenantId,
-    factura_id: p.facturaId,
-    fecha: p.fecha,
-    monto: p.monto,
-    metodo: p.metodo,
-    referencia: p.referencia,
-  }).select('id').single(), 'registrarPago');
-  if (error) throw new Error(`registrarPago: ${error.message}`);
-  const pagoId = (data as { id?: unknown } | null)?.id;
-  if (!pagoId) throw new Error('registrarPago: el insert no devolvió id');
-
-  // ── El estatus solo alcanza `pagada` cuando el saldo llegó a cero ────────
-  // Si este UPDATE falla, el pago YA quedó registrado y la vista de saldo lo
-  // suma igual: se avisa fuerte y no se tira el pago.
-  if (abono.quedaSaldada) {
-    const { data: filas, error: errE } = await supabaseAdmin().from('factura_emitida')
-      .update({ estatus: 'pagada' })
-      .eq('id', p.facturaId).eq('tenant_id', tenantId).eq('estatus', 'emitida').select('id');
-    if (errE || !Array.isArray(filas) || filas.length === 0) {
-      logger.error('facturacion.estatus_pagada_no_escribio', {
-        tenantId, facturaId: p.facturaId,
-        err: errE?.message ?? 'update tocó 0 filas',
-        msg: 'El pago quedó registrado pero la factura no pasó a `pagada`. El saldo derivado sale bien; el estatus hay que corregirlo a mano.',
-      });
-    }
-  }
+  const pagoId = (data as { pago_id?: unknown } | null)?.pago_id;
+  if (!pagoId) throw new Error('registrarPago: el RPC no devolvió el id del pago');
 
   await anotar(tenantId, 'pago.registrado', 'pago_recibido', String(pagoId), {
     facturaId: p.facturaId, fecha: p.fecha, monto: p.monto, metodo: p.metodo, referencia: p.referencia,
