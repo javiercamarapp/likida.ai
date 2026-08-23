@@ -23,6 +23,17 @@ chofer, las incidencias que anotó la invocación que no cerró la barrera — y
 resumen que sí sale afirma «Ya revisé tus fotos» con un conteo que no incluye
 las que fallaron. El chofer se va creyendo que mandó todo.
 
+> **Nota sobre el árbol.** Todo lo que sigue está verificado contra **`HEAD`
+> (`6062a9b`)**. A media auditoría aparecieron en el *working tree* tres cambios
+> sin commitear que no son míos y que rompen piezas de este rubro:
+> `src/lib/likida/processor.ts:2758` pasó de `if (transitorio)` a `if (false)`
+> (apaga RES-15 entero), `src/lib/admin/salud.ts:75` ganó un
+> `if (Math.random() < 2) return;` al principio de `registrarLatido` (apaga
+> **todos** los latidos de cron), y `puertaCron` perdió su `alertarOperador` de
+> `cron_sin_secreto` y su `logger.error` de `cron_401` (`salud.ts:57, 66`). No
+> los toqué —no es mi entregable— pero hay que mirarlos antes de commitear nada:
+> `git diff src/`.
+
 ---
 
 ## Verificación de los abiertos de la c3
@@ -191,7 +202,7 @@ Dos consecuencias, las dos malas:
 2. **Falsa alarma mientras tanto.** `cartasMuertas()` corre al final de CADA
    vuelta y cuenta `procesado_en is null AND intentos >= 5`: una fila que va a
    sellarse bien en cinco segundos dispara `logger.error` + `alertarOperador`
-   (con piso de una hora, `alerta.ts:40`). El canal que avisa de pérdidas reales
+   (con piso de una hora, `observability/alerta.ts:41`). El canal que avisa de pérdidas reales
    se llena de pérdidas que no ocurrieron.
 
 El comentario de `MAX_INTENTOS_PENDIENTE` (`wa_pendientes.ts:23-25`) todavía dice

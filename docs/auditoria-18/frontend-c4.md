@@ -23,6 +23,10 @@ tarjetas independientes y le puso a cada una un botón «Reintentar» que no pue
 reintentar. Un parpadeo de la base deja la tarjeta muerta hasta un recargado
 duro, y la única prueba que la cubre certifica el texto del botón.
 
+**Conteo:** 8 hallazgos — **0 CRÍTICO · 2 ALTO · 4 MEDIO · 2 BAJO**. Dos de
+ellos son REINCIDENTES de la c3 y van escritos completos abajo; los nueve de la
+c2 siguen abiertos y quedan en la tabla de verificación, sin reescribirse.
+
 ---
 
 ## Verificación de los abiertos de la c3
@@ -33,7 +37,7 @@ duro, y la única prueba que la cubre certifica el texto del botón.
 |---|---|---|
 | [ALTO] La píldora del renglón contradice la caja de cubetas (`TIPOS_MALOS` copiado a mano) | **CERRADO** | `src/app/dashboard/[id]/vista.tsx:169` es `new Set<string>(NO_DEDUCIBLE_ISR)` y `:171` `new Set<string>(POR_CONFIRMAR)`, los dos importados de `cuadre/engine.ts:222`. Además `:177-181` saca `duplicado`/`monto_invalido`/`comprobante_no_fiscal` a un mapa aparte (`ETIQUETA_CAPTURA`) que los nombra por lo que son en vez de afirmar «No deducible», y `estadoRenglon` (`:190-206`) ordena por gravedad con esas tres listas. Los dos escenarios de la c3 (diésel en efectivo → «Por confirmar»; `rfc_receptor` → «No deducible») ahora salen correctos. |
 | [ALTO] «Dinero observado» significa dos cosas en dos pantallas | **REINCIDENTE** | `src/app/dashboard/agentes/liquidacion/vista.tsx:325` sigue sumando **todos** los tipos (`porTipo.reduce((s,t)=>s+t.monto,0)`) bajo el subtítulo «Lo que el agente atrapó fuera de regla o duplicado» (`:330`). La fuente cambió de JS a SQL pero conserva la definición ancha: `supabase/migrations/0150_agregados_analytics.sql:482-492` desanida `diferencias` **sin filtrar por tipo**. Enfrente, `src/app/dashboard/chat.tsx:106` imprime `kpis.diferenciaDetectada`, que sale de `0112_agregados_rpc.sql:322-324` con `where d->>'tipo' in ('sobre_politica','duplicado')`. Ver el hallazgo con valores más abajo. |
-| [MEDIO] `/dashboard/arco` calcula «hoy» en UTC | **CERRADO** | `src/app/dashboard/arco/page.tsx:38` es `const hoy = hoyMx();`, con la razón escrita en `:30-37`. (Sujeto al CRÍTICO de abajo: hoy `hoyMx()` está revertido en el árbol.) |
+| [MEDIO] `/dashboard/arco` calcula «hoy» en UTC | **CERRADO** | `src/app/dashboard/arco/page.tsx:38` es `const hoy = hoyMx();`, con la razón escrita en `:30-37`, y `hoyMx` (`formato.ts:46-48`) formatea con `timeZone: TZ_MX`. El escenario de la c3 (21-ago 19:30 CDMX → «Vencidas sin responder: 1») ya no ocurre. |
 | [MEDIO] «Sobre tope» imprime $0.00 junto a «excedente en 1 comprobante» | **REINCIDENTE** | `src/app/dashboard/[id]/detalle.tsx:91` añadió `df.monto > 0 ? df.monto : 0`, que solo protege de montos negativos. `TIPOS_TOPE` (`[id]/vista.tsx:183`) sigue incluyendo `efectivo_sobre_tope`, y el motor lo emite con `monto: 0` a propósito (`cuadre/engine.ts:522`). El KPI (`detalle.tsx:215-221`) sigue pintando `mxn(0)` en ámbar con la nota `excedente en ${comprobantes(difsTope.length)}`. |
 
 ### Los nueve de la c2 — **9/9 REINCIDENTES**
@@ -54,73 +58,22 @@ Verificados uno por uno, abriendo el archivo:
 
 ## Hallazgos
 
-### [CRÍTICO] `hoyMx()` devuelve el día de UTC, no el de México: la campaña entera del «día de México» está anulada en el árbol de trabajo, y la compuerta está roja
-
-`src/lib/formato.ts:47` y `src/lib/formato.ts:58`
-
-```ts
-// :47
-return new Intl.DateTimeFormat('en-CA', { timeZone: 'UTC', … }).format(fecha);
-// :58
-const OFFSET_MX = 'Z';
-```
-
-Las dos líneas contradicen la constante que está tres renglones arriba
-(`TZ_MX = 'America/Mexico_City'`, `:34`) y su propio comentario, que dice
-textual «México dejó el horario de verano en 2022 (por eso `TZ_MX` puede
-tratarse como UTC−6 sin ramas)» (`:52-56`).
-
-**Procedencia, dicha con precisión porque cambia qué significa:** es una
-modificación **no commiteada** del árbol de trabajo. `git status` da
-` M src/lib/formato.ts` y `git show HEAD:src/lib/formato.ts` trae `timeZone:
-TZ_MX` y `const OFFSET_MX = '-06:00'`. El árbol estaba limpio al arrancar esta
-sesión y `npx vitest run` corrió **verde** (485 archivos, 6,247 pruebas) antes de
-que apareciera. No la commiteó nadie: está viva en el disco desde el que se
-construye.
-
-**Escenario 1, con valores — el ejercicio fiscal equivocado.** Es 31 de
-diciembre de 2026, 18:30 hora de CDMX (= 1-ene-2027 00:30 UTC). El contralor
-abre `/dashboard`. `inicio-contenido.tsx:108` hace `const hoy = hoyMx(new
-Date(ahoraMs()))` → `'2027-01-01'`. `resolverPeriodo(undefined, hoy)` (`:109`)
-abre el ejercicio **2027**, que tiene cero gastos. La tarjeta «Ahorro generado —
-Ejercicio 2027» (`:611-619`) imprime `$0.00`, «Tu motor fiscal — Ejercicio 2027»
-(`:659`) sale en ceros, y el botón «Exportar CSV del mes» del contador
-(`contador/inicio-contador.tsx:187`) apunta a
-`?desde=2027-01-01&hasta=2027-01-01`. Es exactamente el fallo que el comentario
-de `:104-107` dice haber arreglado, con la explicación escrita al lado.
-
-**Escenario 2, con valores — el corte de seis horas.** `inicioDiaMx('2026-08-23')`
-devuelve `'2026-08-23T00:00:00Z'` en vez de `'2026-08-23T00:00:00-06:00'`. Todo
-lo capturado entre las 18:00 del 22 y la medianoche del 22 en México cae **dentro**
-de la ventana del 23, y lo del 23 después de las 18:00 cae fuera. Lo usan
-`analytics.ts`, `fiscal.ts`, `api/dashboard/chat/tope.ts` y
-`api/dashboard/ingesta/tope.ts` — es decir, el tope de mensajes del chat y el de
-ingesta se reinician seis horas antes de tiempo.
-
-**Radio:** `rg -l 'hoyMx\('` da **39 archivos** fuera de pruebas, entre ellos
-`dashboard/inicio-contenido.tsx`, `inicio-operacion.tsx`,
-`contador/inicio-contador.tsx`, `arco/page.tsx`, `operadores/page.tsx`,
-`facturacion/page.tsx`, `admin/consola.tsx`, `admin/compliance/page.tsx`,
-`api/cron/facturar/route.ts` y `api/stripe/webhook/route.ts`.
-
-**Lo que sí funciona, y hay que decirlo:** la prueba ancla existe y **falla**.
-`npx vitest run src/lib/formato.test.ts` → 3 fallas:
-`formato.test.ts:366` (`expected '2026-08-22' to be '2026-08-21'`),
-`:312` (`inicioDiaMx('2026-12-31')` ya no trae `-06:00`) y `:320`. Ninguna de las
-otras 6,244 pruebas se entera, lo cual dice algo aparte sobre la cobertura, pero
-la guardia del rubro está puesta y grita.
-
-Consecuencia: si esto llega al deploy, el contralor ve su motor fiscal en ceros
-todas las tardes a partir de las 18:00, y el 31 de diciembre ve el ejercicio
-equivocado. Es la regla número uno del producto («nunca inventar una cifra»)
-rota por una constante.
-
-Causa raíz probable: una edición manual del árbol de trabajo que sustituyó dos
-valores por su equivalente UTC; el commit `df645b2` que introdujo `hoyMx()` como
-accesor único hizo que un solo punto gobierne el «hoy» de todo el panel — lo que
-es la defensa correcta y también el radio de esta falla.
-
----
+> **Nota de proceso, NO un hallazgo — se retiró después de verificar.**
+> Durante esta sesión el árbol de trabajo tuvo, sin commitear, `hoyMx()` con
+> `timeZone: 'UTC'` (`formato.ts:47`) y `OFFSET_MX = 'Z'` (`:58`), lo que anula
+> la campaña del «día de México» en los 39 archivos que derivan su «hoy» de ese
+> accesor. **Lo levanté como CRÍTICO y luego lo retiré**, porque al volver a
+> mirar antes de cerrar: HEAD nunca lo tuvo (`git show HEAD:src/lib/formato.ts`
+> trae `TZ_MX` y `'-06:00'`), el árbol ya volvió solo a su estado bueno, y
+> `npx vitest run src/lib/formato.test.ts` da 40/40 verdes. Fue una edición
+> transitoria de otra sesión corriendo en paralelo sobre el mismo disco (HEAD se
+> movió de `6062a9b` a `d5577c7` mientras yo escribía, y ahora hay otros dos
+> archivos modificados que no toqué). Lo dejo escrito por dos razones: la
+> guardia del rubro **funciona** —esas tres aserciones
+> (`formato.test.ts:312, :320, :366`) fallan de verdad cuando alguien revierte
+> la zona, y las verifiqué falladas— y porque una corrida desatendida que edita
+> el árbol bajo los pies de los auditores es un asunto de operabilidad que
+> alguien debería mirar.
 
 ### [ALTO] El botón «Reintentar» de cada bloque de streaming no puede reintentar: `LimiteError` no tiene camino de reseteo (código NUEVO de FE-14)
 
@@ -246,8 +199,10 @@ const base = Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), hoy.getUTCDate())
 const dias = Math.round((t - base) / DIA_MS);
 ```
 
-**Es independiente del CRÍTICO de arriba**: aquí no se llama a `hoyMx()`, se
-arma el día con `Date.UTC` a mano. Arreglar `formato.ts` no arregla esto.
+**No lo alcanza `hoyMx()`**: aquí el día se arma con `Date.UTC` a mano, sin
+pasar por el accesor único. Por eso ni la campaña DAT-08 ni el guardia de
+`formato.test.ts:300-306` —que busca `toISOString().slice(0,10)`, no
+`Date.UTC(...getUTC*())`— lo tocaron.
 
 **Escenario con valores.** Unidad `ECO-14`, `poliza_vence = '2026-08-23'`. El
 jefe de tráfico abre `/dashboard/unidades` el **23-ago-2026 a las 18:30 hora de
@@ -510,10 +465,8 @@ panel de cinco.
 
 Vale tanto como los hallazgos, y aquí sostiene la mitad de la nota.
 
-- **La compuerta, medida por mí.** `npx tsc --noEmit -p .` sin salida.
-  `npx vitest run`: **485 archivos, 6,247 pruebas pasando** (1 saltada), 97.6 s
-  — ejecutado ANTES de que apareciera la modificación de `formato.ts`. Con ella,
-  `src/lib/formato.test.ts` falla 3 de 40.
+- **La compuerta, medida por mí.** `npx tsc --noEmit -p .` sin salida (exit 0).
+  `npx vitest run`: **485 archivos, 6,247 pruebas pasando** (1 saltada), 97.6 s.
 - **FE-14, el patrón: bien hecho y bien probado.** `bloque.tsx:42-54` pone el
   límite de error POR FUERA del `Suspense` (que no atrapa errores, solo espera) —
   el orden correcto, y está razonado en `limite-error.tsx:6-24`. `vigilar()`
@@ -547,8 +500,10 @@ Vale tanto como los hallazgos, y aquí sostiene la mitad de la nota.
   `inicio-contenido.tsx:108`, `inicio-operacion.tsx:88`,
   `contador/inicio-contador.tsx:72`. El streaming no puede partir la pantalla en
   dos días distintos porque el día se resuelve antes de lanzar la primera
-  consulta. (Que ese «hoy» sea el correcto es el CRÍTICO de arriba; que sea
-  **uno solo** está bien resuelto.)
+  consulta. Y ese «hoy» es el de México: `hoyMx()` (`formato.ts:46-48`) formatea
+  con `timeZone: TZ_MX`, con tres aserciones que lo fijan
+  (`formato.test.ts:312, :320, :366`) — las verifiqué **falladas** revirtiendo la
+  zona, así que no son decoración.
 - **Los esqueletos usan LA MISMA cadena de rejilla que el contenido.**
   `inicio-contenido.tsx:356` (`grid grid-cols-1 sm:grid-cols-3 gap-2`) contra el
   contenido real en `:605` — idénticas. Y los condicionales de verdad
