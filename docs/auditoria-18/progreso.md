@@ -45,8 +45,8 @@ Una línea por acción, con su sha. Se escribe **mientras** avanza, no al cerrar
 
 | # | Acción | sha |
 |---|---|---|
-| 1 | merge de `master` (`583fec4`); un conflicto en `fiscal.ts`, resuelto conservando los dos lados | `4f0f25a` |
-| 2 | **OPER-C4-1** — `node_modules` era un enlace a la laptop del autor; nada corría al clonar. Prueba + `.gitignore` | `923bbfb` |
-| 3 | **FMT-C4-1** — la compuerta base salió roja: `$9,000.0 M` desbordaba la tarjeta de FE-17 | `3967d63` |
+| 1 | merge de `master` (`583fec4`); un conflicto en `fiscal.ts`, resuelto conservando los dos lados | `36a3912` |
+| 2 | **OPER-C4-1** — `node_modules` era un enlace a la laptop del autor; nada corría al clonar. Prueba + `.gitignore` | `8282fa4` |
+| 3 | **FMT-C4-1** — la compuerta base salió roja: `$9,000.0 M` desbordaba la tarjeta de FE-17 | `3af1ea4` |
 | 4 | compuerta verde: 485 archivos, 6,247 pruebas, 1 saltada; tsc limpio; eslint 0 errores | — |
 | 5 | MAPA y `compuerta-c4.md` escritos; doce auditores lanzados | (este commit) |

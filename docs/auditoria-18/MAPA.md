@@ -53,7 +53,7 @@ El delta viene casi entero de dos frentes que se fusionaron a `master` en el dí
 
 ### El merge, y el conflicto único
 
-`4f0f25a` mergea `origin/master` (`583fec4`). **Un solo conflicto**, en
+`36a3912` mergea `origin/master` (`583fec4`). **Un solo conflicto**, en
 `src/lib/likida/fiscal.ts` → `causasDe()`, y otra vez porque la rama y `master`
 tocaron lo mismo por caminos distintos. Aquí **conservé los dos lados**:
 
@@ -71,13 +71,13 @@ lados quedaron unidos (`diasSobreTope`, `CONCEPTOS_CON_TOPE_ALIMENTACION`, `getC
 
 Las dos son de `master`, no del merge, y están arregladas con prueba y commit atómico:
 
-- **OPER-C4-1** (`923bbfb`): `master` versionaba un **enlace simbólico**
+- **OPER-C4-1** (`8282fa4`): `master` versionaba un **enlace simbólico**
   `node_modules -> /Users/javiercamaraportepetit/likida/node_modules` (`c311997`). Se
   coló porque `.gitignore` decía `node_modules/` **con diagonal**, forma que solo casa
   directorios. Al clonar, la caja de herramientas entera se queda sin piso: `npx vitest`
   muere con `Cannot find module 'vitest/config'` — no fallan unas pruebas, no arranca
   ninguna.
-- **FMT-C4-1** (`3967d63`): la compuerta arrancó **roja** en `mxnCompacto`.
+- **FMT-C4-1** (`3af1ea4`): la compuerta arrancó **roja** en `mxnCompacto`.
   `maximumFractionDigits: 1` a secas saca a ICU de su *compact rounding* y conserva el
   cero de cola: `"$9,000.0 M"`, diez caracteres en la tarjeta de ocho — el desbordamiento
   que FE-17 vino a cerrar.
@@ -95,7 +95,7 @@ de la flota. Un error que él vea en la sala cuesta el trato.
 - `/dashboard` — panel del CLIENTE (flota_admin, contador, encargado), ~31 páginas, todas
   filtradas al tenant. Reusa los componentes de `/admin`; no hay segunda librería de UI.
 
-## Inventario (23-ago, sobre `3967d63`)
+## Inventario (23-ago, sobre `3af1ea4`)
 
 | Cosa | Cuánto | Antes (22-ago) |
 |---|---|---|

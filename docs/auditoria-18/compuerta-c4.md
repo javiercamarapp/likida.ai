@@ -45,7 +45,7 @@ No fallan unas pruebas: **no arranca ninguna**. `npm ci` lo sobrevive porque bor
 recrea, pero al hacerlo deja el árbol sucio (` D node_modules`) — que es exactamente lo
 que apaga el autofix de esta auditoría.
 
-Arreglado en `923bbfb`, con prueba que lo reproduce
+Arreglado en `8282fa4`, con prueba que lo reproduce
 (`src/lib/pruebas/arbol_sin_enlaces_ajenos.test.ts`): ninguna ruta versionada puede ser
 un enlace a ruta **absoluta**. Verificado revirtiendo: con el enlace restaurado la
 prueba **no llega ni a correr**, que es el fallo mismo.
@@ -85,10 +85,10 @@ que suelta los ceros de cola— y lo pasa a dígitos fijos, que los conserva. El
 cosmético: `"$9,000.0 M"` son diez caracteres donde la prueba exige ocho, o sea el
 desbordamiento de la tarjeta de KPI que FE-17 vino a cerrar.
 
-Arreglado en `3967d63` con `minimumFractionDigits: 0` explícito. La prueba ya existía y
+Arreglado en `3af1ea4` con `minimumFractionDigits: 0` explícito. La prueba ya existía y
 ya reproducía el fallo — por eso la compuerta lo cazó.
 
-## Línea base final (sobre `3967d63`)
+## Línea base final (sobre `3af1ea4`)
 
 ```
 $ npm test
