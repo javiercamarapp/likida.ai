@@ -50,3 +50,9 @@ Una línea por acción, con su sha. Se escribe **mientras** avanza, no al cerrar
 | 3 | **FMT-C4-1** — la compuerta base salió roja: `$9,000.0 M` desbordaba la tarjeta de FE-17 | `3af1ea4` |
 | 4 | compuerta verde: 485 archivos, 6,247 pruebas, 1 saltada; tsc limpio; eslint 0 errores | — |
 | 5 | MAPA y `compuerta-c4.md` escritos; doce auditores lanzados | (este commit) |
+| 6 | doce reportes de rubro entregados y commiteados | `0a2e5aa`, `d5f8f38` |
+| 7 | verificación adversarial: «repo público» DESCARTADO (repo privado, 1 colaborador) | `d5f8f38` |
+| 8 | **ARQ-C4-1** (CRÍTICO) — el folio fiscal en MAYÚSCULAS contra el CHECK de la 0158. 2 rojas sin el arreglo | `b872b10` |
+| 9 | **BACK-C4-1** (ALTO) — la guardia de orden de Stripe no llegó a la factura. 8 rojas de 31 sin el arreglo | `a5e413d` |
+| 10 | tablero renderizado, capturado y mirado (2 recapturas); series históricas por rubro corregidas contra las síntesis anteriores | (este commit) |
+| 11 | síntesis, RESULTADO y cierre. Compuerta final: 486 archivos · 6,255 pruebas · tsc limpio · 0 errores de lint | (este commit) |
