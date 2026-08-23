@@ -1,87 +1,86 @@
-# MAPA — auditoría 18 (20-ago · continuación 21-ago · **continuación 22-ago**)
+# MAPA — auditoría 18 (20-ago · cont. 21-ago · cont. 22-ago · **cont. 4, 23-ago**)
 
 Corrida **desatendida, en la nube** (routine de Claude Code). Rama `claude/auditoria-18`,
 PR #34. Árbol limpio al arrancar → autofix habilitado.
 
-## CONTINUACIÓN 3 — 22-ago-2026 (esta ronda)
+## CONTINUACIÓN 4 — 23-ago-2026 (esta ronda)
 
 El PR #34 **sigue abierto**, así que esta corrida NO abre ronda nueva: continúa la 18
-sobre la misma rama. Es la tercera pasada.
+sobre la misma rama. Es la **cuarta** pasada.
 
-**Lo que cambió, y es grande.** `master` avanzó de `d432e89` a **`21630c0`**:
-**116 commits, 252 archivos, +16,055 / −1,348** en `src/`, `supabase/`, `normas/`,
-`.github/`, `docs/`. Casi todo viene de un solo PR, el **#38 (`auditoria-18-fixes`)**,
-que es una campaña de arreglo hecha **fuera de esta rama** contra los 83 hallazgos de
-`docs/auditoria-18/hallazgos.md`.
+**Lo que cambió, y otra vez es grande.** `master` avanzó de `21630c0` a **`583fec4`**:
+**368 archivos, +32,183 / −5,220** en `src/`, `supabase/`, `normas/`. Los doce rubros
+tienen código nuevo, así que se relanzan los doce.
 
-Eso hace de esta la primera pasada en mucho tiempo donde *«se atacó y subió»* es una
-razón de movimiento realmente disponible. **Pero hay que verificarla, no creerla:** un
-commit que dice `fix(modelo): ... (C3, B9)` en el asunto no es prueba de que C3 esté
-cerrado. **Abre el archivo.**
+El delta viene casi entero de dos frentes que se fusionaron a `master` en el día:
+
+1. **PR #39 — «escala a 50k viajes/mes + auditoría de producción (117 hallazgos)»**
+   (`b3ac12a`). Es la campaña más grande que ha entrado a este repo. Mueve el peso de
+   agregación de TypeScript a SQL y reescribe la mitad del panel.
+2. **`escala-dashboard` / FE-14 / FE-16** (`583fec4`, `4639717`, `4197bca`): render por
+   bloques con streaming, y el «Cerebro» de `/admin` dejando de mandar 33 MB al navegador.
 
 ### Lo que el delta trae, por foco
 
-- **Campaña de arreglos PR #38** (~70 commits `fix(...)` con ID de hallazgo en el
-  asunto). Cubre los doce rubros. Los de más superficie:
-  - **Esquema / RLS**: `93dac95` (FK compuesta `(col, tenant_id)` en 33 relaciones +
-    `wa_conversacion.tenant_id NOT NULL`), `a9d88b7` (`gasto` bajo `ve_finanzas()`,
-    dominios de `liquidacion` y `ocr_confianza`), `cd8bc70` (bucket `avatares`,
-    `duplicado_de`, `revoke` de `reservar_envio_prospecto`). **Migraciones 0144–0149**
-    y **bloques 111–121** nuevos en `supabase/verificaciones.sql`.
-  - **WhatsApp / agéntico**: `8563eb5` (presupuesto por invocación; el claim huérfano
-    ya no sella el mensaje como procesado — C4, C5, A3, A27), `f7c0b2b` (bandeja
-    durable en un viaje con techo), `c26be40` (el aviso al jefe con el PDF completo).
-  - **LLM / tool calling**: `a87a69d` (loop-guard deja pasar la tool terminal,
-    truncamiento visible, caché de lectura), `b165544` (tipos readonly),
-    `52ad486` (la sonda de visión frena por usuario y tenant y deja fila de costo).
-  - **Fiscal**: `59c02ec` (IVA acreditable exige pago efectivo, LIVA 5-III),
-    `b661d2c` (peaje y diésel exigen pago electrónico, LISR 27-III / LIF 20-A-IV),
-    `22bc9ce` (RMF 9.1.8 fr. III), `43ad24a` (pie del peaje, fr. IV),
-    `99a6b7c` (la facilidad del 15% deja de concederse al 601 — el **mismo**
-    FISC-C2-1 que esta rama arregló en `17c6343`), `cdc4555`, `480ca83`.
-  - **Legal**: `361f2dc` (el decisor del prospecto no sale al modelo, aviso público
-    `/aviso/prospectos`, purga por inactividad — cierra el C2 reincidente),
-    `3d0a232`, `3d49442`, `e8cb7a2`, `8007dc0`, `3e31569`, `6c564e6`, `ed9eeea`.
-  - **Frontend / dashboard**: `4eb6243` (cada tarjeta del Resumen rotula su ventana),
-    `3a0c8df` (StatCard deja de afirmar «0% · sin movimiento» sin comparación),
-    `efd93f7` (consulta caída ≠ «aún no hay gastos»), `c007312` (detalle v2),
-    `f6c2fa9`, `cc83926`, `33a7f40`.
-  - **Auth / seguridad**: `3232ed7` (la cookie de flota ya no se firma con la service
-    role key), `f49da77` (step-up MFA falla CERRADO), `0f24e65` (/login deja de ser
-    oráculo de enumeración), `84e8247`, `dae2e8b`.
-  - **Operabilidad**: `2fbba34`, `a36f7b4`, `b27c99f`, `cd6f472`, `36f0d13`,
-    `146aae0`, `2644c79`, y **dos workflows nuevos**
-    (`.github/workflows/auto-merge-rutina.yml`, `salud-produccion.yml`).
-  - **Arquitectura**: `efab3b3` (`appUrl()` único), `db88559`+`ffb5b47`
-    (`anotarBitacora()` canónico, 16 escritores a mano migrados), `df645b2`
-    (`hoyMx()` único), `7e91498`.
-  - **Pruebas**: ~10 commits `test(...)` que anclan puertas ya existentes
-    (`9b47db7` IDOR de export, `620e854` /vendedor, `c8afcdd`, `77c0b3b`, `0063c82`).
-  - **Deps**: `5eca3ab` — **xlsx vendorizado en `vendor/`**. Esto cerró el INFRA de
-    las dos pasadas anteriores: `npm ci` ahora corre limpio en la nube.
-- **Demo 5k** (`c1c036c`, `e8f9713`): tenant demo de 5,000 camiones para capturas,
-  `scripts/demo-5k.sql`, `docs/demo-5k.md`.
-- **Los tres arreglos que vivían solo en esta rama** (`34e2d12`, `947fd9e`, `b91484b`)
-  **ya están en `master`** por su cuenta.
+- **Agregación a SQL — 18 migraciones nuevas (0150–0167)**, y es el cambio estructural
+  del día. `analytics.ts` deja de traerse filas y sumar en JS:
+  - `0150` (once agregados de `analytics.ts` a RPC), `0151` (fiscal agregado por
+    dimensiones — **la ley fiscal se queda en TS a propósito**), `0152` (comercial y
+    operación), `0153` (`getResumenNegocio` de /admin), `0154` (keyset + `pg_trgm` para
+    el registro de viajes), `0157` (cursor + `ANALYZE`), `0160` (índices de búsqueda de
+    catálogos), `0162` (limpieza de Storage), `0167` (listado de prospectos).
+  - **Hay pruebas de equivalencia JS-vs-RPC** (`975981e`, `espejo_0152.pruebas.ts`,
+    `analytics_rpc_0150.fixture.ts`). Verificar que de verdad comparan, no que existan.
+- **Integridad fiscal y dinero atómico**: `0158` (integridad fiscal), `0159` (las tres
+  escrituras de dinero que no eran atómicas: `registrar_pago_tx`, `reabrir_viaje_tx`),
+  `0163` (histórico de precios de Stripe), `0166` (**el consecutivo fiscal pasa a ser
+  serie + folio + ejercicio**, no folio a secas — `6383abf`, `5d70149`, `eb72ca7`).
+- **Stripe**: doble suscripción, doble CFDI, candado test/live, precios históricos,
+  eventos fuera de orden (`dca6b09`, `457e804`, `233f9a4`, `518e5b7`, `4aeb450`).
+- **Seguridad**: cookie de sesión `httpOnly` (`273cfa3`), CSRF en escrituras por cookie
+  (`c227559`, `src/lib/auth/csrf.ts` **nuevo**), secreto de crons en tiempo constante
+  (`58d6461`, `src/lib/auth/cron.ts` **nuevo**), teléfono ARCO fuera del log (`3b69836`),
+  hash de la llave en vez del secreto (`bb88dbe`).
+- **Día de México**: `0161` (fechas locales) y una campaña entera —`cca9f84`, `496b5a7`,
+  `f723099`, `6e694f0`, `8ad15a7`— de cortes de periodo que se corrían un día.
+- **Resiliencia**: OCR caído deja de degradarse en silencio (`0d1d7fe`), OpenRouter con
+  `maxRetries 0` y timeout (`19a10e5`), Meta clasificado (`d0ad9a8`), latido de crons
+  (`883055e`), y con el LLM caído se contesta **el cuadre real** (`9ef9690`).
+- **Frontend por bloques (FE-14/FE-16)**: `dashboard/bloque.tsx`, `serie-diaria*.ts`,
+  `paginar-*.ts`, `combo-catalogo.tsx`, `limite-error.tsx` — todos **nuevos**. El latido
+  del Cerebro no corre con la pestaña oculta (`75f8418`) y refresca por delta (`7305ee1`).
+- **`verificaciones.sql` creció +1,957 líneas** (bloques 122–135).
 
-### El merge, y los tres conflictos que resolví
+### El merge, y el conflicto único
 
-`673496f` mergea `origin/master` (`21630c0`) en la rama. Tres conflictos, los tres
-porque **la rama y `master` arreglaron el MISMO hallazgo de formas distintas**. En los
-tres tomé el lado de `master`, y la razón importa para quien audite:
+`4f0f25a` mergea `origin/master` (`583fec4`). **Un solo conflicto**, en
+`src/lib/likida/fiscal.ts` → `causasDe()`, y otra vez porque la rama y `master`
+tocaron lo mismo por caminos distintos. Aquí **conservé los dos lados**:
 
-| Archivo | La rama hizo | `master` hizo | Se quedó |
-|---|---|---|---|
-| `src/lib/likida/processor.ts` | `enRuta` → apaga solo el *reenganche* del pendiente | `incluirDespacho: false` → **salta despacho y asignación enteros** cuando hay viaje abierto | `master` (más amplio; subsume al de la rama) |
-| `src/lib/likida/processor_dueno_maneja.test.ts` | prueba del `enRuta` | prueba del `incluirDespacho` | `master` |
-| `supabase/verificaciones.sql` | **bloque 111** que verifica las columnas GENERADAS de 0140/0142/0143 | 0140–0143 **EXENTAS con razón escrita**, y el 111 es la RLS de `liquidacion` (0144) | `master` |
+| Lado | Qué aportó | Se quedó |
+|---|---|---|
+| la rama | reestructura de **FISC-C3-1**: el combustible se juzga con `medioNoAdmitidoCombustible` (lista cerrada LISR 27-III), no con `formaPago === '01'` | **sí** |
+| `master` | helper `sobreTopeEfectivo()`, que prefiere la celda ya calculada por el motor sobre recalcular `monto > tope` en el panel | **sí** |
 
-**Consecuencia auditable, dicha en voz alta:** el `reengancharPendiente` que la rama
-añadió a `despacho_wa.ts:238` y `asignar_wa.ts:298` **sigue en el árbol pero ya no lo
-pasa nadie** (`processor.ts:813,916` usan la forma de `master`) — es código defensivo
-sin call site. Y la verificación de base de las columnas GENERADAS de la 0140/0142/0143
-**se perdió**: hoy están exentas por escrito, no verificadas. Las dos cosas son válidas
-como hallazgo si alguien las quiere levantar.
+Resultado: el tope de efectivo sigue **sin** aplicar al combustible (que es la corrección
+de FISC-C3-1) y para el resto ahora pasa por la celda del motor. Los imports de ambos
+lados quedaron unidos (`diasSobreTope`, `CONCEPTOS_CON_TOPE_ALIMENTACION`, `getConfig`,
+`FORMA_PAGO_SIN_PAGAR`, `medioNoAdmitidoCombustible`).
+
+### Dos cosas que la compuerta cazó ANTES de los auditores
+
+Las dos son de `master`, no del merge, y están arregladas con prueba y commit atómico:
+
+- **OPER-C4-1** (`923bbfb`): `master` versionaba un **enlace simbólico**
+  `node_modules -> /Users/javiercamaraportepetit/likida/node_modules` (`c311997`). Se
+  coló porque `.gitignore` decía `node_modules/` **con diagonal**, forma que solo casa
+  directorios. Al clonar, la caja de herramientas entera se queda sin piso: `npx vitest`
+  muere con `Cannot find module 'vitest/config'` — no fallan unas pruebas, no arranca
+  ninguna.
+- **FMT-C4-1** (`3967d63`): la compuerta arrancó **roja** en `mxnCompacto`.
+  `maximumFractionDigits: 1` a secas saca a ICU de su *compact rounding* y conserva el
+  cero de cola: `"$9,000.0 M"`, diez caracteres en la tarjeta de ocho — el desbordamiento
+  que FE-17 vino a cerrar.
 
 ## Producto en una línea
 
@@ -96,60 +95,70 @@ de la flota. Un error que él vea en la sala cuesta el trato.
 - `/dashboard` — panel del CLIENTE (flota_admin, contador, encargado), ~31 páginas, todas
   filtradas al tenant. Reusa los componentes de `/admin`; no hay segunda librería de UI.
 
-## Inventario (22-ago, sobre `673496f`)
+## Inventario (23-ago, sobre `3967d63`)
 
-| Cosa | Cuánto | Antes (21-ago) |
+| Cosa | Cuánto | Antes (22-ago) |
 |---|---|---|
-| Archivos `.ts`/`.tsx` en `src/` | **950** | 885 |
-| De ellos, `*.test.ts*` | **430** | 387 |
-| Migraciones en `supabase/migrations/` | **146** (última `0149_wa_claim_completado.sql`) | 140 |
-| Fichas normativas en `normas/*.yaml` | **25** | 24 |
-| Rutas `route.ts` bajo `src/app/api/` | 40 | 40 |
+| Archivos `.ts`/`.tsx` en `src/` | **1,027** | 950 |
+| De ellos, `*.test.ts*` | **483** | 430 |
+| Migraciones en `supabase/migrations/` | **163** (última `0167_prospectos_listado.sql`) | 146 |
+| Fichas normativas en `normas/*.yaml` | 24 | 25 |
+| Rutas `route.ts` bajo `src/app/api/` | **42** | 40 |
 
 ## Dónde está cada cosa
 
 - **Motor de dinero (puro):** `src/lib/likida/cuadre/` (`engine.ts`, `guardia.ts`,
-  `resumen.ts`, `leyendas.ts`), `src/lib/likida/liquidacion/` (`deducibilidad.ts`, `pdf.ts`).
+  `resumen.ts`, `leyendas.ts`, `tope_alimentacion.ts`), `src/lib/likida/liquidacion/`
+  (`deducibilidad.ts`, `pdf.ts`, `id.ts`).
 - **Ciclo de WhatsApp:** `src/lib/likida/processor.ts`, `conv.ts` (mutex + barrera de
   ráfaga), `despacho_wa.ts`, `oficina_wa.ts`, `talacha_wa.ts`, `wa_pendientes.ts`,
-  ruta `src/app/api/webhook/whatsapp/route.ts`.
+  ruta `src/app/api/webhook/whatsapp/route.ts`, y el drenado nuevo
+  `src/app/api/cron/wa-pendientes/{cola/route.ts,drenado.ts}`.
 - **Agentes / LLM:** `src/lib/agents/` (copiloto, copiloto-tools, copiloto-acciones),
   `src/lib/llm/` (`openrouter.ts`, `models.ts`, `tool-executor.ts`),
   `src/lib/likida/tools.ts`, `src/lib/likida/agentes/`.
 - **Acceso a datos:** `src/lib/likida/repo.ts` (frontera única pretendida), `pg.ts`,
-  `pg_errores.ts`, `duplicados.ts`, `analytics.ts` (`exigir()`, `traerTodo()`).
-- **Auth y tenant:** `src/lib/auth/` (`guard.ts`, `visibilidad.ts`, `tenant-efectivo.ts`),
-  `middleware.ts`, `src/lib/env.ts`, `src/lib/ratelimit.ts`.
+  `pg_errores.ts`, `duplicados.ts`, `analytics.ts` (`exigir()`, `traerTodo()`,
+  `acotada()`), `viajes_registro.ts`, y **los RPC de 0150–0154** que ahora hacen la suma.
+- **Auth y tenant:** `src/lib/auth/` (`guard.ts`, `visibilidad.ts`, `tenant-efectivo.ts`,
+  **`csrf.ts`**, **`cron.ts`**), `middleware.ts`, `src/lib/env.ts`,
+  `src/lib/ratelimit.ts`, `src/lib/supabase/cookies.ts`.
 - **Fiscal:** `normas/*.yaml` es la fuente de verdad; el código a comparar es
   `liquidacion/deducibilidad.ts`, `cuadre/engine.ts`, `cuadre/leyendas.ts`,
-  `liquidacion/pdf.ts`, `intake/cfdi.ts`, `intake/sat.ts`, `facturacion/`.
+  `fiscal.ts`, `liquidacion/pdf.ts`, `intake/cfdi.ts`, `intake/sat.ts`, `facturacion/`,
+  **y ahora también `supabase/migrations/0151_fiscal_agregado.sql`**.
 - **Legal / datos personales:** `src/lib/likida/privacidad.ts`, `intake/sanitizar.ts`,
   `export/`, migraciones `*aviso_privacidad*`, `src/app/aviso/prospectos/page.tsx`,
   todo `src/lib/llm/` (cada salida a un modelo externo es una transferencia).
-- **Operabilidad:** `src/lib/observability/`, `src/lib/logger.ts`,
-  `.github/workflows/{ci.yml,auto-merge-rutina.yml,salud-produccion.yml}`,
-  `supabase/verificaciones.sql`, `scripts/`.
+- **Operabilidad:** `src/lib/observability/`, `src/lib/logger.ts`, `src/lib/admin/salud.ts`,
+  `.github/workflows/{ci.yml,ci-postgres.yml,auto-merge-rutina.yml,salud-produccion.yml}`,
+  `supabase/verificaciones.sql`, `scripts/` (incluido `respaldo-storage.sh`).
 - **Facturación / piloto de visión:** `src/lib/likida/facturacion/`, en particular
   `adaptadores/piloto_vision.ts` y `conectores/portales_facturacion.ts`.
 
 ## Los hallazgos abiertos que traes de la pasada anterior
 
-Están en `docs/auditoria-18/<rubro>-c2.md` (114 hallazgos: 16 CRÍT · 41 ALTO ·
-39 MEDIO · 18 BAJO) y en `docs/auditoria-18/hallazgos.md` (los 83 de la 18).
-**Los abiertos se verifican PRIMERO.** Si el PR #38 los cerró, se dice — es lo único
-que justifica subir la nota. Si siguen ahí, **REINCIDENTE**.
+Están en `docs/auditoria-18/<rubro>-c3.md` (92 hallazgos: 9 CRÍT · 33 ALTO · 33 MEDIO ·
+17 BAJO). **Los abiertos se verifican PRIMERO.** Si el delta los cerró, se dice — es lo
+único que justifica subir la nota. Si siguen ahí, **REINCIDENTE**.
 
-Los 13 CRÍTICOS que quedaron abiertos el 21-ago:
-- **8 del piloto de visión** (`facturacion/adaptadores/piloto_vision.ts`), todos detrás
-  de `FACTURACION_PILOTO`, hoy apagada.
-- **2 legales**: el aviso de privacidad sin pantalla de captura
-  (`tenant.domicilio_fiscal` / `url_aviso_privacidad` / `contacto_privacidad` solo los
-  escribe `qa-motor.ts`); y el decisor del prospecto hacia un modelo externo
-  (**este último parece atacado por `361f2dc` — verifícalo**).
-- **1 de esquema**: la FK compuesta cubría 5 de 40 relaciones
-  (**`93dac95` dice cubrir 33 — verifícalo contando, no leyendo el asunto**).
-- **1 de arquitectura**: despacho y chofer se pisan la misma fila de `wa_conversacion`.
-- **1 de pruebas**: ninguna prueba corre con la palanca del piloto puesta.
+Un asunto de commit que cita un ID **no es prueba** de que el hallazgo esté cerrado.
+**Abre el archivo y cuenta.**
+
+Lo que quedó pidiendo decisión del dueño (no más código) al cerrar la c3, y que sigue
+siendo cierto salvo que lo verifiques:
+
+1. **El piloto de visión** — 8 críticos íntegros, todos detrás de `FACTURACION_PILOTO`,
+   apagada. El doc del demo manda encenderla.
+2. **`master` sin protección de rama**, y `auto-merge-rutina.yml:29-43` (`contents:
+   write`) cuyo único control de acceso es cómo se llama una rama, en repo público.
+3. **El tenant del demo** (`scripts/demo-5k.sql:45,58`) trae régimen **601** con la
+   facilidad del 15% concedida a mano — lo que `99a6b7c` acaba de prohibir.
+4. **`/aviso/<tenant>` es 404** para toda flota real: falta la pantalla de captura.
+5. **La clave 624 (Coordinados)** no existe en `REGIMENES` ni en el CHECK de la 0056.
+6. Fuera del alcance de `d0e9844`: el numerador del 15% vive **también en SQL**
+   (`sumar_combustible_ejercicio`, `0112:151`, `0084:19`) y sigue filtrando
+   `forma_pago = '01'`. Pide migración; aquí no hay base para verificarla.
 
 ## Trampas ya pisadas (no volver a levantarlas como hallazgo)
 
@@ -175,6 +184,9 @@ Los 13 CRÍTICOS que quedaron abiertos el 21-ago:
   ninguna tool **nueva** rompa esa regla.
 - El formato de cifras vive **solo** en `src/lib/formato.ts`; hay una prueba que falla si
   aparece `toLocaleString('es-MX')` en otro archivo.
+- **La ley fiscal se quedó en TS a propósito** al bajar la agregación a SQL (`0151`): si
+  encuentras lógica de deducibilidad *duplicada* en SQL eso sí es hallazgo, pero que el
+  agregado viva en SQL y la regla en TS es la decisión, no el error.
 - `.gitignore:34` ignora `docs/auditoria-*/`; los reportes entran con `git add -f`.
 
 ## Restricciones de esta corrida (nube)
@@ -183,7 +195,6 @@ Los 13 CRÍTICOS que quedaron abiertos el 21-ago:
   `npm run build`: pide Supabase, OpenRouter, Facturapi y Upstash, que aquí no existen, y su
   fallo no dice nada del código.
 - **NO se corre `pruebas-manuales/*.prueba.ts`**: hacen llamadas reales de pago.
-- **El INFRA de xlsx ya NO aplica.** `5eca3ab` vendorizó `xlsx` en `vendor/`; esta ronda
-  corrió `npm ci` limpio, sin workaround y sin tocar `package.json`.
 - No hay `.env`, ni base, ni red hacia proveedores. Todo hallazgo se sostiene por lectura de
-  código y por la suite offline.
+  código y por la suite offline. **Ninguna migración se puede ejecutar aquí**: lo que digas
+  de SQL sale de leer el archivo.
