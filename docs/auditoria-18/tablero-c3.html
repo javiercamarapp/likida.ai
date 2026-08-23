@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Auditoría 18 · continuación 3 — 22-ago-2026</title>
+<style>
+  :root{
+    --tinta:#12151c; --papel:#f6f5f2; --tarjeta:#fffefb; --linea:#e2ded4;
+    --tenue:#6b6f78; --baja:#b8442e; --sube:#2f6b46;
+    --crit:#a32617; --alto:#c2662a; --medio:#8a7a2c; --bajo:#6b7280;
+    --n4:#b8442e; --n56:#a8801f; --n7:#2f6b46;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--papel);color:var(--tinta);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    padding:34px 38px 46px;max-width:1180px}
+  h1{font-size:25px;letter-spacing:-.4px;font-weight:640}
+  .sub{color:var(--tenue);font-size:13.5px;margin-top:5px;max-width:960px}
+  .cinta{display:flex;gap:12px;margin:22px 0 26px;flex-wrap:wrap}
+  .caja{background:var(--tarjeta);border:1px solid var(--linea);border-radius:9px;
+    padding:13px 17px;min-width:140px}
+  .caja .k{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--tenue)}
+  .caja .v{font-size:27px;font-weight:670;letter-spacing:-.8px;margin-top:3px}
+  .caja .n{font-size:11.5px;color:var(--tenue);margin-top:2px}
+  .roja{color:var(--baja)} .verde{color:var(--sube)}
+  .envoltura{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;background:var(--tarjeta);
+    border:1px solid var(--linea);border-radius:9px;overflow:hidden;font-size:13.5px}
+  th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;
+    color:var(--tenue);padding:9px 12px;border-bottom:1px solid var(--linea);font-weight:600}
+  td{padding:9px 12px;border-bottom:1px solid #f0ede6;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.n{font-variant-numeric:tabular-nums;font-weight:700;font-size:16px;width:52px}
+  td.d{font-variant-numeric:tabular-nums;font-weight:640;width:52px}
+  .g4{color:var(--n4)} .g56{color:var(--n56)} .g7{color:var(--n7)}
+  .sev{display:inline-block;min-width:19px;text-align:center;font-variant-numeric:tabular-nums;
+    font-size:12px;font-weight:640;padding:1px 5px;border-radius:4px;margin-right:3px}
+  td.sevs{white-space:nowrap;width:148px}
+  .sc{background:#f7e3e0;color:var(--crit)} .sa{background:#fbeadb;color:var(--alto)}
+  .sm{background:#f5f1da;color:var(--medio)} .sb{background:#eef0f2;color:var(--bajo)}
+  h2{font-size:15px;margin:32px 0 11px;letter-spacing:-.2px}
+  .nota{color:var(--tenue);font-size:12.5px;margin-top:9px;max-width:960px}
+  .gate{background:var(--tarjeta);border:1px solid var(--linea);border-radius:9px;padding:15px 18px}
+  .gate .fila{display:flex;gap:10px;align-items:baseline;padding:3px 0;font-size:13.5px}
+  .gate .et{min-width:150px;color:var(--tenue);font-size:12px}
+  code{font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:#efece4;
+    padding:1px 5px;border-radius:4px}
+  .serie{display:flex;gap:34px;align-items:flex-end;background:var(--tarjeta);
+    border:1px solid var(--linea);border-radius:9px;padding:18px 24px 13px}
+  .col{text-align:center;width:130px}
+  .col .b{background:#c8c2b4;border-radius:4px 4px 0 0;margin:0 auto;width:56px}
+  .col .b.hoy{background:#8f9a86}
+  .col .lbl{font-size:11.5px;color:var(--tenue);margin-top:7px}
+  .col .val{font-size:17px;font-weight:670;margin-top:3px;font-variant-numeric:tabular-nums}
+  .est{display:inline-block;font-size:10.5px;font-weight:660;letter-spacing:.4px;
+    padding:1px 6px;border-radius:4px;text-transform:uppercase}
+  .e-ok{background:#dfeadf;color:var(--sube)} .e-pend{background:#f5f1da;color:var(--medio)}
+  .e-due{background:#eef0f2;color:var(--bajo)}
+  ul{margin:8px 0 0 19px;font-size:13.5px} li{margin-bottom:7px}
+  .aviso{background:#fdf3ef;border:1px solid #e8cfc6;border-radius:9px;padding:14px 18px;
+    font-size:13.5px;margin:0 0 22px}
+</style>
+</head>
+<body>
+
+<h1>Auditoría 18 · continuación 3 — 22-ago-2026</h1>
+<div class="sub">
+  Tercera pasada de <strong>continuación</strong> sobre el PR&nbsp;#34 (rama
+  <code>claude/auditoria-18</code>), desatendida, en la nube. Se auditó el delta
+  <code>d432e89..21630c0</code>: <strong>116 commits, 252 archivos, +16,055/−1,348</strong>,
+  que es casi entero el <strong>PR&nbsp;#38</strong> — una campaña de arreglo hecha
+  <em>fuera</em> de esta rama contra los 83 hallazgos de la ronda 18.
+</div>
+
+<div class="aviso">
+  <strong>La global sube 1.0 y esta vez la razón es trabajo, no una mirada más suave.</strong>
+  Once de los doce auditores verificaron hallazgos abiertos <em>abriendo el archivo</em> y
+  encontraron que el PR&nbsp;#38 los cerró de verdad; varios lo comprobaron rompiendo la
+  función a propósito para ver la prueba ponerse roja. Aun así la global se queda en
+  <strong>5.8</strong>: quedan <strong>6 CRÍTICOS sin cerrar</strong> y el rubro fiscal
+  <em>no se movió</em>.
+</div>
+
+<div class="cinta">
+  <div class="caja"><div class="k">Global</div><div class="v verde">5.8</div>
+    <div class="n">+1.0 contra la pasada 2 (4.8)</div></div>
+  <div class="caja"><div class="k">Rubros</div><div class="v">12</div>
+    <div class="n">los 12, con código cambiado</div></div>
+  <div class="caja"><div class="k">Hallazgos</div><div class="v">92</div>
+    <div class="n">9 crít · 33 alto · 33 medio · 17 bajo</div></div>
+  <div class="caja"><div class="k">Arreglados</div><div class="v verde">3</div>
+    <div class="n">3 de los 9 críticos, con prueba</div></div>
+  <div class="caja"><div class="k">Compuerta</div><div class="v verde">verde</div>
+    <div class="n">5,544 pruebas · tsc · lint</div></div>
+</div>
+
+<h2>1 · Los doce rubros — el color es la NOTA, nunca el delta</h2>
+<div class="envoltura">
+<table>
+  <thead><tr>
+    <th>Rubro</th><th>Hoy</th><th>Δ</th><th class="sevs">Hallazgos</th>
+    <th>Razón del movimiento, y el riesgo mayor de hoy</th>
+  </tr></thead>
+  <tbody>
+    <tr><td>Modelo de datos</td><td class="n g7">7</td><td class="d verde">+2</td>
+      <td class="sevs"><span class="sev sa">1</span><span class="sev sm">2</span><span class="sev sb">2</span></td>
+      <td><em>se atacó y subió</em> — la FK compuesta, contada una por una: <strong>38 de 43</strong> relaciones (antes 5 de 39). Riesgo: las 5 que faltan, tres tapadas por deniega-todo.</td></tr>
+    <tr><td>Backend y API</td><td class="n g7">7</td><td class="d verde">+1</td>
+      <td class="sevs"><span class="sev sa">2</span><span class="sev sm">1</span><span class="sev sb">3</span></td>
+      <td><em>se atacó y subió</em> — 8 de 13 abiertos cerrados <strong>con prueba nombrada</strong>. Riesgo: <code>registrarPago</code> decide con una lectura y escribe sin llave.</td></tr>
+    <tr><td>Seguridad</td><td class="n g7">7</td><td class="d verde">+1</td>
+      <td class="sevs"><span class="sev sa">3</span><span class="sev sm">3</span><span class="sev sb">2</span></td>
+      <td><em>se atacó y subió</em> — los 6 abiertos cerrados, verificados abriendo el archivo. Riesgo: <code>bitacora_auditoria</code> la escribe cualquiera del tenant firmando con el <code>actor_id</code> de otro.</td></tr>
+    <tr><td>Frontend</td><td class="n g56">6</td><td class="d verde">+1</td>
+      <td class="sevs"><span class="sev sa">2</span><span class="sev sm">2</span></td>
+      <td><em>se atacó y subió</em> — los 7 abiertos de la 18 cerrados, 5 anclados con prueba propia. Riesgo: los 9 de la pasada 2 siguen los 9.</td></tr>
+    <tr><td>Sistema agéntico</td><td class="n g56">6</td><td class="d verde">+2</td>
+      <td class="sevs"><span class="sev sa">2</span><span class="sev sm">3</span><span class="sev sb">2</span></td>
+      <td><em>se atacó y subió</em> — el CRÍTICO cerrado y el ciclo de vida reconstruido (claim <em>reclamado</em> ≠ <em>completado</em>, mig. 0149). Riesgo: el «listo» sin presupuesto recibe un cuadre que parece final.</td></tr>
+    <tr><td>Tool calling</td><td class="n g56">6</td><td class="d verde">+1</td>
+      <td class="sevs"><span class="sev sa">4</span><span class="sev sm">4</span><span class="sev sb">1</span></td>
+      <td><em>se atacó y subió</em> — los 7 de la ronda 18 cerrados con código y prueba unitaria. Riesgo: <code>piloto_vision.ts</code> no tiene un byte de diferencia en el delta.</td></tr>
+    <tr><td>Cumplimiento legal</td><td class="n g56">6</td><td class="d verde">+1</td>
+      <td class="sevs"><span class="sev sc">2</span><span class="sev sa">4</span><span class="sev sm">5</span><span class="sev sb">2</span></td>
+      <td><em>se atacó y subió</em> + <em>mirada más profunda</em> — 8 de 9 abiertos cerrados. Riesgo: el aviso de la flota sigue sin pantalla de captura; <code>/aviso/&lt;tenant&gt;</code> es 404 para toda flota real.</td></tr>
+    <tr><td>Pruebas</td><td class="n g56">6</td><td class="d verde">+1</td>
+      <td class="sevs"><span class="sev sc">1</span><span class="sev sa">1</span><span class="sev sm">2</span></td>
+      <td><em>se atacó y subió</em> — 6 puertas nuevas verificadas <strong>rompiendo la función</strong>. Riesgo: el lease del claim se desarma con 172 pruebas en verde.</td></tr>
+    <tr><td>Operabilidad y DX</td><td class="n g56">6</td><td class="d verde">+1</td>
+      <td class="sevs"><span class="sev sc">2</span><span class="sev sa">3</span><span class="sev sm">2</span></td>
+      <td><em>se atacó y subió</em>, templado por <em>mirada más profunda</em> — 8 de 9 cerrados, pero apareció un auto-merge que escribe en <code>master</code> y <code>master</code> sigue sin protección.</td></tr>
+    <tr><td>Arquitectura</td><td class="n g56">5</td><td class="d verde">+1</td>
+      <td class="sevs"><span class="sev sc">1</span><span class="sev sa">3</span><span class="sev sm">3</span><span class="sev sb">3</span></td>
+      <td><em>se atacó y subió</em> — <code>appUrl()</code>, <code>anotarBitacora()</code> y <code>hoyMx()</code> quedaron únicos <strong>con guardia estructural</strong>. Su CRÍTICO se arregló hoy (<code>35ba042</code>).</td></tr>
+    <tr><td>Cumplimiento fiscal</td><td class="n g4">4</td><td class="d">0</td>
+      <td class="sevs"><span class="sev sc">3</span><span class="sev sa">3</span><span class="sev sm">4</span><span class="sev sb">2</span></td>
+      <td><strong>Sin movimiento, y es el resultado del día.</strong> El PR #38 cerró 6 de 7 abiertos; una <em>mirada más profunda</em> encontró tres CRÍTICOS nuevos del mismo tamaño. Se cancelaron.</td></tr>
+    <tr><td>Rendimiento y costo</td><td class="n g4">4</td><td class="d verde">+1</td>
+      <td class="sevs"><span class="sev sa">5</span><span class="sev sm">2</span></td>
+      <td><em>se atacó y subió</em> — presupuesto por invocación, bandeja en un viaje, cola 600→300. Riesgo: un vuelo del piloto son 625.5 s contra un <code>maxDuration</code> de 300.</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="nota">
+  Suma 70 → <strong>5.8</strong>. Las notas describen el árbol que los auditores vieron
+  (<code>38eef84</code>). Los tres arreglos entraron <strong>después</strong>, así que
+  fiscal y arquitectura quedan <strong>conservadoras a propósito</strong>: no re-audité a
+  nadie para no inflar el número con mi propio trabajo.
+</div>
+
+<h2>2 · Serie histórica de la global</h2>
+<div class="serie">
+  <div class="col"><div class="b" style="height:122px"></div>
+    <div class="val">6.1</div><div class="lbl">ronda 18<br>20-ago</div></div>
+  <div class="col"><div class="b" style="height:96px"></div>
+    <div class="val">4.8</div><div class="lbl">continuación<br>21-ago</div></div>
+  <div class="col"><div class="b hoy" style="height:116px"></div>
+    <div class="val">5.8</div><div class="lbl">continuación 3<br>22-ago</div></div>
+</div>
+<div class="nota">
+  El 6.1 medía menos superficie de la que creía; el 4.8 fue la mirada honesta sobre código
+  nuevo sin las reglas viejas. El 5.8 de hoy es el primero de la serie que sube por
+  <strong>arreglos verificados</strong>, no por una vara más blanda — y aun así no vuelve
+  al 6.1, porque quedan seis críticos abiertos.
+</div>
+
+<h2>3 · Los nueve CRÍTICOS, con su estado</h2>
+<div class="envoltura">
+<table>
+  <thead><tr><th>Estado</th><th>Rubro</th><th>Qué es</th><th>Dónde / por qué</th></tr></thead>
+  <tbody>
+    <tr><td><span class="est e-ok">arreglado</span></td><td>Fiscal</td>
+      <td>El combustible pagado con un medio fuera de la lista de la LISR 27-III salía «Deducible para ISR» en verde</td>
+      <td><code>d0e9844</code> · <code>'06'</code>, <code>'08'</code>, <code>'12'</code>, <code>'17'</code>, <code>'23'</code> se salían por el hueco. Diésel de $11,600 con <code>'06'</code>: $11,600 deducible + $1,600 de IVA donde iba $0. 8 pruebas rojas sin el arreglo.</td></tr>
+    <tr><td><span class="est e-ok">arreglado</span></td><td>Fiscal</td>
+      <td>El panel del contador acreditaba el IVA de un CFDI no pagado que el motor ya rechazaba</td>
+      <td><code>a44efa2</code> · CFDI PPD (<code>'99'</code>): <strong>$8,000 en el panel, $0.00 en el PDF</strong> del mismo UUID. El que se teclea en la declaración es el del panel.</td></tr>
+    <tr><td><span class="est e-ok">arreglado</span></td><td>Arquitectura</td>
+      <td>La pantalla nueva de detalle reconstruía la cubeta fiscal del motor</td>
+      <td><code>35ba042</code> · le faltaba <code>rfc_receptor</code> y le sobraba <code>combustible_efectivo</code>. Dos definiciones de «no deducible» en la misma pantalla. 5 pruebas rojas sin el arreglo.</td></tr>
+    <tr><td><span class="est e-pend">pendiente</span></td><td>Fiscal</td>
+      <td>El tenant del demo trae régimen 601 con la facilidad del 15% concedida a mano</td>
+      <td><code>scripts/demo-5k.sql:45,58</code> · es dato de siembra, no código: se arregla en el script del demo, y es decisión del dueño porque cambia lo que se enseña en la sala.</td></tr>
+    <tr><td><span class="est e-pend">pendiente</span></td><td>Legal</td>
+      <td>El aviso de privacidad de la flota no tiene pantalla de captura</td>
+      <td>REINCIDENTE sin un solo cambio · el arreglo es una pantalla nueva, no un parche.</td></tr>
+    <tr><td><span class="est e-pend">pendiente</span></td><td>Legal</td>
+      <td>El Redactor manda el nombre del decisor a un modelo externo, y el aviso dice que eso no pasa</td>
+      <td><code>redactor.ts:163</code> vs <code>privacidad.ts:758</code> · pide decisión de producto sobre datos de terceros.</td></tr>
+    <tr><td><span class="est e-pend">pendiente</span></td><td>Operabilidad</td>
+      <td>El repo es público y el único control de acceso a <code>master</code> es cómo se llama una rama</td>
+      <td><code>auto-merge-rutina.yml:29-43</code> con <code>contents: write</code> · es configuración del repo, no código: la decide el dueño en Settings.</td></tr>
+    <tr><td><span class="est e-pend">pendiente</span></td><td>Operabilidad</td>
+      <td><code>master</code> sigue sin protección de rama</td>
+      <td><code>"protected": false</code> por API · lo mismo: Settings, no un commit.</td></tr>
+    <tr><td><span class="est e-pend">pendiente</span></td><td>Pruebas</td>
+      <td>El lease del claim de WhatsApp se desarma entero con 172 pruebas en verde</td>
+      <td><code>conv.ts:389-390</code>, el doble de <code>conv_claim_lease.test.ts:32-38</code> tiene <code>is</code>/<code>lt</code> que no registran nada · <strong>tope de 3 vueltas gastado</strong>.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>4 · Reincidentes — un hallazgo que vuelve es peor noticia que uno nuevo</h2>
+<ul>
+  <li><strong>El piloto de visión, íntegro.</strong> Los 8 críticos que la pasada 2 le
+  encontró siguen letra por letra: <code>git log</code> de esos archivos no trae un solo
+  commit del PR #38. Sigue detrás de <code>FACTURACION_PILOTO</code>, apagada.
+  <strong>El doc del demo manda encenderla — no la enciendas antes de decidir esto.</strong></li>
+  <li><strong>Los 9 hallazgos de frontend de la pasada 2</strong> siguen los 9: no
+  estaban en el alcance del PR #38.</li>
+  <li><strong>El aviso de privacidad sin pantalla de captura</strong>, tercera pasada
+  seguida.</li>
+  <li><strong>La clave 624 (Coordinados)</strong> sigue sin existir en <code>REGIMENES</code>
+  ni en el CHECK de la 0056: pide migración.</li>
+</ul>
+
+<h2>5 · Estado de la compuerta</h2>
+<div class="gate">
+  <div class="fila"><span class="et">npm test</span>
+    <strong>435 archivos · 5,544 pruebas · 1 saltada</strong> · <span class="est e-ok">verde</span> · 75 s</div>
+  <div class="fila"><span class="et">npx tsc --noEmit</span>
+    <strong>sin salida</strong> · <span class="est e-ok">limpio</span></div>
+  <div class="fila"><span class="et">npm run lint</span>
+    <strong>0 errores · 5 avisos</strong> (los mismos de la línea base) · <span class="est e-ok">verde</span></div>
+  <div class="fila"><span class="et">npm run build</span>
+    <span class="est e-due">no se corre</span> · pide Supabase, OpenRouter, Facturapi y Upstash; aquí no existen</div>
+  <div class="fila"><span class="et">npm ci</span>
+    <strong>limpio, sin workaround</strong> · <code>5eca3ab</code> vendorizó <code>xlsx</code> y cerró el INFRA de las dos pasadas anteriores</div>
+</div>
+<div class="nota">
+  La compuerta arrancó ROJA tras el merge de <code>master</code>, con dos fallos — y los
+  dos eran <strong>secuela de mi propia resolución del merge</strong>, no de
+  <code>master</code> ni de la rama por separado. Quedan explicados en
+  <code>compuerta.md</code> y corregidos en <code>38eef84</code>.
+  <strong>Un hallazgo del auditor de operabilidad que no cierro:</strong> la suite falló
+  1 de 2 corridas completas en <code>engine_iva_medio_pago.test.ts:35</code> y pasa
+  aislada — la compuerta no es determinista. En mis cuatro corridas de hoy no se
+  reprodujo; queda abierto, no descartado.
+</div>
+
+<h2>6 · Lo que necesita decisión del dueño, no más código</h2>
+<ul>
+  <li><strong>El piloto de visión.</strong> Ocho críticos, convergencia de tres auditores
+  otra vez. Todo detrás de una palanca apagada. Encenderla es la decisión.</li>
+  <li><strong>Protección de rama en <code>master</code> y el alcance del auto-merge.</strong>
+  Es Settings del repo; ningún commit lo arregla.</li>
+  <li><strong>El tenant del demo con régimen 601</strong> y la facilidad del 15%: lo que se
+  enseña en la sala contradice el arreglo que se acaba de publicar.</li>
+  <li><strong>La pantalla de captura del aviso de privacidad</strong>, tercera pasada
+  pidiéndola.</li>
+</ul>
+
+</body>
+</html>
