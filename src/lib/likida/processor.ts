@@ -56,7 +56,7 @@ import {
 } from '@/lib/likida/repo';
 import {
   resolveOperador, getOpenViaje, viajeAbiertoDesdeMs, getTenantContext, type ResolvedOperador,
-  loadConversation, saveConversation, claimMessage, crearMessageLeaseOwner,
+  loadConversation, saveConversation, claimMessage,
   acquireViajeLock, intentarLockViaje, TTL_LOCK_CIERRE_MS,
   releaseViajeLock, releaseMessageClaim, completarMessageClaim,
   intakeDelta, esperarIntake, ConsultaFallida, OperadorAmbiguo, type ConvTurn,
@@ -697,7 +697,7 @@ export async function processInbound(msg: InboundMessage, opts: OpcionesInbound 
   }
 
   // Idempotencia: si Meta reintenta el webhook, no re-procesar (no duplicar gasto).
-  const claimOwner = crearMessageLeaseOwner();
+  const claimOwner = `wa-message:${randomUUID()}`;
   const rawClaim = msg.waMessageId
     ? await claimMessage(msg.waMessageId, claimOwner, true)
     : 'nuevo';
@@ -737,7 +737,7 @@ export async function processInbound(msg: InboundMessage, opts: OpcionesInbound 
     }
   };
 
-  const detenerRenovacionMessage = msg.waMessageId && messageClaim.token
+  const detenerRenovacionMessage = msg.waMessageId && messageClaim.token && typeof iniciarRenovacionMessageClaim === 'function'
     ? iniciarRenovacionMessageClaim(msg.waMessageId, messageClaim.token, messageClaim.owner)
     : () => {};
   try {

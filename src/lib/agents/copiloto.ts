@@ -20,6 +20,7 @@ import { generateWithTools } from '@/lib/llm/openrouter';
 import { toolSchemas, makeExecutor, registerTool, type ToolContext } from '@/lib/llm/tool-executor';
 import { validarBloques, cifrasRespaldadas, extraerNumeros, type Bloque } from './analista';
 import { logger } from '@/lib/logger';
+import { combineAbortSignals } from '@/lib/llm/runtime-signal';
 import { ahoraMs } from '@/lib/saludo';
 import { TZ_MX, hoyMx } from '@/lib/formato';
 import { TOOLS_COPILOTO_LECTURA } from './copiloto-tools';
@@ -173,6 +174,7 @@ export async function ejecutarCopiloto(opts: {
   userId: string;
   mensajes: Array<{ rol: 'usuario' | 'asistente'; texto: string }>;
   timeoutMs?: number;
+  signal?: AbortSignal;
   onPaso?: (ev: { fase: 'inicio' | 'fin'; tool: string }) => void;
 }): Promise<RespuestaCopiloto> {
   const runId = randomUUID();
@@ -180,7 +182,7 @@ export async function ejecutarCopiloto(opts: {
   // del copiloto lo lee (todas son cross-tenant vía lib/admin). Si alguna
   // futura lo leyera, un id vacío truena ruidoso en vez de leer una flota
   // equivocada en silencio.
-  const ctx: ToolContext = { tenantId: '', conversationId: runId };
+  const ctx: ToolContext = { tenantId: '', conversationId: runId, runId };
 
   const ahora = new Date(ahoraMs());
   const fechaLarga = new Intl.DateTimeFormat('es-MX', {
@@ -194,7 +196,8 @@ export async function ejecutarCopiloto(opts: {
 
   const TOOLS = [...TOOLS_COPILOTO_LECTURA, 'proponer_accion', 'entregar_respuesta_admin'];
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), opts.timeoutMs ?? 40_000);
+  const timer = setTimeout(() => controller.abort(new DOMException('Timeout', 'TimeoutError')), opts.timeoutMs ?? 40_000);
+  const signal = combineAbortSignals(opts.signal, controller.signal)!;
   try {
     const res = await generateWithTools({
       role: 'analisis',
@@ -206,7 +209,7 @@ export async function ejecutarCopiloto(opts: {
       maxToolRounds: 5,
       maxTokens: 900,
       temperature: 0.2,
-      signal: controller.signal,
+      signal,
       onTool: opts.onPaso,
       // A30/B17 (auditoría 18), mismo criterio que el analista.
       terminalTools: ['entregar_respuesta_admin'],
@@ -239,7 +242,7 @@ export async function ejecutarCopiloto(opts: {
         maxToolRounds: 4,
         maxTokens: 900,
         temperature: 0,
-        signal: controller.signal,
+        signal,
         onTool: opts.onPaso,
         terminalTools: ['entregar_respuesta_admin'],
         readOnlyTools: TOOLS_COPILOTO_LECTURA,
