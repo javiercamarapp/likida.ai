@@ -1,4 +1,4 @@
--- WhatsApp inbox + downstream idempotency: leases, renewals and fencing.
+-- 0187 · WhatsApp inbox + downstream idempotency: leases, renewals and fencing.
 --
 -- The old inbox used an UPDATE guarded by `intentos`. That is an atomic
 -- counter, but it is not a lease: a second worker could reclaim a row while

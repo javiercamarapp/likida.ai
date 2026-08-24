@@ -1,4 +1,4 @@
--- pgTAP: leases/fencing de WhatsApp (migración 0186).
+-- pgTAP: leases/fencing de WhatsApp y tools (migraciones 0187 + 0188).
 -- Cubre la carrera observable en una sesión y verifica que el claim usa
 -- SKIP LOCKED. La carrera real de dos sesiones se ejercita en el test TS.
 

@@ -1,19 +1,29 @@
-import { describe, expect, it } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 
-const sql = readFileSync('supabase/migrations/0187_runtime_idempotencia_clock.sql', 'utf8');
+const sql = readFileSync('supabase/migrations/0187_wa_evento_pendiente_leases_fencing.sql', 'utf8');
 
-describe('contrato SQL del runtime 0187', () => {
-  it('mueve expiración, renovación y fencing al reloj de PostgreSQL', () => {
-    expect(sql).toContain('create or replace function public.claim_agente_mutacion');
-    expect(sql).toContain('create or replace function public.renew_agente_mutacion');
-    expect(sql).toContain('create or replace function public.complete_agente_mutacion');
-    expect(sql).toContain('create or replace function public.fail_agente_mutacion');
-    expect(sql).toContain('clock_timestamp()');
+describe('contrato SQL del fencing WhatsApp 0187', () => {
+  it('todas las SECURITY DEFINER fijan search_path vacío y califican tablas', () => {
+    expect((sql.match(/security definer/g) ?? []).length).toBe(10);
+    expect((sql.match(/set search_path = ''/g) ?? []).length).toBe(10);
+    expect(sql).toContain('from public.wa_evento_pendiente w');
+    expect(sql).toContain('from public.wa_mensaje_procesado');
     expect(sql).toContain('for update skip locked');
-    expect(sql).toContain("set search_path = ''");
-    expect(sql).toContain('grant execute on function public.claim_agente_mutacion');
-    expect(sql).not.toContain('Date.now');
-    expect(sql).not.toContain('new Date');
+  });
+
+  it('todas las transiciones mutan con token y owner', () => {
+    expect(sql).toContain('and claim_token = p_claim_token');
+    expect(sql).toContain('and claim_owner = p_owner');
+    expect(sql).toContain('and lease_token = p_lease_token');
+    expect(sql).toContain('and lease_owner = p_lease_owner');
+    expect(sql).toContain('renovar_wa_pendiente');
+    expect(sql).toContain('renew_wa_mensaje_procesado');
+  });
+
+  it('impone el orden causal por chofer dentro del claim autoritativo', () => {
+    expect(sql).toContain("coalesce(nullif(anterior.evento ->> 'from', ''), anterior.id)");
+    expect(sql).toContain('(anterior.recibido_en, anterior.id) < (w.recibido_en, w.id)');
+    expect((sql.match(/and not exists \(/g) ?? []).length).toBeGreaterThanOrEqual(2);
   });
 });

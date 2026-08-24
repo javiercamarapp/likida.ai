@@ -22,7 +22,7 @@
 //    (copiloto-acciones.ts).
 //
 // COSTO: cada completion reserva y liquida contra el ledger monetario central
-// (0185), además del log por turno (`copiloto.costo`). El tenant de cobro sale
+// (0186), además del log por turno (`copiloto.costo`). El tenant de cobro sale
 // EXCLUSIVAMENTE de la sesión: si el superadmin no tiene uno asignado, el chat
 // falla cerrado antes del modelo. No existe fallback por env ni tenant de
 // relleno. `llm_costo` sigue siendo la telemetría operativa de las flotas;
@@ -63,7 +63,7 @@ function validarMensajes(crudo: unknown): Array<{ rol: 'usuario' | 'asistente'; 
   return out;
 }
 
-/** Defensa adicional por TURNOS del copiloto. El ledger 0185 pone el techo
+/** Defensa adicional por TURNOS del copiloto. El ledger 0186 pone el techo
  *  monetario atómico; este rate limit corta antes los bucles o una sesión
  *  secuestrada: 300/día ≈ un día pesado de dirección con margen.
  *  Override: LIKIDA_COPILOTO_TOPE_TURNOS_DIA. */
@@ -195,7 +195,7 @@ export async function POST(req: Request) {
     }, { status: 503 });
   }
   // Anti-bucle (20/min) + techo diario de turnos, ambos por el userId de la
-  // sesión. El ledger 0185 aplica además el límite monetario atómico.
+  // sesión. El ledger 0186 aplica además el límite monetario atómico.
   if (!(await rateLimit(`copiloto:min:${sesion.userId}`, 20, 60_000))) {
     return NextResponse.json({ error: 'tope por minuto del copiloto (20/min) — espera un momento' }, { status: 429 });
   }

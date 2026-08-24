@@ -1,6 +1,6 @@
--- Runtime de agentes: idempotencia durable con reloj autoritativo de PostgreSQL.
+-- 0188 · Runtime de agentes: idempotencia durable con reloj autoritativo de PostgreSQL.
 --
--- 0185 dejó la tabla durable, pero el cliente calculaba lease_until con el
+-- 0186 dejó la tabla durable, pero el cliente calculaba lease_until con el
 -- reloj de la instancia. Estas RPCs convierten claim, renovación y fencing en
 -- operaciones server-side: dos workers con relojes divergentes siguen viendo
 -- el mismo tiempo autoritativo de la base.

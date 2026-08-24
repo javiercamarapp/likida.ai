@@ -1,4 +1,4 @@
--- Runtime de agentes: idempotencia durable y presupuesto monetario reservado.
+-- 0186 · Runtime de agentes: idempotencia durable y presupuesto monetario reservado.
 -- 0177 queda deliberadamente fuera de esta entrega.
 
 create table if not exists public.agente_mutacion_idempotencia (
