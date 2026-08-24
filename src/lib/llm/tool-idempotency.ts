@@ -1,83 +1,69 @@
-import { randomUUID } from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { acotada } from '@/lib/likida/presupuesto';
 
 const LEASE_MS = Number(process.env.LIKIDA_TOOL_IDEMPOTENCY_LEASE_MS) || 120_000;
-
-interface Row {
-  tool_name: string;
-  owner_token: string;
-  status: 'running' | 'succeeded' | 'failed';
-  result: unknown;
-  error: string | null;
-  lease_until: string;
-  attempts: number;
-}
 
 export type MutationClaim =
   | { kind: 'execute'; token: string }
   | { kind: 'cached'; result: unknown }
   | { kind: 'busy' };
 
-function expired(row: Row): boolean {
-  return new Date(row.lease_until).getTime() <= Date.now();
+type RpcResult = { data: unknown; error: { message: string } | null };
+
+function leaseSeconds(): number {
+  // La duración es configuración, no una fecha calculada por la app. La
+  // expiración absoluta la calcula PostgreSQL con clock_timestamp().
+  return Math.max(1, Math.min(900, Math.ceil(LEASE_MS / 1_000)));
 }
 
-/** Claim durable, cross-process para una mutación cuyo efecto es estable. */
-export async function claimMutation(tenantId: string, effectKey: string, toolName: string): Promise<MutationClaim> {
-  const token = randomUUID();
-  const leaseUntil = new Date(Date.now() + LEASE_MS).toISOString();
-  const admin = supabaseAdmin();
-  const base = { tenant_id: tenantId, effect_key: effectKey, tool_name: toolName };
+function rpcRow(data: unknown): { kind: string; token: string | null; result: unknown } | null {
+  const candidate = Array.isArray(data) ? data[0] : data;
+  if (!candidate || typeof candidate !== 'object') return null;
+  const row = candidate as Record<string, unknown>;
+  return {
+    kind: typeof row.kind === 'string' ? row.kind : '',
+    token: typeof row.token === 'string' ? row.token : null,
+    result: row.result,
+  };
+}
 
-  const inserted = await acotada(admin.from('agente_mutacion_idempotencia').insert({
-    ...base,
-    owner_token: token,
-    status: 'running',
-    lease_until: leaseUntil,
-    attempts: 1,
-  }).select('tool_name, owner_token, status, result, error, lease_until, attempts').maybeSingle(), 'claimMutation.insert');
-  if (!inserted.error && inserted.data) return { kind: 'execute', token };
-  if (inserted.error && (inserted.error as { code?: string }).code !== '23505') {
-    throw new Error(`claimMutation: ${inserted.error.message}`);
+async function mutationRpc(name: string, args: Record<string, unknown>, etiqueta: string): Promise<RpcResult> {
+  const admin = supabaseAdmin() as unknown as {
+    rpc?: (rpcName: string, rpcArgs: Record<string, unknown>) => PromiseLike<RpcResult>;
+  };
+  if (typeof admin.rpc !== 'function') {
+    throw new Error(`${name}: cliente Supabase sin RPC de idempotencia`);
   }
-
-  const actual = await acotada(admin.from('agente_mutacion_idempotencia')
-    .select('tool_name, owner_token, status, result, error, lease_until, attempts')
-    .eq('tenant_id', tenantId).eq('effect_key', effectKey).maybeSingle(), 'claimMutation.read');
-  if (actual.error) throw new Error(`claimMutation: ${actual.error.message}`);
-  const row = actual.data as Row | null;
-  if (!row) throw new Error('claimMutation: conflicto sin fila durable');
-  if (row.tool_name !== toolName) throw new Error('claimMutation: la llave de efecto ya pertenece a otra tool');
-  if (row.status === 'succeeded') return { kind: 'cached', result: row.result };
-  if (row.status === 'running' && !expired(row)) return { kind: 'busy' };
-
-  const reclaimed = await acotada(admin.from('agente_mutacion_idempotencia').update({
-    owner_token: token,
-    status: 'running',
-    lease_until: leaseUntil,
-    attempts: row.attempts + 1,
-    error: null,
-    result: null,
-    updated_at: new Date().toISOString(),
-  }).eq('tenant_id', tenantId).eq('effect_key', effectKey).eq('tool_name', toolName)
-    .eq('owner_token', row.owner_token).eq('status', row.status)
-    .select('owner_token').maybeSingle(), 'claimMutation.reclaim');
-  if (reclaimed.error) throw new Error(`claimMutation: ${reclaimed.error.message}`);
-  return reclaimed.data ? { kind: 'execute', token } : { kind: 'busy' };
+  return acotada(admin.rpc(name, args), etiqueta);
 }
 
-/** Renueva el lease de una mutación larga sin poder revivir un lease vencido. */
+/** Claim durable, cross-process. El reloj autoritativo vive en PostgreSQL. */
+export async function claimMutation(tenantId: string, effectKey: string, toolName: string): Promise<MutationClaim> {
+  const { data, error } = await mutationRpc('claim_agente_mutacion', {
+    p_tenant_id: tenantId,
+    p_effect_key: effectKey,
+    p_tool_name: toolName,
+    p_lease_seconds: leaseSeconds(),
+  }, 'claimMutation');
+  if (error) throw new Error(`claimMutation: ${error.message}`);
+  const row = rpcRow(data);
+  if (!row) throw new Error('claimMutation: RPC sin resultado durable');
+  if (row.kind === 'execute' && row.token) return { kind: 'execute', token: row.token };
+  if (row.kind === 'cached') return { kind: 'cached', result: row.result };
+  if (row.kind === 'busy') return { kind: 'busy' };
+  throw new Error('claimMutation: respuesta RPC inválida');
+}
+
+/** Renueva un lease vigente usando el reloj de PostgreSQL. */
 export async function renewMutation(tenantId: string, effectKey: string, token: string): Promise<boolean> {
-  const leaseUntil = new Date(Date.now() + LEASE_MS).toISOString();
-  const { data, error } = await acotada(supabaseAdmin().from('agente_mutacion_idempotencia').update({
-    lease_until: leaseUntil,
-    updated_at: new Date().toISOString(),
-  }).eq('tenant_id', tenantId).eq('effect_key', effectKey).eq('owner_token', token)
-    .eq('status', 'running').gt('lease_until', new Date().toISOString())
-    .select('owner_token').maybeSingle(), 'renewMutation');
+  const { data, error } = await mutationRpc('renew_agente_mutacion', {
+    p_tenant_id: tenantId,
+    p_effect_key: effectKey,
+    p_owner_token: token,
+    p_lease_seconds: leaseSeconds(),
+  }, 'renewMutation');
   if (error) throw new Error(`renewMutation: ${error.message}`);
-  return Boolean(data);
+  return data === true;
 }
 
 export async function completeMutation(
@@ -86,19 +72,23 @@ export async function completeMutation(
   token: string,
   result: unknown,
 ): Promise<void> {
-  const { data, error } = await acotada(supabaseAdmin().from('agente_mutacion_idempotencia').update({
-    status: 'succeeded', result, error: null, lease_until: new Date().toISOString(), updated_at: new Date().toISOString(),
-  }).eq('tenant_id', tenantId).eq('effect_key', effectKey).eq('owner_token', token).eq('status', 'running')
-    .select('owner_token').maybeSingle(), 'completeMutation');
+  const { data, error } = await mutationRpc('complete_agente_mutacion', {
+    p_tenant_id: tenantId,
+    p_effect_key: effectKey,
+    p_owner_token: token,
+    p_result: result ?? null,
+  }, 'completeMutation');
   if (error) throw new Error(`completeMutation: ${error.message}`);
-  if (!data) throw new Error('completeMutation: se perdió el fencing token');
+  if (data !== true) throw new Error('completeMutation: se perdió el fencing token');
 }
 
 export async function failMutation(tenantId: string, effectKey: string, token: string, errorMessage: string): Promise<void> {
-  const { data, error } = await acotada(supabaseAdmin().from('agente_mutacion_idempotencia').update({
-    status: 'failed', error: errorMessage.slice(0, 1000), lease_until: new Date().toISOString(), updated_at: new Date().toISOString(),
-  }).eq('tenant_id', tenantId).eq('effect_key', effectKey).eq('owner_token', token).eq('status', 'running')
-    .select('owner_token').maybeSingle(), 'failMutation');
+  const { data, error } = await mutationRpc('fail_agente_mutacion', {
+    p_tenant_id: tenantId,
+    p_effect_key: effectKey,
+    p_owner_token: token,
+    p_error: errorMessage.slice(0, 1000),
+  }, 'failMutation');
   if (error) throw new Error(`failMutation: ${error.message}`);
-  if (!data) throw new Error('failMutation: se perdió el fencing token');
+  if (data !== true) throw new Error('failMutation: se perdió el fencing token');
 }
