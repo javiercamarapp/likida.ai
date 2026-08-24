@@ -51,6 +51,11 @@ begin
 end;
 $$;
 
+-- Las funciones trigger se ejecutan por el trigger aunque el llamador no
+-- tenga EXECUTE. Cerrarla evita que aparezca como SECURITY DEFINER pública y
+-- mantiene la misma política deny-all que el resto de helpers internos.
+revoke all on function public.clasificar_retencion_storage_candidato() from public, anon, authenticated;
+
 drop trigger if exists trg_storage_candidato_retencion on public.storage_huerfano_candidato;
 create trigger trg_storage_candidato_retencion
 before insert or update on public.storage_huerfano_candidato
