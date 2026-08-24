@@ -11,3 +11,12 @@ Una línea por acción, con su sha cuando aplique. Se escribe **mientras** avanz
 - `11:05` — compuerta: `vitest run` **verde** — 501 archivos, 6,434 pruebas, 1 saltada, exit 0.
 - `11:06` — compuerta: `npm run lint` → **0 errores, 157 avisos** (la c4 reportó 24). Anotado en `compuerta.md`.
 - `11:06` — **12 auditores lanzados en paralelo**, contexto fresco, uno por rubro.
+- `11:08` — **CI de `master` verificado contra la API de GitHub** sobre `8b43121`:
+  `CI` #1012 **success**, `CI Postgres (aislamiento entre tenants)` #381 **success**
+  (08:03→08:04), `CodeQL` #251 **success**, `Salud de producción` #98–#102 **success**.
+  **El `ci-postgres` que la c4 reportó 24 h en rojo (runs #308 y #311) hoy está verde.**
+- `11:08` — `git add` normal **rechaza** `docs/auditoria-19/`: `.gitignore:34` trae
+  `docs/auditoria-*/` desde `f5bdc3f` (21-ago, colado en un commit de operabilidad).
+  `docs/auditoria-18/` sobrevive solo porque ya estaba rastreada. Se usa `git add -f`.
+  **Sin esto la ronda entera se pierde en silencio del PR.**
+- `11:09` — `83c9a89` commit de arranque (MAPA + compuerta + diario).
