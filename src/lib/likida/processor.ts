@@ -56,11 +56,12 @@ import {
 } from '@/lib/likida/repo';
 import {
   resolveOperador, getOpenViaje, viajeAbiertoDesdeMs, getTenantContext, type ResolvedOperador,
-  loadConversation, saveConversation, claimMessage,
+  loadConversation, saveConversation, claimMessage, crearMessageLeaseOwner,
   acquireViajeLock, intentarLockViaje, TTL_LOCK_CIERRE_MS,
   releaseViajeLock, releaseMessageClaim, completarMessageClaim,
   intakeDelta, esperarIntake, ConsultaFallida, OperadorAmbiguo, type ConvTurn,
   buscarTenantPorTelefono,
+  iniciarRenovacionMessageClaim,
 } from '@/lib/likida/conv';
 import { registrarCosto, registrarCostoWhatsApp, faseDeModelo, vincularCostosALiquidacion } from '@/lib/likida/costos';
 import { sendText, sendButtons, sendDocument, downloadMediaAsDataUrl, downloadMediaAsText } from '@/lib/meta/client';
@@ -696,7 +697,17 @@ export async function processInbound(msg: InboundMessage, opts: OpcionesInbound 
   }
 
   // Idempotencia: si Meta reintenta el webhook, no re-procesar (no duplicar gasto).
-  const claim = msg.waMessageId ? await claimMessage(msg.waMessageId) : 'nuevo';
+  const claimOwner = crearMessageLeaseOwner();
+  const rawClaim = msg.waMessageId
+    ? await claimMessage(msg.waMessageId, claimOwner, true)
+    : 'nuevo';
+  // Tests and older in-process callers may still mock the compatibility
+  // overload that returns the status string. Production uses the fenced
+  // handle returned by the RPC.
+  const messageClaim = typeof rawClaim === 'string'
+    ? { status: rawClaim, owner: claimOwner, token: undefined }
+    : rawClaim;
+  const claim = messageClaim.status;
   if (claim === 'duplicado') {
     logger.info('wa.duplicate', { id: msg.waMessageId });
     return 'duplicado';
@@ -720,13 +731,26 @@ export async function processInbound(msg: InboundMessage, opts: OpcionesInbound 
   let claimLiberado = false;
   const soltarClaim = async (): Promise<void> => {
     claimLiberado = true;
-    if (msg.waMessageId) await releaseMessageClaim(msg.waMessageId);
+    if (msg.waMessageId) {
+      if (messageClaim.token) await releaseMessageClaim(msg.waMessageId, messageClaim.token, messageClaim.owner);
+      else await releaseMessageClaim(msg.waMessageId);
+    }
   };
 
-  await procesarTurno(msg, reloj, soltarClaim);
+  const detenerRenovacionMessage = msg.waMessageId && messageClaim.token
+    ? iniciarRenovacionMessageClaim(msg.waMessageId, messageClaim.token, messageClaim.owner)
+    : () => {};
+  try {
+    await procesarTurno(msg, reloj, soltarClaim);
+  } finally {
+    detenerRenovacionMessage();
+  }
 
   if (claimLiberado) return 'reintentable';
-  if (msg.waMessageId) await completarMessageClaim(msg.waMessageId);
+  if (msg.waMessageId) {
+    if (messageClaim.token) await completarMessageClaim(msg.waMessageId, messageClaim.token, messageClaim.owner);
+    else await completarMessageClaim(msg.waMessageId);
+  }
   return 'procesado';
 }
 

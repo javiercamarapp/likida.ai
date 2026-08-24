@@ -37,6 +37,8 @@ const anotarFalloPendiente = vi.fn(async () => {});
 const devolverIntentoPendiente = vi.fn(async () => {});
 const cartasMuertas = vi.fn(async () => 0);
 vi.mock('@/lib/likida/wa_pendientes', () => ({
+  crearLeaseOwner: () => 'wa-cron:test',
+  iniciarRenovacionLease: () => () => {},
   pendientesPorDrenar: (...a: unknown[]) => pendientesPorDrenar(...(a as [])),
   reclamarPendiente: (...a: unknown[]) => reclamarPendiente(...(a as [string, number])),
   marcarPendienteProcesado: (...a: unknown[]) => marcarPendienteProcesado(...(a as [])),

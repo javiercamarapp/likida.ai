@@ -15,6 +15,7 @@
 // contado, y al tope se vuelve carta muerta visible, jamás borrada.
 // ═══════════════════════════════════════════════════════════════════════════
 
+import { randomUUID } from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
 import { acotada } from './presupuesto';
@@ -23,6 +24,12 @@ import type { InboundMessage } from './processor';
 /** Al tope de intentos la fila deja de reclamarse: carta muerta VISIBLE con
  *  su ultimo_error. 5 corridas del cron son ~25 min de reintentos. */
 export const MAX_INTENTOS_PENDIENTE = 5;
+export const WA_LEASE_SECONDS = 180;
+export const WA_LEASE_RENEW_EVERY_MS = 60_000;
+
+export function crearLeaseOwner(prefijo: string): string {
+  return `${prefijo}:${randomUUID()}`;
+}
 
 /**
  * Persiste los mensajes de una invocación ANTES del acuse a Meta. NUNCA
@@ -107,6 +114,9 @@ export interface PendienteReclamado {
   id: string;
   evento: InboundMessage;
   intentos: number;
+  leaseToken: string;
+  leaseOwner: string;
+  leaseUntil: string;
 }
 
 /**
@@ -118,11 +128,13 @@ export interface PendienteReclamado {
  * caption completa la foto anterior— y los de personas distintas, a la vez.
  */
 export async function pendientesPorDrenar(limite = 10): Promise<Array<{ id: string; intentos: number; remitente: string }>> {
+  const ahora = new Date().toISOString();
   const { data, error } = await acotada(supabaseAdmin()
     .from('wa_evento_pendiente')
     .select('id, intentos, evento')
     .is('procesado_en', null)
     .lt('intentos', MAX_INTENTOS_PENDIENTE)
+    .or(`lease_until.is.null,lease_until.lte.${ahora}`)
     .order('recibido_en', { ascending: true })
     .limit(limite), 'pendientesPorDrenar');
   if (error) throw new Error(`pendientesPorDrenar: ${error.message}`);
@@ -141,28 +153,49 @@ export async function pendientesPorDrenar(limite = 10): Promise<Array<{ id: stri
  * se procesó — no es error). El intento viaja EN el claim: si el proceso
  * revienta a media corrida, el conteo ya quedó.
  */
-export async function reclamarPendiente(id: string, intentosLeidos: number): Promise<PendienteReclamado | null> {
-  const { data, error } = await acotada(supabaseAdmin()
-    .from('wa_evento_pendiente')
-    .update({ intentos: intentosLeidos + 1 })
-    .eq('id', id)
-    .eq('intentos', intentosLeidos)
-    .is('procesado_en', null)
-    .select('id, evento, intentos'), 'reclamarPendiente');
+export async function reclamarPendiente(
+  id: string,
+  intentosLeidos: number,
+  leaseOwner = crearLeaseOwner('wa-inline'),
+): Promise<PendienteReclamado | null> {
+  const { data, error } = await acotada(supabaseAdmin().rpc('claim_wa_evento_pendiente', {
+    p_id: id,
+    p_intentos_esperados: intentosLeidos,
+    p_lease_owner: leaseOwner,
+    p_lease_seconds: WA_LEASE_SECONDS,
+  }), 'reclamarPendiente');
   if (error) throw new Error(`reclamarPendiente: ${error.message}`);
-  const fila = (data ?? [])[0] as { id: string; evento: InboundMessage; intentos: number } | undefined;
-  return fila ? { id: String(fila.id), evento: fila.evento, intentos: Number(fila.intentos) } : null;
+  const fila = (Array.isArray(data) ? data : data ? [data] : [])[0] as {
+    id: string; evento: InboundMessage; intentos: number;
+    lease_token: string; lease_owner: string; lease_until: string;
+  } | undefined;
+  return fila ? {
+    id: String(fila.id), evento: fila.evento, intentos: Number(fila.intentos),
+    leaseToken: String(fila.lease_token), leaseOwner: String(fila.lease_owner),
+    leaseUntil: String(fila.lease_until),
+  } : null;
 }
 
 /** Sella el evento como procesado. Best-effort CON GRITO: el mensaje ya se
  *  procesó — si el sello falla, el reintento del cron rebotará aguas abajo
  *  en claimMessage (0002), no duplicará gastos. */
-export async function marcarPendienteProcesado(id: string): Promise<void> {
-  const { error } = await acotada(supabaseAdmin()
-    .from('wa_evento_pendiente')
-    .update({ procesado_en: new Date().toISOString(), ultimo_error: null })
-    .eq('id', id), 'marcarPendienteProcesado');
-  if (error) logger.error('wa.pendiente_sin_sellar', { id, err: error.message });
+export async function marcarPendienteProcesado(id: string, leaseToken?: string, leaseOwner?: string): Promise<boolean> {
+  if (!leaseToken || !leaseOwner) {
+    logger.warn('wa.pendiente_sin_token', { id, operacion: 'complete' });
+    return false;
+  }
+  try {
+    const { data, error } = await acotada(supabaseAdmin().rpc('complete_wa_evento_pendiente', {
+      p_id: id, p_lease_token: leaseToken, p_lease_owner: leaseOwner,
+    }), 'marcarPendienteProcesado');
+    if (error) throw error;
+    const ok = data === true || (Array.isArray(data) && data[0] === true);
+    if (!ok) logger.warn('wa.pendiente_sello_fenced', { id });
+    return ok;
+  } catch (e) {
+    logger.error('wa.pendiente_sin_sellar', { id, err: e instanceof Error ? e.message : String(e) });
+    return false;
+  }
 }
 
 /**
@@ -175,23 +208,65 @@ export async function marcarPendienteProcesado(id: string): Promise<void> {
  * mirar. El intento se devuelve anclado (`eq('intentos', …)`): si otra corrida
  * ya lo reclamó de nuevo, esta no le resta nada.
  */
-export async function devolverIntentoPendiente(id: string, intentosDelClaim: number): Promise<void> {
-  const { error } = await acotada(supabaseAdmin()
-    .from('wa_evento_pendiente')
-    .update({ intentos: intentosDelClaim - 1 })
-    .eq('id', id)
-    .eq('intentos', intentosDelClaim)
-    .is('procesado_en', null), 'devolverIntentoPendiente');
-  if (error) logger.warn('wa.pendiente_intento_no_devuelto', { id, err: error.message });
+export async function devolverIntentoPendiente(id: string, intentosDelClaim: number, leaseToken?: string, leaseOwner?: string): Promise<void> {
+  if (!leaseToken || !leaseOwner) {
+    logger.warn('wa.pendiente_sin_token', { id, operacion: 'requeue' });
+    return;
+  }
+  try {
+    const { data, error } = await acotada(supabaseAdmin().rpc('fail_wa_evento_pendiente', {
+      p_id: id, p_lease_token: leaseToken, p_lease_owner: leaseOwner,
+      p_error: null, p_devolver_intento: true,
+    }), 'devolverIntentoPendiente');
+    if (error) throw error;
+    if (data !== true && !(Array.isArray(data) && data[0] === true)) logger.warn('wa.pendiente_requeue_fenced', { id, intentosDelClaim });
+  } catch (e) {
+    logger.warn('wa.pendiente_intento_no_devuelto', { id, err: e instanceof Error ? e.message : String(e) });
+  }
 }
 
-/** Anota el fallo del intento (la fila sigue pendiente hasta el tope). */
-export async function anotarFalloPendiente(id: string, err: string): Promise<void> {
-  const { error } = await acotada(supabaseAdmin()
-    .from('wa_evento_pendiente')
-    .update({ ultimo_error: err.slice(0, 500) })
-    .eq('id', id), 'anotarFalloPendiente');
-  if (error) logger.warn('wa.pendiente_fallo_sin_anotar', { id, err: error.message });
+/** Anota y libera el fallo del intento, condicionado al token vigente. */
+export async function anotarFalloPendiente(id: string, err: string, leaseToken?: string, leaseOwner?: string): Promise<void> {
+  if (!leaseToken || !leaseOwner) {
+    logger.warn('wa.pendiente_sin_token', { id, operacion: 'fail' });
+    return;
+  }
+  try {
+    const { data, error } = await acotada(supabaseAdmin().rpc('fail_wa_evento_pendiente', {
+      p_id: id, p_lease_token: leaseToken, p_lease_owner: leaseOwner,
+      p_error: err.slice(0, 500), p_devolver_intento: false,
+    }), 'anotarFalloPendiente');
+    if (error) throw error;
+    if (data !== true && !(Array.isArray(data) && data[0] === true)) logger.warn('wa.pendiente_fallo_fenced', { id });
+  } catch (e) {
+    logger.warn('wa.pendiente_fallo_sin_anotar', { id, err: e instanceof Error ? e.message : String(e) });
+  }
+}
+
+export async function renovarLeasePendiente(id: string, leaseToken: string, leaseOwner: string): Promise<boolean> {
+  try {
+    const { data, error } = await acotada(supabaseAdmin().rpc('renew_wa_evento_pendiente', {
+      p_id: id, p_lease_token: leaseToken, p_lease_owner: leaseOwner,
+      p_lease_seconds: WA_LEASE_SECONDS,
+    }), 'renovarLeasePendiente');
+    if (error) throw error;
+    return data === true || (Array.isArray(data) && data[0] === true);
+  } catch (e) {
+    logger.warn('wa.pendiente_lease_no_renovado', { id, err: e instanceof Error ? e.message : String(e) });
+    return false;
+  }
+}
+
+/** Heartbeat best-effort para OCR/LLM largos; el fence final sigue siendo
+ * obligatorio aunque una renovación falle. */
+export function iniciarRenovacionLease(id: string, leaseToken: string, leaseOwner: string): () => void {
+  let enVuelo = false;
+  const timer = setInterval(() => {
+    if (enVuelo) return;
+    enVuelo = true;
+    void renovarLeasePendiente(id, leaseToken, leaseOwner).finally(() => { enVuelo = false; });
+  }, WA_LEASE_RENEW_EVERY_MS);
+  return () => clearInterval(timer);
 }
 
 /** Cuántas cartas muertas hay (al tope de intentos, sin procesar) — para la
