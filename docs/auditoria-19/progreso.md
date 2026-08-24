@@ -47,3 +47,12 @@ Una línea por acción, con su sha cuando aplique. Se escribe **mientras** avanz
 - El auditor de datos avisó de otras dos mutaciones que vio pasar
   (`wa_outbox.ts:39` con `if (false)`, y los topes de diésel/caseta intercambiados en
   `entrevista-aplicar.ts:158-159`). **Las dos estaban ya revertidas** cuando las revisé.
+- `11:33` — **SEG-19-1 (ALTO) arreglado**, `6697f32`. `/api/export/poliza` era la única de
+  las cinco rutas de `export/` sin `puedeVerArea(rol,'dinero')`. Prueba nueva
+  `src/app/api/export/poliza/rol_dinero.test.ts`: **sin el arreglo, 1 de 4 roja** — el
+  `encargado` recibe **503, no 403**, porque pasó el guarda y llegó a leer el catálogo.
+  Suite después: 504 archivos, 6,447 verdes. **Tope de 3 vueltas: se usaron las 3.**
+- `11:36` — tablero renderizado y **capturado** (`tablero.png`). Mirado: 12 rubros
+  contados, notas cotejadas contra la síntesis, suma 56/12 = 4.7. Recapturado una vez
+  (el pie salía cortado a 2150px de alto; quedó a 2230).
+- `11:38` — `00-SINTESIS.md` y `RESULTADO.md` escritos. Ronda cerrada: **COMPLETA**.
