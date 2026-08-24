@@ -3,9 +3,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // ═══════════════════════════════════════════════════════════════════════════
 // EL LEAD DE /getdemo — lo que se fija:
 //  · CORS cerrado: solo likida.ai recibe la cabecera. Este endpoint ESCRIBE.
-//  · NUNCA rompe al visitante: base caída, columna ausente o campo raro → 200
-//    y el lead se guarda igual. Si esto se traba se pierde la CITA, que vale
-//    más que el lead.
+//  · Un lead confirmado devuelve `accepted: true`; una base caída devuelve
+//    503 explícito para que la landing muestre reintento/fallback y no invente
+//    una conversión.
 //  · `unidades` y `urgencia` son dominios cerrados y se filtran AQUÍ: un valor
 //    fuera de dominio no puede tirar el insert entero y llevarse el prospecto.
 //  · El canal se deduce de la atribución, y un click id manda sobre el utm_*
@@ -247,17 +247,17 @@ describe('la red de seguridad de la 0137', () => {
       { data: null, error: { message: 'column "empresa" of relation "prospecto" does not exist' } },
     );
     const r = await postear(LEAD);
-    expect(r.status).toBe(200); // el visitante nunca se entera…
+    expect(r.status).toBe(503);
     expect(llamadas).toHaveLength(1); // …pero no se reintentó una fila coja
   });
 });
 
-describe('nunca rompe el flujo del visitante', () => {
-  it('si la base falla, contesta 200: la cita vale más que el lead', async () => {
+describe('el lead nunca falla en silencio', () => {
+  it('si la base falla, contesta 503 y obliga a mostrar reintento/fallback', async () => {
     respuestas.push({ data: null, error: { message: 'db down' } });
     const r = await postear(LEAD);
-    expect(r.status).toBe(200);
-    expect(await r.json()).toEqual({ ok: true });
+    expect(r.status).toBe(503);
+    expect(await r.json()).toMatchObject({ ok: false, accepted: false, retryable: true });
   });
 
   it('sin empresa no se escribe nada, pero tampoco se protesta', async () => {
