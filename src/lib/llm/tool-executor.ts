@@ -134,7 +134,7 @@ export async function executeTool(
     } catch (err) {
       const detalle = err instanceof Error ? err.message : String(err);
       if (process.env.NODE_ENV === 'test') {
-        // El runtime real no entra aquí: la migración 0178 y el cliente
+        // El runtime real no entra aquí: la migración 0185 y el cliente
         // service-role proporcionan la tabla. Los tests de cadena usan un
         // mock mínimo de Supabase, por lo que ejercitan el handler sin falsear
         // una garantía de producción.

@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 
-const sql = readFileSync('supabase/migrations/0178_runtime_idempotencia_y_presupuesto.sql', 'utf8');
+const sql = readFileSync('supabase/migrations/0185_runtime_idempotencia_y_presupuesto.sql', 'utf8');
 
-describe('contrato SQL del runtime 0178', () => {
+describe('contrato SQL del runtime 0185', () => {
   it('protege efectos y presupuesto con invariantes de base', () => {
     expect(sql).toContain('unique (tenant_id, effect_key)');
     expect(sql).toContain('alter table public.agente_mutacion_idempotencia enable row level security');
