@@ -164,6 +164,13 @@ jobs:
       - name: Capa 0 — pgTAP leases y fencing de WhatsApp/tools
         run: |
           pg_prove --dbname="$DATABASE_URL" --verbose supabase/tests/wa_leases_fencing.sql
+          # pgTAP instala dos vistas auxiliares en `public`. No pertenecen al
+          # esquema desplegable y harían que la auditoría auto-descubriente de
+          # la Capa 1 las confundiera con vistas del producto sin
+          # `security_invoker`. Tras ejecutar TAP ya no se necesitan: quitar
+          # la extensión restaura exactamente el esquema que irá a Supabase,
+          # sin debilitar ni exceptuar la regla de seguridad.
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c 'drop extension pgtap;'
 
       # ── Capa 1: la batería de aislamiento, contra Postgres real ────────
       # Dos archivos, un solo runner: la auditoría estática (schema-driven,
