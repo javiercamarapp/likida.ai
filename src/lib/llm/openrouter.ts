@@ -13,6 +13,7 @@ import OpenAI from 'openai';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { modelFor, type ModelRole } from './models';
+import { reserveLlmBudget, settleLlmBudget, type LlmBudget, type LlmBudgetReservation } from './budget';
 
 let _client: OpenAI | null = null;
 
@@ -580,7 +581,7 @@ export async function generateStructured<T>(opts: {
 
 // ── generateWithTools: ciclo agéntico completo ──────────────────────────────
 export type ToolExecResult = { success: boolean; result: unknown; error?: string; durationMs: number };
-export type ToolExecutor = (name: string, args: Record<string, unknown>) => Promise<ToolExecResult>;
+export type ToolExecutor = (name: string, args: Record<string, unknown>, signal?: AbortSignal) => Promise<ToolExecResult>;
 export type ToolCallRecord = { toolName: string; args: Record<string, unknown>; result: unknown; durationMs: number; error?: string };
 
 export class LoopGuardError extends Error {
@@ -695,6 +696,8 @@ export async function generateWithTools(opts: {
    * entrar a la caché entre rondas del turno.
    */
   readOnlyTools?: readonly string[];
+  /** Reserva monetaria antes de cada completion del ciclo. */
+  budget?: LlmBudget;
 }): Promise<{
   finalText: string;
   toolCalls: ToolCallRecord[];
@@ -785,6 +788,45 @@ export async function generateWithTools(opts: {
   // CR-5: completado con fallback cross-provider. Reintentar SÓLO la llamada de
   // completado (las tools se ejecutan DESPUÉS, en nuestro código) es seguro: una
   // caída del provider nunca re-ejecuta una mutación ni duplica una liquidación.
+  const reservarCompletion = async (body: Record<string, unknown>, modelForRequest: string): Promise<LlmBudgetReservation | null> => {
+    if (!opts.budget) return null;
+    const maxTokens = Number(body.max_tokens ?? DEFAULT_MAX_TOKENS);
+    // Cota conservadora: cada carácter puede representar un token en entradas
+    // JSON/URLs. Se sobre-reserva y luego se liquida al costo real; nunca se
+    // deja que un retry o fallback gaste sin autorización previa.
+    const inputUpperBound = Math.max(1, JSON.stringify(body.messages ?? '').length + JSON.stringify(body.tools ?? '').length);
+    return reserveLlmBudget(opts.budget, calcCost(modelForRequest, inputUpperBound, maxTokens));
+  };
+
+  const completion = async (body: Record<string, unknown>, signalOpt: { signal: AbortSignal } | undefined) => {
+    const reservation = await reservarCompletion(body, activeModel);
+    try {
+      const create = client.chat.completions.create as unknown as (
+        request: Record<string, unknown>,
+        options?: { signal?: AbortSignal },
+      ) => PromiseLike<OpenAI.Chat.ChatCompletion>;
+      const response = await create(body, signalOpt);
+      if (reservation) {
+        try {
+          const input = response.usage?.prompt_tokens ?? 0;
+          const output = response.usage?.completion_tokens ?? 0;
+          await settleLlmBudget(opts.budget!, reservation, costoReal(response.usage as { cost?: number } | undefined, activeModel, input, output));
+        } catch (e) {
+          logger.error('llm.presupuesto_no_liquidado', { runId: opts.budget?.runId, err: e instanceof Error ? e.message : String(e) });
+        }
+      }
+      return response;
+    } catch (err) {
+      // Ante un error de red se conserva la reserva completa: el proveedor pudo
+      // haber cobrado aunque la respuesta no llegara a la aplicación.
+      if (reservation) {
+        try { await settleLlmBudget(opts.budget!, reservation, reservation.amountUsd); }
+        catch (e) { logger.error('llm.presupuesto_no_liquidado', { runId: opts.budget?.runId, err: e instanceof Error ? e.message : String(e) }); }
+      }
+      throw err;
+    }
+  };
+
   const complete = async (msgs: OpenAI.Chat.ChatCompletionMessageParam[]) => {
     const body = () => ({
       model: activeModel,
@@ -804,12 +846,12 @@ export async function generateWithTools(opts: {
     });
     const signalOpt = opts.signal ? { signal: opts.signal } : undefined;
     try {
-      return await client.chat.completions.create(body(), signalOpt);
+      return await completion(body(), signalOpt);
     } catch (err) {
-      if (fallback && activeModel === model && isTransientError(err)) {
+      if (fallback && activeModel === model && !opts.signal?.aborted && isTransientError(err)) {
         logger.warn('llm.fallback', { fn: 'generateWithTools', from: model, to: fallback });
         activeModel = fallback;
-        return await client.chat.completions.create(body(), signalOpt);
+        return await completion(body(), signalOpt);
       }
       throw err;
     }
@@ -923,7 +965,7 @@ export async function generateWithTools(opts: {
           if (!entry) {
             laCreo = true;
             opts.onTool?.({ fase: 'inicio', tool: call.function.name });
-            entry = { args, promise: opts.toolExecutor(call.function.name, args) };
+            entry = { args, promise: opts.toolExecutor(call.function.name, args, opts.signal) };
             inRound.set(key, entry);
           }
           const exec = await entry.promise;
