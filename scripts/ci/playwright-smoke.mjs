@@ -4,7 +4,7 @@
  * render/hidratación. La suite no crea usuarios, no toca Supabase y no llama
  * proveedores externos.
  */
-import { chromium as chromiumBinary } from '@sparticuz/chromium';
+import chromiumBinary from '@sparticuz/chromium';
 import { chromium } from 'playwright-core';
 
 const base = (process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:3000').replace(/\/$/, '');
