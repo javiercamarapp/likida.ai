@@ -1,10 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
 
 const create = vi.hoisted(() => vi.fn());
+const reserve = vi.hoisted(() => vi.fn());
+const settle = vi.hoisted(() => vi.fn());
 vi.mock('openai', () => ({
   default: class { chat = { completions: { create } }; },
 }));
 vi.mock('@/lib/logger', () => ({ logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() } }));
+vi.mock('./budget', () => ({ reserveLlmBudget: reserve, settleLlmBudget: settle }));
 process.env.OPENROUTER_API_KEY = 'test-key';
 
 const { executeTool, generateWithTools, registerTool } = await import('./runtime_guards_imports');
@@ -45,5 +48,20 @@ describe('runtime del agente', () => {
       maxToolRounds: 2,
     });
     expect(signal).toBe(controller.signal);
+  });
+
+  it('conserva la reserva si el proveedor omite usage', async () => {
+    create.mockResolvedValueOnce({
+      choices: [{ message: { content: 'listo', tool_calls: [] } }],
+      model: 'm',
+    });
+    reserve.mockResolvedValueOnce({ id: 'reservation-1', amountUsd: 0.25 });
+    const budget = { tenantId: 'tenant-1', runId: 'run-1', maxRunUsd: 1, maxTenantDailyUsd: 5, reservadoRunUsd: 0 };
+    await generateWithTools({
+      role: 'chat', system: 's', messages: [{ role: 'user', content: 'x' }],
+      tools: [], toolExecutor: async () => ({ success: true, result: {}, durationMs: 1 }),
+      budget,
+    });
+    expect(settle).toHaveBeenCalledWith(budget, { id: 'reservation-1', amountUsd: 0.25 }, 0.25);
   });
 });

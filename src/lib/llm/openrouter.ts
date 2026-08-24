@@ -808,9 +808,18 @@ export async function generateWithTools(opts: {
       const response = await create(body, signalOpt);
       if (reservation) {
         try {
-          const input = response.usage?.prompt_tokens ?? 0;
-          const output = response.usage?.completion_tokens ?? 0;
-          await settleLlmBudget(opts.budget!, reservation, costoReal(response.usage as { cost?: number } | undefined, activeModel, input, output));
+          const usage = response.usage as (typeof response.usage & { cost?: number }) | undefined;
+          const usageCompleta = usage
+            && Number.isFinite(usage.prompt_tokens)
+            && Number.isFinite(usage.completion_tokens)
+            && (usage.prompt_tokens > 0 || usage.completion_tokens > 0 || typeof usage.cost === 'number');
+          // Si el proveedor omite usage no conocemos el costo real. Conservar
+          // la reserva es la única opción segura: liquidar a cero abriría la
+          // puerta a que el siguiente completion rebase el tope duro.
+          const costo = usageCompleta
+            ? costoReal(usage as { cost?: number }, activeModel, usage.prompt_tokens, usage.completion_tokens)
+            : reservation.amountUsd;
+          await settleLlmBudget(opts.budget!, reservation, costo);
         } catch (e) {
           logger.error('llm.presupuesto_no_liquidado', { runId: opts.budget?.runId, err: e instanceof Error ? e.message : String(e) });
         }

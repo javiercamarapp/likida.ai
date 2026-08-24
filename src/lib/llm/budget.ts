@@ -23,9 +23,9 @@ export interface LlmBudgetReservation {
   persisted?: boolean;
 }
 
-function positiveEnv(name: string, fallback: number): number {
-  const value = Number(process.env[name]);
-  return Number.isFinite(value) && value > 0 ? value : fallback;
+function positiveEnv(value: string | undefined, fallback: number): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
 export function createLlmBudget(tenantId: string, runId: string): LlmBudget {
@@ -34,8 +34,8 @@ export function createLlmBudget(tenantId: string, runId: string): LlmBudget {
     runId,
     // Seis rondas de Sonnet con 4k de salida caben en este techo; el límite
     // sigue siendo duro y puede bajarse sin desplegar.
-    maxRunUsd: positiveEnv('LIKIDA_LLM_RUN_BUDGET_USD', 0.50),
-    maxTenantDailyUsd: positiveEnv('LIKIDA_LLM_TENANT_DAILY_BUDGET_USD', 5.00),
+    maxRunUsd: positiveEnv(process.env.LIKIDA_LLM_RUN_BUDGET_USD, 0.50),
+    maxTenantDailyUsd: positiveEnv(process.env.LIKIDA_LLM_TENANT_DAILY_BUDGET_USD, 5.00),
     reservadoRunUsd: 0,
   };
 }

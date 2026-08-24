@@ -176,8 +176,8 @@ export async function executeTool(
         // ventana para duplicar el efecto; el callback confirma o sella el
         // resultado cuando la promesa real termine.
         void handlerPromise.then(
-          (lateResult) => completeMutation(ctx.tenantId, mutationEffectKey(name, ctx), durable!.token, lateResult),
-          (lateError) => failMutation(ctx.tenantId, mutationEffectKey(name, ctx), durable!.token, lateError instanceof Error ? lateError.message : String(lateError)),
+          (lateResult) => runWithToolSignal(undefined, () => completeMutation(ctx.tenantId, mutationEffectKey(name, ctx), durable!.token, lateResult)),
+          (lateError) => runWithToolSignal(undefined, () => failMutation(ctx.tenantId, mutationEffectKey(name, ctx), durable!.token, lateError instanceof Error ? lateError.message : String(lateError))),
         ).catch((latePersistError) => logger.error('tool.idempotencia_fallo', { name, err: latePersistError instanceof Error ? latePersistError.message : String(latePersistError) }));
       } else {
         try { await runWithToolSignal(undefined, () => failMutation(ctx.tenantId, mutationEffectKey(name, ctx), durable!.token, crudo)); }
