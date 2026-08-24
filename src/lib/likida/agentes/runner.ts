@@ -22,10 +22,12 @@
 // jamás toca un canal de envío. El tope de ENVÍO diario vive aparte, en la
 // única puerta de salida (cola.ts).
 // ═══════════════════════════════════════════════════════════════════════════
+import { randomUUID } from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { acotada } from '../presupuesto';
 import { estaApagado, INTERRUPTORES, type NombreInterruptor } from '../interruptores';
 import { hoyMx } from '@/lib/formato';
+import { LlmBudgetExceededError, createLlmBudget, type LlmBudget } from '@/lib/llm/budget';
 import { redactarCorreoFrio } from './redactor';
 import { logger } from '@/lib/logger';
 
@@ -74,10 +76,10 @@ export async function gastoDelDiaUsd(agente: string): Promise<number> {
 }
 
 /** El lote del Redactor: fabrica hasta N piezas para prospectos en `nuevo`
- *  (los más viejos primero — los del SLA), cortando por presupuesto restante.
+ *  (los más viejos primero — los del SLA), cortando por la reserva/run central.
  *  Las guardas por prospecto (cadencia 48h, pieza pendiente, estado) viven
  *  DENTRO de redactarCorreoFrio — aquí solo se seleccionan candidatos. */
-async function loteRedactor(restanteUsd: number): Promise<{ piezas: number; saltados: number; costoUsd: number }> {
+async function loteRedactor(budget: LlmBudget): Promise<{ piezas: number; saltados: number; costoUsd: number }> {
   const tope = topePiezasPorCorrida();
   // Overfetch ×4: varios candidatos rebotan en las guardas del redactor
   // (pieza pendiente, cadencia) y eso NO es fallo — es la guarda operando.
@@ -93,12 +95,18 @@ async function loteRedactor(restanteUsd: number): Promise<{ piezas: number; salt
   let piezas = 0, saltados = 0, costoUsd = 0;
   for (const c of candidatos) {
     if (piezas >= tope) break;
-    if (costoUsd >= restanteUsd) break;
+    if (budget.reservadoRunUsd >= budget.maxRunUsd) break;
     try {
-      const r = await redactarCorreoFrio(c.id, c.vendedor?.nombre?.trim() || 'Javier', 'cron');
+      const r = await redactarCorreoFrio(c.id, c.vendedor?.nombre?.trim() || 'Javier', 'cron', {
+        tenantId: budget.tenantId,
+        budget,
+      });
       piezas += 1;
       costoUsd += r.costoUsd;
     } catch (e) {
+      // La RPC central ya hizo la decisión atómica. No se trata como un
+      // prospecto inválido ni se sigue fabricando: el techo es de la corrida.
+      if (e instanceof LlmBudgetExceededError) break;
       // Guarda legítima o fallo puntual: se cuenta y se sigue — un prospecto
       // atorado no puede parar el lote entero. El detalle ya quedó en la
       // corrida/log del redactor.
@@ -121,6 +129,9 @@ export async function correrRunner(
    * argumento sigue siendo la vuelta completa del cron.
    */
   soloAgente?: string,
+  /** Tenant autenticado/explicitamente asignado que paga esta corrida.
+   *  `null`/ausente bloquea al Redactor; nunca se usa un env global. */
+  budgetTenantId?: string | null,
 ): Promise<ResultadoRunner> {
   if (await estaApagado('global')) {
     return { apagadoGlobal: true, agentes: [] };
@@ -161,21 +172,12 @@ export async function correrRunner(
       agentes.push({ agente: a.id, resultado: 'saltado', motivo: 'sin presupuesto_dia_usd declarado — el runner no corre agentes sin techo' });
       continue;
     }
-    let gastado: number;
-    try {
-      gastado = await gastoDelDiaUsd(a.id);
-    } catch {
-      agentes.push({ agente: a.id, resultado: 'saltado', motivo: 'no se pudo leer el gasto del día — sin la medición, el techo no se verifica y no se corre' });
-      continue;
-    }
-    const restante = a.presupuesto_dia_usd - gastado;
-    if (restante <= 0) {
-      agentes.push({ agente: a.id, resultado: 'saltado', motivo: `presupuesto del día agotado (${gastado.toFixed(4)} de ${a.presupuesto_dia_usd} USD)` });
-      continue;
-    }
-
     // Candado 4 — backpressure de la bandeja (solo agentes que encolan).
     if (a.id === 'redactor') {
+      if (!budgetTenantId) {
+        agentes.push({ agente: a.id, resultado: 'saltado', motivo: 'sin tenant explícito para presupuesto central — fail closed' });
+        continue;
+      }
       const { count, error: errPend } = await supabaseAdmin()
         .from('cola_aprobacion')
         .select('id', { count: 'exact', head: true })
@@ -191,7 +193,10 @@ export async function correrRunner(
       }
 
       try {
-        const r = await loteRedactor(restante);
+        const budget = createLlmBudget(budgetTenantId, randomUUID(), {
+          maxTenantDailyUsd: a.presupuesto_dia_usd,
+        });
+        const r = await loteRedactor(budget);
         agentes.push({ agente: a.id, resultado: 'corrio', ...r });
       } catch (e) {
         agentes.push({ agente: a.id, resultado: 'saltado', motivo: e instanceof Error ? e.message.slice(0, 200) : 'fallo del lote' });

@@ -31,4 +31,28 @@ describe('presupuesto monetario duro del runtime', () => {
     await expect(reserveLlmBudget(budget, 0.01)).rejects.toMatchObject({ scope: 'tenant' });
     expect(budget.reservadoRunUsd).toBe(0);
   });
+
+  it('requiere tenant explícito; nunca cae a una variable global', () => {
+    expect(() => createLlmBudget(undefined, '00000000-0000-4000-8000-000000000004')).toThrow(/tenant requerido/);
+    expect(() => createLlmBudget(null, '00000000-0000-4000-8000-000000000005')).toThrow(/tenant requerido/);
+  });
+
+  it('mantiene aislamiento: dos tenants usan reservas y topes independientes', async () => {
+    const a = createLlmBudget('tenant-a', '00000000-0000-4000-8000-000000000006');
+    const b = createLlmBudget('tenant-b', '00000000-0000-4000-8000-000000000007');
+    await reserveLlmBudget(a, 0.10);
+    await reserveLlmBudget(b, 0.20);
+    expect(rpc.mock.calls.map(([, args]) => args)).toEqual([
+      expect.objectContaining({ p_tenant_id: 'tenant-a', p_run_id: a.runId }),
+      expect.objectContaining({ p_tenant_id: 'tenant-b', p_run_id: b.runId }),
+    ]);
+  });
+
+  it('liquidar es idempotente en el proceso: un retry no duplica el commit', async () => {
+    const budget = createLlmBudget('tenant-retry', '00000000-0000-4000-8000-000000000008');
+    const reservation = await reserveLlmBudget(budget, 0.10);
+    await settleLlmBudget(budget, reservation, 0.04);
+    await settleLlmBudget(budget, reservation, 0.04);
+    expect(rpc.mock.calls.filter(([name]) => name === 'liquidar_presupuesto_llm')).toHaveLength(1);
+  });
 });

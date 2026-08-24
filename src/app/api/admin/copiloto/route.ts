@@ -205,6 +205,10 @@ export async function POST(req: Request) {
       try {
         const r = await ejecutarCopiloto({
           userId: sesion.userId,
+          // El tenant proviene de la sesión autenticada. Para el superadmin
+          // es null por diseño; en ese caso el motor falla cerrado hasta que
+          // exista un tenant de plataforma asignado explícitamente.
+          budgetTenantId: sesion.tenantId,
           mensajes,
           onPaso: (p) => manda({ t: 'paso', fase: p.fase, tool: p.tool }),
         });

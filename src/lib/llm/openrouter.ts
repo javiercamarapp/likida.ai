@@ -354,8 +354,13 @@ export async function generateResponse(opts: {
       const tokensOut = res.usage?.completion_tokens ?? 0;
       const costo = costoReal(res.usage as { cost?: number } | undefined, m, tokensIn, tokensOut);
       const usageValido = Boolean(res.usage && (tokensIn > 0 || tokensOut > 0 || typeof (res.usage as { cost?: unknown }).cost === 'number'));
-      await settle(usageValido ? costo : reservation?.amountUsd ?? costo);
-      return { text: (res.choices[0]?.message?.content ?? '').trim(), model: res.model || m, tokensIn, tokensOut, cost: costo };
+      const costoContabilizado = usageValido ? costo : reservation?.amountUsd ?? costo;
+      await settle(costoContabilizado);
+      // Si el proveedor omite `usage`, el ledger conserva la reserva por
+      // seguridad. El resultado público debe reflejar lo mismo; devolver 0
+      // aquí haría que el Redactor/runner subestimara su gasto aunque la RPC
+      // central ya hubiera retenido la reserva.
+      return { text: (res.choices[0]?.message?.content ?? '').trim(), model: res.model || m, tokensIn, tokensOut, cost: costoContabilizado };
     } catch (e) {
       await settle(reservation?.amountUsd ?? 0);
       throw e;

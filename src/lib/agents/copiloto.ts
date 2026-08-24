@@ -173,18 +173,19 @@ CONTEXTO DEL NEGOCIO QUE NO CAMBIA HOY: cero clientes de pago ($0 MRR real), los
 export async function ejecutarCopiloto(opts: {
   /** El userId de la sesión superadmin — para el contexto de tools. */
   userId: string;
+  /** Tenant explícito de la sesión que paga el turno. Nunca se lee de env. */
+  budgetTenantId?: string | null;
   mensajes: Array<{ rol: 'usuario' | 'asistente'; texto: string }>;
   timeoutMs?: number;
   signal?: AbortSignal;
   onPaso?: (ev: { fase: 'inicio' | 'fin'; tool: string }) => void;
 }): Promise<RespuestaCopiloto> {
   const runId = randomUUID();
-  // El copiloto es cross-tenant y no tiene un tenant de negocio propio. No se
-  // inventa una FK para el presupuesto: producción puede habilitar el tope
-  // persistido con un tenant plataforma explícito.
-  const budget = process.env.LIKIDA_COPILOTO_BUDGET_TENANT_ID
-    ? createLlmBudget(process.env.LIKIDA_COPILOTO_BUDGET_TENANT_ID, runId)
-    : undefined;
+  // Aunque las tools del copiloto sean cross-tenant, el gasto no puede quedar
+  // sin dueño. El caller deriva este valor de la sesión o lo inyecta
+  // explícitamente; falta de tenant = rechazo, nunca env global ni tenant de
+  // relleno.
+  const budget = createLlmBudget(opts.budgetTenantId, runId);
   // `tenantId` del contexto de tools queda VACÍO a propósito: ninguna tool
   // del copiloto lo lee (todas son cross-tenant vía lib/admin). Si alguna
   // futura lo leyera, un id vacío truena ruidoso en vez de leer una flota
