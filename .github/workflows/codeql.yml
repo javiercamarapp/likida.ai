@@ -53,7 +53,7 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Verificar GHAS para repositorio privado
         env:
@@ -78,7 +78,7 @@ jobs:
           fi
 
       - name: Inicializar CodeQL
-        uses: github/codeql-action/init@v4
+        uses: github/codeql-action/init@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # v4.37.8
         with:
           languages: javascript-typescript
           queries: security-and-quality
@@ -87,7 +87,7 @@ jobs:
       # proyecto compile (a diferencia de Java/Go/C#) — lee el fuente
       # directamente. `autobuild` existe para otros lenguajes; aquí sobra.
       - name: Analizar
-        uses: github/codeql-action/analyze@v4
+        uses: github/codeql-action/analyze@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # v4.37.8
         with:
           category: '/language:javascript-typescript'
           wait-for-processing: true

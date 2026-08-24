@@ -35,9 +35,9 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: npm
@@ -77,7 +77,7 @@ jobs:
 
       - name: Publicar reporte de auditoría dev
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: npm-audit-dev
           path: ${{ runner.temp }}/npm-audit-dev.json
@@ -88,6 +88,9 @@ jobs:
 
       - name: Lint
         run: npm run lint:ratchet
+
+      - name: Tests offline de resiliencia (sin credenciales)
+        run: bash scripts/test-resiliencia.sh
 
       # CON COBERTURA, y no `npm test` a secas: el umbral de `vitest.config.ts`
       # es lo que convierte la cobertura en una puerta en vez de en un número
