@@ -42,7 +42,7 @@ create or replace function public.claim_wa_evento_pendiente(
 )
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 declare
   v_row public.wa_evento_pendiente%rowtype;
@@ -97,7 +97,7 @@ create or replace function public.claim_wa_evento_pendientes(
 )
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 begin
   if p_limite < 1 or p_limite > 200 then
@@ -145,7 +145,7 @@ create or replace function public.renew_wa_evento_pendiente(
 ) returns boolean
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 begin
   if p_lease_seconds < 30 or p_lease_seconds > 900 then
@@ -170,7 +170,7 @@ create or replace function public.complete_wa_evento_pendiente(
 ) returns boolean
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 begin
   update public.wa_evento_pendiente
@@ -199,7 +199,7 @@ create or replace function public.fail_wa_evento_pendiente(
 ) returns boolean
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 begin
   update public.wa_evento_pendiente
@@ -230,7 +230,7 @@ create or replace function public.claim_wa_mensaje_procesado(
 )
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 declare
   v_row public.wa_mensaje_procesado%rowtype;
@@ -300,7 +300,7 @@ create or replace function public.complete_wa_mensaje_procesado(
 ) returns boolean
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 begin
   update public.wa_mensaje_procesado
@@ -324,7 +324,7 @@ create or replace function public.renew_wa_mensaje_procesado(
 ) returns boolean
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 begin
   if p_lease_seconds < 30 or p_lease_seconds > 900 then
@@ -350,7 +350,7 @@ create or replace function public.fail_wa_mensaje_procesado(
 ) returns boolean
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 begin
   delete from public.wa_mensaje_procesado
@@ -369,7 +369,7 @@ create or replace function public.release_wa_mensaje_procesado(
 ) returns boolean
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 begin
   return public.fail_wa_mensaje_procesado(p_wa_message_id, p_lease_token, p_lease_owner);

@@ -323,26 +323,43 @@ export async function generateResponse(opts: {
   messages: { role: 'user' | 'assistant'; content: string }[];
   maxTokens?: number;
   temperature?: number;
+  signal?: AbortSignal;
+  budget?: LlmBudget;
 }) {
   const model = modelFor(opts.role);
   const fallback = FALLBACK[model] ?? null;
 
   const once = async (m: string) => {
-    const res = await getClient().chat.completions.create({
+    opts.signal?.throwIfAborted();
+    const body = {
       model: m,
       messages: [{ role: 'system', content: opts.system }, ...opts.messages],
       max_tokens: opts.maxTokens ?? 500,
       temperature: opts.temperature ?? 0.4,
       ...PROVIDER_OPTS,
-    });
-    const text = (res.choices[0]?.message?.content ?? '').trim();
-    return {
-      text,
-      model: res.model || m,
-      tokensIn: res.usage?.prompt_tokens ?? 0,
-      tokensOut: res.usage?.completion_tokens ?? 0,
-      cost: costoReal(res.usage as { cost?: number } | undefined, m, res.usage?.prompt_tokens ?? 0, res.usage?.completion_tokens ?? 0),
+    } as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming;
+    const reservation = opts.budget
+      ? await reserveLlmBudget(opts.budget, calcCost(m, Math.max(1, JSON.stringify(body.messages).length), Number(body.max_tokens ?? 500)))
+      : null;
+    let settled = false;
+    const settle = async (amount: number) => {
+      if (!reservation || settled) return;
+      settled = true;
+      try { await settleLlmBudget(opts.budget!, reservation, amount); }
+      catch (e) { logger.error('llm.presupuesto_no_liquidado', { runId: opts.budget?.runId, err: e instanceof Error ? e.message : String(e) }); }
     };
+    try {
+      const res = await getClient().chat.completions.create(body, opts.signal ? { signal: opts.signal } : undefined);
+      const tokensIn = res.usage?.prompt_tokens ?? 0;
+      const tokensOut = res.usage?.completion_tokens ?? 0;
+      const costo = costoReal(res.usage as { cost?: number } | undefined, m, tokensIn, tokensOut);
+      const usageValido = Boolean(res.usage && (tokensIn > 0 || tokensOut > 0 || typeof (res.usage as { cost?: unknown }).cost === 'number'));
+      await settle(usageValido ? costo : reservation?.amountUsd ?? costo);
+      return { text: (res.choices[0]?.message?.content ?? '').trim(), model: res.model || m, tokensIn, tokensOut, cost: costo };
+    } catch (e) {
+      await settle(reservation?.amountUsd ?? 0);
+      throw e;
+    }
   };
 
   try {
@@ -419,6 +436,8 @@ export async function generateStructured<T>(opts: {
   images?: string[];
   maxTokens?: number;
   temperature?: number;
+  /** Reserva dura por corrida/tenant antes de cada intento, incluido fallback. */
+  budget?: LlmBudget;
 }): Promise<{ data: T; raw: string; model: string; tokensIn: number; tokensOut: number; cost: number }> {
   const model = modelFor(opts.role);
   const fallback = FALLBACK[model] ?? null;
@@ -474,7 +493,7 @@ export async function generateStructured<T>(opts: {
     // Si el presupuesto ya se agotó, no se paga una llamada que se va a cortar a
     // media respuesta.
     opts.signal?.throwIfAborted();
-    const res = await getClient().chat.completions.create({
+    const body = {
       model: m,
       messages: msgs,
       max_tokens: maxTokens,
@@ -486,13 +505,32 @@ export async function generateStructured<T>(opts: {
       } as any,
       ...opcionesDeRazonamiento(opts.role),
       ...PROVIDER_OPTS,
-    }, opts.signal ? { signal: opts.signal } : undefined);
+    };
+    const reservation = opts.budget
+      ? await reserveLlmBudget(opts.budget, calcCost(m, Math.max(1, JSON.stringify(body.messages).length + JSON.stringify(jsonSchema).length), maxTokens))
+      : null;
+    let settled = false;
+    const settle = async (amount: number) => {
+      if (!reservation || settled) return;
+      settled = true;
+      try { await settleLlmBudget(opts.budget!, reservation, amount); }
+      catch (e) { logger.error('llm.presupuesto_no_liquidado', { runId: opts.budget?.runId, err: e instanceof Error ? e.message : String(e) }); }
+    };
+    let res: OpenAI.Chat.ChatCompletion;
+    try {
+      res = await getClient().chat.completions.create(body, opts.signal ? { signal: opts.signal } : undefined);
+    } catch (e) {
+      await settle(reservation?.amountUsd ?? 0);
+      throw e;
+    }
     const raw = res.choices[0]?.message?.content || '';
     // La llamada se cobra aunque falle: el consumo viaja EN el error para que el
     // contador por liquidación no reporte $0 en los intentos fallidos.
     const tokIn = res.usage?.prompt_tokens ?? 0;
     const tokOut = res.usage?.completion_tokens ?? 0;
     const usage = { model: res.model || m, tokensIn: tokIn, tokensOut: tokOut, cost: costoReal(res.usage as { cost?: number } | undefined, m, tokIn, tokOut) };
+    const usageValido = Boolean(res.usage && (tokIn > 0 || tokOut > 0 || typeof (res.usage as { cost?: unknown }).cost === 'number'));
+    await settle(usageValido ? usage.cost : reservation?.amountUsd ?? usage.cost);
     // Se cobra AQUÍ, antes de cualquier salida: pase lo que pase debajo —
     // truncado, JSON roto, schema inválido— esta llamada ya se pagó.
     cobrar(usage);

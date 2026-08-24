@@ -52,7 +52,7 @@ create or replace function public.reservar_presupuesto_llm(
 ) returns boolean
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 declare
   usado_tenant numeric;
@@ -84,7 +84,7 @@ create or replace function public.liquidar_presupuesto_llm(
 ) returns boolean
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 begin
   update public.llm_presupuesto_reserva

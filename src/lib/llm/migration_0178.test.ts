@@ -15,5 +15,7 @@ describe('contrato SQL del runtime 0178', () => {
     expect(sql).toContain('create or replace function public.liquidar_presupuesto_llm');
     expect(sql).toContain('grant execute on function public.reservar_presupuesto_llm');
     expect(sql).toContain('grant execute on function public.liquidar_presupuesto_llm');
+    expect(sql).toContain("set search_path = ''");
+    expect(sql).toContain('attempts integer not null default 1');
   });
 });

@@ -15,9 +15,11 @@
 // se agrega por migración, no por colado.
 // ═══════════════════════════════════════════════════════════════════════════
 import { NextResponse } from 'next/server';
+import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { generateStructured } from '@/lib/llm/openrouter';
+import { createLlmBudget } from '@/lib/llm/budget';
 import { giroDe, NOMBRE_GIRO } from '@/lib/admin/prospectos-mapa';
 import { pieAvisoProspectos } from '@/lib/likida/privacidad';
 import { lineaDecisor, notasSinPersona, reponerDecisor, MARCADOR_DECISOR } from './seudonimo';
@@ -92,6 +94,7 @@ export async function POST(req: Request) {
       maxTokens: 900,
       temperature: 0.7,
       signal: AbortSignal.timeout(30_000),
+      budget: sesion.tenantId ? createLlmBudget(sesion.tenantId, randomUUID()) : undefined,
     });
     const ahora = new Date().toISOString();
     // El nombre vuelve aquí, sin haber salido; y cada toque cierra con la

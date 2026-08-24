@@ -11,6 +11,7 @@ interface Row {
   result: unknown;
   error: string | null;
   lease_until: string;
+  attempts: number;
 }
 
 export type MutationClaim =
@@ -35,14 +36,14 @@ export async function claimMutation(tenantId: string, effectKey: string, toolNam
     status: 'running',
     lease_until: leaseUntil,
     attempts: 1,
-  }).select('tool_name, owner_token, status, result, error, lease_until').maybeSingle(), 'claimMutation.insert');
+  }).select('tool_name, owner_token, status, result, error, lease_until, attempts').maybeSingle(), 'claimMutation.insert');
   if (!inserted.error && inserted.data) return { kind: 'execute', token };
   if (inserted.error && (inserted.error as { code?: string }).code !== '23505') {
     throw new Error(`claimMutation: ${inserted.error.message}`);
   }
 
   const actual = await acotada(admin.from('agente_mutacion_idempotencia')
-    .select('tool_name, owner_token, status, result, error, lease_until')
+    .select('tool_name, owner_token, status, result, error, lease_until, attempts')
     .eq('tenant_id', tenantId).eq('effect_key', effectKey).maybeSingle(), 'claimMutation.read');
   if (actual.error) throw new Error(`claimMutation: ${actual.error.message}`);
   const row = actual.data as Row | null;
@@ -55,7 +56,7 @@ export async function claimMutation(tenantId: string, effectKey: string, toolNam
     owner_token: token,
     status: 'running',
     lease_until: leaseUntil,
-    attempts: (row as Row & { attempts?: number }).attempts ? (row as Row & { attempts: number }).attempts + 1 : 2,
+    attempts: row.attempts + 1,
     error: null,
     result: null,
     updated_at: new Date().toISOString(),
@@ -64,6 +65,19 @@ export async function claimMutation(tenantId: string, effectKey: string, toolNam
     .select('owner_token').maybeSingle(), 'claimMutation.reclaim');
   if (reclaimed.error) throw new Error(`claimMutation: ${reclaimed.error.message}`);
   return reclaimed.data ? { kind: 'execute', token } : { kind: 'busy' };
+}
+
+/** Renueva el lease de una mutación larga sin poder revivir un lease vencido. */
+export async function renewMutation(tenantId: string, effectKey: string, token: string): Promise<boolean> {
+  const leaseUntil = new Date(Date.now() + LEASE_MS).toISOString();
+  const { data, error } = await acotada(supabaseAdmin().from('agente_mutacion_idempotencia').update({
+    lease_until: leaseUntil,
+    updated_at: new Date().toISOString(),
+  }).eq('tenant_id', tenantId).eq('effect_key', effectKey).eq('owner_token', token)
+    .eq('status', 'running').gt('lease_until', new Date().toISOString())
+    .select('owner_token').maybeSingle(), 'renewMutation');
+  if (error) throw new Error(`renewMutation: ${error.message}`);
+  return Boolean(data);
 }
 
 export async function completeMutation(

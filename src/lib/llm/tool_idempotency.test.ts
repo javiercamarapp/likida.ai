@@ -3,13 +3,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 const claim = vi.hoisted(() => vi.fn());
 const complete = vi.hoisted(() => vi.fn());
 const fail = vi.hoisted(() => vi.fn());
-vi.mock('./tool-idempotency', () => ({ claimMutation: claim, completeMutation: complete, failMutation: fail }));
+const renew = vi.hoisted(() => vi.fn());
+vi.mock('./tool-idempotency', () => ({ claimMutation: claim, completeMutation: complete, failMutation: fail, renewMutation: renew }));
 vi.mock('@/lib/logger', () => ({ logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() } }));
 
 const { executeTool, registerTool } = await import('./tool-executor');
 
 describe('idempotencia durable de mutaciones', () => {
-  beforeEach(() => { claim.mockReset(); complete.mockReset(); fail.mockReset(); });
+  beforeEach(() => { claim.mockReset(); complete.mockReset(); fail.mockReset(); renew.mockReset(); });
   afterEach(() => { vi.unstubAllEnvs(); });
 
   it('reclama y confirma el efecto con fencing token', async () => {
@@ -24,6 +25,20 @@ describe('idempotencia durable de mutaciones', () => {
     expect(r.success).toBe(true);
     expect(claim).toHaveBeenCalledWith('t', 'durable_mutation:t:v:-', 'durable_mutation');
     expect(complete).toHaveBeenCalledWith('t', 'durable_mutation:t:v:-', 'token-1', { saved: true });
+  });
+
+  it('falla cerrado sin runId y no entra al handler', async () => {
+    const handler = vi.fn(async () => ({ saved: true }));
+    registerTool('mutation_without_run_id', {
+      isMutation: true,
+      schema: { type: 'function', function: { name: 'mutation_without_run_id', parameters: { type: 'object', properties: {} } } },
+      handler,
+    });
+    const r = await executeTool('mutation_without_run_id', {}, { tenantId: 't', viajeId: 'v' });
+    expect(r.success).toBe(false);
+    expect(r.error).toMatch(/runida|corrida identificada/i);
+    expect(handler).not.toHaveBeenCalled();
+    expect(claim).not.toHaveBeenCalled();
   });
 
   it('sirve el resultado durable y no toca el handler', async () => {

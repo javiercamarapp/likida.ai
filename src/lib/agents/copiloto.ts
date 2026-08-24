@@ -25,6 +25,7 @@ import { ahoraMs } from '@/lib/saludo';
 import { TZ_MX, hoyMx } from '@/lib/formato';
 import { TOOLS_COPILOTO_LECTURA } from './copiloto-tools';
 import { CATALOGO_ACCIONES, accionDelCatalogo } from './copiloto-acciones';
+import { createLlmBudget } from '@/lib/llm/budget';
 import './copiloto-tools'; // registra las tools 🟢 al importar
 
 /** La previsualización de una acción gateada — la interfaz la pinta con
@@ -178,6 +179,12 @@ export async function ejecutarCopiloto(opts: {
   onPaso?: (ev: { fase: 'inicio' | 'fin'; tool: string }) => void;
 }): Promise<RespuestaCopiloto> {
   const runId = randomUUID();
+  // El copiloto es cross-tenant y no tiene un tenant de negocio propio. No se
+  // inventa una FK para el presupuesto: producción puede habilitar el tope
+  // persistido con un tenant plataforma explícito.
+  const budget = process.env.LIKIDA_COPILOTO_BUDGET_TENANT_ID
+    ? createLlmBudget(process.env.LIKIDA_COPILOTO_BUDGET_TENANT_ID, runId)
+    : undefined;
   // `tenantId` del contexto de tools queda VACÍO a propósito: ninguna tool
   // del copiloto lo lee (todas son cross-tenant vía lib/admin). Si alguna
   // futura lo leyera, un id vacío truena ruidoso en vez de leer una flota
@@ -210,6 +217,7 @@ export async function ejecutarCopiloto(opts: {
       maxTokens: 900,
       temperature: 0.2,
       signal,
+      budget,
       onTool: opts.onPaso,
       // A30/B17 (auditoría 18), mismo criterio que el analista.
       terminalTools: ['entregar_respuesta_admin'],
@@ -243,6 +251,7 @@ export async function ejecutarCopiloto(opts: {
         maxTokens: 900,
         temperature: 0,
         signal,
+        budget,
         onTool: opts.onPaso,
         terminalTools: ['entregar_respuesta_admin'],
         readOnlyTools: TOOLS_COPILOTO_LECTURA,

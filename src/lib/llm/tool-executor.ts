@@ -8,7 +8,7 @@ import type OpenAI from 'openai';
 import { logger } from '@/lib/logger';
 import type { ToolExecResult } from './openrouter';
 import { combineAbortSignals, runWithToolSignal, timeoutSignal } from './runtime-signal';
-import { claimMutation, completeMutation, failMutation } from './tool-idempotency';
+import { claimMutation, completeMutation, failMutation, renewMutation } from './tool-idempotency';
 
 /** Contexto inyectado a cada handler: IDs scoped para no pedírselos al LLM. */
 export interface ToolContext {
@@ -118,6 +118,16 @@ export async function executeTool(
   const toolSignal = combineAbortSignals(ctx.signal, signal, timeoutSignal(timeoutToolMs()));
   const effectiveCtx = { ...ctx, signal: toolSignal };
   let durable: Awaited<ReturnType<typeof claimMutation>> | null = null;
+  if (tool.isMutation && !ctx.runId) {
+    logger.error('tool.mutacion_sin_run_id', { name, tenantId: ctx.tenantId });
+    return { success: false, result: null, error: 'la mutación requiere una corrida identificada; no se ejecutó', durationMs: Date.now() - started };
+  }
+  let leaseTimer: ReturnType<typeof setInterval> | undefined;
+  let keepLeaseUntilSettled = false;
+  const stopLease = () => {
+    if (leaseTimer) clearInterval(leaseTimer);
+    leaseTimer = undefined;
+  };
   if (tool.isMutation && ctx.runId) {
     try {
       durable = await runWithToolSignal(toolSignal, () => claimMutation(ctx.tenantId, mutationEffectKey(name, ctx), name));
@@ -143,6 +153,15 @@ export async function executeTool(
     return { success: false, result: null, error: 'la mutación ya está siendo procesada; no se vuelve a ejecutar', durationMs: Date.now() - started };
   }
 
+  if (durable?.kind === 'execute') {
+    const renewEveryMs = Math.max(1_000, Math.floor((Number(process.env.LIKIDA_TOOL_IDEMPOTENCY_LEASE_MS) || 120_000) / 3));
+    leaseTimer = setInterval(() => {
+      void runWithToolSignal(undefined, () => renewMutation(ctx.tenantId, mutationEffectKey(name, ctx), durable!.token))
+        .then((ok) => { if (!ok) logger.error('tool.lease_renovacion_rechazada', { name }); })
+        .catch((err) => logger.error('tool.lease_renovacion_error', { name, err: err instanceof Error ? err.message : String(err) }));
+    }, renewEveryMs);
+  }
+
   let handlerSettled = true;
   let handlerPromise: Promise<unknown> | undefined;
   try {
@@ -159,6 +178,7 @@ export async function executeTool(
     // éxito de una mutación antes de devolverlo: marcarla fallida abriría la
     // puerta a repetir un side effect que sí alcanzó a committear.
     if (durable?.kind === 'execute') {
+      stopLease();
       // El handler puede haber terminado justo cuando venció la señal. El
       // commit del fencing debe poder archivarse para no repetir el side effect.
       await runWithToolSignal(undefined, () => completeMutation(ctx.tenantId, mutationEffectKey(name, ctx), durable.token, result));
@@ -171,6 +191,7 @@ export async function executeTool(
     logger.error('tool.error', { name, err: crudo });
     if (durable?.kind === 'execute') {
       if (toolSignal?.aborted && !handlerSettled && handlerPromise) {
+        keepLeaseUntilSettled = true;
         // Un handler que ignora AbortSignal puede haber committeado después de
         // que el executor devolvió timeout. Mantener el lease evita abrir una
         // ventana para duplicar el efecto; el callback confirma o sella el
@@ -178,8 +199,10 @@ export async function executeTool(
         void handlerPromise.then(
           (lateResult) => runWithToolSignal(undefined, () => completeMutation(ctx.tenantId, mutationEffectKey(name, ctx), durable!.token, lateResult)),
           (lateError) => runWithToolSignal(undefined, () => failMutation(ctx.tenantId, mutationEffectKey(name, ctx), durable!.token, lateError instanceof Error ? lateError.message : String(lateError))),
-        ).catch((latePersistError) => logger.error('tool.idempotencia_fallo', { name, err: latePersistError instanceof Error ? latePersistError.message : String(latePersistError) }));
+        ).catch((latePersistError) => logger.error('tool.idempotencia_fallo', { name, err: latePersistError instanceof Error ? latePersistError.message : String(latePersistError) }))
+          .finally(stopLease);
       } else {
+        stopLease();
         try { await runWithToolSignal(undefined, () => failMutation(ctx.tenantId, mutationEffectKey(name, ctx), durable!.token, crudo)); }
         catch (e) { logger.error('tool.idempotencia_fallo', { name, err: e instanceof Error ? e.message : String(e) }); }
       }
@@ -190,6 +213,8 @@ export async function executeTool(
       error: mensajeParaElModelo(crudo),
       durationMs: Date.now() - started,
     };
+  } finally {
+    if (!keepLeaseUntilSettled) stopLease();
   }
 }
 
