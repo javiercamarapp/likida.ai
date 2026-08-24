@@ -266,6 +266,7 @@ export function iniciarRenovacionLease(id: string, leaseToken: string, leaseOwne
     enVuelo = true;
     void renovarLeasePendiente(id, leaseToken, leaseOwner).finally(() => { enVuelo = false; });
   }, WA_LEASE_RENEW_EVERY_MS);
+  timer.unref?.();
   return () => clearInterval(timer);
 }
 

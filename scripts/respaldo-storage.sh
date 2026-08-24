@@ -16,10 +16,12 @@
 #
 # Uso: bash scripts/respaldo-storage.sh /ruta/backup
 set -euo pipefail
+# RESPALDO_BUCKETS es configuración, no un patrón de archivos local.
+set -f
 cd "$(dirname "$0")/.."
 
 DESTINO="${1:-${RESPALDO_ROOT:-./.backups/storage}}"
-BUCKETS="${RESPALDO_BUCKETS:-comprobantes liquidaciones bus}"
+BUCKETS="${RESPALDO_BUCKETS:-comprobantes liquidaciones avatares bus}"
 REQUIRE_REMOTE="${RESPALDO_REQUIRE_REMOTE:-false}"
 ALLOW_EMPTY="${RESPALDO_ALLOW_EMPTY:-false}"
 URL="${NEXT_PUBLIC_SUPABASE_URL:-}"
@@ -50,6 +52,25 @@ sha256_file() {
   fi
 }
 
+validar_bucket() {
+  local bucket="$1"
+  case "$bucket" in
+    ''|.|..|*[!A-Za-z0-9._-]*)
+      echo "ERROR: nombre de bucket inseguro: $bucket" >&2
+      exit 2
+      ;;
+  esac
+}
+
+codificar_ruta_url() {
+  jq -rn --arg ruta "$1" '$ruta | split("/") | map(@uri) | join("/")'
+}
+
+ruta_dentro() {
+  local candidata="$1" raiz="${2%/}"
+  [[ "$candidata" == "$raiz" || "$candidata" == "$raiz/"* ]]
+}
+
 URL="${URL%/}"
 mkdir -p "$DESTINO"
 DESTINO="$(cd "$DESTINO" && pwd -P)"
@@ -78,6 +99,11 @@ listar_bucket() {
         echo "ERROR: Storage devolvió un error al listar $bucket: $(jq -c . <<<"$respuesta")" >&2
         exit 1
       }
+      jq -e 'all(.[]; (.name | type) == "string" and ((.name | test("[\\t\\n\\r]")) | not))' \
+        <<<"$respuesta" >/dev/null || {
+        echo "ERROR: Storage devolvió un nombre no representable en $bucket/$prefijo." >&2
+        exit 1
+      }
       n="$(jq 'length' <<<"$respuesta")"
       [ "$n" -eq 0 ] && break
       while IFS=$'\t' read -r nombre id bytes; do
@@ -101,7 +127,10 @@ listar_bucket() {
 }
 
 echo "Listando buckets: $BUCKETS"
-for bucket in $BUCKETS; do listar_bucket "$bucket"; done
+for bucket in $BUCKETS; do
+  validar_bucket "$bucket"
+  listar_bucket "$bucket"
+done
 TOTAL="$(wc -l < "$OBJETOS" | tr -d '[:space:]')"
 if [ "$TOTAL" -eq 0 ] && [ "$ALLOW_EMPTY" != "true" ]; then
   echo "ERROR: Storage devolvió cero objetos. Usa RESPALDO_ALLOW_EMPTY=true solo si es intencional." >&2
@@ -116,20 +145,34 @@ SHA_TMP="$TMP_DIR/MANIFIESTO.sha256"
 BAJADOS=0
 VERIFICADOS=0
 while IFS=$'\t' read -r bucket ruta bytes; do
+  validar_bucket "$bucket"
+  case "$bytes" in ''|*[!0-9]*) echo "ERROR: tamaño inválido: $bucket/$ruta" >&2; exit 1 ;; esac
   destino="$DESTINO/$bucket/$ruta"
-  mkdir -p "$(dirname "$destino")"
-  if [ -f "$destino" ] && [ "$(wc -c < "$destino" | tr -d '[:space:]')" = "$bytes" ]; then
-    :
-  else
-    curl -sS -f --retry 3 --retry-delay 1 -o "$destino" \
-      -H "Authorization: Bearer $LLAVE" -H "apikey: $LLAVE" \
-      "$URL/storage/v1/object/$bucket/$ruta" \
-      || { echo "ERROR: no se pudo descargar $bucket/$ruta." >&2; exit 1; }
-    BAJADOS=$((BAJADOS + 1))
-  fi
-  actual_bytes="$(wc -c < "$destino" | tr -d '[:space:]')"
-  actual_sha="$(sha256_file "$destino")"
+  destino_padre="$(dirname "$destino")"
+  mkdir -p "$destino_padre"
+  destino_padre="$(cd "$destino_padre" && pwd -P)"
+  ruta_dentro "$destino_padre" "$DESTINO" || {
+    echo "ERROR: un symlink saca el destino del backup: $bucket/$ruta" >&2
+    exit 1
+  }
+  destino="$destino_padre/$(basename "$ruta")"
+  [ ! -L "$destino" ] || { echo "ERROR: destino local es symlink: $bucket/$ruta" >&2; exit 1; }
+  [ ! -e "$destino" ] || [ -f "$destino" ] || { echo "ERROR: destino local no es archivo: $bucket/$ruta" >&2; exit 1; }
+
+  # Nunca se reutiliza un archivo solo porque tiene el mismo tamaño: dos
+  # versiones distintas pueden medir lo mismo. Se descarga a temporal, se
+  # verifica y recién entonces se reemplaza atómicamente la copia local.
+  temporal="$(mktemp "$TMP_DIR/objeto.XXXXXX")"
+  ruta_url="$(codificar_ruta_url "$ruta")"
+  curl -sS -f --retry 3 --retry-delay 1 -o "$temporal" \
+    -H "Authorization: Bearer $LLAVE" -H "apikey: $LLAVE" \
+    "$URL/storage/v1/object/$bucket/$ruta_url" \
+    || { echo "ERROR: no se pudo descargar $bucket/$ruta." >&2; exit 1; }
+  actual_bytes="$(wc -c < "$temporal" | tr -d '[:space:]')"
+  actual_sha="$(sha256_file "$temporal")"
   [ "$actual_bytes" = "$bytes" ] || { echo "ERROR: tamaño inconsistente: $bucket/$ruta" >&2; exit 1; }
+  mv "$temporal" "$destino"
+  BAJADOS=$((BAJADOS + 1))
   printf '%s\t%s\t%s\t%s\n' "$bucket" "$ruta" "$bytes" "$actual_sha" >> "$TSV_TMP"
   printf '%s  %s\n' "$actual_sha" "$bucket/$ruta" >> "$SHA_TMP"
   VERIFICADOS=$((VERIFICADOS + 1))

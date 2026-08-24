@@ -51,7 +51,7 @@ explícitamente `RESPALDO_ALLOW_EMPTY=true`.
 | `AWS_SECRET_ACCESS_KEY` | GitHub secret | Si S3 | Credencial de escritura limitada |
 | `AWS_SESSION_TOKEN` | GitHub secret | Opcional | Credencial temporal |
 | `AWS_REGION` | GitHub variable | No | Default `us-east-1` |
-| `RESPALDO_BUCKETS` | GitHub variable | No | Default: `comprobantes liquidaciones bus` |
+| `RESPALDO_BUCKETS` | GitHub variable | No | Default: `comprobantes liquidaciones avatares bus` |
 | `RESPALDO_REQUIRE_REMOTE` | Entorno | CI | Debe ser `true` en el workflow |
 | `RESPALDO_ALLOW_EMPTY` | GitHub variable | No | Default `false`; cambiarlo requiere justificarlo |
 | `RESPALDO_ROOT` | Runner | No | Directorio temporal/local |
@@ -98,7 +98,7 @@ Reglas:
 - Un archivo existente con el mismo hash se conserva.
 - Un conflicto existente falla; `--overwrite` es una decisión separada y explícita.
 - Nunca se borra un archivo del destino.
-- Rutas absolutas, `..`, symlinks y tamaños/hash inconsistentes detienen la prueba.
+- Rutas absolutas, `..`, buckets inválidos, escapes por symlink y tamaños/hash inconsistentes detienen la prueba.
 
 El restore drill de producción debe ejecutarse en un proyecto o volumen
 aislado, cotejar las rutas referenciadas por la base y registrar el RTO. La

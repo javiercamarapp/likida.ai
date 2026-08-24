@@ -59,12 +59,26 @@ export async function GET() {
     const latidos = await estadoLatidos();
     const vencidos = (Object.keys(latidos) as CronId[]).filter((c) => latidos[c].estado === 'vencido');
     const sinLatido = (Object.keys(latidos) as CronId[]).filter((c) => latidos[c].estado === 'sin_latido');
+    const noSanos = (Object.keys(latidos) as CronId[]).filter((c) =>
+      latidos[c].estado === 'ok' && latidos[c].ultimoEstado !== 'ok');
     if (vencidos.length > 0) {
       cronCheck = 'degraded';
       logger.error('health.cron_vencido', { crons: vencidos, haceMin: vencidos.map((c) => latidos[c].haceMin) });
       await alertarOperador('cron.sin_latido', {
         error: `Sin latido: ${vencidos.map((c) => `${c} (hace ${latidos[c].haceMin} min)`).join(', ')}`,
         codigo: 'cron_sin_latido',
+      });
+    } else if (noSanos.length > 0) {
+      // Fresco no significa sano: un cron que acaba de reportar `fallo`,
+      // `parcial` o `saltado` debe tumbar el health aunque su reloj esté al día.
+      cronCheck = 'degraded';
+      logger.error('health.cron_estado_no_ok', {
+        crons: noSanos,
+        estados: noSanos.map((c) => latidos[c].ultimoEstado),
+      });
+      await alertarOperador('cron.estado_no_ok', {
+        error: `Cron con resultado no sano: ${noSanos.map((c) => `${c} (${latidos[c].ultimoEstado})`).join(', ')}`,
+        codigo: 'cron_estado_no_ok',
       });
     } else if (sinLatido.length === 0) {
       cronCheck = 'ok';

@@ -85,7 +85,14 @@ export async function drenarBandeja(inicioInvocacion: number, req: Request, vuel
     await conPool([...porChofer.values()], ANCHO_POOL, async (cadena) => {
       for (const p of cadena) {
         const claim = await reclamarPendiente(p.id, p.intentos, leaseOwner);
-        if (!claim) continue; // otra corrida lo tomó — resultado esperado
+        if (!claim) {
+          // Otra corrida tomó un mensaje ANTERIOR de esta conversación. Seguir
+          // con el siguiente permitiría que dos invocaciones solapadas
+          // procesaran a2 mientras la otra todavía trabaja a1, rompiendo el
+          // orden por chofer que este agrupamiento promete. La cadena se retoma
+          // completa en la siguiente vuelta; otros choferes siguen en paralelo.
+          break;
+        }
         const detenerRenovacion = claim.leaseToken && claim.leaseOwner
           ? iniciarRenovacionLease(claim.id, claim.leaseToken, claim.leaseOwner)
           : () => {};

@@ -232,6 +232,25 @@ describe('el drenado', () => {
     expect(await r.json()).toMatchObject({ procesados: 0, fallidos: 0 });
   });
 
+  it('un claim perdido corta ESA conversación: nunca adelanta el mensaje siguiente del mismo chofer', async () => {
+    pendientesPorDrenar.mockResolvedValue([
+      { id: 'a1', intentos: 0, remitente: '521111' },
+      { id: 'a2', intentos: 0, remitente: '521111' },
+    ]);
+    reclamarPendiente.mockImplementation(async (id: string, intentos: number) =>
+      id === 'a1'
+        ? null
+        : { id, evento: { from: '521111', type: 'text', waMessageId: id }, intentos: intentos + 1 });
+
+    const r = await GET(peticion('Bearer secreto-de-prueba'));
+
+    expect(r.status).toBe(200);
+    expect(reclamarPendiente).toHaveBeenCalledTimes(1);
+    expect(reclamarPendiente).toHaveBeenCalledWith('a1', 0, 'wa-cron:test');
+    expect(processInbound).not.toHaveBeenCalled();
+    expect(marcarPendienteProcesado).not.toHaveBeenCalled();
+  });
+
   it('el monitor de SLA grita las urgentes vencidas — incluso con el sistema APAGADO', async () => {
     estaApagado.mockResolvedValue(true);
     urgentesVencidas.mockResolvedValue(2);

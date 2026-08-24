@@ -34,6 +34,7 @@ while [ "$#" -gt 0 ]; do
 done
 
 [ -n "$BACKUP" ] || { echo "ERROR: especifica la ruta del backup." >&2; exit 2; }
+$OVERWRITE && ! $APPLY && { echo "ERROR: --overwrite solo es válido junto con --apply." >&2; exit 2; }
 [ -f "$BACKUP/MANIFIESTO.json" ] || {
   echo "ERROR: falta MANIFIESTO.json; genera un backup nuevo." >&2
   exit 3
@@ -47,10 +48,35 @@ sha256_file() {
   fi
 }
 
-format="$(jq -r '.format // empty' "$BACKUP/MANIFIESTO.json")"
-version="$(jq -r '.version // empty' "$BACKUP/MANIFIESTO.json")"
-[ "$format" = "likida-storage-manifest" ] && [ "$version" = "1" ] || {
-  echo "ERROR: formato de manifiesto no soportado." >&2; exit 3;
+ruta_dentro() {
+  local candidata="$1" raiz="${2%/}"
+  [[ "$candidata" == "$raiz" || "$candidata" == "$raiz/"* ]]
+}
+
+validar_bucket() {
+  local bucket="$1"
+  case "$bucket" in
+    ''|.|..|*[!A-Za-z0-9._-]*)
+      echo "ERROR: bucket inseguro en manifiesto: $bucket" >&2
+      exit 3
+      ;;
+  esac
+}
+
+jq -e '
+  .format == "likida-storage-manifest" and
+  .version == 1 and
+  (.object_count | type == "number" and . >= 0 and floor == .) and
+  (.objects | type == "array") and
+  .object_count == (.objects | length) and
+  all(.objects[];
+    (.bucket | type) == "string" and
+    (.path | type) == "string" and
+    (.bytes | type == "number" and . >= 0 and floor == .) and
+    (.sha256 | type == "string" and test("^[0-9a-f]{64}$")))
+' "$BACKUP/MANIFIESTO.json" >/dev/null || {
+  echo "ERROR: formato o campos de manifiesto no soportados." >&2
+  exit 3
 }
 
 if $APPLY; then
@@ -59,9 +85,11 @@ if $APPLY; then
   mkdir -p "$DESTINO"
   BACKUP_ABS="$(cd "$BACKUP" && pwd -P)"
   DESTINO_ABS="$(cd "$DESTINO" && pwd -P)"
-  [ "$BACKUP_ABS" != "$DESTINO_ABS" ] || {
-    echo "ERROR: destino no puede ser el backup original." >&2; exit 2;
-  }
+  [ "$DESTINO_ABS" != "/" ] || { echo "ERROR: destino raíz rechazado." >&2; exit 2; }
+  if ruta_dentro "$DESTINO_ABS" "$BACKUP_ABS" || ruta_dentro "$BACKUP_ABS" "$DESTINO_ABS"; then
+    echo "ERROR: backup y destino no pueden contenerse entre sí." >&2
+    exit 2
+  fi
   echo "APPLY no destructivo: $BACKUP_ABS -> $DESTINO_ABS"
 else
   BACKUP_ABS="$(cd "$BACKUP" && pwd -P)"
@@ -75,6 +103,7 @@ while IFS= read -r objeto; do
   ruta="$(jq -r '.path' <<<"$objeto")"
   bytes="$(jq -r '.bytes' <<<"$objeto")"
   esperado="$(jq -r '.sha256' <<<"$objeto")"
+  validar_bucket "$bucket"
   case "$ruta" in
     /*|../*|*/../*|..|*$'\t'*|*$'\n'*)
       echo "ERROR: ruta insegura en manifiesto: $bucket/$ruta" >&2; exit 3 ;;
@@ -82,13 +111,27 @@ while IFS= read -r objeto; do
   archivo="$BACKUP_ABS/$bucket/$ruta"
   [ -f "$archivo" ] || { echo "ERROR: falta objeto: $bucket/$ruta" >&2; exit 3; }
   [ ! -L "$archivo" ] || { echo "ERROR: objeto es symlink: $bucket/$ruta" >&2; exit 3; }
+  archivo_padre="$(cd "$(dirname "$archivo")" && pwd -P)"
+  ruta_dentro "$archivo_padre" "$BACKUP_ABS" || {
+    echo "ERROR: un symlink saca el objeto del backup: $bucket/$ruta" >&2
+    exit 3
+  }
+  archivo="$archivo_padre/$(basename "$archivo")"
   real_bytes="$(wc -c < "$archivo" | tr -d '[:space:]')"
   real_sha="$(sha256_file "$archivo")"
   [ "$real_bytes" = "$bytes" ] || { echo "ERROR: bytes no coinciden: $bucket/$ruta" >&2; exit 3; }
   [ "$real_sha" = "$esperado" ] || { echo "ERROR: SHA-256 no coincide: $bucket/$ruta" >&2; exit 3; }
   if $APPLY; then
     salida="$DESTINO_ABS/$bucket/$ruta"
-    mkdir -p "$(dirname "$salida")"
+    salida_padre="$(dirname "$salida")"
+    mkdir -p "$salida_padre"
+    salida_padre="$(cd "$salida_padre" && pwd -P)"
+    ruta_dentro "$salida_padre" "$DESTINO_ABS" || {
+      echo "ERROR: un symlink saca la restauración del destino: $bucket/$ruta" >&2
+      exit 3
+    }
+    salida="$salida_padre/$(basename "$salida")"
+    [ ! -L "$salida" ] || { echo "ERROR: destino es symlink: $salida" >&2; exit 3; }
     if [ -e "$salida" ]; then
       [ -f "$salida" ] || { echo "ERROR: destino no es archivo: $salida" >&2; exit 3; }
       destino_sha="$(sha256_file "$salida")"
@@ -96,7 +139,7 @@ while IFS= read -r objeto; do
         $OVERWRITE || { echo "ERROR: conflicto existente; usa --overwrite explícito." >&2; exit 4; }
       }
     fi
-    if [ ! -e "$salida" ] || $OVERWRITE; then cp -p "$archivo" "$salida"; fi
+    if [ ! -e "$salida" ] || $OVERWRITE; then cp -p -- "$archivo" "$salida"; fi
   fi
   COUNT=$((COUNT + 1))
 done < <(jq -c '.objects[]' "$BACKUP/MANIFIESTO.json")
@@ -106,7 +149,12 @@ done < <(jq -c '.objects[]' "$BACKUP/MANIFIESTO.json")
 }
 
 if $APPLY; then
-  printf '%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$DESTINO_ABS/RESTORE_DRILL_COMPLETADO_UTC"
+  marca="$DESTINO_ABS/RESTORE_DRILL_COMPLETADO_UTC"
+  [ ! -L "$marca" ] || { echo "ERROR: la marca de restore es symlink." >&2; exit 3; }
+  [ ! -e "$marca" ] || [ -f "$marca" ] || { echo "ERROR: la marca de restore no es archivo." >&2; exit 3; }
+  marca_tmp="$(mktemp "$DESTINO_ABS/.restore-drill.XXXXXX")"
+  printf '%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$marca_tmp"
+  mv "$marca_tmp" "$marca"
   echo "OK: $COUNT objetos verificados y copiados sin borrar archivos existentes."
 else
   echo "OK: $COUNT objetos verificados; dry-run completado sin escribir."

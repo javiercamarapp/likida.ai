@@ -502,6 +502,7 @@ export function iniciarRenovacionMessageClaim(waMessageId: string, leaseToken: s
     enVuelo = true;
     void renovarMessageClaim(waMessageId, leaseToken, leaseOwner).finally(() => { enVuelo = false; });
   }, 60_000);
+  timer.unref?.();
   return () => clearInterval(timer);
 }
 

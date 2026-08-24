@@ -70,6 +70,22 @@ describe('/api/health', () => {
     latidos = [];
   });
 
+  it('un latido fresco en fallo también degrada: frescura no oculta el resultado', async () => {
+    dbFalla = false;
+    alertarOperador.mockClear();
+    const ahora = new Date().toISOString();
+    latidos = ['wa-pendientes', 'escalar', 'facturar', 'purgar', 'runner', 'gps']
+      .map((id) => ({ id, ultimo_latido: ahora, estado: id === 'runner' ? 'fallo' : 'ok' }));
+
+    const r = await GET();
+    const c = await r.json();
+
+    expect(r.status).toBe(503);
+    expect(c).toMatchObject({ ok: false, status: 'degraded', checks: { db: 'ok', crons: 'degraded' } });
+    expect(JSON.stringify(c)).not.toContain('runner');
+    expect(alertarOperador).toHaveBeenCalledWith('cron.estado_no_ok', expect.objectContaining({ codigo: 'cron_estado_no_ok' }));
+  });
+
   it('con la base caída: 503 y fail — lo que un monitor entiende sin leer el cuerpo', async () => {
     dbFalla = true;
     const r = await GET();

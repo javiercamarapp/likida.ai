@@ -160,6 +160,9 @@ export async function executeTool(
         .then((ok) => { if (!ok) logger.error('tool.lease_renovacion_rechazada', { name }); })
         .catch((err) => logger.error('tool.lease_renovacion_error', { name, err: err instanceof Error ? err.message : String(err) }));
     }, renewEveryMs);
+    // El lease protege el efecto, pero no debe mantener vivo por sí solo un
+    // worker que ya devolvió timeout y cuyo SDK nunca resolvió su promesa.
+    leaseTimer.unref?.();
   }
 
   let handlerSettled = true;
