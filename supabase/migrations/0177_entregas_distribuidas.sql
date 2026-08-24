@@ -35,7 +35,11 @@ begin
     update correo_procesado set estado='applied', applied_at=now(), lease_expires_at=null,
       ultimo_error=null where email_id=p_email_id and claim_token=p_token and estado='processing';
   else
-    update correo_procesado set lease_expires_at=now(), ultimo_error=left(p_error,500)
+    -- `now()` is fixed for the whole transaction. Using it here made an
+    -- immediate retry in that same transaction remain busy (`now() < now()`
+    -- is false). An explicit expired lease releases the job immediately while
+    -- the token predicate still prevents an old worker from finalizing it.
+    update correo_procesado set lease_expires_at='-infinity'::timestamptz, ultimo_error=left(p_error,500)
       where email_id=p_email_id and claim_token=p_token and estado='processing';
   end if;
   return found;
