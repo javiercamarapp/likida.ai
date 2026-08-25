@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { randomUUID } from 'crypto';
 import { logger } from '@/lib/logger';
 import { generateStructured, StructuredError, TruncatedError, resumenCausa } from '@/lib/llm/openrouter';
+import type { LlmBudget } from '@/lib/llm/budget';
 import { alertarOperador, contadorDeFallos } from '@/lib/observability/alerta';
 import { decodeCodigosFromImage, bufferFromDataUrl, esRfcValido, esUuidValido, rfcChecksumOk } from './cfdi';
 import { normalizarFecha } from './fecha';
@@ -56,6 +57,23 @@ const ExtraccionSchema = z.object({
   litros: z.number().finite().nullable(),
   precio_unitario: z.number().finite().nullable(),
   forma_pago: z.enum(['efectivo', 'tarjeta', 'otro']).nullable(),
+  // ── DOS CAMPOS RETIRADOS DEL ESQUEMA (24-ago-2026, en producción) ──────
+  //
+  // `plazo_facturacion_horas` y `renglones` se agregaron esta mañana y
+  // TUMBARON EL OCR EN PRODUCCIÓN: OpenRouter devolvió `400 Provider returned
+  // error` de inmediato, sin consumir un token, en cada foto. La firma es
+  // inconfundible — `llm_costo` con `tokens_in/out = 0` — y coincide exacto
+  // con el despliegue que los introdujo: a las 14:20 el mismo modelo leía
+  // bien, a las 17:16 ya no.
+  //
+  // El sospechoso es `renglones`: un array de objetos con `maxItems`, que el
+  // structured output de Gemini vía OpenRouter no acepta. No se reintroducen
+  // a ciegas — antes hay que probar el esquema contra el proveedor, no contra
+  // el tipo de TypeScript, que fue justo el paso que faltó.
+  //
+  // El motor los sigue leyendo si algún día vuelven (`plazoFacturacionHoras`,
+  // `renglones` en ocr_extra): su ausencia hace que caiga al catálogo y que la
+  // observación de canasta mixta no se levante. Degrada, no rompe.
   // ── DAT-19 · LA MONEDA, QUE NADIE LEÍA ─────────────────────────────────
   //
   // El monto entraba a una columna de PESOS sin preguntarse en qué moneda
@@ -307,6 +325,7 @@ export async function extraerComprobante(
    * que sí venía bien presupuestado. Y Meta ya recibió su 200: no reintenta.
    */
   signal?: AbortSignal,
+  budget?: LlmBudget,
 ): Promise<ExtraerResultado> {
   const fotos = (Array.isArray(imagenes) ? imagenes : [imagenes]).filter(Boolean);
 
@@ -332,6 +351,7 @@ export async function extraerComprobante(
       schema: ExtraccionSchema,
       schemaName: 'comprobante',
       signal,
+      budget,
     });
   } catch (e) {
     // OJO: a este catch NO se llega por una foto mala. Un ticket ilegible sí
