@@ -129,6 +129,14 @@ async function cargar(): Promise<void> {
       // cabeceras, y el pipeline del logger no las ha visto para redactarlas.
       sendDefaultPii: false,
       beforeSend: (evento: unknown) => sanitizarEventoSentry(evento),
+      // BACKEND-19C2-3 — el SDK trata `beforeSend`/`beforeSendTransaction`
+      // como hooks INDEPENDIENTES: con `tracesSampleRate` > 0 (default 0.05),
+      // 1 de cada 20 transacciones de performance salía sin pasar por el
+      // saneador — mismo `.request`/`.breadcrumbs`/`.user`/`.extra` que un
+      // evento de error, mismo riesgo de fuga (RFC, domicilio, cookies de
+      // sesión). `sanitizarEventoSentry` opera genérico sobre esas formas
+      // compartidas, así que sirve para los dos tipos de evento sin cambios.
+      beforeSendTransaction: (evento: unknown) => sanitizarEventoSentry(evento),
     });
     sentry = mod;
   } catch (e) {
