@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auditoría 19 c2 — Likida</title>
+<style>
+  :root{
+    --tinta:#14161a; --tinta-2:#4a5058; --tinta-3:#7b828c;
+    --papel:#f7f6f3; --tarjeta:#ffffff; --linea:#e3e1dc;
+    --sube:#1f7a4d; --baja:#b3261e; --igual:#7b828c;
+    --critico:#b3261e; --alto:#c2610a; --medio:#8a7413; --bajo:#5a6270;
+    --marca:#e8590c;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--papel);color:var(--tinta);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .hoja{max-width:1120px;margin:0 auto;padding:40px 28px 64px}
+  header{border-bottom:2px solid var(--tinta);padding-bottom:18px;margin-bottom:26px}
+  .kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--marca);font-weight:700}
+  h1{margin:.28em 0 .12em;font-size:30px;letter-spacing:-.02em;line-height:1.15}
+  .sub{color:var(--tinta-2);font-size:14px;max-width:74ch}
+  .cifras{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin:26px 0 30px}
+  .cifra{background:var(--tarjeta);border:1px solid var(--linea);border-radius:10px;padding:14px 16px}
+  .cifra .et{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--tinta-3);font-weight:700}
+  .cifra .v{font-size:27px;font-weight:700;letter-spacing:-.025em;margin-top:5px;
+    font-variant-numeric:tabular-nums}
+  .cifra .n{font-size:12px;color:var(--tinta-2);margin-top:3px}
+  h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tinta-3);
+    font-weight:700;margin:34px 0 12px;padding-bottom:7px;border-bottom:1px solid var(--linea)}
+  .tabla-envoltura{overflow-x:auto;background:var(--tarjeta);border:1px solid var(--linea);border-radius:10px}
+  table{border-collapse:collapse;width:100%;min-width:720px;font-size:13.5px}
+  th{text-align:left;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--tinta-3);font-weight:700;padding:11px 14px;border-bottom:1px solid var(--linea);
+    white-space:nowrap}
+  td{padding:11px 14px;border-bottom:1px solid var(--linea);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  .rubro{font-weight:600;white-space:nowrap}
+  .nota{font-variant-numeric:tabular-nums;font-weight:700;font-size:16px;text-align:center;width:52px}
+  .delta{font-weight:700;text-align:center;width:54px;font-variant-numeric:tabular-nums}
+  .d-baja{color:var(--baja)} .d-sube{color:var(--sube)} .d-igual{color:var(--igual)}
+  .razon{color:var(--tinta-2);font-size:12.5px;max-width:52ch}
+  .sev{text-align:center;font-variant-numeric:tabular-nums;width:42px;font-weight:600}
+  .s0{color:var(--tinta-3);font-weight:400}
+  .barra{height:7px;background:var(--linea);border-radius:4px;overflow:hidden;width:78px;margin-top:5px}
+  .barra i{display:block;height:100%;background:var(--tinta)}
+  .serie{background:var(--tarjeta);border:1px solid var(--linea);border-radius:10px;padding:20px 18px 12px}
+  .leyenda{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--tinta-2);margin-top:10px}
+  .pin{display:inline-flex;align-items:center;gap:5px}
+  .pin b{display:inline-block;width:9px;height:9px;border-radius:2px}
+  .compuerta{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+  .cg{background:var(--tarjeta);border:1px solid var(--linea);border-left:3px solid var(--sube);
+    border-radius:8px;padding:12px 14px}
+  .cg.no{border-left-color:var(--tinta-3)}
+  .cg .cmd{font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--tinta)}
+  .cg .out{font-size:12px;color:var(--tinta-2);margin-top:5px}
+  .arreglos li{margin-bottom:10px;color:var(--tinta-2);font-size:13.5px}
+  .arreglos b{color:var(--tinta)}
+  code{font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:#eeece7;
+    padding:1px 5px;border-radius:4px}
+  .nota-pie{color:var(--tinta-3);font-size:12px;margin-top:30px;border-top:1px solid var(--linea);padding-top:14px}
+  .conv{background:#fff8f2;border:1px solid #f5d9c2;border-radius:8px;padding:13px 15px;font-size:13px;color:var(--tinta-2)}
+  .conv b{color:var(--tinta)}
+</style>
+</head>
+<body>
+<div class="hoja">
+
+<header>
+  <div class="kicker">Likida · auditoría diaria · ronda de continuación</div>
+  <h1>Auditoría 19 c2 — 25 de agosto de 2026</h1>
+  <p class="sub">Doce rubros relanzados con contexto fresco sobre el delta
+  <code>8b43121 → 69aa71b</code> (115 archivos, +4,974 / −1,026). Continuación sobre el
+  PR #52, no ronda nueva. Corrida desatendida, en la nube.</p>
+</header>
+
+<div class="cifras">
+  <div class="cifra"><div class="et">Global</div><div class="v" id="global">—</div>
+    <div class="n" id="global-delta">—</div></div>
+  <div class="cifra"><div class="et">Hallazgos con ficha</div><div class="v" id="total">—</div>
+    <div class="n" id="total-n">—</div></div>
+  <div class="cifra"><div class="et">Críticos</div><div class="v" style="color:var(--critico)" id="crit">—</div>
+    <div class="n">2 arreglados con prueba</div></div>
+  <div class="cifra"><div class="et">Compuerta</div><div class="v" style="color:var(--sube)">verde</div>
+    <div class="n">sin <code>build</code>: no hay credenciales</div></div>
+  <div class="cifra"><div class="et">Rubros que suben</div><div class="v">1</div>
+    <div class="n">3 bajan · 8 se quedan</div></div>
+</div>
+
+<h2>Las doce notas</h2>
+<div class="tabla-envoltura">
+<table id="t">
+  <thead><tr>
+    <th>Rubro</th><th class="nota">Hoy</th><th class="delta">Δ</th>
+    <th class="sev">C</th><th class="sev">A</th><th class="sev">M</th><th class="sev">B</th>
+    <th>Razón del movimiento</th>
+  </tr></thead>
+  <tbody></tbody>
+</table>
+</div>
+
+<h2>Serie histórica</h2>
+<div class="serie">
+  <svg id="svg" viewBox="0 0 720 200" width="100%" height="200" role="img"
+       aria-label="Serie histórica de la nota global">
+  </svg>
+  <div class="leyenda">
+    <span class="pin"><b style="background:var(--tinta)"></b> nota global por ronda</span>
+    <span class="pin">La serie se cortó en la ronda 18: <code>4d4d7f6</code> y el
+      <code>master</code> de entonces no tenían ancestro común.</span>
+  </div>
+</div>
+
+<h2>Convergencias entre auditores</h2>
+<div class="conv">
+  <b>Tres auditores independientes</b> —backend, seguridad y rendimiento— llegaron al mismo
+  <code>openrouter.ts:515</code> por caminos distintos: la reserva de presupuesto contaba
+  caracteres donde el precio es por token, y en el camino de visión esos caracteres son la
+  foto. Cuando tres métodos independientes coinciden, el hallazgo deja de necesitar defensa.
+  <b>Arreglado</b> en <code>b4a2cc4</code>.
+</div>
+
+<h2>La compuerta, con su salida real</h2>
+<div class="compuerta">
+  <div class="cg"><div class="cmd">npm test</div>
+    <div class="out" id="cg-test">—</div></div>
+  <div class="cg"><div class="cmd">npx tsc --noEmit -p .</div>
+    <div class="out">sin salida · exit 0</div></div>
+  <div class="cg"><div class="cmd">npm run lint</div>
+    <div class="out">0 errores · 156 avisos · exit 0</div></div>
+  <div class="cg no"><div class="cmd">npm run build</div>
+    <div class="out">no se corre: pide Supabase, OpenRouter, Facturapi y Upstash</div></div>
+</div>
+
+<h2>Arreglado, con prueba que lo reproduce</h2>
+<ol class="arreglos">
+  <li><b>BACK-19c2-1 · CRÍTICO · <code>b4a2cc4</code></b> — la reserva de presupuesto medía
+  el input en caracteres y <code>calcCost</code> los cobra como tokens. Una foto de 3 MB
+  —la que <code>limites.ts:24</code> admite por escrito— pedía <b>$0.756109</b> contra un
+  techo de <b>$0.50</b> y moría antes de tocar al proveedor: el chofer leía «fallo técnico»
+  sobre una llamada que cuesta ~$0.0016. La prueba fija además que el texto largo
+  <i>sigue</i> sobre-reservándose, para que el arreglo no se lleve la cota conservadora.</li>
+  <li><b>AGEN-19c2-2 · CRÍTICO · <code>234c364</code></b> — el sello del fencing vivía
+  dentro del mismo <code>try</code> que decide el éxito de la tool, así que un
+  <code>complete_agente_mutacion</code> que se pasara del tope de 8 s hacía que
+  <code>guardar_liquidacion</code> respondiera fallo sobre un viaje ya <code>liquidado</code>
+  e irreversible: sin PDF, sin aviso al jefe, y el modelo explicándole al chofer que no se
+  pudo. El camino de error ya se protegía así; el de éxito no.</li>
+</ol>
+
+<p class="nota-pie">
+  Tope de arreglo: 3 vueltas, se usaron 2. Ninguna revertida. Los críticos restantes quedan
+  <b>pendientes con razón escrita</b>: el de la idempotencia sobre un viaje reabierto exige
+  que reabrir invalide la fila y no hay base aquí para reproducirlo; el del acuse por foto
+  exige rediseñar la ventana de ráfaga contra el procesamiento en serie por chofer; el de
+  monitoreo es de CI y producción. Ninguno es un parche.
+</p>
+
+<script>
+const RUBROS = [
+  ['Operabilidad y DX',      6, 6, 3, 7, 6, 3, 'Se atacó y subió (el desfase de despliegue cerró: 69aa71b sí lleva la bandera) contra deuda que cobró factura (el schedule sigue sin comparar versión: 139 corridas, 0 ejecuciones). Del mismo tamaño.'],
+  ['Backend y API',          5, 6, 1, 8, 9, 2, 'Deuda que cobró factura — el presupuesto nuevo nació midiendo caracteres como tokens, y 7 de 8 altos de la ronda 19 siguen abiertos.'],
+  ['Tool calling',           5, 4, 1, 4, 2, 1, 'Se atacó y subió — la idempotencia por efecto y el presupuesto duro llegaron de verdad; lo que la tool ESCRIBE sigue siendo el hueco.'],
+  ['Seguridad',              5, 5, 1, 4, 6, 5, 'Deuda que cobró factura + mirada más profunda. npm audit --omit=dev: 0 vulnerabilidades, verificado por el orquestador.'],
+  ['Frontend',               5, 5, 0, 6, 4, 3, 'Compensación exacta: el crítico de la compuerta de onboarding cerró de verdad, y 8 de 8 reincidentes de la c4 siguen abiertos.'],
+  ['Rendimiento y costo',    5, 5, 3, 9, 6, 1, 'Deuda que cobró factura — sus dos críticos reincidentes van por la quinta ronda sin tocarse.'],
+  ['Modelo de datos',        5, 6, 1, 7, 4, 5, 'Deuda que cobró factura + mirada más profunda — la llave de idempotencia no tiene alcance de corrida ni vencimiento.'],
+  ['Pruebas',                5, 5, 3, 7, 7, 1, 'Se atacó y subió (pgTAP corriendo de verdad en CI, el IDOR cerrado con prueba propia) contra deuda que cobró factura: el panel de QA nació con su motor en 6.49 % de líneas. Neto cero.'],
+  ['Sistema agéntico',       4, 4, 2, 4, 3, 1, 'Se atacó y subió (leases con fencing) compensado por deuda que cobró factura: los 4 abiertos de la ronda 19 siguen sin una línea de cambio.'],
+  ['Arquitectura',           3, 4, 0, 5, 6, 2, 'Deuda que cobró factura — los dos controles nuevos se apagan solos bajo vitest, y repo.ts pasó de 171 a 173 archivos que lo saltan con la allowlist congelada en 16.'],
+  ['Cumplimiento fiscal',    3, 3, 4, 6, 8, 3, 'Deuda que cobró factura — los dos arreglos fiscales del delta están inertes: el motor lee dos llaves de ocr_extra que ningún escritor pone.'],
+  ['Cumplimiento legal',     3, 3, 4, 4, 2, 1, 'El commit que se llama «Compuerta legal» no cerró ninguno de los cuatro críticos. Se cerró 1 de 22, y por colateral. (Más 22 reincidentes verificados uno por uno en tabla.)'],
+];
+const PRUEBAS = ['—', null, 0, 0, 0, 0, 0, ''];
+
+function pinta(){
+  const filas = RUBROS.concat([PRUEBAS]).filter(r => r[1] !== null);
+  filas.sort((a,b) => b[1]-a[1]);
+  const tb = document.querySelector('#t tbody');
+  tb.innerHTML = '';
+  let suma = 0, c=0,a=0,m=0,b=0;
+  for (const [nombre, hoy, antes, nc, na, nm, nb, razon] of filas){
+    suma += hoy; c+=nc; a+=na; m+=nm; b+=nb;
+    const d = hoy - antes;
+    const cls = d < 0 ? 'd-baja' : d > 0 ? 'd-sube' : 'd-igual';
+    const txt = d < 0 ? '▼ '+d : d > 0 ? '▲ +'+d : '=';
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td class="rubro">'+nombre+'<div class="barra"><i style="width:'+(hoy*10)+'%"></i></div></td>'+
+      '<td class="nota">'+hoy+'</td>'+
+      '<td class="delta '+cls+'">'+txt+'</td>'+
+      '<td class="sev'+(nc?'':' s0')+'" style="'+(nc?'color:var(--critico)':'')+'">'+nc+'</td>'+
+      '<td class="sev'+(na?'':' s0')+'" style="'+(na?'color:var(--alto)':'')+'">'+na+'</td>'+
+      '<td class="sev'+(nm?'':' s0')+'">'+nm+'</td>'+
+      '<td class="sev'+(nb?'':' s0')+'">'+nb+'</td>'+
+      '<td class="razon">'+razon+'</td>';
+    tb.appendChild(tr);
+  }
+  const global = suma / filas.length;
+  const g = Math.round(global*10)/10;
+  document.getElementById('global').textContent = g.toFixed(1);
+  const dg = Math.round((g - 4.7)*10)/10;
+  document.getElementById('global-delta').textContent =
+    (dg === 0 ? 'sin cambio' : (dg>0?'▲ +':'▼ ')+dg.toFixed(1)) + ' contra el 4.7 de la ronda 19';
+  document.getElementById('total').textContent = c+a+m+b;
+  document.getElementById('total-n').textContent = c+' críticos · '+a+' altos · '+m+' medios · '+b+' bajos';
+  document.getElementById('crit').textContent = c;
+  return g;
+}
+
+function serie(g){
+  const datos = [['18',6.1],['c2',4.8],['c3',5.8],['c4',5.3],['19',4.7],['19c2',g]];
+  const W=720,H=200,ml=34,mr=16,mt=18,mb=30;
+  const x = i => ml + i*(W-ml-mr)/(datos.length-1);
+  const y = v => mt + (10-v)*(H-mt-mb)/10;
+  let s = '';
+  for (let v=0; v<=10; v+=2){
+    s += '<line x1="'+ml+'" y1="'+y(v)+'" x2="'+(W-mr)+'" y2="'+y(v)+'" stroke="#e3e1dc" stroke-width="1"/>'
+       + '<text x="'+(ml-8)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="10" fill="#7b828c">'+v+'</text>';
+  }
+  s += '<path d="'+datos.map((d,i)=>(i?'L':'M')+x(i)+' '+y(d[1])).join(' ')+
+       '" fill="none" stroke="#14161a" stroke-width="2" stroke-linejoin="round"/>';
+  datos.forEach((d,i)=>{
+    const ult = i === datos.length-1;
+    s += '<circle cx="'+x(i)+'" cy="'+y(d[1])+'" r="'+(ult?5:3.5)+'" fill="'+(ult?'#e8590c':'#14161a')+'"/>'
+       + '<text x="'+x(i)+'" y="'+(y(d[1])-11)+'" text-anchor="middle" font-size="11" font-weight="700" fill="'+(ult?'#e8590c':'#14161a')+'">'+d[1].toFixed(1)+'</text>'
+       + '<text x="'+x(i)+'" y="'+(H-10)+'" text-anchor="middle" font-size="10" fill="#7b828c">'+d[0]+'</text>';
+  });
+  document.getElementById('svg').innerHTML = s;
+}
+
+serie(pinta());
+document.getElementById('cg-test').textContent =
+  '519 archivos · 6,525 pruebas · 1 saltada · exit 0';
+</script>
+</body>
+</html>
