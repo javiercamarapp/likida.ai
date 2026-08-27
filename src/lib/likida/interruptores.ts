@@ -50,6 +50,13 @@ export const INTERRUPTORES = [
   // único de los tres que toca un canal real, y por eso el primero que se
   // apaga si algo huele mal.
   'agente:enriquecedor', 'agente:sdr', 'agente:enviador',
+  // Éxito del cliente (0218) — los seis que vigilan a la flota que YA firmó.
+  // Ninguno escribe al cliente: todos dejan el parte o el borrador en la
+  // bandeja. Aun así llevan palanca, porque el candado 1 del runner no
+  // distingue entre "manda correos" y "solo propone": un autónomo que no se
+  // puede apagar no corre, punto.
+  'agente:onboarding_cliente', 'agente:exito_cliente', 'agente:retencion',
+  'agente:cobranza_saas', 'agente:soporte', 'agente:atencion_faq',
 ] as const;
 
 export type NombreInterruptor = (typeof INTERRUPTORES)[number];

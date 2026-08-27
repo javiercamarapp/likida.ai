@@ -44,7 +44,7 @@ vi.mock('@/lib/likida/presupuesto', () => ({ acotada: (q: unknown) => q }));
 let apagados = new Set<string>();
 let interruptorFalla = false;
 vi.mock('../interruptores', () => ({
-  INTERRUPTORES: ['global', 'agente:redactor', 'agente:kpi_whatsapp'],
+  INTERRUPTORES: ['global', 'agente:redactor', 'agente:kpi_whatsapp', 'agente:onboarding_cliente', 'agente:atencion_faq'],
   estaApagado: async (n: string) => {
     if (interruptorFalla && n !== 'global') throw new Error('base caída');
     return apagados.has(n);
@@ -58,6 +58,12 @@ vi.mock('./redactor', () => ({ redactarCorreoFrio: (...a: unknown[]) => redactar
 // aplica igual y evita arrastrar los lectores reales de /admin.
 const correrDireccion = vi.fn(async (_a: unknown) => ({ resultado: 'corrio' as const, piezas: 1, costoUsd: 0 }));
 vi.mock('../direccion/reportes', () => ({ correrAgenteDireccion: (...a: unknown[]) => correrDireccion(...(a as [unknown])) }));
+
+// Éxito del cliente (0218): mismo trato que dirección — import dinámico en el
+// runner, mock aquí, y así la vuelta no arrastra los lectores de /admin ni el
+// corpus de normas.
+const correrExito = vi.fn(async (..._a: unknown[]) => ({ resultado: 'corrio' as const, piezas: 1, costoUsd: 0 }));
+vi.mock('./exito', () => ({ correrAgenteExito: (...a: unknown[]) => correrExito(...a) }));
 
 const { correrRunner } = await import('./runner');
 
@@ -73,6 +79,8 @@ beforeEach(() => {
   redactar.mockResolvedValue({ piezaId: 'p', asunto: 'x', aviso: null, costoUsd: 0.001 });
   correrDireccion.mockClear();
   correrDireccion.mockResolvedValue({ resultado: 'corrio', piezas: 1, costoUsd: 0 });
+  correrExito.mockClear();
+  correrExito.mockResolvedValue({ resultado: 'corrio', piezas: 1, costoUsd: 0 });
 });
 
 describe('los cuatro candados', () => {
@@ -214,6 +222,56 @@ describe('el despacho de dirección (0216)', () => {
     const r = await correrRunner(undefined, TENANT);
     expect(correrDireccion).not.toHaveBeenCalled();
     expect(r.agentes[0].motivo).toContain('sin presupuesto_dia_usd');
+  });
+});
+
+describe('el despacho de éxito del cliente (0218)', () => {
+  it('un determinista se despacha a su motor y su resultado sale tal cual', async () => {
+    respuestas.set('agente_definicion', [{ data: [{ id: 'onboarding_cliente', presupuesto_dia_usd: 0.1 }], error: null }]);
+    const r = await correrRunner(undefined, TENANT);
+    expect(correrExito).toHaveBeenCalledWith('onboarding_cliente', 'cron');
+    expect(r.agentes).toEqual([{ agente: 'onboarding_cliente', resultado: 'corrio', motivo: undefined, piezas: 1, costoUsd: 0 }]);
+    // Los cinco deterministas NO pasan por el gasto del día: su gasto de
+    // modelo es $0 y leerlo sería una consulta que no decide nada.
+    expect(respuestas.get('agente_corrida')).toBeUndefined();
+  });
+
+  it('el motor que lanza NO tumba la vuelta', async () => {
+    correrExito.mockRejectedValueOnce(new Error('la bandeja no contesta'));
+    respuestas.set('agente_definicion', [{ data: [{ id: 'onboarding_cliente', presupuesto_dia_usd: 0.1 }], error: null }]);
+    const r = await correrRunner(undefined, TENANT);
+    expect(r.agentes[0]).toMatchObject({ agente: 'onboarding_cliente', resultado: 'saltado', motivo: 'la bandeja no contesta' });
+  });
+
+  it('sin kill switch declarado no corre — el candado 1 no distingue rubros', async () => {
+    respuestas.set('agente_definicion', [{ data: [{ id: 'retencion', presupuesto_dia_usd: 0.1 }], error: null }]);
+    const r = await correrRunner(undefined, TENANT);
+    expect(correrExito).not.toHaveBeenCalled();
+    expect(r.agentes[0].motivo).toMatch(/kill switch/);
+  });
+
+  it('atencion_faq SÍ pasa por el techo de gasto MEDIDO: es el único que gasta modelo', async () => {
+    respuestas.set('agente_definicion', [{ data: [{ id: 'atencion_faq', presupuesto_dia_usd: 1 }], error: null }]);
+    respuestas.set('agente_corrida', [{ data: [{ costo_usd: 0.02 }], error: null }]);
+    const r = await correrRunner(undefined, TENANT);
+    expect(correrExito).toHaveBeenCalledWith('atencion_faq', 'cron');
+    expect(r.agentes[0].resultado).toBe('corrio');
+  });
+
+  it('con el techo de atencion_faq agotado, ni se le pregunta al modelo', async () => {
+    respuestas.set('agente_definicion', [{ data: [{ id: 'atencion_faq', presupuesto_dia_usd: 1 }], error: null }]);
+    respuestas.set('agente_corrida', [{ data: [{ costo_usd: 5 }], error: null }]);
+    const r = await correrRunner(undefined, TENANT);
+    expect(correrExito).not.toHaveBeenCalled();
+    expect(r.agentes[0].motivo).toMatch(/techo diario alcanzado/);
+  });
+
+  it('gasto del día ilegible: fail closed y dicho', async () => {
+    respuestas.set('agente_definicion', [{ data: [{ id: 'atencion_faq', presupuesto_dia_usd: 1 }], error: null }]);
+    respuestas.set('agente_corrida', [{ data: null, error: { message: 'base caída' } }]);
+    const r = await correrRunner(undefined, TENANT);
+    expect(correrExito).not.toHaveBeenCalled();
+    expect(r.agentes[0].motivo).toMatch(/fail closed/);
   });
 });
 
