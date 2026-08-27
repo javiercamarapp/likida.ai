@@ -8897,7 +8897,7 @@ end $$;
 -- un valor inventado del OCR o de un XML roto rebota, no se guarda.
 do $$
 declare
-  t uuid; n_anon int; n_auth int; duplicado_rebota boolean; metodo_malo_rebota boolean;
+  t uuid; v_op uuid; n_anon int; n_auth int; duplicado_rebota boolean; metodo_malo_rebota boolean;
 begin
   -- (a) Sin grant directo: ni anon ni authenticated pueden leer cfdi_pago.
   begin
@@ -8929,9 +8929,11 @@ begin
 
   -- (c) El dominio de metodo_pago: basura rebota.
   begin
-    update gasto set metodo_pago = 'XXX' where tenant_id = t; -- 0 filas, pero el CHECK se evalúa en el tipo
     -- Un UPDATE de 0 filas no evalúa el CHECK: se prueba con un INSERT real.
-    insert into viaje (tenant_id, folio) values (t, 'ZZZ-REP');
+    -- `viaje.operador_id` es NOT NULL: se crea un operador de andamiaje antes
+    -- (el fallo original de este bloque en CI fue exactamente ese NOT NULL).
+    insert into operador (tenant_id, nombre, telefono) values (t, 'P', '+520000000199') returning id into v_op;
+    insert into viaje (tenant_id, operador_id, folio) values (t, v_op, 'ZZZ-REP');
     insert into gasto (tenant_id, viaje_id, concepto, monto, metodo_pago)
       select t, v.id, 'diesel', 100, 'XXX' from viaje v where v.tenant_id = t limit 1;
     metodo_malo_rebota := false;

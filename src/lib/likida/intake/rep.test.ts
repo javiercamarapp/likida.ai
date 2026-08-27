@@ -113,7 +113,6 @@ describe('metodoPagoSat — el atributo que dice si un CFDI espera un REP', () =
 
 const upsert = vi.hoisted(() => vi.fn(async () => ({ error: null })));
 const update = vi.hoisted(() => vi.fn());
-const select = vi.hoisted(() => vi.fn());
 vi.mock('@/lib/supabase/admin', () => ({
   supabaseAdmin: () => ({
     from: (tabla: string) => tabla === 'cfdi_pago'
