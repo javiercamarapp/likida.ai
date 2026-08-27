@@ -42,6 +42,11 @@ export const INTERRUPTORES = [
   // kill switch declarado el runner ni los despacha (candado 1).
   'agente:analista_metricas', 'agente:control_costos',
   'agente:tesoreria', 'agente:cierre_mensual',
+  // La máquina de prospección (0217): el investigador (id histórico
+  // `enriquecedor`), el SDR de seguimientos y el enviador de campaña — el
+  // único de los tres que toca un canal real, y por eso el primero que se
+  // apaga si algo huele mal.
+  'agente:enriquecedor', 'agente:sdr', 'agente:enviador',
 ] as const;
 
 export type NombreInterruptor = (typeof INTERRUPTORES)[number];
