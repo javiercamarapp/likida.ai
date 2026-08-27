@@ -38,6 +38,9 @@ export const INTERRUPTORES = [
   'agente:liquidacion', 'agente:facturas', 'agente:cobranza',
   'agente:conductores', 'agente:peajes', 'agente:proveedores',
   'agente:ventas', 'agente:redactor',
+  // Los cuatro de dirección (0216) — el candado 1 del runner exige palanca.
+  'agente:kpi_whatsapp', 'agente:desempeno_startup',
+  'agente:orquestador', 'agente:orquestador_semanal',
 ] as const;
 
 export type NombreInterruptor = (typeof INTERRUPTORES)[number];
