@@ -12486,3 +12486,125 @@ begin
     cookies_rebotan, captcha_entero_rebota, captcha_recortado_entra,
     vinculado_sin_fecha_rebota, caducada_sin_fecha_rebota, otra_flota_entra, cerrado;
 end $$;
+
+-- ── 196. Los nueve relojes caben en la tabla que los vigila (mig. 0242) ──────
+--
+-- EL BUG QUE ESTE BLOQUE EXISTE PARA QUE NO VUELVA. `cron_latido` (0155) trae
+-- un CHECK que enumera los ids permitidos, y se fue ampliando a mano: la 0176
+-- metió `gps`, la 0180 metió `wa-outbox`, y ahí se quedó, en SIETE. Después
+-- nacieron dos crons más —`asistencia` (emergencias, cada 5 min) y
+-- `descarga-sat` (0231, cada 6 h)—, `src/lib/admin/salud.ts` los declaró en
+-- `CRONS`, sus rutas llamaron a `registrarLatido`… y el upsert rebotaba contra
+-- este CHECK.
+--
+-- Nadie se enteró porque `registrarLatido` es best-effort A PROPÓSITO (un cron
+-- que hizo su trabajo no debe fallar porque no pudo escribir su bitácora):
+-- tragaba el `check_violation` con un `logger.warn`. Los dos crons corrían y
+-- el panel los daba por muertos para siempre — y `sin_latido` dejaba
+-- /api/health en `degraded` permanente, que es la forma más eficaz de que
+-- nadie vuelva a mirar ese semáforo.
+--
+-- Es exactamente el tipo de garantía que SOLO la base puede demostrar: que un
+-- id entra o rebota no se puede probar contra un mock de supabase-js — ese
+-- prueba el mock, y de hecho lo probó en verde durante semanas.
+do $$
+declare
+  nueve_entran        boolean;
+  cuantos             int;
+  asistencia_late     boolean;
+  descarga_sat_late   boolean;
+  dedazo_rebota       boolean;
+  estado_basura_rebota boolean;
+  detalle_del_salto   text;
+  sin_policies        boolean;
+  filas_que_ve_el_navegador int;
+  cerrado             boolean;
+begin
+  -- (a) Los NUEVE ids que `CRONS` declara entran. Se usa upsert porque en una
+  --     base con historia las filas ya existen: lo que se comprueba es que el
+  --     CHECK los admite, no que la tabla esté vacía.
+  begin
+    insert into public.cron_latido (id, ultimo_latido, estado, detalle) values
+      ('wa-pendientes', now(), 'ok',      '{}'::jsonb),
+      ('wa-outbox',     now(), 'ok',      '{}'::jsonb),
+      ('escalar',       now(), 'parcial', '{}'::jsonb),
+      ('facturar',      now(), 'saltado', '{"interruptor":"global"}'::jsonb),
+      ('purgar',        now(), 'ok',      '{}'::jsonb),
+      ('runner',        now(), 'fallo',   '{}'::jsonb),
+      ('gps',           now(), 'ok',      '{}'::jsonb),
+      ('asistencia',    now(), 'ok',      '{}'::jsonb),
+      ('descarga-sat',  now(), 'ok',      '{}'::jsonb)
+    on conflict (id) do update
+      set ultimo_latido = excluded.ultimo_latido,
+          estado        = excluded.estado,
+          detalle       = excluded.detalle;
+    nueve_entran := true;
+  exception when others then
+    nueve_entran := false;
+  end;
+
+  select count(*) into cuantos from public.cron_latido
+   where id in ('wa-pendientes','wa-outbox','escalar','facturar','purgar',
+                'runner','gps','asistencia','descarga-sat');
+
+  -- (b) Los DOS que la 0242 agrega, nombrados aparte: son los que llevaban
+  --     semanas rebotando, y un verde global no diría cuál de los nueve falta.
+  select exists (select 1 from public.cron_latido where id = 'asistencia')
+    into asistencia_late;
+  select exists (select 1 from public.cron_latido where id = 'descarga-sat')
+    into descarga_sat_late;
+
+  -- (c) EL DOMINIO SIGUE CERRADO. Ampliar no puede convertirse en abrir: un id
+  --     con dedazo tiene que rebotar, porque si entrara, latiría feliz como
+  --     fila válida mientras el cron de verdad se ve `sin_latido` — el panel
+  --     enseñaría diez renglones y uno sería mentira.
+  begin
+    insert into public.cron_latido (id, estado) values ('facutrar', 'ok');
+    dedazo_rebota := false;
+  exception when check_violation then
+    dedazo_rebota := true;
+  end;
+
+  -- (d) El otro CHECK de la tabla no se tocó y sigue vivo.
+  begin
+    insert into public.cron_latido (id, estado) values ('purgar', 'medio_ok');
+    estado_basura_rebota := false;
+  exception when check_violation then
+    estado_basura_rebota := true;
+  end;
+
+  -- (e) El motivo del salto viaja en `detalle`, que es lo que la pantalla de
+  --     Relojes lee para distinguir «lo apagué yo» de «lleva tres días muerto».
+  select detalle ->> 'interruptor' into detalle_del_salto
+    from public.cron_latido where id = 'facturar';
+
+  -- (f) EL CANDADO, MEDIDO COMO LO VIVE UN NAVEGADOR y no por sus grants.
+  --
+  --     `cron_latido` es deny-all por RLS ACTIVA Y CERO POLICIES, no por
+  --     grants revocados: los GRANT por default de Supabase a
+  --     anon/authenticated siguen ahí (los pone el andamio, igual que el
+  --     proyecto real), así que `has_table_privilege` contesta `t` y NO sirve
+  --     como prueba de aislamiento — mediría el permiso de tabla, que aquí no
+  --     es quien decide. Lo que decide es que sin una sola policy ninguna fila
+  --     pasa el filtro para un rol que no sea BYPASSRLS.
+  --
+  --     Se prueba impersonando, que es lo que hace PostgREST en cada request,
+  --     en vez de leer el catálogo: si mañana alguien añade una policy
+  --     permisiva "para depurar", este contador deja de ser 0 y el bloque
+  --     truena — cosa que la lectura de grants nunca habría notado.
+  sin_policies := not exists (
+    select 1 from pg_policy where polrelid = 'public.cron_latido'::regclass);
+
+  set local role authenticated;
+  select count(*) into filas_que_ve_el_navegador from public.cron_latido;
+  reset role;
+
+  cerrado := sin_policies
+    and filas_que_ve_el_navegador = 0
+    and (select relrowsecurity from pg_class where oid = 'public.cron_latido'::regclass);
+
+  raise exception 'CRON_LATIDO_NUEVE_242  nueve_entran=%  cuantos=%  asistencia_late=%  descarga_sat_late=%  dedazo_rebota=%  estado_basura_rebota=%  detalle_del_salto=%  filas_que_ve_el_navegador=%  cerrado=%   (esperado t / 9 / t / t / t / t / global / 0 / t)',
+    nueve_entran, cuantos, asistencia_late, descarga_sat_late,
+    dedazo_rebota, estado_basura_rebota, detalle_del_salto,
+    filas_que_ve_el_navegador, cerrado;
+end $$;
