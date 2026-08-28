@@ -10,7 +10,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // ═══════════════════════════════════════════════════════════════════════════
 
 const respuestas = new Map<string, Array<{ data?: unknown; error?: { message: string } | null; count?: number }>>();
+/** Cuántas veces se consultó cada tabla. Es lo único que deja verificar que
+ *  un `.in(...)` de miles de ids se parta en lotes: la URL que PostgREST no
+ *  aguanta no se ve desde aquí, pero el número de vueltas sí. */
+const consultas = new Map<string, number>();
 function builder(tabla: string) {
+  consultas.set(tabla, (consultas.get(tabla) ?? 0) + 1);
   const responder = () => {
     const cola = respuestas.get(tabla);
     return cola && cola.length > 0 ? cola.shift()! : { data: [], error: null, count: 0 };
@@ -44,7 +49,7 @@ const {
   armarBriefDemo, tituloBrief,
   armarPropuesta, tituloPropuesta,
   perfilQueConvierte, celdasSinTrabajar, nuevosSinTocar, armarEncargoCaza,
-  MIN_AVANZADOS_PARA_PERFIL,
+  MIN_AVANZADOS_PARA_PERFIL, IDS_POR_LOTE, TOPE_PROSPECTOS,
 } = await import('./leads');
 
 const HOY = '2026-08-27'; // jueves
@@ -73,6 +78,7 @@ function senalesLlenas(over: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   respuestas.clear();
+  consultas.clear();
   encolar.mockClear();
   encolar.mockResolvedValue('pieza-1');
   registrar.mockClear();
@@ -176,6 +182,35 @@ describe('scorer: sin señal NO hay número', () => {
   it('un conteo que PostgREST no devuelve es fail-closed, no un cero', async () => {
     respuestas.set('cola_aprobacion', [{ count: undefined, error: null }]);
     await expect(correrAgenteLeads('scorer', 'cron', HOY)).rejects.toThrow(/no se afirma un 0/);
+  });
+
+  // Con el censo real (decenas de miles de filas), un `.in()` con todos los
+  // ids son cientos de KB de query string y PostgREST contesta 414 antes de
+  // llegar a Postgres. El lote no es una optimización: sin él este camino se
+  // rompe SIEMPRE.
+  it('la lista de ids se parte en lotes: un solo .in() con miles de ids no cabe en la URL', async () => {
+    const n = IDS_POR_LOTE * 2 + 1;
+    respuestas.set('cola_aprobacion', [{ count: 0, error: null }]);
+    respuestas.set('prospecto', [{
+      data: Array.from({ length: n }, (_, i) => ({ id: `p${i}`, empresa: `ZZZ ${i}`, estado: 'nuevo' })),
+      error: null, count: n,
+    }]);
+    await correrAgenteLeads('scorer', 'cron', HOY);
+    expect(consultas.get('prospecto_correo')).toBe(3);
+  });
+
+  it('un lote que falla LANZA: media lista diría «sin correos» de los que no llegaron', async () => {
+    const n = IDS_POR_LOTE + 1;
+    respuestas.set('cola_aprobacion', [{ count: 0, error: null }]);
+    respuestas.set('prospecto', [{
+      data: Array.from({ length: n }, (_, i) => ({ id: `p${i}`, empresa: `ZZZ ${i}`, estado: 'nuevo' })),
+      error: null, count: n,
+    }]);
+    respuestas.set('prospecto_correo', [
+      { data: [], error: null },
+      { data: null, error: { message: 'el segundo lote no llegó' } },
+    ]);
+    await expect(correrAgenteLeads('scorer', 'cron', HOY)).rejects.toThrow(/el segundo lote no llegó/);
   });
 
   it('la tabla ilegible LANZA en vez de afirmar que no hay señal', async () => {
@@ -528,13 +563,35 @@ describe('cazador: el encargo de caza, no la caza', () => {
 
   it('la corrida titula por semana y no toca ninguna tabla de escritura', async () => {
     respuestas.set('cola_aprobacion', [{ count: 0, error: null }]);
-    respuestas.set('prospecto', [{ data: [{ id: 'p1', empresa: 'ZZZ', estado: 'nuevo', scian: '484', ciudad: 'MTY', num_unidades: null, created_at: '2026-01-01T00:00:00Z' }], error: null, count: 1 }]);
+    respuestas.set('prospecto', [
+      { data: [{ id: 'p1', empresa: 'ZZZ', estado: 'nuevo', scian: '484', ciudad: 'MTY', num_unidades: null, created_at: '2026-01-01T00:00:00Z' }], error: null, count: 1 },
+      { data: [], error: null },
+    ]);
     respuestas.set('prospecto_contacto', [{ data: [], error: null }]);
     const r = await correrAgenteLeads('cazador', 'cron', HOY);
     expect(r).toMatchObject({ resultado: 'corrio', piezas: 1 });
     expect(ultimoTitulo()).toBe(`Cazador — semana del ${LUNES}`);
     // La única escritura de todo el módulo es la pieza en la bandeja.
     expect(encolar).toHaveBeenCalledTimes(1);
+  });
+
+  // El perfil sale de SU consulta, no de la ventana del censo: si saliera de
+  // ahí, con decenas de miles de filas el «perfil que convierte» retrataría a
+  // las filas más viejas del censo importado.
+  it('el perfil NO se calcula sobre la ventana truncada del censo: tiene consulta propia', async () => {
+    respuestas.set('cola_aprobacion', [{ count: 0, error: null }]);
+    respuestas.set('prospecto', [
+      // La ventana del censo: truncada, y sin un solo avanzado dentro.
+      { data: [{ id: 'p1', empresa: 'ZZZ', estado: 'nuevo', scian: '484', ciudad: 'MTY', num_unidades: null, created_at: '2026-01-01T00:00:00Z' }], error: null, count: TOPE_PROSPECTOS + 1 },
+      // La consulta propia de los avanzados: cinco, con flota, fuera de esa ventana.
+      { data: Array.from({ length: 5 }, (_, i) => ({ estado: 'demo', scian: '484110', ciudad: 'Guadalajara', num_unidades: 20 + i })), error: null },
+    ]);
+    respuestas.set('prospecto_contacto', [{ data: [], error: null }]);
+    await correrAgenteLeads('cazador', 'cron', HOY);
+    const cuerpo = ultimoCuerpo();
+    expect(cuerpo).toContain('Guadalajara');
+    expect(cuerpo).toContain('MEDIANA');
+    expect(cuerpo).toContain('El PERFIL de la sección 1 NO está afectado');
   });
 });
 

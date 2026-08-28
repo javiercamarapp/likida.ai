@@ -188,6 +188,31 @@ export const TOPE_PROSPECTOS = 5_000;
  *  ignorar uno dejaría medio pipeline invisible. */
 export const ESTADOS_CERRADOS: readonly string[] = ['cerrado', 'won', 'perdido', 'lost', 'cancelled'];
 
+/** Ids por consulta en un `.in(...)`.
+ *
+ *  ESTO NO ES UNA MICRO-OPTIMIZACIÓN, ES UN LÍMITE DE PROTOCOLO. PostgREST
+ *  recibe el filtro por la QUERY STRING de un GET, y un `in.(…)` con los 5 000
+ *  ids del tope de arriba son ~185 KB de URL: el proxy contesta 414 y la
+ *  consulta ni llega a Postgres. Con el censo real (decenas de miles de filas)
+ *  ese camino se rompe SIEMPRE, no de vez en cuando — y el agente que lo
+ *  sufriera fallaría entero por una lista de correos.
+ *
+ *  200 deja la URL en unos 8 KB, muy por debajo de cualquier límite razonable,
+ *  y 25 vueltas de 200 sobre tablas satélite pequeñas cuestan milisegundos. */
+export const IDS_POR_LOTE = 200;
+
+/** Corre `leer` por lotes de ids y junta las filas. LANZA en cuanto un lote
+ *  falla: media lista es peor que ninguna — un mapa a medias haría que los
+ *  prospectos del lote que no llegó se reportaran como «sin correos» o «sin
+ *  tocar», que son afirmaciones, no huecos. */
+async function porLotes<T>(ids: string[], leer: (lote: string[]) => Promise<T[]>): Promise<T[]> {
+  const salida: T[] = [];
+  for (let i = 0; i < ids.length; i += IDS_POR_LOTE) {
+    salida.push(...await leer(ids.slice(i, i + IDS_POR_LOTE)));
+  }
+  return salida;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // 1 · SCORER — la señal que EXISTE, o el «no alcanza» dicho con todas sus
 // letras.
@@ -386,16 +411,16 @@ async function leerSenales(): Promise<{ filas: SenalesProspecto[]; truncado: boo
  *  se leería como «ningún prospecto tiene correo», que es una afirmación. */
 async function contarCorreos(ids: string[]): Promise<Map<string, number>> {
   const mapa = new Map<string, number>();
-  if (ids.length === 0) return mapa;
-  const { data, error } = await acotada(supabaseAdmin()
-    .from('prospecto_correo')
-    .select('prospecto_id')
-    .in('prospecto_id', ids)
-    .limit(TOPE_PROSPECTOS * 4), 'leads.scorer.correos');
-  if (error) throw new Error(`contarCorreos: ${error.message}`);
-  for (const f of (data ?? []) as Array<{ prospecto_id: string }>) {
-    mapa.set(f.prospecto_id, (mapa.get(f.prospecto_id) ?? 0) + 1);
-  }
+  const filas = await porLotes(ids, async (lote) => {
+    const { data, error } = await acotada(supabaseAdmin()
+      .from('prospecto_correo')
+      .select('prospecto_id')
+      .in('prospecto_id', lote)
+      .limit(IDS_POR_LOTE * 20), 'leads.scorer.correos');
+    if (error) throw new Error(`contarCorreos: ${error.message}`);
+    return (data ?? []) as Array<{ prospecto_id: string }>;
+  });
+  for (const f of filas) mapa.set(f.prospecto_id, (mapa.get(f.prospecto_id) ?? 0) + 1);
   return mapa;
 }
 
@@ -862,19 +887,26 @@ async function leerVigilancia(): Promise<{ filas: FilaVigia[]; truncado: boolean
  *  afirmación fuerte y falsa. */
 async function leerHistorial(ids: string[]): Promise<Map<string, { salida: string | null; respuesta: string | null }>> {
   const mapa = new Map<string, { salida: string | null; respuesta: string | null }>();
-  if (ids.length === 0) return mapa;
-  const { data, error } = await acotada(supabaseAdmin()
-    .from('prospecto_contacto')
-    .select('prospecto_id, direccion, ocurrio_en')
-    .in('prospecto_id', ids)
-    .order('ocurrio_en', { ascending: false })
-    .limit(TOPE_PROSPECTOS * 4), 'leads.vigia.historial');
-  if (error) throw new Error(`leerHistorial: ${error.message}`);
-  // Descendente: la PRIMERA de cada (prospecto, dirección) es la última.
-  for (const f of (data ?? []) as Array<{ prospecto_id: string; direccion: string; ocurrio_en: string }>) {
+  const filas = await porLotes(ids, async (lote) => {
+    const { data, error } = await acotada(supabaseAdmin()
+      .from('prospecto_contacto')
+      .select('prospecto_id, direccion, ocurrio_en')
+      .in('prospecto_id', lote)
+      .order('ocurrio_en', { ascending: false })
+      .limit(IDS_POR_LOTE * 20), 'leads.vigia.historial');
+    if (error) throw new Error(`leerHistorial: ${error.message}`);
+    return (data ?? []) as Array<{ prospecto_id: string; direccion: string; ocurrio_en: string }>;
+  });
+  // Cada lote viene descendente, así que la PRIMERA fila que se ve de cada
+  // (prospecto, dirección) es la última que ocurrió. El orden se compara igual
+  // por si un lote llegara desordenado: quedarse con la más nueva es la
+  // decisión, no confiar en el orden de llegada.
+  for (const f of filas) {
     const actual = mapa.get(f.prospecto_id) ?? { salida: null, respuesta: null };
-    if (f.direccion === 'salida' && actual.salida === null) actual.salida = f.ocurrio_en;
-    if (f.direccion === 'respuesta' && actual.respuesta === null) actual.respuesta = f.ocurrio_en;
+    const campo = f.direccion === 'salida' ? 'salida' : f.direccion === 'respuesta' ? 'respuesta' : null;
+    if (campo !== null && (actual[campo] === null || f.ocurrio_en > (actual[campo] as string))) {
+      actual[campo] = f.ocurrio_en;
+    }
     mapa.set(f.prospecto_id, actual);
   }
   return mapa;
@@ -1353,10 +1385,19 @@ export interface Perfil {
   motivoSinPerfil: string | null;
 }
 
+/** Las etapas que cuentan como AVANZADO para el perfil: de demo en adelante,
+ *  en los dos vocabularios que conviven en el dominio de `estado` (0181). */
+export const ETAPAS_AVANZADAS: readonly string[] = ['demo', 'appointment', 'pilot', 'proposal', 'negociacion', 'cerrado', 'won'];
+
+/** Lo mínimo que el perfil necesita de una fila. Se declara aparte de
+ *  `FilaCaza` a propósito: el perfil se calcula sobre una consulta PROPIA de
+ *  los avanzados —no sobre la ventana truncada del censo— y esa consulta no
+ *  tiene por qué traer la marca de `tocado`, que solo sirve para las celdas. */
+export type FilaPerfil = Pick<FilaCaza, 'estado' | 'scian' | 'ciudad' | 'numUnidades'>;
+
 /** El perfil de lo que convierte. PURO. */
-export function perfilQueConvierte(filas: FilaCaza[]): Perfil {
-  const AVANZADOS: readonly string[] = ['demo', 'appointment', 'pilot', 'proposal', 'negociacion', 'cerrado', 'won'];
-  const avanzados = filas.filter((f) => AVANZADOS.includes(f.estado));
+export function perfilQueConvierte(filas: FilaPerfil[]): Perfil {
+  const avanzados = filas.filter((f) => ETAPAS_AVANZADAS.includes(f.estado));
   const conFlota = avanzados.filter((f) => f.numUnidades !== null);
   if (avanzados.length < MIN_AVANZADOS_PARA_PERFIL) {
     return {
@@ -1365,7 +1406,7 @@ export function perfilQueConvierte(filas: FilaCaza[]): Perfil {
       motivoSinPerfil: `SIN PERFIL: solo ${numero(avanzados.length)} prospecto(s) han pasado de demo, y el piso declarado son ${numero(MIN_AVANZADOS_PARA_PERFIL)}. Un «perfil que convierte» sacado de menos casos no es un patrón, es una anécdota con porcentajes.`,
     };
   }
-  const contar = (clave: (f: FilaCaza) => string | null) => {
+  const contar = (clave: (f: FilaPerfil) => string | null) => {
     const m = new Map<string, number>();
     for (const f of avanzados) {
       const k = clave(f)?.trim();
@@ -1467,7 +1508,7 @@ export function armarEncargoCaza(
 
   if (truncado) {
     l.push('');
-    l.push(`CONSULTA TRUNCADA A ${numero(TOPE_PROSPECTOS)} FILAS: el censo tiene más filas de las que este encargo alcanzó a leer. Los conteos son un PISO, no el total, y el perfil se armó sobre la muestra leída.`);
+    l.push(`CONSULTA TRUNCADA A ${numero(TOPE_PROSPECTOS)} FILAS: el censo tiene más filas de las que este encargo alcanzó a leer. Los conteos de las secciones 2 y 3 son un PISO, no el total. El PERFIL de la sección 1 NO está afectado: sale de su propia consulta sobre los prospectos avanzados, que son pocos por definición y caben enteros — un perfil armado sobre las filas más viejas del censo retrataría al censo, no a lo que convierte.`);
   }
   l.push('');
   l.push('Fuentes: `prospecto` (censo capturado, sin duplicados) · `prospecto_contacto` (si tiene al menos un toque). Ninguna empresa de este documento salió de fuera de la base.');
@@ -1503,19 +1544,46 @@ async function leerCaza(): Promise<{ filas: FilaCaza[]; truncado: boolean }> {
   };
 }
 
+/** Los prospectos que YA avanzaron, en su propia consulta y SIN truncar.
+ *
+ *  POR QUÉ NO SALEN DE LA VENTANA DEL CENSO: el censo son decenas de miles de
+ *  filas y la ventana lee las `TOPE_PROSPECTOS` más viejas. Si el perfil se
+ *  calculara sobre esa ventana, un prospecto que llegó a demo el mes pasado
+ *  quedaría fuera y el «perfil que convierte» retrataría al censo importado, no
+ *  a lo que convierte. Los avanzados son pocos por definición —es la parte
+ *  angosta del embudo— así que caben enteros en una consulta propia y el perfil
+ *  nunca se afirma sobre una muestra sesgada. LANZA ante error. */
+async function leerAvanzados(): Promise<FilaPerfil[]> {
+  const { data, error } = await acotada(supabaseAdmin()
+    .from('prospecto')
+    .select('estado, scian, ciudad, num_unidades')
+    .is('duplicado_de', null)
+    .in('estado', [...ETAPAS_AVANZADAS])
+    .limit(TOPE_PROSPECTOS), 'leads.cazador.avanzados');
+  if (error) throw new Error(`leerAvanzados: ${error.message}`);
+  return ((data ?? []) as Array<Record<string, unknown>>).map((f) => ({
+    estado: String(f.estado),
+    scian: (f.scian as string | null) ?? null,
+    ciudad: (f.ciudad as string | null) ?? null,
+    numUnidades: f.num_unidades === null || f.num_unidades === undefined ? null : Number(f.num_unidades),
+  }));
+}
+
 /** Quiénes tienen al menos un contacto. LANZA ante error: un set vacío por
  *  fallo pintaría el censo entero como «sin tocar» y mandaría a rehacer
  *  trabajo ya hecho. */
 async function idsTocados(ids: string[]): Promise<Set<string>> {
   const s = new Set<string>();
-  if (ids.length === 0) return s;
-  const { data, error } = await acotada(supabaseAdmin()
-    .from('prospecto_contacto')
-    .select('prospecto_id')
-    .in('prospecto_id', ids)
-    .limit(TOPE_PROSPECTOS * 4), 'leads.cazador.tocados');
-  if (error) throw new Error(`idsTocados: ${error.message}`);
-  for (const f of (data ?? []) as Array<{ prospecto_id: string }>) s.add(f.prospecto_id);
+  const filas = await porLotes(ids, async (lote) => {
+    const { data, error } = await acotada(supabaseAdmin()
+      .from('prospecto_contacto')
+      .select('prospecto_id')
+      .in('prospecto_id', lote)
+      .limit(IDS_POR_LOTE * 20), 'leads.cazador.tocados');
+    if (error) throw new Error(`idsTocados: ${error.message}`);
+    return (data ?? []) as Array<{ prospecto_id: string }>;
+  });
+  for (const f of filas) s.add(f.prospecto_id);
   return s;
 }
 
@@ -1529,8 +1597,11 @@ async function correrCazador(disparo: DisparoCorrida, hoy: string): Promise<Resu
       await anotarCorrida(agente, inicio, 'ok', disparo, { pieza: 'ya_existia', titulo });
       return yaEstaba(agente, 'el encargo de caza de esta semana');
     }
-    const { filas, truncado } = await leerCaza();
-    const perfil = perfilQueConvierte(filas);
+    const [{ filas, truncado }, avanzados] = await Promise.all([leerCaza(), leerAvanzados()]);
+    // El perfil sale de SU consulta, no de la ventana del censo: ver
+    // `leerAvanzados`. Las celdas y los nuevos sin tocar sí salen de la
+    // ventana, y por eso el cuerpo declara el truncamiento.
+    const perfil = perfilQueConvierte(avanzados);
     const celdas = celdasSinTrabajar(filas);
     const sinTocar = nuevosSinTocar(filas);
     const res = await encolarPiezaLeads(agente, 'encargo_caza', titulo, armarEncargoCaza(perfil, celdas, sinTocar, filas.length, lunes, truncado), {
