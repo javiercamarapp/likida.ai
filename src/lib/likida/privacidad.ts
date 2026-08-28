@@ -209,7 +209,7 @@ export function avisoSimplificado(r: DatosResponsable): string | null {
     // `viaje.llegada_en/descarga_en/regreso_en` y ningún aviso los enunciaba.
     // Se nombran con las palabras que el chofer de verdad manda, porque eso es
     // lo que tiene que reconocer.
-    `Qué se trata: tu nombre y teléfono, las fotos de comprobantes de gasto que envíes por aquí (diésel, casetas, alimentación, hospedaje) con sus montos y fechas, y los avisos del viaje que tú mandes ("ya llegué", "estoy descargando", "voy de regreso") con la hora de tu mensaje.`,
+    `Qué se trata: tu nombre y teléfono, las fotos de comprobantes de gasto que envíes por aquí (diésel, casetas, alimentación, hospedaje) con sus montos y fechas, los avisos del viaje que tú mandes ("ya llegué", "estoy descargando", "voy de regreso") con la hora de tu mensaje, y la posición GPS de la unidad que traes asignada.`,
     ``,
     // Fr. III — finalidades, DISTINGUIENDO. La fracción vigente no se conforma
     // con enumerarlas: pide separar las que requieren consentimiento. Y el
@@ -224,12 +224,23 @@ export function avisoSimplificado(r: DatosResponsable): string | null {
     ``,
     // AUDITORÍA 3, ALTO (LEG-A1) — la finalidad de los hitos, enunciada. La
     // liquidación cierra igual sin ellos (es seguimiento, no requisito), así
-    // que va como finalidad ADICIONAL, no escondida en "liquidar". Y se dice
-    // la verdad sobre el alcance: la hora es la del mensaje, no telemetría —
-    // hitos_viaje.ts ya lo estableció ("el producto nunca la presenta como
-    // telemetría"), y un aviso que insinúe rastreo enunciaría un tratamiento
-    // que no ocurre.
-    `También: anotar la hora de tus avisos del viaje para medir sus tiempos —como la espera en la descarga— y enseñárselos a la empresa. No hay GPS: solo se anota lo que tú escribes y a qué hora lo mandaste.`,
+    // que va como finalidad ADICIONAL, no escondida en "liquidar".
+    //
+    // AUDITORÍA 19, CRÍTICO (legal C1 / C.15): esta línea decía "No hay GPS:
+    // solo se anota lo que tú escribes" — y el producto lleva desde la 0050
+    // grabando posiciones. Tres caminos reales las escriben en `posicion`:
+    // el poller de rastreo (sincronizar_gps.ts, cron /api/cron/gps cada 5
+    // min, vercel.json:30), el pin que el chofer manda por WhatsApp
+    // (processor.ts → registrarUbicacionChofer) y el pin de asistencia
+    // (asistencia_wa.ts). La geolocalización de la unidad mientras el chofer
+    // la maneja ES un dato personal suyo (LFPDPPP art. 3 fr. IX: persona
+    // identificada o identificable), y un aviso que lo niega es peor que uno
+    // que calla. Se declara con su límite verdadero: el rastreado es el
+    // camión de la empresa, no el teléfono del chofer, y las posiciones se
+    // borran a los 90 días (purgar_posicion, mig. 0155).
+    `También: anotar la hora de tus avisos del viaje para medir sus tiempos —como la espera en la descarga— y enseñárselos a la empresa.`,
+    ``,
+    `Sobre tu ubicación: si tu empresa tiene GPS en sus camiones, se recibe la *posición de la unidad* que manejas para medir los tiempos del viaje y enseñárselos a la empresa; si compartes tu ubicación por el chat, también se guarda y la ve tu jefe. Se borra a los 90 días. Tu teléfono no se rastrea.`,
     ``,
     // Art. 26 fr. II — el derecho de oposición al tratamiento automatizado. Es
     // el elemento 11 del checklist de docs/conocimiento/11-datos-personales.md
@@ -516,8 +527,18 @@ export function avisoIntegral(r: DatosIntegral): SeccionAviso[] {
         `Las **fotos de comprobantes** que envías por WhatsApp —diésel, casetas, alimentación, hospedaje, refacciones— y lo que viene escrito en ellas: montos, fechas, folios, RFC del establecimiento y datos fiscales del comprobante.`,
         `El **contenido de tus mensajes** en esa conversación, y los **viajes y liquidaciones** en los que participas.`,
         // AUDITORÍA 3, ALTO (LEG-A1): los hitos 0090 como categoría de dato,
-        // con su límite dicho — la hora es la del mensaje, no telemetría.
-        `Los **avisos del viaje** que decides mandar por el mismo chat —"ya llegué", "estoy descargando", "voy de regreso"— con la hora en que llega tu mensaje. **No hay GPS ni rastreo del teléfono:** se anota únicamente lo que tú escribes y cuándo lo mandaste.`,
+        // con su límite dicho — la hora es la del mensaje.
+        `Los **avisos del viaje** que decides mandar por el mismo chat —"ya llegué", "estoy descargando", "voy de regreso"— con la hora en que llega tu mensaje.`,
+        // AUDITORÍA 19, CRÍTICO (legal C1 / C.15): este párrafo decía "**No
+        // hay GPS ni rastreo del teléfono**" mientras el cron de
+        // /api/cron/gps (cada 5 minutos) y el pin de WhatsApp escriben
+        // `posicion` desde la 0050. La geolocalización de la unidad con un
+        // chofer identificado al volante es dato personal del chofer, y la
+        // fr. II obliga a enumerarla. Se declara con sus dos límites reales:
+        // lo rastreado es el camión (el dispositivo lo instala la empresa,
+        // no vive en el teléfono del chofer) y la retención es de 90 días
+        // (purgar_posicion, mig. 0155).
+        `La **posición GPS de la unidad que traes asignada**, cuando tu empresa tiene contratado un rastreo satelital para sus camiones: la posición del camión se recibe cada pocos minutos, también mientras tú lo manejas. Y la **ubicación que tú decidas compartir** por el chat, que se guarda y se le muestra a tu empresa. **Tu teléfono no se rastrea:** el dispositivo de rastreo es del camión, y de tu teléfono solo sale lo que tú mandes. Las posiciones se conservan **90 días** y después se borran solas.`,
         // AUDITORÍA EXTERNA 16-AGO-2026 (P2): la versión anterior decía "no
         // se usa para nada", y el flujo real es más matizado — la foto viaja
         // COMPLETA al motor de lectura (no se puede enmascarar una imagen
@@ -543,6 +564,15 @@ export function avisoIntegral(r: DatosIntegral): SeccionAviso[] {
         // ellos: es seguimiento pedido por la empresa, y el titular conserva
         // la oposición sin que eso afecte su liquidación.
         `· Anotar la hora de tus avisos del viaje ("ya llegué", "estoy descargando", "voy de regreso") para medir los tiempos de la operación —por ejemplo, cuánto dura la espera en la descarga— y mostrárselos a la empresa.`,
+        // AUDITORÍA 19 (legal C1 / C.15): la finalidad del GPS, enunciada
+        // donde la ley la pide y con su oposición dicha entera. Va entre las
+        // NO necesarias porque la liquidación cierra igual sin posiciones
+        // (0207: sin posiciones en el radio no hay fila, es un motivo
+        // declarado, no un cero). Y se dice el límite de la oposición: el
+        // rastreo del camión lo contrata la empresa; lo que la oposición
+        // detiene es el uso de esas posiciones ligado a tu persona, no el
+        // dispositivo del camión.
+        `· Usar las posiciones GPS de la unidad para el seguimiento del viaje y para medir sus tiempos —por ejemplo, cuánto estuvo detenida la unidad en un sitio de carga o descarga— y mostrárselo a la empresa. Puedes oponerte a que esas posiciones se usen ligadas a tu persona; el rastreo del camión es un contrato de tu empresa con su proveedor y no se apaga desde aquí, y decírtelo así es más honesto que prometer lo contrario.`,
         `· Medir cómo funciona el servicio para mejorarlo (estadísticas de uso, sin identificarte en los reportes).`,
         `Cualquier finalidad que no esté escrita aquí requiere que te vuelvan a pedir permiso. La ley vigente ya no permite ampararse en usos "compatibles o análogos".`,
       ],
