@@ -115,15 +115,69 @@ export interface ResumenCierrePeaje {
   avisadas: number;
   sinDestinatario: number;
   gastos: number;
+  /** Flotas a las que NO se pudo reservar el sello (la base no contestó). No
+   *  recibieron aviso, y se cuentan aparte de `sinDestinatario` porque la causa
+   *  y el arreglo son otros. */
+  sinReserva: number;
+  /** Reservas que se tomaron, no acabaron en mensaje y TAMPOCO se pudieron
+   *  soltar. Cada una es un aviso de ESTE umbral que ya no va a salir: el
+   *  número que hay que mirar primero cuando algo huele mal. */
+  reservasAtoradas: number;
+}
+
+/** ¿El rebote es el de la llave primaria del sello? */
+function esDuplicado(err: { code?: unknown; message?: unknown }): boolean {
+  return String(err.code ?? '') === '23505'
+    || String(err.message ?? '').includes('duplicate key');
+}
+
+/**
+ * SUELTA una reserva de sello que no acabó en mensaje.
+ *
+ * Es la mitad que hace honesto al claim-then-act: sin ella, una reserva sobre
+ * un WhatsApp que nunca salió enterraría el aviso del mes (el umbral es un día
+ * exacto y no vuelve). Si el borrado tampoco se puede, se GRITA: ese es el
+ * único caso en el que este archivo pierde un aviso, y tiene que ser ruidoso.
+ * Devuelve `true` si la reserva quedó libre.
+ */
+async function soltarReserva(tenantId: string, periodo: string, umbral: number): Promise<boolean> {
+  const { error } = await acotada(supabaseAdmin()
+    .from('peaje_cierre_aviso')
+    .delete()
+    .eq('tenant_id', tenantId)
+    .eq('periodo', periodo)
+    .eq('umbral', umbral), 'peaje_cierre.soltar');
+  if (error) {
+    logger.error('peaje_cierre.reserva_atorada', { tenantId, periodo, umbral, err: error.message });
+    return false;
+  }
+  return true;
 }
 
 /**
  * El barrido: por cada flota, si hoy cruza un umbral y hay casetas sin CFDI,
  * avisa y sella.
  *
- * EL ORDEN ES LA INVARIANTE (patrón 0202, igual que el vigilante de reglas):
- * se manda PRIMERO y se sella DESPUÉS. Sellar antes de que el WhatsApp salga
- * dejaría a la flota sin aviso y al sistema convencido de que ya avisó.
+ * ── LA IDEMPOTENCIA ES LA LLAVE PRIMARIA, NO UN `if` (regla 6) ────────────
+ *
+ * AUDITORÍA CICLO 7, c7-17: hasta el 27-ago-2026 esto leía el sello, decidía,
+ * MANDABA y sellaba al final. La PK `(tenant_id, periodo, umbral)` protegía la
+ * FILA, no el ENVÍO: dos invocaciones solapadas del cron leían las dos
+ * «todavía no se ha avisado», las dos llamaban a `sendText`, y la segunda
+ * rebotaba con un 23505 cuando el WhatsApp duplicado YA estaba en el teléfono
+ * de la flota. En el canal del dinero, que es justo el que el resto del repo
+ * protege con pisos horarios para que nadie aprenda a ignorarlo.
+ *
+ * Ahora el orden es claim-then-act, el mismo patrón que la 0227 usa para el
+ * timbre: se RESERVA el sello con un `insert` —la PK arbitra la carrera, no un
+ * `if`—, se manda, y si el mensaje no sale se SUELTA la reserva para que la
+ * corrida siguiente reintente. Una fila viva significa: este aviso SALIÓ.
+ *
+ * Lo que se pierde y por qué se acepta: el fallo de `soltarReserva` (un
+ * borrado que tampoco se pudo) entierra ese aviso. Se cambió un riesgo por
+ * otro a sabiendas — un aviso perdido cada tanto es recuperable con el aviso
+ * del último día, y un WhatsApp duplicado en el canal del dinero enseña a
+ * ignorarlo, que es lo que no tiene arreglo.
  */
 export async function avisarCierrePeaje(ahora: Date = new Date()): Promise<ResumenCierrePeaje> {
   const hoy = hoyMx(ahora);
@@ -143,7 +197,7 @@ export async function avisarCierrePeaje(ahora: Date = new Date()): Promise<Resum
     .limit(5000), 'peaje_cierre.gastos');
   if (error) throw new Error(`avisarCierrePeaje: ${error.message}`);
   if ((gastos ?? []).length === 0) {
-    return { corrio: true, flotas: 0, avisadas: 0, sinDestinatario: 0, gastos: 0 };
+    return { corrio: true, flotas: 0, avisadas: 0, sinDestinatario: 0, gastos: 0, sinReserva: 0, reservasAtoradas: 0 };
   }
 
   const porFlota = new Map<string, GastoPorFacturar[]>();
@@ -157,57 +211,121 @@ export async function avisarCierrePeaje(ahora: Date = new Date()): Promise<Resum
   // La anticipación declarada por cada flota. Sin fila de configuración se usa
   // el default: una flota SIN descarga masiva también recibe este aviso — el
   // derecho a facturar se le vence igual.
-  const { data: cfgs } = await acotada(supabaseAdmin()
+  //
+  // AUDITORÍA CICLO 7, c7-8 (alto): aquí NO se leía `error` (regla 4), y
+  // `acotada` lo empeoraba — al agotar su tope devuelve `{ data: null, error }`,
+  // así que un timeout de 9.5 s entraba por esta puerta y se leía como «ninguna
+  // flota tiene configuración». Una flota con `peaje_dias_aviso = 10` perdía su
+  // aviso ENTERO: el día en que faltaban 10 días, `diasDe` venía vacío, el
+  // `?? DIAS_AVISO_DEFECTO` inventaba un 7, y `umbralDeHoy` —que solo dispara
+  // con `faltan === diasAviso` EXACTO— devolvía null. Mañana faltan 9, tampoco
+  // es 7: NO HAY SEGUNDA OPORTUNIDAD para ese umbral. La flota solo recibía el
+  // aviso de «HOY vence», demasiado tarde para entrar al portal de PASE, y el
+  // derecho a facturar esos cruces se extinguía. Dinero perdido por un valor de
+  // configuración inventado a partir de un error tragado.
+  //
+  // «No pude leer tu configuración» NO es «tu configuración es 7».
+  const { data: cfgs, error: errCfg } = await acotada(supabaseAdmin()
     .from('sat_descarga_config')
     .select('tenant_id, peaje_dias_aviso')
     .in('tenant_id', [...porFlota.keys()]), 'peaje_cierre.config');
+  const configIlegible = Boolean(errCfg);
+  if (configIlegible) {
+    logger.error('peaje_cierre.config_ilegible', { periodo, faltan, err: errCfg!.message });
+  }
   const diasDe = new Map((cfgs ?? []).map((c) => [c.tenant_id as string, Number(c.peaje_dias_aviso)]));
 
   let avisadas = 0;
   let sinDestinatario = 0;
+  let sinReserva = 0;
+  let reservasAtoradas = 0;
   let flotas = 0;
+  let saltadasPorConfig = 0;
 
   for (const [tenantId, lista] of porFlota) {
-    const umbral = umbralDeHoy(hoy, diasDe.get(tenantId) ?? DIAS_AVISO_DEFECTO);
-    if (umbral === null) continue;
+    // EL ÚNICO UMBRAL QUE NO DEPENDE DE LA CONFIGURACIÓN es el del último día:
+    // `faltan === 0` es el cierre para TODAS las flotas, lo hayan configurado o
+    // no. Así que con la configuración ilegible ese aviso —el que ya no admite
+    // postergarse— sigue saliendo, y solo se saltan los umbrales que de verdad
+    // dependían del dato que no se pudo leer. Fail-closed no es «no hacer
+    // nada»: es no afirmar lo que no se sabe.
+    const umbral = configIlegible
+      ? (faltan === 0 ? 0 : null)
+      : umbralDeHoy(hoy, diasDe.get(tenantId) ?? DIAS_AVISO_DEFECTO);
+    if (umbral === null) {
+      if (configIlegible) saltadasPorConfig++;
+      continue;
+    }
     flotas++;
 
-    // ¿Ya se avisó este (flota, mes, umbral)? El sello es la llave primaria:
-    // se pregunta y, si existe, no se repite.
-    const { data: sello } = await acotada(supabaseAdmin()
+    // LA RESERVA DEL SELLO, ANTES DE MANDAR (claim-then-act, patrón 0227). La
+    // PK `(tenant_id, periodo, umbral)` es el árbitro de la carrera entre dos
+    // invocaciones solapadas del cron: la que pierde recibe 23505 y NO manda
+    // nada. Antes esto era «consulto, mando y sello», y el WhatsApp duplicado
+    // ya estaba en el teléfono cuando el 23505 llegaba (c7-17).
+    //
+    // Y el error se LEE: un `data: null` por timeout se leía como «todavía no
+    // se ha avisado» y REENVIABA. Aquí un error que no sea el duplicado
+    // significa «no sé si ya avisé», y con esa duda no se manda.
+    const { error: errReserva } = await acotada(supabaseAdmin()
       .from('peaje_cierre_aviso')
-      .select('umbral')
-      .eq('tenant_id', tenantId)
-      .eq('periodo', periodo)
-      .eq('umbral', umbral)
-      .maybeSingle(), 'peaje_cierre.sello');
-    if (sello) continue;
-
-    const telefono = await telefonoParaDineroDe(tenantId);
-    if (!telefono) {
-      // Sin destinatario NO se sella: el día que la flota registre a su
-      // contador, el aviso todavía puede salir. Sellar aquí lo enterraría.
-      logger.warn('peaje_cierre.sin_destinatario', { tenantId, periodo, umbral });
-      sinDestinatario++;
+      .insert({ tenant_id: tenantId, periodo, umbral, gastos: lista.length }), 'peaje_cierre.reservar');
+    if (errReserva) {
+      if (esDuplicado(errReserva)) continue; // ya se avisó este (flota, mes, umbral)
+      logger.error('peaje_cierre.sin_reserva', { tenantId, periodo, umbral, err: errReserva.message });
+      sinReserva++;
       continue;
     }
 
-    const total = lista.reduce((s, g) => s + g.monto, 0);
-    const ordenados = [...lista].sort((a, b) => a.fecha.localeCompare(b.fecha));
-    const enviado = await sendText(telefono, mensajeCierrePeaje(ordenados, faltan, total));
-    if (!enviado) {
-      // Mismo criterio: sin envío no hay sello, y la siguiente corrida
-      // reintenta. Un sello sobre un mensaje que no salió es una mentira.
-      logger.warn('peaje_cierre.no_enviado', { tenantId, periodo, umbral });
-      continue;
+    // A partir de aquí el sello es NUESTRO: todo camino que no acabe en
+    // mensaje entregado tiene que soltarlo.
+    let entregado = false;
+    try {
+      const telefono = await telefonoParaDineroDe(tenantId);
+      if (!telefono) {
+        // Sin destinatario no queda sello: el día que la flota registre a su
+        // contador, el aviso todavía puede salir. Dejarlo puesto lo enterraría.
+        logger.warn('peaje_cierre.sin_destinatario', { tenantId, periodo, umbral });
+        sinDestinatario++;
+      } else {
+        const total = lista.reduce((s, g) => s + g.monto, 0);
+        const ordenados = [...lista].sort((a, b) => a.fecha.localeCompare(b.fecha));
+        // `sendText` devuelve el id del mensaje o `null`; lo que importa aquí
+        // es si salió, y `null` es exactamente «no salió».
+        entregado = (await sendText(telefono, mensajeCierrePeaje(ordenados, faltan, total))) !== null;
+        if (!entregado) logger.warn('peaje_cierre.no_enviado', { tenantId, periodo, umbral });
+      }
+    } catch (e) {
+      // El canal de una flota que truena NO puede costarle el aviso a las
+      // demás: se anota, se suelta la reserva en el `finally` y el barrido
+      // sigue. Antes una excepción de `sendText` subía y mataba la pasada
+      // entera con las flotas restantes sin mirar.
+      logger.error('peaje_cierre.envio_lanzo', {
+        tenantId, periodo, umbral, err: e instanceof Error ? e.message : String(e),
+      });
+    } finally {
+      if (entregado) avisadas++;
+      else if (!(await soltarReserva(tenantId, periodo, umbral))) reservasAtoradas++;
     }
-
-    const { error: errSello } = await acotada(supabaseAdmin()
-      .from('peaje_cierre_aviso')
-      .insert({ tenant_id: tenantId, periodo, umbral, gastos: lista.length }), 'peaje_cierre.sellar');
-    if (errSello) logger.warn('peaje_cierre.sello_fallo', { tenantId, err: errSello.message });
-    avisadas++;
   }
 
-  return { corrio: true, flotas, avisadas, sinDestinatario, gastos: gastos?.length ?? 0 };
+  const resumen: ResumenCierrePeaje = {
+    corrio: true, flotas, avisadas, sinDestinatario,
+    gastos: gastos?.length ?? 0, sinReserva, reservasAtoradas,
+  };
+
+  // Si la configuración no se pudo leer, la pasada NO fue limpia y hay que
+  // decirlo donde alguien lo vea: la ruta del cron atrapa esto, lo registra y
+  // marca el latido 'parcial' (lo que ya se avisó, ya salió y quedó sellado).
+  // Callarlo con un resumen verde sería exactamente el error que este hallazgo
+  // describe, movido un piso más arriba.
+  if (configIlegible) {
+    throw new Error(
+      `avisarCierrePeaje: no se pudo leer sat_descarga_config (${errCfg!.message}). `
+      + `Se saltaron ${saltadasPorConfig} flota(s) cuyo umbral configurado no se pudo conocer — NO se asumió el default de ${DIAS_AVISO_DEFECTO} días. `
+      + `El aviso del último día del mes no depende de esa configuración y sí salió: ${avisadas} enviado(s).`,
+    );
+  }
+
+  return resumen;
 }
