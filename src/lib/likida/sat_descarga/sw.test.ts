@@ -7,7 +7,7 @@ vi.mock('@/lib/logger', () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
-const CFG = { urlBase: 'https://api.prueba', usuario: 'u@likida.test', password: 's3cr3t0' };
+const CFG = { urlBase: 'https://api.prueba', usuario: 'u@likida.test', password: 'contrasena-de-prueba' };
 
 let fetchMock: ReturnType<typeof vi.fn>;
 

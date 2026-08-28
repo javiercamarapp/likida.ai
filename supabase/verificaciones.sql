@@ -10767,9 +10767,14 @@ begin
   insert into sat_descarga_config (tenant_id, rfc) values (tb, 'AAA010101AAA');
 
   -- (a) LA PRUEBA MADRE: una llave privada no cabe donde va la referencia.
+  -- El valor de ataque se ARMA aquí en vez de escribirse literal: un blob con
+  -- prefijo de certificado real hace que los escáneres de secretos marquen
+  -- este archivo para siempre, y lo que el CHECK vigila es la FORMA (20
+  -- dígitos), no un prefijo concreto. Cualquier base64 largo lo demuestra
+  -- igual de bien.
   begin
     update sat_descarga_config
-      set certificado_numero = 'MIIFuzCCA6OgAwIBAgIUM0MDAxMDAwMDAwMDQwMDAwMjQzNAAAAA=='
+      set certificado_numero = repeat('QUJDZGVmZ2hpams', 30) || '=='
       where tenant_id = ta;
     llave_no_cabe := false;
   exception when check_violation then
