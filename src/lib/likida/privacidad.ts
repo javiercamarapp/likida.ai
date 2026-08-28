@@ -511,8 +511,15 @@ export function avisoIntegral(r: DatosIntegral): SeccionAviso[] {
     {
       titulo: 'Quién es responsable de tus datos',
       fundamento: 'LFPDPPP art. 15 fr. I',
+      // AUDITORÍA 19 (legal C3 / C.16): sin domicilio capturado, la sección
+      // lo DICE y se marca pendiente — mismo criterio que el contacto del
+      // art. 29 más abajo. Antes la ruta entera respondía 404, que es dejar
+      // al titular sin nada por faltar un dato de la flota.
+      pendiente: !domicilio,
       parrafos: [
-        `**${razonSocial}**, con domicilio en ${domicilio}, es la responsable de tus datos personales. A ella le reclamas y ante ella ejerces tus derechos.`,
+        domicilio
+          ? `**${razonSocial}**, con domicilio en ${domicilio}, es la responsable de tus datos personales. A ella le reclamas y ante ella ejerces tus derechos.`
+          : `**${razonSocial}** es la responsable de tus datos personales. A ella le reclamas y ante ella ejerces tus derechos. **La empresa aún no ha capturado su domicilio fiscal** — se dice aquí en vez de dejarlo en blanco o inventar uno; mientras tanto, el camino que sí funciona es escribir **PRIVACIDAD** por el mismo chat de WhatsApp.`,
         // AUDITORÍA 18 (B6): decía "fr. XX", que es la definición de TRANSFERENCIA.
         // "Persona encargada" es la fr. XII (normas/lfpdppp-2-XII-XX.yaml); la
         // XX se cita bien más abajo, en la sección del art. 35, donde sí toca.

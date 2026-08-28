@@ -1043,8 +1043,16 @@ export async function getDatosResponsable(
   // que el operador no recibiera NADA: el aviso simplificado sí se puede armar
   // sin ella —las fracciones I a IV del art. 15 caben enteras en el mensaje— y
   // callarse cumple menos que mandarlo diciendo que la empresa aún no lo publica.
-  // Razón social y domicilio sí se exigen: son la fr. I y no se pueden fingir.
-  return r.razonSocial && r.domicilio ? r : null;
+  //
+  // El DOMICILIO tampoco se exige ya (auditoría 19, legal C3 / C.16): exigirlo
+  // hacía que /aviso/<flota> respondiera 404 para toda flota sin la columna
+  // capturada — y ninguna pantalla de producción la llenaba. Un aviso que
+  // nombra al responsable y DICE que el domicilio está pendiente cumple más
+  // que un 404 mudo; `avisoIntegral` pinta esa sección como pendiente, igual
+  // que hace con el contacto del art. 29. La razón social SÍ se exige: sin
+  // ella el aviso no puede decir NI SIQUIERA a quién reclamarle, y eso ya no
+  // es un aviso a medias — es un documento sin responsable.
+  return r.razonSocial ? r : null;
 }
 
 /**
