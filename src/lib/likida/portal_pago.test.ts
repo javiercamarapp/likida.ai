@@ -207,6 +207,20 @@ describe('validarPropuesta — el monto', () => {
     expect(validarPropuesta({ ...BASE, monto: '100.005' }, CTX).monto).toBe(100.01);
   });
 
+  it('c7-33 · usa el redondeo de la casa: los .005 que `Math.round` tira hacia abajo', () => {
+    // LA PRUEBA QUE FALTABA. La de arriba probaba `100.005` y PASABA con
+    // `Math.round(n*100)/100`, porque `100.005*100` da exactamente `10000.5`
+    // en punto flotante: eligió, sin saberlo, el único valor de la familia que
+    // no falla. Sus hermanos sí fallaban — `Math.round(1.005*100)/100` es `1`,
+    // no `1.01`, porque 1.005 se guarda como 1.00499999…
+    for (const [tecleado, esperado] of [['1.005', 1.01], ['2.005', 2.01], ['1.045', 1.05], ['8.045', 8.05]] as const) {
+      expect(
+        validarPropuesta({ ...BASE, monto: tecleado }, { ...CTX, saldo: 1_000 }).monto,
+        `un centavo hacia abajo en un pago es un centavo que nadie concilia (${tecleado})`,
+      ).toBe(esperado);
+    }
+  });
+
   it('cero y negativo se rechazan', () => {
     expect(() => validarPropuesta({ ...BASE, monto: '0' }, CTX)).toThrow(DatoInvalido);
     expect(() => validarPropuesta({ ...BASE, monto: '-100' }, CTX)).toThrow(DatoInvalido);

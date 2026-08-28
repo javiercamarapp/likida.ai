@@ -7,6 +7,7 @@ import { DatoInvalido } from './errores';
 import { esUuidValido } from './intake/cfdi';
 import { registrarPago } from './facturacion_escritura';
 import { expiracionDesde, generarTokenPortal, diasDeVigencia } from './portal_pago';
+import { round2 } from '@/lib/formato';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // EL PORTAL DE PAGO — LAS ESCRITURAS DEL CONTRALOR.
@@ -321,7 +322,11 @@ export async function registrarRepEmitido(
   if (!RE_FECHA.test(fechaPago) || Number.isNaN(Date.parse(`${fechaPago}T00:00:00Z`))) {
     throw new DatoInvalido('La fecha del pago del complemento no se entiende.');
   }
-  const imp = Math.round(Number(c.impPagado.replace(/[$\s,]/g, '')) * 100) / 100;
+  // `round2` de la casa, no aritmética de centavos a mano (c7-33): un centavo
+  // hacia abajo en el `imp_pagado` de un REP es exactamente lo que rebota el
+  // PAC. Ver el docstring de `round2` en `formato.ts` («AUDITORÍA 9, ALTO
+  // REINCIDENTE»).
+  const imp = round2(Number(c.impPagado.replace(/[$\s,]/g, '')));
   if (!Number.isFinite(imp) || imp <= 0) {
     throw new DatoInvalido('El importe pagado del complemento tiene que ser mayor que cero.');
   }

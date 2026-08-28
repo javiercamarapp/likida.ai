@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { DatoInvalido } from './errores';
-import { hoyMx, mxn } from '@/lib/formato';
+import { hoyMx, mxn, round2 } from '@/lib/formato';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // EL PORTAL DE PAGO — LA PARTE QUE NO TOCA LA BASE.
@@ -213,7 +213,12 @@ function montoTecleado(crudo: string): number {
   if (limpio === '') throw new DatoInvalido('Escribe el monto que pagaste.');
   const n = Number(limpio);
   if (!Number.isFinite(n)) throw new DatoInvalido('Ese monto no se entiende. Escríbelo como 12345.67');
-  return Math.round(n * 100) / 100;
+  // `round2` y no `Math.round(n*100)/100` (c7-33): es literalmente el caso que
+  // `formato.ts` documenta como «AUDITORÍA 9, ALTO REINCIDENTE» y que `round2`
+  // existe para cerrar. `Math.round(1.005*100)/100` da `1` porque 1.005 se
+  // guarda como 1.00499999…; `round2(1.005)` da `1.01`. Un centavo hacia abajo
+  // en el importe de un pago es un centavo que el contralor no puede conciliar.
+  return round2(n);
 }
 
 /**
