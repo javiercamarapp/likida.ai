@@ -65,10 +65,10 @@ describe('D.22 — consolidación de celdas sin CFDI por identidad canónica del
     ];
     const gastos = await traer();
     expect(gastos).toHaveLength(1);
-    expect(gastos[0].celda.n).toBe(5);
-    expect(gastos[0].monto).toBe(500);
-    expect(gastos[0].rfcEmisor).toBe('PEP970814SF3');
-    expect(gastos[0].id).toBe('g100');   // la muestra es la MENOR de las fundidas
+    expect(gastos[0]!.celda!.n).toBe(5);
+    expect(gastos[0]!.monto).toBe(500);
+    expect(gastos[0]!.rfcEmisor).toBe('PEP970814SF3');
+    expect(gastos[0]!.id).toBe('g100');   // la muestra es la MENOR de las fundidas
   });
 
   it('dos celdas que resuelven al MISMO comercio por señales distintas (dominio vs RFC) se funden', async () => {
@@ -81,8 +81,8 @@ describe('D.22 — consolidación de celdas sin CFDI por identidad canónica del
     ];
     const gastos = await traer();
     expect(gastos).toHaveLength(1);
-    expect(gastos[0].celda.n).toBe(2);
-    expect(gastos[0].monto).toBe(400);
+    expect(gastos[0]!.celda!.n).toBe(2);
+    expect(gastos[0]!.monto).toBe(400);
   });
 
   it('null es null: sin comercio y sin RFC no se agrupa con nadie — ni entre sí', async () => {
@@ -121,8 +121,8 @@ describe('D.22 — consolidación de celdas sin CFDI por identidad canónica del
     expect(gastos).toHaveLength(1);
     // TODOS los comprobantes del grupo carecen de desglose → el GastoFiscal
     // fundido dice null, no 0 — el invariante de la casa.
-    expect(gastos[0].subTotal).toBeNull();
-    expect(gastos[0].iepsTraslado).toBeNull();
-    expect(gastos[0].ivaTraslado).toBeNull();
+    expect(gastos[0]!.subTotal).toBeNull();
+    expect(gastos[0]!.iepsTraslado).toBeNull();
+    expect(gastos[0]!.ivaTraslado).toBeNull();
   });
 });

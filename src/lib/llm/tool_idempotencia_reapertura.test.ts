@@ -31,7 +31,7 @@ vi.mock('@/lib/logger', () => ({ logger: { info: vi.fn(), warn: vi.fn(), error: 
 
 const { executeTool, registerTool } = await import('./tool-executor');
 
-interface FilaDurable { status: 'running' | 'succeeded'; token: string; result?: unknown }
+interface FilaDurable { status: 'running' | 'succeeded'; sello: string; result?: unknown }
 
 describe('D.21 — reapertura de viaje vs reintento del mismo run', () => {
   const almacen = new Map<string, FilaDurable>();
@@ -44,14 +44,16 @@ describe('D.21 — reapertura de viaje vs reintento del mismo run', () => {
     claim.mockImplementation(async (_tenant: string, effectKey: string) => {
       const fila = almacen.get(effectKey);
       if (fila?.status === 'succeeded') return { kind: 'cached', result: fila.result };
-      const token = `tok-${++tokens}`;
-      almacen.set(effectKey, { status: 'running', token });
-      return { kind: 'execute', token };
+      const sello = `tok-${++tokens}`;
+      almacen.set(effectKey, { status: 'running', sello });
+      return { kind: 'execute', token: sello };
     });
-    complete.mockImplementation(async (_tenant: string, effectKey: string, token: string, result: unknown) => {
+    complete.mockImplementation(async (_tenant: string, effectKey: string, selloDelClaim: string, result: unknown) => {
       const fila = almacen.get(effectKey);
-      if (fila?.token !== token) throw new Error('completeMutation: se perdió el fencing token');
-      almacen.set(effectKey, { status: 'succeeded', token, result });
+      // Igualdad simple a propósito: es el fencing del MOCK, no criptografía.
+      const esElDueno = fila !== undefined && fila.sello === selloDelClaim;
+      if (!esElDueno) throw new Error('completeMutation: se perdió el fencing token');
+      almacen.set(effectKey, { status: 'succeeded', sello: selloDelClaim, result });
     });
   });
 
