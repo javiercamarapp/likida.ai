@@ -152,10 +152,17 @@ describe('las listas de evidencia se firman con UN request, no con N', () => {
     'src/app/api/admin/qa/fotos/route.ts',
   ];
 
+  /** Lee UNO de los archivos de `listados` — fuente del propio repo, en
+   *  tiempo de prueba; la ruta sale de la constante de arriba, no de ninguna
+   *  entrada de usuario (mismo criterio que salud.test.ts:118). */
+  function fuenteDe(ruta: string): string {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- ruta de la constante `listados`, fuente del propio repo en tiempo de prueba; no viene de ninguna entrada de usuario.
+    return readFileSync(join(REPO, ruta), 'utf8');
+  }
+
   test('los 4 sitios que enseñan listas usan firmarRutas (el lote)', () => {
     for (const ruta of listados) {
-      const fuente = readFileSync(join(REPO, ruta), 'utf8');
-      expect(fuente, `${ruta} debe firmar en lote`).toContain('firmarRutas(');
+      expect(fuenteDe(ruta), `${ruta} debe firmar en lote`).toContain('firmarRutas(');
     }
   });
 
@@ -163,10 +170,9 @@ describe('las listas de evidencia se firman con UN request, no con N', () => {
     // `firmarRuta(` singular solo se tolera en fotos/route.ts (el PATCH firma
     // UNA foto recién etiquetada — ahí el lote no aporta nada).
     for (const ruta of listados.slice(0, 3)) {
-      const fuente = readFileSync(join(REPO, ruta), 'utf8');
-      expect(fuente.match(/firmarRuta\(/g) ?? [], `${ruta} volvió a firmar una por una`).toHaveLength(0);
+      expect(fuenteDe(ruta).match(/firmarRuta\(/g) ?? [], `${ruta} volvió a firmar una por una`).toHaveLength(0);
     }
-    const fotos = readFileSync(join(REPO, 'src/app/api/admin/qa/fotos/route.ts'), 'utf8');
+    const fotos = fuenteDe('src/app/api/admin/qa/fotos/route.ts');
     expect(fotos.match(/firmarRuta\(/g) ?? []).toHaveLength(1);   // solo el PATCH
   });
 });
