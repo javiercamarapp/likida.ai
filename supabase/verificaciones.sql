@@ -11470,8 +11470,8 @@ begin
       ('agente:tesoreria', false), ('agente:orquestador', false),
       ('agente:enviador', false), ('agente:atencion_faq', false),
       ('agente:talento', false), ('agente:alianzas', false),
-      ('agente:descarga_sat', false), ('agente:seguridad', false);
-    palancas_previas := 10;
+      ('agente:descarga_sat', false);
+    palancas_previas := 9;
   exception when check_violation then
     palancas_previas := -1;
   end;
@@ -11666,8 +11666,8 @@ begin
       ('agente:tesoreria', false), ('agente:orquestador', false),
       ('agente:enviador', false), ('agente:atencion_faq', false),
       ('agente:talento', false), ('agente:alianzas', false),
-      ('agente:descarga_sat', false);
-    palancas_previas := 9;
+      ('agente:descarga_sat', false), ('agente:seguridad', false);
+    palancas_previas := 10;
   exception when check_violation then
     palancas_previas := -1;
   end;
