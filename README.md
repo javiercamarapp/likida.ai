@@ -41,6 +41,28 @@ figure, because we haven't confirmed one against an official source
 (INEGI/SICT/CANACAR) — the same discipline the product enforces on a
 customer's numbers, applied to our own.
 
+### We didn't estimate demand — we read it
+
+Instead of a market-size guess, we ran a census of live Mexican job postings
+(Indeed, Computrabajo, LinkedIn, OCC): over 5,000 full descriptions
+downloaded and read one by one, screenshotted, and classified.
+
+- **828 companies** have a hiring post that names, in its own words, exactly
+  the manual work this product eliminates — reconciling trip expenses
+  against an advance by hand.
+- **63 active postings** put it directly in the job title
+  ("liquidador de viajes," "auxiliar de liquidaciones").
+- The role being hired for carries a **median salary of $11,129–$14,500
+  MXN/month** (31 of those postings publish pay) — that's the recurring
+  headcount cost per fleet that a WhatsApp number replaces.
+- The postings span the three buyer profiles the product is built for:
+  **dedicated carriers** (transportistas), **shippers running a private
+  fleet** with their own in-house logistics staff, and **3PL operators**
+  managing fleets on someone else's behalf.
+
+This is primary research, not a citation — the row-level data, screenshots,
+and methodology are kept on file and reconciled against the CRM.
+
 ## Why now
 
 - **The tax authority already digitized the input.** CFDI 4.0 and Carta
