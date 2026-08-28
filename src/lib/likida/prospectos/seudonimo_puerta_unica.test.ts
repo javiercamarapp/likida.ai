@@ -1,3 +1,7 @@
+/* eslint-disable security/detect-non-literal-fs-filename --
+ * Esta prueba ES un barrido del árbol de src/: lee archivos cuyo nombre sale
+ * de readdirSync sobre nuestro propio repo, en tiempo de test, sin entrada
+ * externa. El patrón es el mismo de qa-panel.test.ts (vigilancia por grep). */
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
