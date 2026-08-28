@@ -6,17 +6,14 @@ import { anotarBitacora, type EntidadBitacora } from './bitacora_escritura';
 import { DatoInvalido } from './errores';
 import { esUuidValido } from './intake/cfdi';
 import { registrarPago } from './facturacion_escritura';
-import {
-  expiracionDesde, generarTokenPortal, diasDeVigencia,
-  type PropuestaValida,
-} from './portal_pago';
+import { expiracionDesde, generarTokenPortal, diasDeVigencia } from './portal_pago';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// EL PORTAL DE PAGO — LAS ESCRITURAS.
+// EL PORTAL DE PAGO — LAS ESCRITURAS DEL CONTRALOR.
 //
-// Cinco verbos, y la línea que los separa es quién los dispara:
+// Cinco verbos en total, y la línea que los parte en dos archivos es quién los
+// dispara. AQUÍ viven los cuatro que exigen sesión y rol:
 //
-//   EL CONTRALOR (con sesión, tras `puedeVerRuta`):
 //     · `crearLigaPago`   — emite el link. El token se enseña UNA vez.
 //     · `revocarLigaPago` — lo mata.
 //     · `conciliarPropuesta` / `descartarPropuesta` — decide sobre lo que el
@@ -26,17 +23,16 @@ import {
 //       Un segundo camino a `pago_recibido` sería una segunda regla de dinero.
 //     · `registrarRepEmitido` — anota el complemento que timbró su PAC.
 //
-//   EL CLIENTE (sin sesión, desde /pago/<token>):
-//     · `registrarPropuesta` — y NADA más. Es el único verbo que una petición
-//       anónima alcanza, escribe en una tabla que la cartera no lee, y no
-//       existe ninguna ruta desde ahí hacia `pago_recibido`.
+// El quinto —`registrarPropuesta`, el ÚNICO que alcanza una petición anónima—
+// vive en `portal_pago_propuesta.ts`, y esa separación se midió: la cadena de
+// `registrarPago`/`esUuidValido` arrastra `sharp` y `zxing-wasm`, y con los
+// cinco juntos la página pública de pago los cargaba en cada arranque en frío
+// (265 archivos contra los 169 de una ruta mínima). Ver la cabecera de ese
+// archivo para el detalle.
 //
-// ── LA IDEMPOTENCIA ES DEL ÍNDICE, NO DE UN `if` ──────────────────────────
-//
-// `registrarPropuesta` no pregunta "¿ya existe?" antes de insertar: entre la
-// pregunta y el insert cabe el segundo clic. Inserta, y si la base contesta
-// 23505 sobre `portal_pago_propuesta_unica` contesta "ya lo tenemos" en vez de
-// un error. La ventana no existe porque no hay dos pasos.
+// Que el verbo del cliente esté FÍSICAMENTE en otro módulo también hace
+// visible la garantía: desde `/api/pago/registrar` no se importa nada de aquí,
+// así que no existe ruta desde una petición anónima hacia `pago_recibido`.
 // ═══════════════════════════════════════════════════════════════════════════
 
 /** El código que Postgres devuelve al chocar contra un índice único. */
@@ -160,70 +156,6 @@ export async function revocarLigaPago(
   }
 
   await anotar(tenantId, 'portal_pago.liga_revocada', 'portal_pago_liga', ligaId, {}, actor);
-}
-
-// ── 2. LA PROPUESTA (el único verbo del cliente) ───────────────────────────
-
-export type ResultadoPropuesta =
-  | { ok: true; id: string; repetida: false }
-  /** La misma fecha, monto y referencia ya estaban. No es un error: es el
-   *  segundo clic, o el cliente comprobando que sí quedó. */
-  | { ok: true; id: null; repetida: true }
-  | { ok: false; motivo: string };
-
-/**
- * Guarda lo que el cliente dice que pagó. NO toca `pago_recibido`, NO toca el
- * estatus de la factura, NO resta del saldo. Entra en cuarentena y espera.
- *
- * NUNCA LANZA: quien la llama es una página pública, y una excepción ahí se
- * convierte en una pantalla de error genérica que no le dice al cliente si su
- * pago quedó registrado o no — que es la única pregunta que trae.
- */
-export async function registrarPropuesta(
-  liga: { ligaId: string; tenantId: string; facturaId: string },
-  v: PropuestaValida,
-): Promise<ResultadoPropuesta> {
-  try {
-    const { data, error } = await acotada(supabaseAdmin().from('portal_pago_propuesta').insert({
-      tenant_id: liga.tenantId,
-      liga_id: liga.ligaId,
-      factura_id: liga.facturaId,
-      fecha: v.fecha,
-      monto: v.monto,
-      referencia: v.referencia,
-      metodo: v.metodo,
-      estado: 'pendiente',
-    }).select('id').single(), 'registrarPropuesta');
-
-    if (error) {
-      if (error.code === CHOQUE_UNICO) return { ok: true, id: null, repetida: true };
-      logger.error('portal_pago.propuesta', { err: error.message });
-      return { ok: false, motivo: 'No pudimos registrar tu pago en este momento. Vuelve a intentarlo en unos minutos.' };
-    }
-    const id = (data as { id?: unknown } | null)?.id;
-    if (!id) {
-      logger.error('portal_pago.propuesta', { err: 'el insert no devolvió id' });
-      return { ok: false, motivo: 'No pudimos registrar tu pago en este momento. Vuelve a intentarlo en unos minutos.' };
-    }
-
-    // La bitácora del panel: el contralor tiene que poder ver el hecho aunque
-    // el correo del aviso se pierda. El actor es `'sistema'` a propósito —no
-    // hay una cuenta detrás, hay un tercero con un token.
-    await anotarBitacora(
-      {
-        tenantId: liga.tenantId, actor: 'sistema',
-        accion: 'portal_pago.propuesta_registrada',
-        entidad: 'portal_pago_propuesta', entidadId: String(id),
-        detalle: { facturaId: liga.facturaId, fecha: v.fecha, monto: v.monto, metodo: v.metodo },
-      },
-      { evento: 'portal_pago.bitacora_no_escribio' },
-    );
-
-    return { ok: true, id: String(id), repetida: false };
-  } catch (e) {
-    logger.error('portal_pago.propuesta', { err: e instanceof Error ? e.message : String(e) });
-    return { ok: false, motivo: 'No pudimos registrar tu pago en este momento. Vuelve a intentarlo en unos minutos.' };
-  }
 }
 
 // ── 3. LA CONCILIACIÓN (el humano confirma) ────────────────────────────────

@@ -37,7 +37,7 @@ vi.mock('@/lib/likida/portal_pago_lectura', () => ({
   vistaDelPortal: (...a: unknown[]) => vistaDelPortal(...(a as [])),
   anotarAcceso: (...a: unknown[]) => anotarAcceso(...(a as [])),
 }));
-vi.mock('@/lib/likida/portal_pago_escritura', () => ({
+vi.mock('@/lib/likida/portal_pago_propuesta', () => ({
   registrarPropuesta: (...a: unknown[]) => registrarPropuesta(...(a as [])),
 }));
 vi.mock('@/lib/likida/portal_pago_aviso', () => ({

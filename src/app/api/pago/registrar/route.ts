@@ -4,7 +4,11 @@ import { logger } from '@/lib/logger';
 import { DatoInvalido } from '@/lib/likida/errores';
 import { esCarnada, validarPropuesta, identificaFactura, TEXTO_LIGA_NO_VALIDA } from '@/lib/likida/portal_pago';
 import { resolverLiga, vistaDelPortal, anotarAcceso } from '@/lib/likida/portal_pago_lectura';
-import { registrarPropuesta } from '@/lib/likida/portal_pago_escritura';
+// `portal_pago_propuesta` y NO `portal_pago_escritura`: aquél trae SOLO el
+// verbo del cliente. Importar el de las escrituras del contralor metería
+// `sharp` y `zxing-wasm` (vía `registrarPago` → `intake/cfdi`) en el arranque
+// en frío de la página que un tercero abre desde su teléfono para pagar.
+import { registrarPropuesta } from '@/lib/likida/portal_pago_propuesta';
 import { avisarPropuestaAlContralor } from '@/lib/likida/portal_pago_aviso';
 
 // ═══════════════════════════════════════════════════════════════════════════
