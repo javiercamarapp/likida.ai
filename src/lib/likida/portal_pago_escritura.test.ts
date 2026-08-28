@@ -35,9 +35,10 @@ vi.mock('./bitacora_escritura', () => ({
 }));
 
 import {
-  crearLigaPago, revocarLigaPago, registrarPropuesta,
+  crearLigaPago, revocarLigaPago,
   conciliarPropuesta, descartarPropuesta, registrarRepEmitido, sellarRepEntregado,
 } from './portal_pago_escritura';
+import { registrarPropuesta } from './portal_pago_propuesta';
 import { DatoInvalido } from './errores';
 
 type Resultado = { data: unknown; error: { message: string; code?: string } | null };

@@ -22,6 +22,7 @@ const RUTA_XML = 'src/app/pago/[token]/complemento/route.ts';
 const PAGINA = 'src/app/pago/[token]/page.tsx';
 const LECTURA = 'src/lib/likida/portal_pago_lectura.ts';
 const ESCRITURA = 'src/lib/likida/portal_pago_escritura.ts';
+const PROPUESTA = 'src/lib/likida/portal_pago_propuesta.ts';
 const MIGRACION = 'supabase/migrations/0228_portal_pago.sql';
 
 // eslint-disable-next-line security/detect-non-literal-fs-filename -- las seis rutas son constantes de este archivo (fuente del propio repo, en tiempo de prueba); ninguna viene de una entrada de usuario.
@@ -55,11 +56,30 @@ describe('la ruta pública no puede llegar a pago_recibido', () => {
   });
 
   it('no importa `facturacion_escritura` ni `supabaseAdmin` directo', () => {
-    // Todo lo que toca la base pasa por `portal_pago_lectura`/`_escritura`,
-    // que son los dos archivos donde el alcance está anclado a la liga.
-    const src = leer(RUTA_PUBLICA);
+    // Todo lo que toca la base pasa por los módulos donde el alcance está
+    // anclado a la liga.
+    const src = sinComentarios(leer(RUTA_PUBLICA));
     expect(src).not.toContain('facturacion_escritura');
     expect(src).not.toContain('@/lib/supabase/admin');
+  });
+
+  it('NO importa `portal_pago_escritura`: ahí viven los verbos del contralor', () => {
+    // Dos cosas a la vez. La de seguridad: si esta línea cambiara, la ruta
+    // pública tendría a `conciliarPropuesta` y a `crearLigaPago` a un `import`
+    // de distancia. Y la de latencia: `portal_pago_escritura` arrastra `sharp`
+    // y `zxing-wasm` (vía registrarPago → intake/cfdi) al arranque en frío de
+    // la página que un tercero abre desde su teléfono — medido: 265 archivos
+    // contra los 169 de una ruta mínima.
+    const src = sinComentarios(leer(RUTA_PUBLICA));
+    expect(src).not.toContain('portal_pago_escritura');
+    expect(src).toContain("from '@/lib/likida/portal_pago_propuesta'");
+  });
+
+  it('el módulo del cliente NO importa nada de la cadena del contralor', () => {
+    const src = sinComentarios(leer(PROPUESTA));
+    expect(src).not.toContain('facturacion_escritura');
+    expect(src).not.toContain('intake/cfdi');
+    expect(src).not.toContain('portal_pago_escritura');
   });
 
   it('trae los tres candados del molde #124, en la fuente', () => {
@@ -130,14 +150,16 @@ describe('toda lectura del portal va anclada al tenant', () => {
     }
   });
 
-  it('la escritura tampoco toca una fila sin decir de qué flota es', () => {
-    const src = sinComentarios(leer(ESCRITURA));
-    for (const c of src.split('.from(').slice(1)) {
-      const bloque = c.slice(0, 700);
-      expect(
-        bloque.includes("eq('tenant_id'") || bloque.includes('tenant_id:'),
-        `una escritura de ${ESCRITURA} no dice de qué flota es: ${bloque.slice(0, 120)}`,
-      ).toBe(true);
+  it('las escrituras tampoco tocan una fila sin decir de qué flota es', () => {
+    for (const f of [ESCRITURA, PROPUESTA]) {
+      const src = sinComentarios(leer(f));
+      for (const c of src.split('.from(').slice(1)) {
+        const bloque = c.slice(0, 700);
+        expect(
+          bloque.includes("eq('tenant_id'") || bloque.includes('tenant_id:'),
+          `una escritura de ${f} no dice de qué flota es: ${bloque.slice(0, 120)}`,
+        ).toBe(true);
+      }
     }
   });
 });
@@ -214,7 +236,7 @@ describe('la bitácora del portal no guarda datos personales de más', () => {
   it('ni IP ni user-agent en ningún archivo del portal', () => {
     // El visitante es un tercero que nunca aceptó un aviso de privacidad de
     // Likida. Minimización (art. 13 LFPDPPP), mismo criterio que sitio_evento.
-    for (const f of [LECTURA, ESCRITURA, RUTA_PUBLICA, PAGINA]) {
+    for (const f of [LECTURA, ESCRITURA, PROPUESTA, RUTA_PUBLICA, PAGINA]) {
       const src = sinComentarios(leer(f)).toLowerCase();
       expect(src, `${f} nombra el user-agent fuera de un comentario`).not.toContain('user-agent');
       expect(src, `${f} nombra useragent fuera de un comentario`).not.toContain('useragent');
