@@ -13478,6 +13478,7 @@ begin
     expediente_cerrado, indice_bandeja_existe, firma_sobrevive_borrado,
     borrar_gasto_ok, degradado_limpia_firma, degradado_anotado,
     expediente_nombra_gasto_muerto, ligado_sobrevive, borrar_flota_ok, expediente_barrido;
+end $$;
 
 -- ── 200. El anti-join de anomalías por IGUALDAD y el presupuesto de IA por propósito (mig. 0244) ──
 --
