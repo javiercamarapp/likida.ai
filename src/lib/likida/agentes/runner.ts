@@ -85,6 +85,17 @@ const CRECIMIENTO: readonly string[] = [
   'visuales', 'video_demo', 'video_marketing', 'alianzas',
 ];
 
+/** Los tres de dirección que van a la BANDEJA (0235). NO son los cuatro de la
+ *  0216: aquéllos mandan correo y se despachan por `../direccion/reportes`.
+ *  Literal aquí por lo mismo que las listas de arriba — el motor entra por
+ *  import dinámico dentro de su rama—, y `runner.test.ts` compara esta lista
+ *  contra la del motor: si divergen, falla. */
+const DIRECCION_BANDEJA: readonly string[] = ['automejora', 'especialistas_incidente', 'fundraising'];
+
+/** Los seis de leads (0235), los últimos que quedaban en 'disenado' del
+ *  catálogo entero. Mismo trato literal que las demás listas. */
+const LEADS: readonly string[] = ['scorer', 'dossier', 'vigia', 'demo_prep', 'propuestas', 'cazador'];
+
 export interface AgenteDelRunner {
   agente: string;
   resultado: 'corrio' | 'saltado';
@@ -475,6 +486,56 @@ export async function correrRunner(
         agentes.push({ agente: a.id, resultado: r.resultado, motivo: r.motivo, piezas: r.piezas, costoUsd: r.costoUsd });
       } catch (e) {
         agentes.push({ agente: a.id, resultado: 'saltado', motivo: e instanceof Error ? e.message.slice(0, 200) : 'fallo del motor de crecimiento' });
+      }
+      continue;
+    }
+
+    // ── DIRECCIÓN A LA BANDEJA (0235): automejora, especialistas de
+    // incidente y fundraising. Van en una rama APARTE de la de la 0216 —y no
+    // en la de arriba— porque su salida es otra: aquéllos MANDAN correo y
+    // sellan `reporte_direccion`; éstos encolan y esperan el tap de Javier.
+    // Meterlos en la misma rama obligaría al motor de allá a distinguir dos
+    // contratos de salida, que es justo lo que la separación de archivos evita.
+    //
+    // Deterministas: gasto de modelo $0 y ninguno arrastra el cliente del
+    // modelo, así que el import dinámico es por el mismo motivo que el de
+    // crecimiento —no cargar `@/lib/admin/salud` ni los lectores de la cola en
+    // cada vuelta—, no por costo de tokens.
+    if (DIRECCION_BANDEJA.includes(a.id)) {
+      try {
+        const { correrAgenteDireccionBandeja, esAgenteDireccionBandeja } = await import('./direccion');
+        // El estrechamiento de verdad lo hace el predicado del motor, no la
+        // lista literal de arriba (mismo criterio que el back office).
+        if (!esAgenteDireccionBandeja(a.id)) {
+          agentes.push({ agente: a.id, resultado: 'saltado', motivo: 'la lista del runner y la del motor de dirección-bandeja divergen — no se despacha a ciegas' });
+          continue;
+        }
+        const r = await correrAgenteDireccionBandeja(a.id, 'cron');
+        agentes.push({ agente: a.id, resultado: r.resultado, motivo: r.motivo, piezas: r.piezas, costoUsd: r.costoUsd });
+      } catch (e) {
+        agentes.push({ agente: a.id, resultado: 'saltado', motivo: e instanceof Error ? e.message.slice(0, 200) : 'fallo del motor de dirección' });
+      }
+      continue;
+    }
+
+    // ── LEADS (0235): los seis que cierran el catálogo en 60/60 ───────────
+    // Los seis son deterministas (gasto de modelo $0; el techo declarado es el
+    // candado formal, y el runner lo mediría contra el gasto REAL el día que
+    // alguno redacte con modelo). Ninguno escribe a nadie ni muta el CRM: los
+    // seis encolan y ya. Su backpressure vive DENTRO de cada motor —una pieza
+    // por periodo o por empresa, arbitrada por el índice único de la 0235—,
+    // así que no hace falta el conteo de bandeja que sí lleva el Redactor.
+    if (LEADS.includes(a.id)) {
+      try {
+        const { correrAgenteLeads, esAgenteLeads } = await import('./leads');
+        if (!esAgenteLeads(a.id)) {
+          agentes.push({ agente: a.id, resultado: 'saltado', motivo: 'la lista del runner y la del motor de leads divergen — no se despacha a ciegas' });
+          continue;
+        }
+        const r = await correrAgenteLeads(a.id, 'cron');
+        agentes.push({ agente: a.id, resultado: r.resultado, motivo: r.motivo, piezas: r.piezas, costoUsd: r.costoUsd });
+      } catch (e) {
+        agentes.push({ agente: a.id, resultado: 'saltado', motivo: e instanceof Error ? e.message.slice(0, 200) : 'fallo del motor de leads' });
       }
       continue;
     }
