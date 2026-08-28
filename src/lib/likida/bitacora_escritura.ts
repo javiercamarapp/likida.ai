@@ -41,7 +41,10 @@ export type EntidadBitacora =
   | 'agente_definicion'
   | 'cola_aprobacion'
   | 'interruptor'
-  | 'runner';
+  | 'runner'
+  | 'portal_pago_liga'
+  | 'portal_pago_propuesta'
+  | 'rep_emitido';
 
 /**
  * Quién lo hizo. `'sistema'` es una decisión, no un olvido: un cron o una
