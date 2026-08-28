@@ -117,6 +117,28 @@ export function normalizarDominio(v: string | null | undefined): string | null {
   return t === '' ? null : t;
 }
 
+/**
+ * Variantes comparables del EMISOR esperado.
+ *
+ * El caso MEDIDO que la obliga (primera medición real, corrida 46ad99ca,
+ * 28-ago-2026): la etiqueta del banco anota el nombre comercial entre
+ * paréntesis — "NUEVA WAL MART DE MEXICO S DE RL DE CV (WALMART)" — y el OCR
+ * leyó la razón social EXACTA. Comparar contra la etiqueta completa contaba
+ * como error ~20 lecturas perfectas de 42 "fallos" de emisor: una medición
+ * falseada en la otra dirección, igual de inservible que una inflada.
+ *
+ * Se acepta la etiqueta completa o la etiqueta SIN sus paréntesis. Lo que NO
+ * se acepta es el alias solo: un OCR que devuelve "WALMART" a secas no
+ * demostró haber leído la razón social, y la razón social es lo que casa con
+ * el RFC y con el portal de facturación.
+ */
+export function variantesEmisorEsperado(esperado: string): string[] {
+  const completa = normalizarTextoVerdad(esperado);
+  const sinParentesis = normalizarTextoVerdad(esperado.replace(/\([^)]*\)/g, ' '));
+  const variantes = [completa, sinParentesis].filter((v): v is string => v !== null);
+  return [...new Set(variantes)];
+}
+
 /** Fecha comparable en `yyyy-mm-dd`. NO adivina formatos raros: la
  *  verdad-de-terreno ya viene validada en ISO, y del lado del OCR es
  *  `normalizarFecha` (intake/fecha.ts) quien ya normalizó. Aquí solo se recorta
@@ -189,6 +211,21 @@ export function compararCampo(clave: ClaveVerdad, verdad: VerdadTerreno, leido: 
       clave, esperado, leido: crudoLeido,
       veredicto: iguales ? 'ok' : 'mal',
       motivo: iguales ? null : b === null ? 'lo leído no es una fecha yyyy-mm-dd' : 'la fecha leída no coincide',
+    };
+  }
+
+  if (clave === 'emisor') {
+    // El emisor acepta la etiqueta con o sin su anotación entre paréntesis
+    // (el nombre comercial) — ver `variantesEmisorEsperado` para el caso
+    // medido que lo obliga. El leído NO recibe el mismo trato: el alias solo
+    // no demuestra la razón social.
+    const variantes = variantesEmisorEsperado(String(esperado ?? ''));
+    const b = normalizarTextoVerdad(String(crudoLeido));
+    const iguales = b !== null && variantes.includes(b);
+    return {
+      clave, esperado, leido: crudoLeido,
+      veredicto: iguales ? 'ok' : 'mal',
+      motivo: iguales ? null : 'no coincide con lo etiquetado (comparado sin acentos, mayúsculas ni puntuación, con o sin el nombre comercial entre paréntesis)',
     };
   }
 

@@ -2,7 +2,7 @@ import { describe, test, expect } from 'vitest';
 import {
   normalizarTextoVerdad, normalizarDominio, normalizarFechaVerdad, montosIguales,
   compararCampo, medir, medicionSinLeer, agregar, ocrVacio, ocrLeidoDeGasto,
-  medirSinGasto, esAlucinacion, contarAlucinaciones, agregarPorCampo, resumenPrecision,
+  medirSinGasto, esAlucinacion, contarAlucinaciones, agregarPorCampo, resumenPrecision, variantesEmisorEsperado,
   type OcrLeido, type MedicionFotoResumen,
 } from './qa-verdad';
 import { CLAVES_VERDAD, type ClaveVerdad, type VerdadTerreno } from './qa-tipos';
@@ -407,5 +407,29 @@ describe('resumenPrecision — los negativos van APARTE y el no-medido lleva su 
     ]);
     expect(r.global.exactitud).toBeNull();   // sin campos medidos NO hay porcentaje
     expect(r.noMedidosPorMotivo).toEqual([{ motivo: 'el proveedor devolvió 5xx', campos: 14 }]);
+  });
+});
+
+describe('el emisor con su nombre comercial entre paréntesis (caso medido, corrida 46ad99ca)', () => {
+  test('la razón social exacta acierta aunque la etiqueta anote el alias', () => {
+    const v = verdad({ emisor: 'NUEVA WAL MART DE MEXICO S DE RL DE CV (WALMART)' });
+    expect(compararCampo('emisor', v, leido({ emisor: 'NUEVA WAL MART DE MEXICO S DE RL DE CV' })).veredicto).toBe('ok');
+    // Y la etiqueta completa también, claro.
+    expect(compararCampo('emisor', v, leido({ emisor: 'Nueva Wal Mart de Mexico S de RL de CV (Walmart)' })).veredicto).toBe('ok');
+  });
+
+  test('el alias SOLO no acierta: "WALMART" a secas no demuestra la razón social', () => {
+    const v = verdad({ emisor: 'NUEVA WAL MART DE MEXICO S DE RL DE CV (WALMART)' });
+    expect(compararCampo('emisor', v, leido({ emisor: 'WALMART' })).veredicto).toBe('mal');
+  });
+
+  test('una razón social incompleta sigue siendo mal — la variante no relaja lo demás', () => {
+    const v = verdad({ emisor: 'NUEVA WAL MART DE MEXICO S DE RL DE CV (WALMART)' });
+    expect(compararCampo('emisor', v, leido({ emisor: 'WAL MART DE MEXICO S DE RL DE CV' })).veredicto).toBe('mal');
+  });
+
+  test('variantesEmisorEsperado: sin paréntesis no duplica variantes', () => {
+    expect(variantesEmisorEsperado('OXXO GAS')).toEqual(['OXXOGAS']);
+    expect(variantesEmisorEsperado('A.D.F.S.A. (ARCO 8039)')).toEqual(['ADFSAARCO8039', 'ADFSA']);
   });
 });
