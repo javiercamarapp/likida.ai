@@ -62,6 +62,10 @@ export const INTERRUPTORES = [
   // puede apagar no corre, punto.
   'agente:onboarding_cliente', 'agente:exito_cliente', 'agente:retencion',
   'agente:cobranza_saas', 'agente:soporte', 'agente:atencion_faq',
+  // La descarga masiva del SAT (0230). Palanca propia y no solo la global:
+  // este autónomo habla con el buzón tributario y ESCRIBE comprobantes, así
+  // que apagarlo no puede exigir apagar la facturación entera.
+  'agente:descarga_sat',
 ] as const;
 
 export type NombreInterruptor = (typeof INTERRUPTORES)[number];
