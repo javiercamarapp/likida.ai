@@ -1387,3 +1387,59 @@ export async function resolverSolicitudArco(
     return { enviada: false, error: e instanceof Error ? e.message : String(e) };
   }
 }
+
+/**
+ * EJECUTA una solicitud de CANCELACIÓN: anonimiza al titular en la base y
+ * marca la solicitud resuelta con la evidencia de qué se tocó.
+ *
+ * AUDITORÍA 19 (legal, reincidente #5): `ejecutar_arco_cancelacion` existía
+ * desde la 0173/0178 y NADA la llamaba — el derecho de cancelación se
+ * "resolvía" escribiendo un texto (`resolverSolicitudArco`) sin que un solo
+ * byte del titular cambiara en la base. Un ARCO que solo escribe prosa es un
+ * ARCO que no se ejerció.
+ *
+ * EL ORDEN IMPORTA Y ES DELIBERADO: el teléfono del titular se lee ANTES de
+ * ejecutar, porque la RPC anonimiza `operador.telefono` y borra sus
+ * conversaciones — después ya no hay a quién avisarle. La confirmación se
+ * manda DESPUÉS de que la RPC confirmó (nunca antes: avisar "ya quedó" y que
+ * la RPC falle sería una constancia falsa), best-effort al número leído.
+ *
+ * Lo que la RPC conserva y por qué lo dice ella misma: la evidencia fiscal
+ * (imágenes de gasto/CFDI) se retiene por CFF art. 30 y queda desligada del
+ * titular — la resolución escrita lo enuncia.
+ */
+export async function ejecutarCancelacionArco(
+  tenantId: string, solicitudId: string,
+): Promise<{ ok: boolean; motivo?: string; avisada: boolean; errorAviso?: string }> {
+  const { data: sol, error: errLee } = await acotada(supabaseAdmin()
+    .from('solicitud_arco').select('titular_ref, tipo').eq('id', solicitudId).eq('tenant_id', tenantId).maybeSingle(),
+    'ejecutarCancelacionArco.leer');
+  if (errLee) throw new Error(`ejecutarCancelacionArco.leer: ${errLee.message}`);
+  if (!sol) throw new Error('ejecutarCancelacionArco: la solicitud no existe en esta flota');
+  const telefono = (sol.titular_ref as string | null) ?? null;
+
+  const { data, error } = await acotada(supabaseAdmin().rpc('ejecutar_arco_cancelacion', {
+    p_tenant: tenantId,
+    p_solicitud: solicitudId,
+  }), 'ejecutarCancelacionArco');
+  if (error) throw new Error(`ejecutarCancelacionArco: ${error.message}`);
+
+  const r = (data ?? {}) as { ok?: boolean; motivo?: string };
+  if (r.ok !== true) {
+    // La RPC se negó con motivo (tipo equivocado, ya cerrada, otra flota):
+    // se propaga tal cual — es la explicación que la pantalla enseña.
+    return { ok: false, motivo: r.motivo ?? 'la base no explicó el rechazo', avisada: false };
+  }
+
+  if (!telefono) return { ok: true, avisada: false, errorAviso: 'sin teléfono del titular' };
+  try {
+    const { enviarRespuestaArco } = await import('@/lib/meta/client');
+    const aviso = await enviarRespuestaArco(
+      telefono,
+      'Tu solicitud de cancelación de datos quedó ejecutada: tu nombre y tu teléfono ya no están ligados a tu información en el sistema. Los comprobantes fiscales se conservan el tiempo que la ley obliga (CFF art. 30), sin vincularse a tu persona.',
+    );
+    return aviso.ok ? { ok: true, avisada: true } : { ok: true, avisada: false, errorAviso: aviso.error };
+  } catch (e) {
+    return { ok: true, avisada: false, errorAviso: e instanceof Error ? e.message : String(e) };
+  }
+}
