@@ -11,12 +11,18 @@ vi.mock('@/lib/logger', () => ({ logger }));
 // configuración (c7-8). Un mock que devolviera el builder e ignorara todo —el
 // patrón que la auditoría señaló como la única red bajo cinco archivos— no
 // puede ver ni el orden ni el error.
-type Op = { tabla: string; op: string; payload?: unknown; eq: Array<[string, unknown]> };
+type Op = {
+  tabla: string; op: string; payload?: unknown; eq: Array<[string, unknown]>;
+  /** Las columnas por las que se pidió orden. El corte de una lectura que se
+   *  trunca depende de esto: sin `order` la rebanada es el orden FÍSICO de la
+   *  tabla y qué flota se queda sin aviso es azar del heap. */
+  order: string[];
+};
 const ops: Op[] = [];
 const respuestas = new Map<string, Array<{ data?: unknown; error?: { message: string; code?: string } | null }>>();
 
 function builder(tabla: string) {
-  const o: Op = { tabla, op: 'select', eq: [] };
+  const o: Op = { tabla, op: 'select', eq: [], order: [] };
   const responder = () => {
     ops.push(o);
     const cola = respuestas.get(`${tabla}:${o.op}`) ?? respuestas.get(tabla);
@@ -26,6 +32,7 @@ function builder(tabla: string) {
   Object.assign(b, {
     select: () => b, eq: (c: string, v: unknown) => { o.eq.push([c, v]); return b; },
     is: () => b, in: () => b, gte: () => b, lte: () => b, limit: () => b,
+    order: (c: string) => { o.order.push(c); return b; },
     insert: (p: unknown) => { o.op = 'insert'; o.payload = p; return b; },
     delete: () => { o.op = 'delete'; return b; },
     maybeSingle: async () => responder(),
@@ -51,6 +58,7 @@ vi.mock('../contactos', () => ({ telefonoParaDineroDe: (t: string) => telefonoPa
 const {
   ultimoDiaDelMes, primerDiaDelMes, diasHastaCierre, umbralDeHoy,
   mensajeCierrePeaje, avisarCierrePeaje, DIAS_AVISO_DEFECTO, MAX_LINEAS,
+  TOPE_GASTOS_PEAJE,
 } = await import('./peaje_cierre');
 
 describe('el calendario del cierre de mes', () => {
@@ -327,5 +335,105 @@ describe('c7-8 · «no pude leer tu configuración» NO es «tu configuración e
   it('un error leyendo los GASTOS sigue lanzando: no se avisa sobre un mes que no se leyó', async () => {
     respuestas.set('gasto', [{ data: null, error: { message: 'base caída' } }]);
     await expect(avisarCierrePeaje(DIA_UMBRAL_7)).rejects.toThrow(/base caída/);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EL RELOJ DE LA VUELTA, Y LA LECTURA QUE SE TRUNCA EN SILENCIO.
+//
+// Las dos son del rebase del ciclo 7, no del commit original, y las dos son la
+// misma clase de fallo: un barrido que hace MENOS trabajo del que cree y no lo
+// dice. `avisarCierrePeaje` itera flota por flota con dos viajes de red de por
+// medio (el teléfono y el WhatsApp) y corre DESPUÉS de `correrDescargaSat`
+// dentro de los mismos 300 s. El runner ya murió mudo dos veces por bucles que
+// no preguntaban la hora — 25-ago-2026 y 28-ago-2026, con correo de alerta de
+// por medio— y este bucle era el siguiente de la lista.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Casetas de tres flotas distintas: el barrido tiene tres vueltas que dar. */
+const GASTOS_TRES_FLOTAS = [
+  { id: 'g1', tenant_id: 't-1', monto: 300, fecha: '2026-09-03' },
+  { id: 'g2', tenant_id: 't-2', monto: 120, fecha: '2026-09-04' },
+  { id: 'g3', tenant_id: 't-3', monto: 90, fecha: '2026-09-05' },
+];
+
+describe('el reloj de la vuelta, adentro del motor (patrón #152)', () => {
+  it('sin `venceEn` el barrido corre completo, como siempre', async () => {
+    sembrar({ gastos: GASTOS_TRES_FLOTAS });
+    const r = await avisarCierrePeaje(DIA_UMBRAL_7);
+    expect(r.avisadas).toBe(3);
+    expect(r.sinTurno, 'nadie se quedó sin turno: no había reloj').toBe(0);
+  });
+
+  it('con el reloj YA vencido no se manda un solo WhatsApp, y se DICE cuántas quedaron', async () => {
+    sembrar({ gastos: GASTOS_TRES_FLOTAS });
+    const r = await avisarCierrePeaje(DIA_UMBRAL_7, { venceEn: Date.now() - 1 });
+
+    expect(sendText, 'el reloj se pregunta ANTES del primer envío').not.toHaveBeenCalled();
+    expect(r.sinTurno, 'las tres flotas quedaron sin mirar, y el número sale en el resumen').toBe(3);
+    expect(r.avisadas).toBe(0);
+    // LO QUE DE VERDAD IMPORTA: el corte ocurre antes de RESERVAR. Un sello
+    // tomado sobre un mensaje que no salió entierra el aviso del mes —el
+    // umbral es un día exacto y no vuelve—, así que cortar entre la reserva y
+    // el envío sería peor que no cortar.
+    expect(insertsDeSello(), 'ni una reserva tomada: cortar con el sello puesto enterraría el aviso').toHaveLength(0);
+    expect(deletesDeSello(), 'y por lo tanto tampoco hay ninguna que soltar').toHaveLength(0);
+    expect(logger.warn).toHaveBeenCalledWith('peaje_cierre.corte_por_reloj', expect.objectContaining({ sinTurno: 3 }));
+  });
+
+  it('la flota que YA ganó su reserva se termina: el corte no deja un sello a medias', async () => {
+    sembrar({ gastos: GASTOS_TRES_FLOTAS });
+    // El reloj se agota DURANTE la primera flota: pedir el teléfono "tarda"
+    // lo suficiente para pasarse del límite. La primera tiene que llegar hasta
+    // el final —ya había reservado— y las otras dos no deben ni empezar.
+    const t0 = Date.now();
+    let ahora = t0;
+    const reloj = vi.spyOn(Date, 'now').mockImplementation(() => ahora);
+    telefonoParaDineroDe.mockImplementation(async (_t: string) => {
+      ahora = t0 + 60_000; // se acabó el tiempo mientras se atendía a t-1
+      return '5215500000000';
+    });
+    const r = await avisarCierrePeaje(DIA_UMBRAL_7, { venceEn: t0 + 30_000 });
+    reloj.mockRestore();
+
+    expect(r.avisadas, 'la primera se completó: reservó, mandó y selló').toBe(1);
+    expect(sendText).toHaveBeenCalledTimes(1);
+    expect(r.sinTurno, 'las dos siguientes ni se empezaron').toBe(2);
+    expect(deletesDeSello(), 'el sello de la que sí mandó se queda puesto').toHaveLength(0);
+  });
+});
+
+describe('la lectura de casetas que se trunca: 5,000 no es «el universo»', () => {
+  it('una lectura AL TOPE se declara truncada, grita, y el resumen no la disfraza', async () => {
+    // A 200 flotas con casetas diarias los 5,000 cruces del mes se agotan y las
+    // flotas que caen fuera del corte no reciben NINGÚN aviso. Antes eso salía
+    // como `gastos: 5000` —un número con cara de universo— y nada más: el
+    // síntoma sería «a mi flota nunca le avisan» y ni el latido ni el log
+    // apuntarían aquí. Hoy es latente; el día que no lo sea, se ve.
+    const muchos = Array.from({ length: TOPE_GASTOS_PEAJE }, (_, i) => ({
+      id: `g${i}`, tenant_id: `t-${i % 3}`, monto: 10, fecha: '2026-09-03',
+    }));
+    sembrar({ gastos: muchos });
+    const r = await avisarCierrePeaje(DIA_UMBRAL_7);
+
+    expect(r.truncado, 'la lectura llegó al tope: hay flotas que este barrido no vio').toBe(true);
+    expect(logger.error).toHaveBeenCalledWith('peaje_cierre.lectura_truncada', expect.objectContaining({
+      tope: TOPE_GASTOS_PEAJE,
+    }));
+  });
+
+  it('una lectura que NO llega al tope no se declara truncada', async () => {
+    sembrar({ gastos: GASTOS_TRES_FLOTAS });
+    expect((await avisarCierrePeaje(DIA_UMBRAL_7)).truncado).toBe(false);
+  });
+
+  it('la lectura va ORDENADA: si se corta, que se corte igual las dos veces', async () => {
+    // Sin `order` la rebanada de 5,000 es el orden FÍSICO de `gasto` —azar del
+    // heap— y qué flota se queda sin aviso cambia entre corridas sin que nada
+    // haya cambiado. Ordenado, el corte es al menos reproducible y depurable.
+    sembrar({ gastos: GASTOS_TRES_FLOTAS });
+    await avisarCierrePeaje(DIA_UMBRAL_7);
+    const lectura = ops.find((o) => o.tabla === 'gasto');
+    expect(lectura?.order).toEqual(['tenant_id', 'fecha']);
   });
 });

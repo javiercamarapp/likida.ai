@@ -50,6 +50,11 @@ export const DIAS_AVISO_DEFECTO = 7;
  *  tope que el vigilante de reglas: un mensaje de 300 líneas no se lee. */
 export const MAX_LINEAS = 10;
 
+/** El tope de la lectura de casetas del mes. Era un `5000` literal dentro de la
+ *  consulta; se declara aquí porque el barrido tiene que poder COMPARARSE
+ *  contra él para saber si la lectura vino truncada (ver `truncado`). */
+export const TOPE_GASTOS_PEAJE = 5_000;
+
 export interface GastoPorFacturar {
   id: string;
   monto: number;
@@ -123,6 +128,15 @@ export interface ResumenCierrePeaje {
    *  soltar. Cada una es un aviso de ESTE umbral que ya no va a salir: el
    *  número que hay que mirar primero cuando algo huele mal. */
   reservasAtoradas: number;
+  /** Flotas que quedaron sin mirar porque se acabó el reloj de la vuelta. NO
+   *  es lo mismo que «no les tocaba»: es trabajo que el tiempo le quitó a este
+   *  barrido, y por eso se cuenta aparte y sube al latido como 'parcial'. */
+  sinTurno: number;
+  /** `true` cuando la lectura de casetas llegó AL TOPE: hay más cruces del mes
+   *  de los que se leyeron, así que hay flotas que este barrido ni siquiera
+   *  supo que existían. Se dice; no se calla detrás de un `gastos: 5000` con
+   *  cara de universo. */
+  truncado: boolean;
 }
 
 /** ¿El rebote es el de la llave primaria del sello? */
@@ -178,8 +192,31 @@ async function soltarReserva(tenantId: string, periodo: string, umbral: number):
  * otro a sabiendas — un aviso perdido cada tanto es recuperable con el aviso
  * del último día, y un WhatsApp duplicado en el canal del dinero enseña a
  * ignorarlo, que es lo que no tiene arreglo.
+ *
+ * ── EL RELOJ DE LA VUELTA (patrón del PR #152) ────────────────────────────
+ *
+ * Este barrido ITERA SOBRE UNA LISTA DE TRABAJO —una flota por vuelta, con un
+ * WhatsApp de por medio— así que le toca la regla que el runner aprendió a la
+ * mala: un motor que itera pregunta la hora. El runner murió mudo el
+ * 25-ago-2026 y el 28-ago-2026 exactamente por bucles que no la preguntaban;
+ * Vercel corta la función DENTRO del bucle y la ruta no alcanza a escribir su
+ * latido, así que el fallo no se ve en ningún tablero. Aquí el riesgo es el
+ * mismo: `telefonoParaDineroDe` + `sendText` son dos viajes de red EN SERIE
+ * por flota, y este barrido comparte los 300 s de `maxDuration` con
+ * `correrDescargaSat`, que corre ANTES y se lleva lo que quiera.
+ *
+ * DÓNDE SE PREGUNTA, Y POR QUÉ SOLO AHÍ: al principio de cada flota, ANTES de
+ * reservar el sello. Nunca entre la reserva y el envío — cortar ahí dejaría el
+ * sello puesto sobre un mensaje que no salió, que es justo el aviso enterrado
+ * que `soltarReserva` existe para impedir. Una vez tomada la reserva, esa
+ * flota se termina.
  */
-export async function avisarCierrePeaje(ahora: Date = new Date()): Promise<ResumenCierrePeaje> {
+export async function avisarCierrePeaje(
+  ahora: Date = new Date(),
+  /** EL RELOJ DE LA VUELTA (epoch ms), cuando el llamador impone uno. Sin él el
+   *  barrido corre completo, como siempre. */
+  opts: { venceEn?: number } = {},
+): Promise<ResumenCierrePeaje> {
   const hoy = hoyMx(ahora);
   const periodo = primerDiaDelMes(hoy);
   const faltan = diasHastaCierre(hoy);
@@ -187,6 +224,13 @@ export async function avisarCierrePeaje(ahora: Date = new Date()): Promise<Resum
   // Las flotas que tienen casetas sin CFDI ESTE MES. Se parte de los gastos y
   // no del catálogo de flotas: una flota sin casetas no necesita el aviso, y
   // recorrer todos los tenants para descubrirlo sería trabajo por nada.
+  //
+  // EL `.order()` NO ES COSMÉTICO. Sin él la rebanada que entra cuando se
+  // agota el tope es la del orden FÍSICO de la tabla —arbitraria y sin
+  // relación con nada— y qué flota se queda sin aviso depende de dónde cayeron
+  // sus filas en el heap. Ordenando por `tenant_id, fecha` el corte es al menos
+  // determinista y reproducible: la misma pasada dos veces se queda con las
+  // mismas flotas, y quien depure sabe por dónde cortó.
   const { data: gastos, error } = await acotada(supabaseAdmin()
     .from('gasto')
     .select('id, tenant_id, monto, fecha')
@@ -194,10 +238,29 @@ export async function avisarCierrePeaje(ahora: Date = new Date()): Promise<Resum
     .is('cfdi_uuid', null)
     .gte('fecha', periodo)
     .lte('fecha', hoy)
-    .limit(5000), 'peaje_cierre.gastos');
+    .order('tenant_id', { ascending: true })
+    .order('fecha', { ascending: true })
+    .limit(TOPE_GASTOS_PEAJE), 'peaje_cierre.gastos');
   if (error) throw new Error(`avisarCierrePeaje: ${error.message}`);
+  // LA LECTURA TRUNCADA SE DECLARA. A 200 flotas con casetas diarias los 5,000
+  // cruces del mes se agotan, y las flotas que caen fuera del corte no reciben
+  // NINGÚN aviso — sin que nada lo diga, porque `gastos: gastos.length`
+  // reportaba 5000 como si fuera el universo. Ese es el número que un tablero
+  // lee como «todo bien». Hoy es latente (producción no tiene ese volumen),
+  // pero el día que lo tenga el síntoma sería «a mi flota nunca le avisan» y
+  // nada en el latido apuntaría aquí.
+  const truncado = (gastos ?? []).length >= TOPE_GASTOS_PEAJE;
+  if (truncado) {
+    logger.error('peaje_cierre.lectura_truncada', {
+      periodo, faltan, tope: TOPE_GASTOS_PEAJE,
+      nota: 'hay más casetas sin CFDI este mes de las que se leyeron: hay flotas que este barrido no vio',
+    });
+  }
   if ((gastos ?? []).length === 0) {
-    return { corrio: true, flotas: 0, avisadas: 0, sinDestinatario: 0, gastos: 0, sinReserva: 0, reservasAtoradas: 0 };
+    return {
+      corrio: true, flotas: 0, avisadas: 0, sinDestinatario: 0, gastos: 0,
+      sinReserva: 0, reservasAtoradas: 0, sinTurno: 0, truncado: false,
+    };
   }
 
   const porFlota = new Map<string, GastoPorFacturar[]>();
@@ -241,8 +304,23 @@ export async function avisarCierrePeaje(ahora: Date = new Date()): Promise<Resum
   let reservasAtoradas = 0;
   let flotas = 0;
   let saltadasPorConfig = 0;
+  let sinTurno = 0;
 
-  for (const [tenantId, lista] of porFlota) {
+  // Se materializa el Map a arreglo para poder decir CUÁNTAS flotas quedaron
+  // sin mirar cuando el reloj corta — «se acabó el tiempo» sin el número es
+  // media verdad, y el latido necesita el número.
+  const entradas = [...porFlota.entries()];
+  for (let i = 0; i < entradas.length; i++) {
+    // ── EL RELOJ, ADENTRO DEL MOTOR (patrón #152) ──────────────────────────
+    // ANTES de reservar el sello, nunca después: una reserva tomada y no
+    // usada entierra el aviso del mes (el umbral es un día exacto y no
+    // vuelve). Lo que no alcanzó turno se DICE en `sinTurno`; no desaparece.
+    if (opts.venceEn !== undefined && Date.now() >= opts.venceEn) {
+      sinTurno = entradas.length - i;
+      logger.warn('peaje_cierre.corte_por_reloj', { sinTurno, avisadas, flotas, periodo, faltan });
+      break;
+    }
+    const [tenantId, lista] = entradas[i];
     // EL ÚNICO UMBRAL QUE NO DEPENDE DE LA CONFIGURACIÓN es el del último día:
     // `faltan === 0` es el cierre para TODAS las flotas, lo hayan configurado o
     // no. Así que con la configuración ilegible ese aviso —el que ya no admite
@@ -312,6 +390,7 @@ export async function avisarCierrePeaje(ahora: Date = new Date()): Promise<Resum
   const resumen: ResumenCierrePeaje = {
     corrio: true, flotas, avisadas, sinDestinatario,
     gastos: gastos?.length ?? 0, sinReserva, reservasAtoradas,
+    sinTurno, truncado,
   };
 
   // Si la configuración no se pudo leer, la pasada NO fue limpia y hay que
