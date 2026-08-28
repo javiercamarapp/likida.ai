@@ -259,3 +259,43 @@ comment on function public.reservar_presupuesto_llm(uuid, uuid, uuid, numeric, n
 
 revoke all on function public.reservar_presupuesto_llm(uuid, uuid, uuid, numeric, numeric, numeric, text, numeric) from public, anon, authenticated;
 grant execute on function public.reservar_presupuesto_llm(uuid, uuid, uuid, numeric, numeric, numeric, text, numeric) to service_role;
+
+-- ── 3. D.23 · La PUERTA del panel: cuánto lleva HOY cada propósito ─────────
+--
+-- Invariante de la casa: lo que se construye se VE en un dashboard. Este
+-- agregado alimenta /admin/consumo — cuánto lleva cada (flota, propósito)
+-- hoy (día de MÉXICO, mismo corte que la RPC de reserva), partido en lo ya
+-- liquidado y lo reservado vivo. El dinero no se muestrea (FE-8): se agrega
+-- en la base y cruza la red un arreglo del tamaño flotas × 3 propósitos.
+
+create or replace function public.presupuesto_ia_por_proposito()
+returns jsonb
+language sql
+stable
+set search_path = public, pg_catalog
+as $$
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'tenantId', tenant_id,
+    'tenantNombre', nombre,
+    'proposito', proposito,
+    'liquidadoUsd', liquidado,
+    'reservadoVivoUsd', reservado_vivo,
+    'n', n
+  ) order by nombre, proposito), '[]'::jsonb)
+  from (
+    select r.tenant_id, t.nombre, r.proposito,
+           coalesce(sum(r.reservado_usd) filter (where r.estado = 'liquidado'), 0) as liquidado,
+           coalesce(sum(r.reservado_usd) filter (where r.estado = 'reservado' and r.expira_en > now()), 0) as reservado_vivo,
+           count(*) as n
+    from llm_presupuesto_reserva r
+    join tenant t on t.id = r.tenant_id
+    where r.created_at >= date_trunc('day', now() at time zone 'America/Mexico_City') at time zone 'America/Mexico_City'
+    group by r.tenant_id, t.nombre, r.proposito
+  ) s;
+$$;
+
+comment on function public.presupuesto_ia_por_proposito() is
+  'El gasto de IA de HOY (día MX, mismo corte que reservar_presupuesto_llm) por (flota, propósito), partido en liquidado y reservado vivo — alimenta /admin/consumo (0244, D.23). SECURITY INVOKER; solo service_role.';
+
+revoke all on function public.presupuesto_ia_por_proposito() from public, anon, authenticated;
+grant execute on function public.presupuesto_ia_por_proposito() to service_role;
