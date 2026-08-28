@@ -212,6 +212,6 @@ describe('interpretarAMano — el camino sin proveedor', () => {
   it('unos parámetros inválidos devuelven el error del campo, no un throw', () => {
     const r = interpretarAMano('chofer_con_viajes_sin_liquidar', { n: 0 }, 'flota_admin');
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error ?? r.motivo).toContain('n');
+    if (!r.ok) expect(r.motivo).toContain('«n»');
   });
 });
