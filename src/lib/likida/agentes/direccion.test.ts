@@ -332,6 +332,7 @@ describe('fundraising: las cifras reales, y la lista de las que no existen', () 
   const cifras = {
     flotas: 3, suscripciones: { porEstado: [], activas: [] },
     facturasPagadas: 0, cobradoMxn: 0, pipeline: [], liquidaciones: 0,
+    truncado: false,
   };
 
   it('el parte SIN cifra de MRR dice por qué, no un cero', () => {
@@ -363,6 +364,12 @@ describe('fundraising: las cifras reales, y la lista de las que no existen', () 
   it('el pipeline se declara CONTEO, no valor en pesos', () => {
     const c = armarParteFundraising({ ...cifras, pipeline: [{ etapa: 'nuevo', n: 800 }] }, calcularMrr([]), '2026-08-01');
     expect(c).toContain('no valor de pipeline');
+  });
+
+  it('una lectura truncada se DICE: una cifra recortada se cita, una ausente se pregunta', () => {
+    const c = armarParteFundraising({ ...cifras, truncado: true }, calcularMrr([]), '2026-08-01');
+    expect(c).toContain('SE TRUNCÓ');
+    expect(c).toContain('un PISO, no el total');
   });
 
   it('jamás escribe «clientes reales»', () => {
