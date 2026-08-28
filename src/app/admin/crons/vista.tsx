@@ -5,7 +5,12 @@ import { StatusPill, EstadoError, type Estado } from '../ui/kit';
 import { BarraPagina, TituloSeccion } from '../../dashboard/resumen-visual';
 
 /**
- * LOS NUEVE RELOJES — el render.
+ * LOS RELOJES DEL SISTEMA — el render.
+ *
+ * Cuántos son NO se escribe aquí: sale de `CRONS`, la constante que
+ * `salud.test.ts` cruza contra vercel.json y contra el CHECK de la base. Eran
+ * siete, luego nueve, y con el registro de jornada (0241) son diez — un
+ * número escrito a mano en esta pantalla habría envejecido tres veces.
  *
  * `cron_latido` (0155) lleva meses guardando el pulso de cada cron y hasta hoy
  * el único que lo leía era `/api/health`, que contesta un booleano agregado
@@ -35,6 +40,7 @@ const RUTA: Record<CronId, string> = {
   gps: '/api/cron/gps',
   asistencia: '/api/cron/asistencia',
   'descarga-sat': '/api/cron/descarga-sat',
+  jornada: '/api/cron/jornada',
 };
 
 /** Qué hace cada reloj, en una línea, para que el rojo se pueda priorizar. */
@@ -48,6 +54,7 @@ const OFICIO: Record<CronId, string> = {
   gps: 'baja las posiciones de las unidades',
   asistencia: 'vigila las emergencias sin reconocer',
   'descarga-sat': 'recoge del SAT los CFDI que el comercio ya timbró',
+  jornada: 'asienta el registro de jornada del día (LFT 132-XXXIV)',
 };
 
 /**

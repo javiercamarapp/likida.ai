@@ -12487,124 +12487,571 @@ begin
     vinculado_sin_fecha_rebota, caducada_sin_fecha_rebota, otra_flota_entra, cerrado;
 end $$;
 
--- ── 196. Los nueve relojes caben en la tabla que los vigila (mig. 0242) ──────
+-- ── 196. El carril completo del panel de QA: la foto no se procesa dos veces y la pasada la arbitra la base (mig. 0240) ──
+-- El bloque 194 lo toma el fork de tickets de esta ola; éste toma el 196 (el
+-- 195 ya estaba escrito).
 --
--- EL BUG QUE ESTE BLOQUE EXISTE PARA QUE NO VUELVA. `cron_latido` (0155) trae
--- un CHECK que enumera los ids permitidos, y se fue ampliando a mano: la 0176
--- metió `gps`, la 0180 metió `wa-outbox`, y ahí se quedó, en SIETE. Después
--- nacieron dos crons más —`asistencia` (emergencias, cada 5 min) y
--- `descarga-sat` (0231, cada 6 h)—, `src/lib/admin/salud.ts` los declaró en
--- `CRONS`, sus rutas llamaron a `registrarLatido`… y el upsert rebotaba contra
--- este CHECK.
+-- POR QUÉ ESTE BLOQUE EXISTE. Una corrida de 91 comprobantes no cabe en una
+-- invocación de Vercel, así que avanza en PASADAS. Todo lo que impide que eso
+-- cueste dinero de más vive en la base y no en TypeScript, y un test con
+-- supabase-js mockeado probaría el mock:
 --
--- Nadie se enteró porque `registrarLatido` es best-effort A PROPÓSITO (un cron
--- que hizo su trabajo no debe fallar porque no pudo escribir su bitácora):
--- tragaba el `check_violation` con un `logger.warn`. Los dos crons corrían y
--- el panel los daba por muertos para siempre — y `sin_latido` dejaba
--- /api/health en `degraded` permanente, que es la forma más eficaz de que
--- nadie vuelva a mirar ese semáforo.
---
--- Es exactamente el tipo de garantía que SOLO la base puede demostrar: que un
--- id entra o rebota no se puede probar contra un mock de supabase-js — ese
--- prueba el mock, y de hecho lo probó en verde durante semanas.
+--  (a) LA MISMA FOTO NO SE PUEDE TOMAR DOS VECES. Es la PK
+--      `(corrida_id, foto_id)`. Dos pasadas solapadas —el navegador reintenta,
+--      alguien abre la pantalla en dos pestañas, una pasada que Vercel dio por
+--      muerta sigue viva unos segundos— piden la misma foto: una entra y la
+--      otra rebota con 23505. Un `if (yaProcesada)` leído antes de mandar sería
+--      una carrera, y perderla significa mandar el mismo ticket dos veces al
+--      modelo (dinero real) y contarlo dos veces (una cifra inventada).
+--  (b) PERO LA MISMA FOTO EN OTRA CORRIDA SÍ ENTRA. La llave es por corrida,
+--      no por foto: el banco se reusa entre corridas y una PK demasiado
+--      estrecha convertiría el segundo día de pruebas en un rebote perpetuo.
+--  (c) LA LLAVE DE LA PASADA LA ARBITRA POSTGRES. `tomarPasada` es un UPDATE
+--      con `pasada_en_vuelo is null` en el WHERE. Dos pasadas simultáneas
+--      piden; una toca 1 fila y la otra 0, y la que tocó 0 se va SIN GASTAR.
+--      Se comprueba también el fencing al soltar: quien ya fue relevado no le
+--      quita la llave a quien la tiene (`eq('pasada_en_vuelo', <la mía>)`).
+--  (d) BORRAR UNA FOTO DEL BANCO QUE UNA CORRIDA CITA REBOTA
+--      (`on delete restrict`), en contra del reflejo de poner cascade: lo que
+--      NO puede pasar es que desaparezca en silencio la prueba de que esta
+--      corrida procesó ese ticket y cuánto costó. Fallar cerrado y decirlo.
+--  (e) BORRAR LA CORRIDA SÍ SE LLEVA SU AVANCE (`on delete cascade`): el
+--      avance no significa nada sin la corrida que lo produjo.
+--  (f) `costo_usd` ADMITE NULL Y RECHAZA NEGATIVOS. NULL = NO SE MIDIÓ, y es
+--      distinto de 0: un 0 afirmaría que la foto salió gratis. La columna es
+--      NULL-able a propósito y el CHECK sólo prohíbe lo imposible.
+--  (g) LOS DOMINIOS SE CIERRAN: `estado` de la foto admite los cuatro
+--      —incluido 'interrumpida', que es "no se sabe cómo acabó" y no es ni
+--      acierto ni fallo— y rechaza cualquier otro; `fase` admite las seis y
+--      `corte` sólo 'reloj', 'dinero' o NULL. NULL en `corte` es "no se cortó",
+--      que no es lo mismo que "se cortó por nada".
+--  (h) `n` Y `pasada` SON 1-BASED y `pasadas` no puede ser negativo: la
+--      pantalla dice «foto 47 de 91» leyendo `n`, y un 0 ahí sería un renglón
+--      que ninguna foto ocupa.
+--  (i) EL DOBLE CANDADO DE LA CASA: RLS deny-all + grants sólo a service_role.
 do $$
 declare
-  nueve_entran        boolean;
-  cuantos             int;
-  asistencia_late     boolean;
-  descarga_sat_late   boolean;
-  dedazo_rebota       boolean;
-  estado_basura_rebota boolean;
-  detalle_del_salto   text;
-  sin_policies        boolean;
-  filas_que_ve_el_navegador int;
-  cerrado             boolean;
+  co1 uuid; co2 uuid; f1 uuid; f2 uuid;
+  p_a uuid := gen_random_uuid(); p_b uuid := gen_random_uuid();
+  segunda_toma_rebota boolean; misma_foto_otra_corrida_entra boolean;
+  gano integer; perdio integer;
+  suelta_ajena integer; suelta_propia integer;
+  borrar_foto_citada_rebota boolean; borrar_corrida_se_lleva_avance integer;
+  costo_nulo_entra boolean; costo_negativo_rebota boolean;
+  cuatro_estados integer := 0; estado_inventado_rebota boolean;
+  seis_fases integer := 0; fase_inventada_rebota boolean;
+  corte_nulo_entra boolean; corte_inventado_rebota boolean;
+  n_cero_rebota boolean; pasadas_negativas_rebotan boolean;
+  cerrado boolean;
+  e text;
 begin
-  -- (a) Los NUEVE ids que `CRONS` declara entran. Se usa upsert porque en una
-  --     base con historia las filas ya existen: lo que se comprueba es que el
-  --     CHECK los admite, no que la tabla esté vacía.
+  insert into qa_foto (hash, path, mime, etiqueta, bytes)
+    values ('zzz-verif-196-a', 'banco/zzz-a.jpg', 'image/jpeg', 'ZZZ VERIF 196 a', 100)
+    returning id into f1;
+  insert into qa_foto (hash, path, mime, etiqueta, bytes)
+    values ('zzz-verif-196-b', 'banco/zzz-b.jpg', 'image/jpeg', 'ZZZ VERIF 196 b', 100)
+    returning id into f2;
+  insert into qa_corrida (escenario, parametros, estado, tenant_nombre, carril)
+    values ('demo_guion', '{"fotoIds":[]}'::jsonb, 'corriendo', 'ZZZ QA VERIF 196 A', 'completo')
+    returning id into co1;
+  insert into qa_corrida (escenario, parametros, estado, tenant_nombre, carril)
+    values ('demo_guion', '{"fotoIds":[]}'::jsonb, 'corriendo', 'ZZZ QA VERIF 196 B', 'completo')
+    returning id into co2;
+
+  -- (a) La misma foto, dos veces en la MISMA corrida: la segunda rebota.
+  insert into qa_corrida_foto (corrida_id, foto_id, n, estado, pasada)
+    values (co1, f1, 1, 'corriendo', 1);
   begin
-    insert into public.cron_latido (id, ultimo_latido, estado, detalle) values
-      ('wa-pendientes', now(), 'ok',      '{}'::jsonb),
-      ('wa-outbox',     now(), 'ok',      '{}'::jsonb),
-      ('escalar',       now(), 'parcial', '{}'::jsonb),
-      ('facturar',      now(), 'saltado', '{"interruptor":"global"}'::jsonb),
-      ('purgar',        now(), 'ok',      '{}'::jsonb),
-      ('runner',        now(), 'fallo',   '{}'::jsonb),
-      ('gps',           now(), 'ok',      '{}'::jsonb),
-      ('asistencia',    now(), 'ok',      '{}'::jsonb),
-      ('descarga-sat',  now(), 'ok',      '{}'::jsonb)
-    on conflict (id) do update
-      set ultimo_latido = excluded.ultimo_latido,
-          estado        = excluded.estado,
-          detalle       = excluded.detalle;
-    nueve_entran := true;
+    insert into qa_corrida_foto (corrida_id, foto_id, n, estado, pasada)
+      values (co1, f1, 1, 'corriendo', 2);
+    segunda_toma_rebota := false;
+  exception when unique_violation then
+    segunda_toma_rebota := true;
+  end;
+
+  -- (b) La misma foto en OTRA corrida sí entra: la llave es por corrida.
+  begin
+    insert into qa_corrida_foto (corrida_id, foto_id, n, estado, pasada)
+      values (co2, f1, 1, 'ok', 1);
+    misma_foto_otra_corrida_entra := true;
   exception when others then
-    nueve_entran := false;
+    misma_foto_otra_corrida_entra := false;
   end;
 
-  select count(*) into cuantos from public.cron_latido
-   where id in ('wa-pendientes','wa-outbox','escalar','facturar','purgar',
-                'runner','gps','asistencia','descarga-sat');
+  -- (c) La llave de la pasada: dos UPDATE condicionales, uno gana.
+  update qa_corrida set pasada_en_vuelo = p_a
+    where id = co1 and pasada_en_vuelo is null;
+  get diagnostics gano = row_count;
+  update qa_corrida set pasada_en_vuelo = p_b
+    where id = co1 and pasada_en_vuelo is null;
+  get diagnostics perdio = row_count;
 
-  -- (b) Los DOS que la 0242 agrega, nombrados aparte: son los que llevaban
-  --     semanas rebotando, y un verde global no diría cuál de los nueve falta.
-  select exists (select 1 from public.cron_latido where id = 'asistencia')
-    into asistencia_late;
-  select exists (select 1 from public.cron_latido where id = 'descarga-sat')
-    into descarga_sat_late;
+  -- Y el fencing al soltar: quien ya fue relevado no suelta la llave ajena.
+  update qa_corrida set pasada_en_vuelo = null
+    where id = co1 and pasada_en_vuelo = p_b;
+  get diagnostics suelta_ajena = row_count;
+  update qa_corrida set pasada_en_vuelo = null
+    where id = co1 and pasada_en_vuelo = p_a;
+  get diagnostics suelta_propia = row_count;
 
-  -- (c) EL DOMINIO SIGUE CERRADO. Ampliar no puede convertirse en abrir: un id
-  --     con dedazo tiene que rebotar, porque si entrara, latiría feliz como
-  --     fila válida mientras el cron de verdad se ve `sin_latido` — el panel
-  --     enseñaría diez renglones y uno sería mentira.
+  -- (f) NULL = no se midió; negativo es imposible.
   begin
-    insert into public.cron_latido (id, estado) values ('facutrar', 'ok');
-    dedazo_rebota := false;
-  exception when check_violation then
-    dedazo_rebota := true;
+    insert into qa_corrida_foto (corrida_id, foto_id, n, estado, pasada, costo_usd)
+      values (co2, f2, 2, 'interrumpida', 1, null);
+    costo_nulo_entra := true;
+  exception when others then
+    costo_nulo_entra := false;
   end;
-
-  -- (d) El otro CHECK de la tabla no se tocó y sigue vivo.
   begin
-    insert into public.cron_latido (id, estado) values ('purgar', 'medio_ok');
-    estado_basura_rebota := false;
+    update qa_corrida_foto set costo_usd = -0.0001 where corrida_id = co2 and foto_id = f2;
+    costo_negativo_rebota := false;
   exception when check_violation then
-    estado_basura_rebota := true;
+    costo_negativo_rebota := true;
   end;
 
-  -- (e) El motivo del salto viaja en `detalle`, que es lo que la pantalla de
-  --     Relojes lee para distinguir «lo apagué yo» de «lleva tres días muerto».
-  select detalle ->> 'interruptor' into detalle_del_salto
-    from public.cron_latido where id = 'facturar';
+  -- (g) Los dominios. Los cuatro estados de la foto entran…
+  foreach e in array array['corriendo', 'ok', 'bad', 'interrumpida'] loop
+    begin
+      update qa_corrida_foto set estado = e where corrida_id = co1 and foto_id = f1;
+      cuatro_estados := cuatro_estados + 1;
+    exception when others then
+      null;
+    end;
+  end loop;
+  begin
+    update qa_corrida_foto set estado = 'pendiente' where corrida_id = co1 and foto_id = f1;
+    estado_inventado_rebota := false;
+  exception when check_violation then
+    estado_inventado_rebota := true;
+  end;
 
-  -- (f) EL CANDADO, MEDIDO COMO LO VIVE UN NAVEGADOR y no por sus grants.
-  --
-  --     `cron_latido` es deny-all por RLS ACTIVA Y CERO POLICIES, no por
-  --     grants revocados: los GRANT por default de Supabase a
-  --     anon/authenticated siguen ahí (los pone el andamio, igual que el
-  --     proyecto real), así que `has_table_privilege` contesta `t` y NO sirve
-  --     como prueba de aislamiento — mediría el permiso de tabla, que aquí no
-  --     es quien decide. Lo que decide es que sin una sola policy ninguna fila
-  --     pasa el filtro para un rol que no sea BYPASSRLS.
-  --
-  --     Se prueba impersonando, que es lo que hace PostgREST en cada request,
-  --     en vez de leer el catálogo: si mañana alguien añade una policy
-  --     permisiva "para depurar", este contador deja de ser 0 y el bloque
-  --     truena — cosa que la lectura de grants nunca habría notado.
-  sin_policies := not exists (
-    select 1 from pg_policy where polrelid = 'public.cron_latido'::regclass);
+  foreach e in array array['siembra', 'fotos', 'cierre', 'oraculos', 'limpieza', 'terminada'] loop
+    begin
+      update qa_corrida set fase = e where id = co1;
+      seis_fases := seis_fases + 1;
+    exception when others then
+      null;
+    end;
+  end loop;
+  begin
+    update qa_corrida set fase = 'a-medias' where id = co1;
+    fase_inventada_rebota := false;
+  exception when check_violation then
+    fase_inventada_rebota := true;
+  end;
 
-  set local role authenticated;
-  select count(*) into filas_que_ve_el_navegador from public.cron_latido;
-  reset role;
+  -- NULL en `corte` = no se cortó. Es un valor legítimo, no un hueco.
+  begin
+    update qa_corrida set corte = null where id = co1;
+    update qa_corrida set corte = 'reloj' where id = co1;
+    update qa_corrida set corte = 'dinero' where id = co1;
+    corte_nulo_entra := true;
+  exception when others then
+    corte_nulo_entra := false;
+  end;
+  begin
+    update qa_corrida set corte = 'cansancio' where id = co1;
+    corte_inventado_rebota := false;
+  exception when check_violation then
+    corte_inventado_rebota := true;
+  end;
 
-  cerrado := sin_policies
-    and filas_que_ve_el_navegador = 0
-    and (select relrowsecurity from pg_class where oid = 'public.cron_latido'::regclass);
+  -- (h) 1-based, y las pasadas no cuentan hacia atrás.
+  begin
+    insert into qa_corrida_foto (corrida_id, foto_id, n, estado, pasada)
+      values (co2, f2, 0, 'ok', 1);
+    n_cero_rebota := false;
+  exception when check_violation then
+    n_cero_rebota := true;
+  when unique_violation then
+    n_cero_rebota := null;   -- no debería pasar: f2 ya está en co2 con n=2
+  end;
+  begin
+    update qa_corrida set pasadas = -1 where id = co1;
+    pasadas_negativas_rebotan := false;
+  exception when check_violation then
+    pasadas_negativas_rebotan := true;
+  end;
 
-  raise exception 'CRON_LATIDO_NUEVE_242  nueve_entran=%  cuantos=%  asistencia_late=%  descarga_sat_late=%  dedazo_rebota=%  estado_basura_rebota=%  detalle_del_salto=%  filas_que_ve_el_navegador=%  cerrado=%   (esperado t / 9 / t / t / t / t / global / 0 / t)',
-    nueve_entran, cuantos, asistencia_late, descarga_sat_late,
-    dedazo_rebota, estado_basura_rebota, detalle_del_salto,
-    filas_que_ve_el_navegador, cerrado;
+  -- (d) Borrar del banco una foto que una corrida cita: rebota.
+  begin
+    delete from qa_foto where id = f1;
+    borrar_foto_citada_rebota := false;
+  exception when foreign_key_violation then
+    borrar_foto_citada_rebota := true;
+  end;
+
+  -- (e) Borrar la corrida se lleva su avance.
+  delete from qa_corrida where id = co2;
+  select count(*) into borrar_corrida_se_lleva_avance
+    from qa_corrida_foto where corrida_id = co2;
+
+  -- (i) El doble candado de la casa.
+  cerrado := not has_table_privilege('anon', 'public.qa_corrida_foto', 'SELECT')
+    and not has_table_privilege('authenticated', 'public.qa_corrida_foto', 'SELECT')
+    and not has_table_privilege('anon', 'public.qa_corrida_foto', 'INSERT')
+    and has_table_privilege('service_role', 'public.qa_corrida_foto', 'SELECT')
+    and has_table_privilege('service_role', 'public.qa_corrida_foto', 'INSERT')
+    and has_table_privilege('service_role', 'public.qa_corrida_foto', 'UPDATE')
+    and (select relrowsecurity from pg_class where oid = 'public.qa_corrida_foto'::regclass);
+
+  raise exception 'QA_CARRIL_COMPLETO_0240  segunda_toma_rebota=%  misma_foto_otra_corrida_entra=%  gano=%  perdio=%  suelta_ajena=%  suelta_propia=%  costo_nulo_entra=%  costo_negativo_rebota=%  cuatro_estados=%  estado_inventado_rebota=%  seis_fases=%  fase_inventada_rebota=%  corte_nulo_entra=%  corte_inventado_rebota=%  n_cero_rebota=%  pasadas_negativas_rebotan=%  borrar_foto_citada_rebota=%  avance_tras_borrar_corrida=%  cerrado=%   (esperado t / t / 1 / 0 / 0 / 1 / t / t / 4 / t / 6 / t / t / t / t / t / t / 0 / t)',
+    segunda_toma_rebota, misma_foto_otra_corrida_entra, gano, perdio,
+    suelta_ajena, suelta_propia, costo_nulo_entra, costo_negativo_rebota,
+    cuatro_estados, estado_inventado_rebota, seis_fases, fase_inventada_rebota,
+    corte_nulo_entra, corte_inventado_rebota, n_cero_rebota, pasadas_negativas_rebotan,
+    borrar_foto_citada_rebota, borrar_corrida_se_lleva_avance, cerrado;
+end $$;
+
+-- ── 197. El registro de jornada: la procedencia obligatoria, la corrección que se anota, y el chofer que no se puede borrar (mig. 0241) ──
+-- El bloque 173 que la consigna reservaba YA ESTABA TOMADO (la dirección, mig.
+-- 0216, línea 9712). El 196 se lo llevó el carril de QA (mig. 0240) al entrar
+-- a master mientras esta rama estaba abierta, así que éste toma el 197.
+--
+-- Lo que SOLO la base puede demostrar de la 0241 —y que un `if` en TypeScript
+-- no sostiene, porque el `if` se puede quitar sin que nada truene—:
+--
+--  (a) UN EXPEDIENTE POR OPERADOR Y DÍA. `jornada_dia_unica` arbitra la carrera
+--      entre el chofer declarando su inicio y el cron derivando el hito. Sin
+--      este índice las dos preguntan «¿ya existe el día?», las dos oyen que no,
+--      y quedan DOS expedientes con la mitad de las marcas cada uno — o sea, un
+--      documento laboral que parte la jornada de una persona en dos mitades sin
+--      que nadie lo note.
+--  (b) LA DECLARACIÓN LE GANA A LA DERIVACIÓN, Y NO LO DECIDE UN `if`. Con un
+--      `inicio_jornada` declarado vivo, el asiento derivado del GPS rebota con
+--      23505 contra `jornada_asiento_marca_unica`. El derivador lee ese código
+--      como «ya estaba», no como fallo. Si mañana alguien borra el `if` del
+--      motor, el índice sigue ahí.
+--  (c) Y LA CORRECCIÓN CABE JUSTO CUANDO SE ANOTA. El índice es PARCIAL sobre
+--      `anulado_en is null`: mientras el viejo esté vivo el nuevo NO entra;
+--      anulado el viejo —con motivo, autor y hora— el nuevo sí. Eso es lo que
+--      hace que corregir sea imposible sin dejar rastro: no hay camino de
+--      sustituir una hora que no pase por anular la anterior.
+--  (d) EL DERIVADOR ES IDEMPOTENTE POR EL HECHO, NO POR LA HORA. Dos corridas
+--      del cron sobre el mismo hito producen UN asiento (`origen_ref` único).
+--      Sin esto, un cron que corre cada hora acumula veinticuatro «inicios»
+--      derivados del mismo viaje.
+--  (e) UNA HORA DERIVADA SIN ORIGEN NO ENTRA. `hito_viaje` y `gps` exigen
+--      `origen_ref`: es la diferencia entre un registro que prueba y una hoja
+--      de cálculo. En un juicio laboral una hora sin procedencia no prueba nada.
+--  (f) UNA CAPTURA DE OFICINA SIN FIRMA NO ENTRA, y una ANULACIÓN sin motivo
+--      ni firma tampoco. Un registro editable en silencio es peor que no
+--      tenerlo: destruye su propia credibilidad ante el perito.
+--  (g) LA CONFORMIDAD DEL OPERADOR FALLA CERRADO. El párrafo tercero de la LFT
+--      132 fr. XXXIV pide que el acuerdo se ACREDITE para que el registro haga
+--      prueba plena; sin el id del mensaje de WhatsApp que lo acredita, la
+--      fecha de conformidad no se puede sellar. Una casilla marcada sin
+--      evidencia no es un acuerdo acreditado.
+--  (h) BORRAR AL CHOFER NO BORRA SU JORNADA. `on delete restrict` sobre
+--      `operador`: el art. 804 fr. III obliga a conservar el control de
+--      asistencia «durante el último año y un año después de que se extinga la
+--      relación laboral», y el 805 castiga no exhibirlo con la presunción de
+--      ser ciertos los hechos del actor. Que dar de baja a un operador borrara
+--      su registro sería destruir justo la prueba cuya ausencia se castiga.
+--  (i) BORRAR EL VIAJE SÍ SE PUEDE, Y NO REVIENTA. `on delete set null
+--      (viaje_id)` CON LISTA DE COLUMNAS: a secas anularía también `tenant_id`,
+--      que es NOT NULL, y el DELETE del viaje fallaría — el bug exacto que
+--      arregló la 0236 y que aquí no se reintroduce. La hora trabajada sigue
+--      siendo cierta aunque el viaje ya no esté.
+--  (j) NINGUNA FLOTA TOCA LA JORNADA DE OTRA. Las FK son COMPUESTAS
+--      `(id, tenant_id)`: colgar un día del operador de otra flota rebota, y un
+--      asiento no puede corregir el de otra flota.
+--  (k) EL CATÁLOGO DE CRONS ESTÁ COMPLETO. `jornada` entra, y los dos que
+--      llevaban meses mudos —`asistencia` y `descarga-sat`— también. Un id
+--      inventado rebota. Una lista corta aquí no falla ruidosamente: silencia
+--      latidos, y `/api/health` no puede llamar muerto a un cron del que nunca
+--      tuvo un latido que juzgar.
+--  (l) UN UMBRAL DE CERO HORAS NO ES UN UMBRAL. Marcaría excedido TODO día.
+--      Cero, NaN y más de 24 h rebotan en la base; y una política por flota, no
+--      dos, porque el reporte no sabría cuál enseñó.
+--  (m) EL DOBLE CANDADO DE LA CASA. Aquí el dato no es una cifra de negocio: es
+--      el horario de una persona identificada, dato personal del art. 3 fr. V
+--      de la LFPDPPP.
+do $$
+declare
+  ta uuid; tb uuid; op_a uuid; op_b uuid; uni_a uuid; via_a uuid; usr uuid;
+  dia_a uuid; dia_b uuid; asiento_declarado uuid; asiento_viaje uuid;
+  dia_repetido_rebota boolean; derivado_rebota_si_hay_declarado boolean;
+  corregido_entra_tras_anular boolean; anulado_no_estorba boolean;
+  origen_repetido_rebota boolean; wa_repetido_rebota boolean;
+  dos_sin_wa_conviven boolean; dos_descansos_conviven boolean;
+  derivado_sin_origen_rebota boolean; captura_sin_firma_rebota boolean;
+  anulacion_sin_motivo_rebota boolean; anulacion_sin_firma_rebota boolean;
+  conformidad_sin_mensaje_rebota boolean; cierre_sin_firma_rebota boolean;
+  cierre_incoherente_rebota boolean; procedencia_inventada_rebota boolean;
+  borrar_operador_rebota boolean; borrar_viaje_deja_asiento boolean;
+  tenant_sobrevive boolean; dia_de_otra_flota_rebota boolean;
+  corrige_otra_flota_rebota boolean;
+  jornada_late boolean; asistencia_late boolean; sat_late boolean;
+  cron_inventado_rebota boolean;
+  cero_horas_rebota boolean; nan_rebota boolean; mas_de_24_rebota boolean;
+  dos_politicas_rebotan boolean; cerrado boolean;
+begin
+  insert into tenant (nombre) values ('ZZZ VERIF 0241 A') returning id into ta;
+  insert into tenant (nombre) values ('ZZZ VERIF 0241 B') returning id into tb;
+  insert into operador (tenant_id, nombre, telefono) values (ta, 'ZZZ Chofer A', '5210000000241') returning id into op_a;
+  insert into operador (tenant_id, nombre, telefono) values (tb, 'ZZZ Chofer B', '5210000000242') returning id into op_b;
+  insert into unidad (tenant_id, numero_economico) values (ta, 'ZZZ-0241') returning id into uni_a;
+  insert into viaje (tenant_id, operador_id) values (ta, op_a) returning id into via_a;
+  insert into app_user (id, tenant_id, email) values (gen_random_uuid(), ta, 'zzz-0241@likida.test') returning id into usr;
+
+  insert into jornada_dia (tenant_id, operador_id, dia) values (ta, op_a, date '2026-08-27') returning id into dia_a;
+
+  -- (a) El MISMO operador, el MISMO día: un solo expediente.
+  begin
+    insert into jornada_dia (tenant_id, operador_id, dia) values (ta, op_a, date '2026-08-27');
+    dia_repetido_rebota := false;
+  exception when unique_violation then
+    dia_repetido_rebota := true;
+  end;
+
+  -- (b) El chofer declara su inicio; el GPS intenta derivar otro. Rebota.
+  insert into jornada_asiento (tenant_id, jornada_id, tipo, momento, procedencia, wa_message_id)
+    values (ta, dia_a, 'inicio_jornada', timestamptz '2026-08-27 04:00-06', 'declarado_operador', 'wamid.ZZZ0241A')
+    returning id into asiento_declarado;
+  begin
+    insert into jornada_asiento (tenant_id, jornada_id, tipo, momento, procedencia, origen_ref, unidad_id)
+      values (ta, dia_a, 'inicio_jornada', timestamptz '2026-08-27 05:12-06', 'gps', 'gps:zzz:2026-08-27:primera', uni_a);
+    derivado_rebota_si_hay_declarado := false;
+  exception when unique_violation then
+    derivado_rebota_si_hay_declarado := true;
+  end;
+
+  -- (c) Se anula el declarado —con motivo, autor y hora— y ENTONCES el
+  --     corregido entra. No hay camino de sustituir una hora sin dejar rastro.
+  update jornada_asiento
+     set anulado_en = now(), anulado_por = usr, anulado_por_email = 'zzz-0241@likida.test',
+         anulado_motivo = 'El operador dictó mal la hora por teléfono.'
+   where id = asiento_declarado;
+  begin
+    insert into jornada_asiento (tenant_id, jornada_id, tipo, momento, procedencia,
+                                 registrado_por, registrado_por_email, corrige_a, nota)
+      values (ta, dia_a, 'inicio_jornada', timestamptz '2026-08-27 03:40-06', 'capturado_contralor',
+              usr, 'zzz-0241@likida.test', asiento_declarado, 'Corregido contra la bitácora de patio.');
+    corregido_entra_tras_anular := true;
+  exception when others then
+    corregido_entra_tras_anular := false;
+  end;
+  -- Y el anulado SIGUE en el expediente: anular no es borrar.
+  anulado_no_estorba := exists (
+    select 1 from jornada_asiento where id = asiento_declarado and anulado_en is not null);
+
+  -- (d) El mismo hecho derivado dos veces: un solo asiento.
+  insert into jornada_asiento (tenant_id, jornada_id, tipo, momento, procedencia, origen_ref, viaje_id)
+    values (ta, dia_a, 'fin_jornada', timestamptz '2026-08-27 18:00-06', 'hito_viaje',
+            'viaje:' || via_a || ':aceptado_en', via_a)
+    returning id into asiento_viaje;
+  begin
+    insert into jornada_asiento (tenant_id, jornada_id, tipo, momento, procedencia, origen_ref, viaje_id)
+      values (ta, dia_a, 'inicio_descanso', timestamptz '2026-08-27 13:00-06', 'hito_viaje',
+              'viaje:' || via_a || ':aceptado_en', via_a);
+    origen_repetido_rebota := false;
+  exception when unique_violation then
+    origen_repetido_rebota := true;
+  end;
+
+  -- El mismo mensaje de WhatsApp reentregado por Meta no duplica la marca…
+  begin
+    insert into jornada_asiento (tenant_id, jornada_id, tipo, momento, procedencia, wa_message_id)
+      values (ta, dia_a, 'inicio_descanso', timestamptz '2026-08-27 13:00-06', 'declarado_operador', 'wamid.ZZZ0241A');
+    wa_repetido_rebota := false;
+  exception when unique_violation then
+    wa_repetido_rebota := true;
+  end;
+  -- …pero el índice es PARCIAL: los asientos sin mensaje no compiten entre sí.
+  begin
+    insert into jornada_asiento (tenant_id, jornada_id, tipo, momento, procedencia,
+                                 registrado_por_email)
+      values (ta, dia_a, 'inicio_descanso', timestamptz '2026-08-27 13:00-06', 'capturado_contralor', 'zzz-0241@likida.test');
+    insert into jornada_asiento (tenant_id, jornada_id, tipo, momento, procedencia,
+                                 registrado_por_email)
+      values (ta, dia_a, 'fin_descanso', timestamptz '2026-08-27 13:35-06', 'capturado_contralor', 'zzz-0241@likida.test');
+    dos_sin_wa_conviven := true;
+  exception when others then
+    dos_sin_wa_conviven := false;
+  end;
+  -- Y los DESCANSOS son varios en un día: `marca_unica` no los alcanza.
+  begin
+    insert into jornada_asiento (tenant_id, jornada_id, tipo, momento, procedencia,
+                                 registrado_por_email)
+      values (ta, dia_a, 'inicio_descanso', timestamptz '2026-08-27 16:00-06', 'capturado_contralor', 'zzz-0241@likida.test');
+    dos_descansos_conviven := true;
+  exception when others then
+    dos_descansos_conviven := false;
+  end;
+
+  -- (e) Una hora derivada sin decir de qué hecho salió no entra.
+  begin
+    insert into jornada_asiento (tenant_id, jornada_id, tipo, momento, procedencia)
+      values (ta, dia_a, 'fin_descanso', timestamptz '2026-08-27 16:30-06', 'gps');
+    derivado_sin_origen_rebota := false;
+  exception when check_violation then
+    derivado_sin_origen_rebota := true;
+  end;
+
+  -- (f) Captura de oficina sin firma; anulación sin motivo; anulación sin firma.
+  begin
+    insert into jornada_asiento (tenant_id, jornada_id, tipo, momento, procedencia)
+      values (ta, dia_a, 'fin_descanso', timestamptz '2026-08-27 16:30-06', 'capturado_contralor');
+    captura_sin_firma_rebota := false;
+  exception when check_violation then
+    captura_sin_firma_rebota := true;
+  end;
+  begin
+    update jornada_asiento set anulado_en = now(), anulado_por_email = 'zzz-0241@likida.test'
+     where id = asiento_viaje;
+    anulacion_sin_motivo_rebota := false;
+  exception when check_violation then
+    anulacion_sin_motivo_rebota := true;
+  end;
+  begin
+    update jornada_asiento set anulado_en = now(), anulado_motivo = 'sin firmar'
+     where id = asiento_viaje;
+    anulacion_sin_firma_rebota := false;
+  exception when check_violation then
+    anulacion_sin_firma_rebota := true;
+  end;
+
+  -- Y la lista de procedencias es CERRADA: no hay una quinta que se cuele.
+  begin
+    insert into jornada_asiento (tenant_id, jornada_id, tipo, momento, procedencia)
+      values (ta, dia_a, 'fin_descanso', timestamptz '2026-08-27 16:30-06', 'estimado');
+    procedencia_inventada_rebota := false;
+  exception when check_violation then
+    procedencia_inventada_rebota := true;
+  end;
+
+  -- (g) La conformidad del art. 132 fr. XXXIV párr. 3 falla cerrado.
+  begin
+    update jornada_dia set conforme_operador_en = now() where id = dia_a;
+    conformidad_sin_mensaje_rebota := false;
+  exception when check_violation then
+    conformidad_sin_mensaje_rebota := true;
+  end;
+  -- El cierre sin la firma congelada tampoco pasa…
+  begin
+    update jornada_dia set estado = 'cerrado', cerrado_en = now(), cerrado_por = usr where id = dia_a;
+    cierre_sin_firma_rebota := false;
+  exception when check_violation then
+    cierre_sin_firma_rebota := true;
+  end;
+  -- …ni un expediente que miente sobre su propio estado.
+  begin
+    update jornada_dia set estado = 'cerrado', cerrado_por_email = 'zzz-0241@likida.test' where id = dia_a;
+    cierre_incoherente_rebota := false;
+  exception when check_violation then
+    cierre_incoherente_rebota := true;
+  end;
+
+  -- (h) Dar de baja al chofer NO puede borrar el documento que la ley obliga a
+  --     conservar (LFT 804 fr. III y 805).
+  begin
+    delete from operador where id = op_a;
+    borrar_operador_rebota := false;
+  exception when foreign_key_violation then
+    borrar_operador_rebota := true;
+  end;
+
+  -- (i) Borrar el viaje SÍ se puede: `set null (viaje_id)` con lista, así que
+  --     `tenant_id` sobrevive NOT NULL y el DELETE no revienta (bug de la 0236).
+  begin
+    delete from viaje where id = via_a;
+    borrar_viaje_deja_asiento := exists (select 1 from jornada_asiento where id = asiento_viaje and viaje_id is null);
+    tenant_sobrevive := exists (select 1 from jornada_asiento where id = asiento_viaje and tenant_id = ta);
+  exception when others then
+    borrar_viaje_deja_asiento := false;
+    tenant_sobrevive := false;
+  end;
+
+  -- (j) Ninguna flota toca la jornada de otra. Las FK son compuestas.
+  begin
+    insert into jornada_dia (tenant_id, operador_id, dia) values (ta, op_b, date '2026-08-27');
+    dia_de_otra_flota_rebota := false;
+  exception when foreign_key_violation then
+    dia_de_otra_flota_rebota := true;
+  end;
+  insert into jornada_dia (tenant_id, operador_id, dia) values (tb, op_b, date '2026-08-27') returning id into dia_b;
+  begin
+    insert into jornada_asiento (tenant_id, jornada_id, tipo, momento, procedencia,
+                                 registrado_por_email, corrige_a)
+      values (tb, dia_b, 'inicio_jornada', timestamptz '2026-08-27 05:00-06', 'capturado_contralor',
+              'zzz-0241@likida.test', asiento_declarado);
+    corrige_otra_flota_rebota := false;
+  exception when foreign_key_violation then
+    corrige_otra_flota_rebota := true;
+  end;
+
+  -- (k) El catálogo de crons, COMPLETO. `jornada` entra y los dos mudos también.
+  insert into cron_latido (id) values ('jornada')
+    on conflict (id) do update set ultimo_latido = now();
+  jornada_late := exists (select 1 from cron_latido where id = 'jornada');
+  insert into cron_latido (id) values ('asistencia')
+    on conflict (id) do update set ultimo_latido = now();
+  asistencia_late := exists (select 1 from cron_latido where id = 'asistencia');
+  insert into cron_latido (id) values ('descarga-sat')
+    on conflict (id) do update set ultimo_latido = now();
+  sat_late := exists (select 1 from cron_latido where id = 'descarga-sat');
+  begin
+    insert into cron_latido (id) values ('cron-que-nadie-escribio');
+    cron_inventado_rebota := false;
+  exception when check_violation then
+    cron_inventado_rebota := true;
+  end;
+
+  -- (l) Un umbral de cero horas marcaría excedido TODO día.
+  begin
+    insert into jornada_politica (tenant_id, horas_max_jornada, declarada_por_email)
+      values (ta, 0, 'zzz-0241@likida.test');
+    cero_horas_rebota := false;
+  exception when check_violation then
+    cero_horas_rebota := true;
+  end;
+  begin
+    insert into jornada_politica (tenant_id, horas_max_jornada, declarada_por_email)
+      values (ta, 'NaN'::numeric, 'zzz-0241@likida.test');
+    nan_rebota := false;
+  exception when check_violation then
+    nan_rebota := true;
+  end;
+  begin
+    insert into jornada_politica (tenant_id, horas_max_jornada, declarada_por_email)
+      values (ta, 25, 'zzz-0241@likida.test');
+    mas_de_24_rebota := false;
+  exception when check_violation then
+    mas_de_24_rebota := true;
+  end;
+  insert into jornada_politica (tenant_id, horas_max_jornada, declarada_por_email)
+    values (ta, 11.5, 'zzz-0241@likida.test');
+  begin
+    insert into jornada_politica (tenant_id, horas_max_jornada, declarada_por_email)
+      values (ta, 10, 'zzz-0241@likida.test');
+    dos_politicas_rebotan := false;
+  exception when unique_violation then
+    dos_politicas_rebotan := true;
+  end;
+
+  -- (m) El doble candado. Horario de una persona identificada: dato personal.
+  cerrado := not has_table_privilege('anon', 'public.jornada_dia', 'SELECT')
+    and not has_table_privilege('authenticated', 'public.jornada_dia', 'SELECT')
+    and not has_table_privilege('anon', 'public.jornada_asiento', 'SELECT')
+    and not has_table_privilege('authenticated', 'public.jornada_asiento', 'SELECT')
+    and not has_table_privilege('anon', 'public.jornada_politica', 'SELECT')
+    and not has_table_privilege('authenticated', 'public.jornada_politica', 'SELECT')
+    and has_table_privilege('service_role', 'public.jornada_dia', 'SELECT')
+    and has_table_privilege('service_role', 'public.jornada_asiento', 'INSERT')
+    and has_table_privilege('service_role', 'public.jornada_politica', 'UPDATE')
+    and (select relrowsecurity from pg_class where oid = 'public.jornada_dia'::regclass)
+    and (select relrowsecurity from pg_class where oid = 'public.jornada_asiento'::regclass)
+    and (select relrowsecurity from pg_class where oid = 'public.jornada_politica'::regclass);
+
+  raise exception 'JORNADA_LFT_0241  dia_repetido_rebota=%  derivado_rebota_si_hay_declarado=%  corregido_entra_tras_anular=%  anulado_no_estorba=%  origen_repetido_rebota=%  wa_repetido_rebota=%  dos_sin_wa_conviven=%  dos_descansos_conviven=%  derivado_sin_origen_rebota=%  captura_sin_firma_rebota=%  anulacion_sin_motivo_rebota=%  anulacion_sin_firma_rebota=%  procedencia_inventada_rebota=%  conformidad_sin_mensaje_rebota=%  cierre_sin_firma_rebota=%  cierre_incoherente_rebota=%  borrar_operador_rebota=%  borrar_viaje_deja_asiento=%  tenant_sobrevive=%  dia_de_otra_flota_rebota=%  corrige_otra_flota_rebota=%  jornada_late=%  asistencia_late=%  sat_late=%  cron_inventado_rebota=%  cero_horas_rebota=%  nan_rebota=%  mas_de_24_rebota=%  dos_politicas_rebotan=%  cerrado=%   (esperado t / t / t / t / t / t / t / t / t / t / t / t / t / t / t / t / t / t / t / t / t / t / t / t / t / t / t / t / t / t)',
+    dia_repetido_rebota, derivado_rebota_si_hay_declarado, corregido_entra_tras_anular,
+    anulado_no_estorba, origen_repetido_rebota, wa_repetido_rebota, dos_sin_wa_conviven,
+    dos_descansos_conviven, derivado_sin_origen_rebota, captura_sin_firma_rebota,
+    anulacion_sin_motivo_rebota, anulacion_sin_firma_rebota, procedencia_inventada_rebota,
+    conformidad_sin_mensaje_rebota, cierre_sin_firma_rebota, cierre_incoherente_rebota,
+    borrar_operador_rebota, borrar_viaje_deja_asiento, tenant_sobrevive,
+    dia_de_otra_flota_rebota, corrige_otra_flota_rebota,
+    jornada_late, asistencia_late, sat_late, cron_inventado_rebota,
+    cero_horas_rebota, nan_rebota, mas_de_24_rebota, dos_politicas_rebotan, cerrado;
 end $$;

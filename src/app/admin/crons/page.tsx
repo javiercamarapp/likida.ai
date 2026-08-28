@@ -12,8 +12,8 @@ export const dynamic = 'force-dynamic';
  */
 export default async function CronsPage() {
   // El `.catch(() => null)` de la casa: `null` significa «no se pudo leer», y
-  // la vista lo DICE. Lo que no se hace es devolver una tabla vacía — nueve
-  // renglones grises se leerían como nueve relojes tranquilos, que es la
+  // la vista lo DICE. Lo que no se hace es devolver una tabla vacía — una
+  // tabla de renglones grises se leería como relojes tranquilos, que es la
   // manera exacta de que una base caída pase por sistema sano.
   const latidos = await detalleLatidos().catch((e: unknown) => {
     logger.error('admin.crons.sin_latidos', { err: e instanceof Error ? e.message : String(e) });
