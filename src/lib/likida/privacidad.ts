@@ -553,7 +553,15 @@ export function avisoIntegral(r: DatosIntegral): SeccionAviso[] {
         // que lo sensible se guarde o participe del cuadre. El aviso ahora
         // describe exactamente eso; un aviso que promete más de lo que el
         // código hace es un hallazgo de due diligence, no una protección.
-        `**No se piden ni se conservan datos sensibles.** Ni salud, ni origen racial o étnico, ni creencias, ni afiliación sindical, ni preferencias sexuales, ni datos biométricos. Cada foto se procesa completa por el motor de lectura para extraer los campos del comprobante; si en ella aparece por accidente algo sensible (un ticket de farmacia, por ejemplo), un filtro lo detecta y lo excluye: **no se guarda, no participa en tu liquidación**, y puedes pedir que la foto se borre.`,
+        // AUDITORÍA 19 (legal, reincidente #7): decía a secas "puedes pedir
+        // que la foto se borre", y la 0178 decidió lo contrario para la foto
+        // que YA es comprobante de un gasto: es evidencia fiscal y se
+        // conserva (CFF art. 30) — el ejecutor ARCO la desliga del titular,
+        // no la borra. Lo que SÍ se borra solo es la imagen que no respalda
+        // ningún gasto (cola de huérfanos, mig. 0165). El aviso ahora dice
+        // esa frontera con todas sus letras, porque prometer un borrado que
+        // la base rechaza es una promesa con evidencia escrita de romperse.
+        `**No se piden ni se conservan datos sensibles.** Ni salud, ni origen racial o étnico, ni creencias, ni afiliación sindical, ni preferencias sexuales, ni datos biométricos. Cada foto se procesa completa por el motor de lectura para extraer los campos del comprobante; si en ella aparece por accidente algo sensible (un ticket de farmacia, por ejemplo), un filtro lo detecta y lo excluye: **no se guarda como dato, no participa en tu liquidación**, y la imagen que no respalda ningún gasto se elimina sola del almacenamiento. **Lo que no se puede borrar ni pidiéndolo:** la foto que ya es comprobante de un gasto — esa se conserva por obligación fiscal (CFF art. 30). Lo que sí puedes pedir es que se **desligue de tu persona**, y eso es lo que la cancelación ejecuta.`,
       ],
     },
     {
@@ -772,7 +780,13 @@ export function avisoProspectos(d: DatosAvisoProspectos): SeccionAviso[] {
       pendiente: !d.razonSocial || !d.domicilio,
       parrafos: [
         `**${razonSocial}** (Likida), con domicilio en ${domicilio}, es la responsable de tus datos personales.`,
-        `Este aviso es para ti si **trabajas en una empresa de transporte o con flota propia** y Likida te contactó —o piensa hacerlo— para ofrecerle su servicio a tu empresa. No eres cliente de Likida ni nos diste tus datos: por eso te decimos aquí de dónde salieron y qué hacemos con ellos.`,
+        // AUDITORÍA 19 (legal, reincidente #14): decía "ni nos diste tus
+        // datos" a TODO lector — y el lead de /getdemo (api/lead) sí los dio,
+        // con su nombre, correo y teléfono en el formulario. Un aviso que le
+        // niega al titular su propio acto no describe el tratamiento real
+        // (art. 15 fr. II exige decir de dónde salieron). Se dicen los dos
+        // orígenes, porque los dos existen.
+        `Este aviso es para ti si **trabajas en una empresa de transporte o con flota propia** y Likida te contactó —o piensa hacerlo— para ofrecerle su servicio a tu empresa. Hay dos formas de que tengamos tus datos, y este aviso cubre las dos: **los buscamos nosotros** en fuentes públicas sin que lo supieras, o **tú los dejaste** al usar la calculadora o pedir una demostración en likida.ai. En ambos casos aquí dice qué tenemos y qué hacemos con ello.`,
         `Si ya usas Likida como cliente, tu aviso es la **política de privacidad**; si eres operador de una flota, el aviso que te toca lo publica tu empresa.`,
       ],
     },
@@ -782,6 +796,11 @@ export function avisoProspectos(d: DatosAvisoProspectos): SeccionAviso[] {
       parrafos: [
         `Tu **nombre**, tu **puesto**, tu **correo y teléfono de trabajo** y, si lo tienes público, tu **perfil profesional**; junto con el nombre, el giro y la plaza de tu empresa y la vacante que publicó.`,
         `Salieron de **fuentes de acceso público**: el directorio de empresas del INEGI (DENUE), bolsas de trabajo donde tu empresa publicó una vacante, el sitio web de tu empresa y directorios o perfiles profesionales públicos. Algunos correos **no se leyeron en ninguna parte: se dedujeron** del patrón de correos de la empresa, y así quedan marcados —como no verificados— hasta que alguien los confirma.`,
+        // AUDITORÍA 19 (legal, reincidente #14): el fbclid del lead no estaba
+        // enumerado en ningún aviso. Es un identificador de la persona que
+        // llenó el formulario y la fr. II obliga a decirlo. Se purga junto
+        // con lo demás (mig. 0243).
+        `Si tú dejaste tus datos en likida.ai, además se guarda **de qué anuncio o búsqueda llegaste** (los identificadores de campaña que tu navegador trae en la liga, como el fbclid de Facebook o el gclid de Google). Sirven para saber qué canal funcionó; se borran con el resto de tus datos.`,
         `**No se tratan datos sensibles** ni datos de tu vida privada: solo los de tu papel en la empresa.`,
       ],
     },
