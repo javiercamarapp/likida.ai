@@ -665,12 +665,10 @@ export async function guardarLecturaDeCorrida(
       campos_no_medidos: l.medicion.camposNoMedidos,
       costo_usd: l.costoUsd,
       motivo: l.motivo,
-      // El `.order('id')` es el desempate total que exige la red del
-      // `.limit()` sin orden (limite_con_orden.test.ts). Aquí es redundante de
-      // verdad —el select devuelve solo la fila recién insertada— pero la
-      // marca `orden-no-importa` no exime en archivos con comentarios de
-      // línea (sinComentarios filtra líneas y el índice queda corrido), y un
-      // order de más sobre una fila cuesta nada.
+      // `.order('id')`: el desempate total que pide la red del `.limit()` sin
+      // orden (limite_con_orden.test.ts). Aquí decide poco —el select devuelve
+      // solo la fila recién insertada— pero el desempate explícito es gratis y
+      // no obliga al lector a razonar por qué este sitio sería la excepción.
     }).select(COLS_LECTURA_CORRIDA).order('id').limit(1);
 
     if (error) {
