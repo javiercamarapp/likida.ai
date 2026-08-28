@@ -181,6 +181,7 @@ describe('el contrato de migraciones que este bundle exige', () => {
       expect(m.tablas.length, `${m.nombre} sin tablas declaradas`).toBeGreaterThan(0);
       // Y la tabla declarada de verdad se crea en ese archivo: la evidencia
       // del ROJO no puede apuntar a una tabla que la migración no crea.
+      // eslint-disable-next-line security/detect-non-literal-fs-filename -- lee las migraciones del propio repo en tiempo de prueba; el nombre sale de la constante MIGRACIONES_EXIGIDAS, no de ninguna entrada de usuario.
       const sql = readFileSync(`supabase/migrations/${m.nombre}.sql`, 'utf8');
       for (const t of m.tablas) {
         expect(sql, `${m.nombre} no crea ${t}`).toMatch(new RegExp(`create table( if not exists)? (public\\.)?${t}\\b`));
