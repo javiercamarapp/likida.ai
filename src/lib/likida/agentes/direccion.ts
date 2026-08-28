@@ -793,6 +793,9 @@ export interface CifrasFundraising {
   pipeline: Array<{ etapa: string; n: number }>;
   /** Viajes procesados por el motor, histórico. */
   liquidaciones: number;
+  /** Alguna de las dos lecturas agregadas no cupo entera. Un investor update
+   *  con una cifra truncada sin decirlo es peor que uno sin la cifra. */
+  truncado: boolean;
 }
 
 export interface Mrr {
@@ -872,6 +875,11 @@ export function armarParteFundraising(c: CifrasFundraising, mrr: Mrr, mes: strin
   l.push('OPERACIÓN (la tracción de producto, que no es ingreso pero sí es uso)');
   l.push(`  · Liquidaciones generadas por el motor, histórico: ${numero(c.liquidaciones)}.`);
 
+  if (c.truncado) {
+    l.push('');
+    l.push(`⚠️ ALGUNA LECTURA AGREGADA SE TRUNCÓ EN ${numero(TOPE_FILAS_AGREGADO)} FILAS: el cobrado histórico y/o el pipeline de arriba son un PISO, no el total. Se dice porque una cifra recortada sin avisar es peor que una cifra ausente — la primera se cita, la segunda se pregunta.`);
+  }
+
   l.push('');
   l.push('LAS CIFRAS QUE UN INVERSIONISTA VA A PEDIR Y QUE HOY NO EXISTEN:');
   for (const h of HUECOS) {
@@ -908,7 +916,8 @@ async function leerCifras(): Promise<CifrasFundraising> {
   return {
     flotas, liquidaciones, suscripciones,
     facturasPagadas: facturas.n, cobradoMxn: facturas.total,
-    pipeline,
+    pipeline: pipeline.etapas,
+    truncado: facturas.truncado || pipeline.truncado,
   };
 }
 
@@ -941,33 +950,42 @@ async function leerSuscripciones(): Promise<Suscripciones> {
   };
 }
 
-async function leerFacturas(): Promise<{ n: number; total: number }> {
-  const { data, error } = await acotada(supabaseAdmin()
+/** Filas que las dos lecturas agregadas del parte leen como máximo. Se comparan
+ *  contra el `count: 'exact'` de PostgREST y NO contra el largo del arreglo:
+ *  PostgREST recorta a `max_rows` sin avisar, así que un arreglo más corto que
+ *  el `.limit()` no prueba que se leyó todo (la lección ESC-8). */
+export const TOPE_FILAS_AGREGADO = 20_000;
+
+async function leerFacturas(): Promise<{ n: number; total: number; truncado: boolean }> {
+  const { data, error, count } = await acotada(supabaseAdmin()
     .from('factura_saas')
-    .select('monto')
+    .select('monto', { count: 'exact' })
     .eq('estado', 'pagada')
-    .limit(5_000), 'direccion.fundraising.facturas');
+    .limit(TOPE_FILAS_AGREGADO), 'direccion.fundraising.facturas');
   if (error) throw new Error(`leerFacturas: ${error.message}`);
   const filas = (data ?? []) as Array<{ monto: unknown }>;
   return {
     n: filas.length,
     total: Math.round(filas.reduce((s, f) => s + Number(f.monto ?? 0), 0) * 100) / 100,
+    truncado: typeof count === 'number' ? count > filas.length : filas.length >= TOPE_FILAS_AGREGADO,
   };
 }
 
-async function leerPipeline(): Promise<Array<{ etapa: string; n: number }>> {
-  const { data, error } = await acotada(supabaseAdmin()
+async function leerPipeline(): Promise<{ etapas: Array<{ etapa: string; n: number }>; truncado: boolean }> {
+  const { data, error, count } = await acotada(supabaseAdmin()
     .from('prospecto')
-    .select('estado')
+    .select('estado', { count: 'exact' })
     .is('duplicado_de', null)
-    .limit(50_000), 'direccion.fundraising.pipeline');
+    .limit(TOPE_FILAS_AGREGADO), 'direccion.fundraising.pipeline');
   if (error) throw new Error(`leerPipeline: ${error.message}`);
+  const filas = (data ?? []) as Array<{ estado: string }>;
   const m = new Map<string, number>();
-  for (const f of (data ?? []) as Array<{ estado: string }>) {
-    m.set(f.estado, (m.get(f.estado) ?? 0) + 1);
-  }
-  return [...m.entries()].map(([etapa, n]) => ({ etapa, n }))
-    .sort((a, b) => b.n - a.n || a.etapa.localeCompare(b.etapa));
+  for (const f of filas) m.set(f.estado, (m.get(f.estado) ?? 0) + 1);
+  return {
+    etapas: [...m.entries()].map(([etapa, n]) => ({ etapa, n }))
+      .sort((a, b) => b.n - a.n || a.etapa.localeCompare(b.etapa)),
+    truncado: typeof count === 'number' ? count > filas.length : filas.length >= TOPE_FILAS_AGREGADO,
+  };
 }
 
 async function correrFundraising(disparo: DisparoCorrida, hoy: string): Promise<ResultadoDireccionBandeja> {
