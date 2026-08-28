@@ -665,12 +665,21 @@ export async function guardarLecturaDeCorrida(
       campos_no_medidos: l.medicion.camposNoMedidos,
       costo_usd: l.costoUsd,
       motivo: l.motivo,
-    }).select(COLS_LECTURA_CORRIDA).limit(1);
+      // El `.order('id')` es el desempate total que exige la red del
+      // `.limit()` sin orden (limite_con_orden.test.ts). Aquí es redundante de
+      // verdad —el select devuelve solo la fila recién insertada— pero la
+      // marca `orden-no-importa` no exime en archivos con comentarios de
+      // línea (sinComentarios filtra líneas y el índice queda corrido), y un
+      // order de más sobre una fila cuesta nada.
+    }).select(COLS_LECTURA_CORRIDA).order('id').limit(1);
 
     if (error) {
       if (esDuplicado(error)) {
+        // `.order('id')` por la red del `.limit()`: el índice único parcial de
+        // la 0246 ya deja a lo sumo UNA fila por (corrida_id, foto_id), así
+        // que el orden no decide nada — pero el desempate explícito es gratis.
         const previa = await db.from('qa_foto_lectura').select(COLS_LECTURA_CORRIDA)
-          .eq('corrida_id', corridaId).eq('foto_id', l.fotoId).limit(1);
+          .eq('corrida_id', corridaId).eq('foto_id', l.fotoId).order('id').limit(1);
         const filas = (previa.data ?? []) as FilaLectura[];
         if (!previa.error && filas.length > 0) {
           return { ok: true, datos: lecturaDeFila(filas[0]), yaMedida: true };
@@ -694,8 +703,11 @@ export async function guardarLecturaDeCorrida(
  *  nada", que pintaría un panel vacío sobre una medición que sí existe. */
 export async function leerLecturasDeCorrida(db: SupabaseClient, corridaId: string): Promise<Resultado<LecturaFoto[]>> {
   try {
+    // Desempate por `id`: el medidor escribe las 90 en el mismo tramo de
+    // segundos y `corrida_en` empata — sin desempate total, dos lecturas de la
+    // misma corrida podrían pintarse en orden distinto entre dos vistas.
     const { data, error } = await db.from('qa_foto_lectura').select(COLS_LECTURA_CORRIDA)
-      .eq('corrida_id', corridaId).order('corrida_en', { ascending: true });
+      .eq('corrida_id', corridaId).order('corrida_en', { ascending: true }).order('id');
     if (error) return { ok: false, error: tablaLectura(error, `no se pudieron leer las lecturas de la corrida ${corridaId}`) };
     return { ok: true, datos: ((data ?? []) as FilaLectura[]).map(lecturaDeFila) };
   } catch (e) {
