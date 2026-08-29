@@ -158,7 +158,7 @@ describe('la contabilidad del cierre', () => {
   // pruebas atan el margen a los TECHOS, y los techos al FUENTE que los impone.
   // ═════════════════════════════════════════════════════════════════════════
   it('C2: el techo de envío de la tabla ES el SEND_TIMEOUT_MS real de meta/client.ts', () => {
-    const cliente = readFileSync(new URL('../meta/client.ts', import.meta.url), 'utf8');
+    const cliente = readFileSync('src/lib/meta/client.ts', 'utf8');
     const m = /const SEND_TIMEOUT_MS = ([\d_]+)/.exec(cliente);
     expect(m, 'no se encontró SEND_TIMEOUT_MS en meta/client.ts').not.toBeNull();
     expect(TECHO_ENVIO_WHATSAPP_MS).toBe(Number(m![1].replace(/_/g, '')));
