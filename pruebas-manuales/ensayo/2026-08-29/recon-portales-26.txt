@@ -162,8 +162,10 @@ queda sin declarar, igual que en CIRCLE_K.
 
 REQUIEREN CUENTA Y NO HAY CREDENCIALES DE PRUEBA (4):
   g500, shell, bp, circuito_exterior — `requiereCuenta: true` en el catálogo.
-  No se intentó ninguna cuenta real ni de prueba: sin credenciales, no hay
-  forma honesta de leer el formulario que vive detrás del login.
+  NO SE VISITÓ NINGUNO de los cuatro en este recon — cero peticiones HTTP a
+  sus dominios. No se intentó ninguna cuenta real ni de prueba, ni ningún
+  login: sin credenciales, no hay forma honesta de leer el formulario que
+  vive detrás del login, así que directamente no se abrió la página.
 
 CAPTCHA BLOQUEA LA PANTALLA DE ENTRADA (1):
   hidrosina — https://facturacionelectronica.hidrosina.com.mx/facturaciontranseunte/
@@ -205,13 +207,26 @@ SITIO NO CARGA / SERVICIO CAÍDO (2):
 
 FORMULARIO NO EXISTE EN EL DOM SIN ENVIAR ALGO ANTES (JS complejo) (4):
   arco_sonora — https://www.buzonfacturas.com/GenerarCFDI/Index?avanzada=0
-  es una búsqueda por RFC; el HTML trae 14 `<input>` SIN `id` ni `name`
-  (ni siquiera tras escribir un RFC de prueba), así que no hay un selector
-  que no sea inventado. El paso de captura del ticket real vendría después
-  de "Buscar", que dispara una petición no-GET (bloqueada por el candado).
+  es una búsqueda por RFC; el HTML trae 14 `<input>` SIN `id` ni `name`, así
+  que no hay un selector que no sea inventado. ⚠️ CORRECCIÓN A LO QUE DECÍA
+  ESTA LÍNEA ANTES: en el segundo intento SÍ se escribió el RFC ficticio de
+  prueba `GMX0902279I1` (el mismo fixture inventado que usa `capufe.test.ts`,
+  no el dato de ningún cliente real) en `#RFC`, y DESPUÉS SÍ SE APRETÓ
+  "Buscar" — no se quedó sin apretar. El candado de red (GET/HEAD solamente,
+  registrado antes de navegar) debía abortar cualquier POST que ese botón
+  disparara, y la página quedó completamente en blanco después del clic, lo
+  que es consistente con eso — pero no se instrumentó un log de peticiones
+  bloqueadas/permitidas para ese clic específico (a diferencia de
+  `guion-prevuelo.prueba.ts`, que sí lo hace con su arreglo `bloqueadas`),
+  así que no hay prueba a nivel de red de qué método usa ese botón. Por eso
+  esta ficha no se toca de nuevo sin un pre-vuelo instrumentado que lo
+  confirme.
   conekta360 — https://facturacion.conekta360.mx/ solo expone `#rfc` +
-  "Buscar"; el resto del flujo (selección de tickets del RFC, monto, folio)
-  vive detrás de esa búsqueda y no se pudo ver.
+  "Buscar". MISMA ACLARACIÓN: se escribió el mismo RFC ficticio en `#rfc` y
+  se apretó "Buscar" de verdad; mismo candado, mismo resultado en blanco,
+  misma falta de log de red para probarlo. El resto del flujo (selección de
+  tickets del RFC, monto, folio) vive detrás de esa búsqueda y no se pudo
+  ver.
   primera_plus — https://www.facturaelectronicagfa.mx/#/emision/servicio es
   una SPA (Angular) con CERO inputs en el DOM —ni ocultos— hasta elegir un
   "servicio" de un combo que tampoco se pudo ejercitar sin enviar nada.

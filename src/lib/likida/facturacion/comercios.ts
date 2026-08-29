@@ -469,9 +469,10 @@ export const COMERCIOS: Comercio[] = [
     plazoVerificado: false,
     campos: [],
     camposPendientes: true,
-    // `requiereCuenta: true` — el recon de campo de 29-ago-2026 se saltó este
-    // comercio a propósito: sin credenciales de prueba no hay forma honesta
-    // de leer lo que pide el formulario detrás del login.
+    // `requiereCuenta: true` — el recon de campo de 29-ago-2026 NO VISITÓ
+    // este comercio: sin credenciales de prueba no hay forma honesta de leer
+    // lo que pide el formulario detrás del login, así que no se le mandó ni
+    // una sola petición.
     reconocer: { dominios: ['g500network.com', 'miappg500.g500network.com'], texto: ['G500'] },
   },
   {
@@ -786,10 +787,22 @@ export const COMERCIOS: Comercio[] = [
     // Pista para quien lo retome: el propio portal publica su manual en
     // `/Images/Manual%20Buzon%20Facturas.pdf`.
     //
-    // RE-CONFIRMADO 29-ago-2026: incluso escribiendo un RFC de prueba en
-    // `#RFC` (sin apretar «Buscar», que dispara un POST bloqueado por el
-    // candado del recon), el HTML trae 14 `<input>` SIN `id` ni `name` — ni
-    // uno usable como selector sin inventarlo. Sigue igual que arriba.
+    // RE-CONFIRMADO 29-ago-2026, Y CON UNA ACLARACIÓN QUE HAY QUE LEER ANTES
+    // DE TOCAR ESTA FICHA: se escribió el RFC ficticio de prueba
+    // `GMX0902279I1` (el mismo fixture inventado que usa `capufe.test.ts`,
+    // "TRANSPORTES DEL BAJIO SA DE CV" — no es el dato de ningún cliente
+    // real) en `#RFC`, y DESPUÉS SÍ SE APRETÓ «Buscar». El candado de red del
+    // recon (`page.route` bloqueando todo lo que no sea GET/HEAD, registrado
+    // antes de navegar) debía abortar cualquier POST que ese botón
+    // disparara, y lo observado —la página quedó completamente en blanco,
+    // 0 campos y 0 botones— es consistente con eso. PERO no se instrumentó
+    // un log de peticiones bloqueadas/permitidas (como sí hace
+    // `guion-prevuelo.prueba.ts` con su arreglo `bloqueadas`) para ese clic
+    // específico, así que no hay prueba a nivel de red de qué método usa ese
+    // botón. Por eso, aunque el HTML seguía trayendo 14 `<input>` SIN `id` ni
+    // `name` (ni uno usable como selector sin inventarlo), esta ficha NO se
+    // vuelve a tocar sin correr antes un pre-vuelo instrumentado que
+    // confirme el método real de ese botón.
     camposPendientes: true,
     reconocer: {
       dominios: ['buzonfacturas.com'],
@@ -1184,7 +1197,9 @@ export const COMERCIOS: Comercio[] = [
     // tecleó contraseña. Lo que se sabe de la plataforma está en `facturagas`,
     // que es el mismo software y sí deja mirar — pero eso es una INFERENCIA, no
     // una lectura de este portal, y por eso aquí no se escribe ningún campo.
-    // Recon 29-ago-2026: sin credenciales de prueba, se saltó a propósito.
+    // Recon 29-ago-2026: NO SE VISITÓ este comercio — sin credenciales de
+    // prueba no hay nada honesto que leer detrás del login, así que no se le
+    // mandó ni una sola petición.
     camposPendientes: true,
     reconocer: { dominios: ['facturacion.shell.com.mx', 'shell.com.mx'], texto: ['SHELL'] },
   },
@@ -1206,7 +1221,9 @@ export const COMERCIOS: Comercio[] = [
     // Detrás de cuenta **y** de un CAPTCHA de imagen PROPIO en el login
     // (`#loginCaptcha_CaptchaTextBox`, maxlength=5, con `#btnRefreshImage`).
     // No se resolvió ni se rodeó: es modo asistido por definición.
-    // Recon 29-ago-2026: sin credenciales de prueba, se saltó a propósito.
+    // Recon 29-ago-2026: NO SE VISITÓ este comercio — sin credenciales de
+    // prueba no hay nada honesto que leer detrás del login, así que no se le
+    // mandó ni una sola petición.
     camposPendientes: true,
     reconocer: { dominios: ['gasolineriabp.com.mx'], texto: ['BP ', 'BPME', 'BP ME', 'GASOLINERIA BP'] },
   },
@@ -1456,10 +1473,11 @@ export const COMERCIOS: Comercio[] = [
     plazo: { dias: 30 },
     plazoVerificado: true,
     campos: [],
-    // los campos del ticket están detrás del login. Recon 29-ago-2026: se
-    // saltó a propósito por lo mismo que ya dice el comentario de arriba —
-    // sin verificar si el camino "sin registro" existe de verdad, no hay
-    // credencial de prueba con la que mirar el resto.
+    // los campos del ticket están detrás del login. Recon 29-ago-2026: NO SE
+    // VISITÓ este comercio, por lo mismo que ya dice el comentario de
+    // arriba — sin verificar si el camino "sin registro" existe de verdad,
+    // no hay credencial de prueba con la que mirar el resto, así que no se
+    // le mandó ni una sola petición.
     camposPendientes: true,
     reconocer: {
       dominios: ['portalfacturacion.circuitoexterior.mx', 'circuitoexterior.mx'],
@@ -2017,11 +2035,20 @@ export const COMERCIOS: Comercio[] = [
     plazoVerificado: true,
     campos: [],
     camposPendientes: true,
-    // RECON 29-ago-2026: la pantalla de entrada es solo `#rfc` + «Buscar»
-    // (búsqueda por RFC del receptor). El candado de red del recon bloquea
-    // cualquier petición no-GET, así que no se pudo ver qué tickets devuelve
-    // esa búsqueda ni cómo se captura el folio/monto de ESTE ticket — sigue
-    // pendiente por eso.
+    // RECON 29-ago-2026, CON LA MISMA ACLARACIÓN QUE `arco_sonora` — léela
+    // antes de tocar esta ficha: la pantalla de entrada es `#rfc` + «Buscar»
+    // (búsqueda por RFC del receptor). Se escribió el RFC ficticio de prueba
+    // `GMX0902279I1` (el fixture inventado de `capufe.test.ts`, no el dato de
+    // ningún cliente real) en `#rfc`, y DESPUÉS SÍ SE APRETÓ «Buscar». El
+    // candado de red (GET/HEAD solamente, registrado antes de navegar) debía
+    // abortar cualquier POST que ese botón disparara, y lo observado —la
+    // página quedó completamente en blanco— es consistente con eso, pero no
+    // se instrumentó un log de peticiones bloqueadas/permitidas para ese
+    // clic específico, así que no hay prueba a nivel de red de qué método
+    // usa ese botón. No se pudo ver qué tickets devuelve esa búsqueda ni
+    // cómo se captura el folio/monto de ESTE ticket, y esta ficha NO se
+    // vuelve a tocar sin un pre-vuelo instrumentado que confirme el método
+    // real de ese botón.
     reconocer: { dominios: ['conekta360.mx'], texto: ['CONEKTA 360', 'CONEKTA360'] },
   },
   {
