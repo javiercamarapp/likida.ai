@@ -96,7 +96,7 @@ FILA = ENCENDIDO; falla cerrado al revés del resto A PROPÓSITO),
 SIN escritor real: `posicion`, `geocerca`, `terminal` (huérfana desde 0001),
 `mantenimiento`, `cotizacion`, `portal_credencial`, `invitacion`,
 `campania`/`envio_mensaje` (muertas de facto). `ticket_mensaje` SALIÓ de esta
-lista el 29-ago-2026: la 0266 y `lib/likida/soporte.ts` cerraron el ciclo del
+lista el 29-ago-2026: la 0268 y `lib/likida/soporte.ts` cerraron el ciclo del
 ticket (responder, tomar, cerrar, reabrir) desde las dos pantallas. **PENDIENTES DE APLICAR EN PROD: 0115-0125** — el código
 ya escribe contra todas; sin migs, esas rutas fallan en producción.
 

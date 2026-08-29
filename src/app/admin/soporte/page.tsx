@@ -73,7 +73,7 @@ async function flotaDelTicket(fd: FormData): Promise<{ id: string; tenantId: str
 /**
  * SOPORTE — la cola de tickets del SUPERADMIN: `ticket_soporte` (0051) de
  * TODAS las flotas, con flota, edad y reloj de SLA por fila, y —desde la
- * 0266— el hilo y las cuatro acciones que cierran el ciclo.
+ * 0268— el hilo y las cuatro acciones que cierran el ciclo.
  *
  * ── LO QUE ESTA PANTALLA NO PODÍA HACER HASTA HOY (auditoría 29-ago-2026, H1)
  *
@@ -340,7 +340,7 @@ export default async function SoportePage({
                 <EstadoVacio icono={<LifeBuoy width={17} height={17} strokeWidth={1.75} style={{ color: 'var(--marca)' }} />}>
                   <span className="font-semibold">La cola existe y está vacía de verdad.</span>{' '}
                   La tabla de tickets (con prioridad, categoría y reloj de SLA) está en la base desde la
-                  migración 0051, el panel del cliente abre tickets desde el 16 de agosto, y desde la 0266
+                  migración 0051, el panel del cliente abre tickets desde el 16 de agosto, y desde la 0268
                   esta pantalla puede responderlos, tomarlos y cerrarlos. Este 0 no es un hueco de
                   producto: es que hoy ninguna flota tiene nada pendiente con Likida.
                 </EstadoVacio>

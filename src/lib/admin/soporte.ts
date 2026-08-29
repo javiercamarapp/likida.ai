@@ -44,7 +44,7 @@ export interface TicketCruzado {
    *  mezclaría los pendientes de clientes distintos como si fueran uno. */
   tenantId: string;
   tenantNombre: string;
-  /** Quién de Likida lo tomó (0266). `null` = SIN TOMAR — que no es lo mismo
+  /** Quién de Likida lo tomó (0268). `null` = SIN TOMAR — que no es lo mismo
    *  que "en proceso": la cola lo dice con esas palabras. */
   asignadoA: string | null;
   asignadoNombre: string | null;

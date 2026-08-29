@@ -469,6 +469,10 @@ export const COMERCIOS: Comercio[] = [
     plazoVerificado: false,
     campos: [],
     camposPendientes: true,
+    // `requiereCuenta: true` — el recon de campo de 29-ago-2026 NO VISITÓ
+    // este comercio: sin credenciales de prueba no hay forma honesta de leer
+    // lo que pide el formulario detrás del login, así que no se le mandó ni
+    // una sola petición.
     reconocer: { dominios: ['g500network.com', 'miappg500.g500network.com'], texto: ['G500'] },
   },
   {
@@ -688,45 +692,57 @@ export const COMERCIOS: Comercio[] = [
   {
     clave: 'pemex_franquicia',
     nombre: 'Pemex franquicia / Grupo CargoGas',
-    // ── NI RESPONDE NI ES UN PORTAL (recon 28-ago-2026) ────────────────────
+    // ── EL SITIO SE REDISEÑÓ (recon 29-ago-2026); EL PROBLEMA DE FONDO NO ──
     //
-    // `www.cargogas.com` resuelve (35.215.83.77, nginx/SiteGround) y hace 301 a
-    // `cargogas.com`, donde el servidor entrega cuerpo **"403 - Forbidden"** con
-    // `<meta name="robots" content="noindex">`. Igual en `/facturacion` y
-    // `/facturacion/`, con UA de Chrome y con la de curl. Es un WAF que bloquea
-    // automatización.
+    // `cargogas.com/facturacion/` ya NO da 403: el WAF de SiteGround que
+    // bloqueaba el recon del 28-ago-2026 desapareció junto con el sitio viejo.
+    // Hoy es una página nueva (Elementor, `dateModified: 2026-05-28`) con DOS
+    // botones "¡Factura aquí!":
     //
-    // Y el contenido real, leído por otra vía, **no es un portal: es un
-    // directorio** de portales regionales por estación. O sea que esta ficha
-    // prometía una página de facturar que no existe — por eso `portalPendiente`.
+    //   · Ticket normal → sigue siendo `http://cargogas.dyndns.ws:8080/facturacion/`,
+    //     EL MISMO host de DNS dinámico y puerto no estándar del recon anterior.
+    //   · «Facturación para créditos y flotillas» (la sección que aplicaría a
+    //     Likida) → un proveedor NUEVO, `http://factura.cargogas.warelan.com/`.
+    //     Se midió su formulario real con Chrome headless (Playwright,
+    //     29-ago-2026), sin escribir ni enviar nada: pide `bill[billing_code]`
+    //     ("código de facturación"), `bill[client_id]` ("número de cliente",
+    //     obligatorio), `bill[rfc]` y `bill[email]` — ningún password en ESTA
+    //     pantalla, pero el subdominio entero es HTTP puro: el puerto 443 ni
+    //     siquiera acepta conexión (`curl` a `https://factura.cargogas.warelan.com/`
+    //     falla con "Failed to connect... Couldn't connect to server"). El
+    //     `client_id` es el identificador de la cuenta de crédito de la
+    //     flotilla — mandarlo en claro por HTTP es la misma exposición que
+    //     `sin_tls` existe para bloquear, aunque no haya un campo llamado
+    //     literalmente "password".
     //
-    // ⚠️ EL FACTURADOR AL QUE REMITE SU PROPIO SITIO ES PEOR QUE EL DE MEGASUR,
-    // y por eso queda anotado aquí en vez de guardarse como `portal`:
-    // `http://cargogas.dyndns.ws:8080/facturacion/` responde 200 **en texto
-    // plano**, sobre un **DNS dinámico gratuito** y un **puerto no estándar**
-    // (su gemelo de flotillas es `:4126`). Si Likida metiera ahí credenciales de
-    // flotilla viajarían en claro, hacia un host que puede cambiar de IP cuando
-    // el proveedor de DDNS quiera. Además es un SEGUNDO selector —de ciudad y
-    // estación— así que ni siquiera lleva a un formulario: el portal está dos
-    // niveles más adentro. No se automatiza hasta que exponga HTTPS.
+    // CONCLUSIÓN: el bloqueo por `muro_anti_bot` de la ronda anterior ya no
+    // describe el sitio de hoy, pero la ficha sigue sin poder automatizarse —
+    // por la MISMA familia de razón (sin TLS) con evidencia fresca. Se cambia
+    // `razon` a `sin_tls` para que la nota diga lo que se midió HOY, no lo que
+    // ya no es cierto.
     portal: '',
     portalPendiente: true,
-    requiereCuenta: false, // NO VERIFICADO: no se pudo mirar
+    requiereCuenta: false, // NO VERIFICADO: el de flotillas pide "número de cliente", no se creó cuenta
     plazo: 'mes_natural',
     plazoVerificado: false,
     campos: [],
     camposPendientes: true,
     noAutomatizable: {
-      razon: 'muro_anti_bot',
+      razon: 'sin_tls',
       nota:
-        'Recon 28-ago-2026: cargogas.com sirve cuerpo "403 - Forbidden" con noindex a cualquier ' +
-        'navegador automatizado (WAF de SiteGround), y su contenido real es un directorio de ' +
-        'portales por estación, no un portal. El facturador alterno al que remite ' +
-        '(http://cargogas.dyndns.ws:8080/facturacion/) es HTTP plano sobre DNS dinámico gratuito ' +
-        'y puerto no estándar: tampoco se automatiza hasta que exponga HTTPS.',
+        'Recon 29-ago-2026 (el sitio se rediseñó desde el 28-ago-2026, el 403 de SiteGround ya no ' +
+        'aplica): cargogas.com/facturacion/ ofrece dos rutas, ninguna con TLS. Ticket normal → ' +
+        'http://cargogas.dyndns.ws:8080/facturacion/ (DNS dinámico, puerto no estándar, igual que ' +
+        'antes). Créditos y flotillas → http://factura.cargogas.warelan.com/, medido con Chrome ' +
+        'headless: formulario real (billing_code, client_id obligatorio, rfc, email) servido sobre ' +
+        'HTTP puro — el puerto 443 de warelan.com no acepta conexión. El client_id de la cuenta de ' +
+        'crédito de la flotilla viajaría en claro por la red; no se automatiza hasta que exponga HTTPS.',
     },
     reconocer: {
-      dominios: ['cargogas.com', 'cargogas.dyndns.ws', 'facturagas.com', 'hidrolitro.com'],
+      dominios: [
+        'cargogas.com', 'cargogas.dyndns.ws', 'facturagas.com', 'hidrolitro.com',
+        'warelan.com', 'cargogas.warelan.com',
+      ],
       texto: ['CARGOGAS', 'CARGO GAS'],
     },
   },
@@ -782,6 +798,23 @@ export const COMERCIOS: Comercio[] = [
     // nota de venta"); no se sabe cómo se llaman, así que no se escriben.
     // Pista para quien lo retome: el propio portal publica su manual en
     // `/Images/Manual%20Buzon%20Facturas.pdf`.
+    //
+    // RE-CONFIRMADO 29-ago-2026, Y CON UNA ACLARACIÓN QUE HAY QUE LEER ANTES
+    // DE TOCAR ESTA FICHA: se escribió el RFC ficticio de prueba
+    // `GMX0902279I1` (el mismo fixture inventado que usa `capufe.test.ts`,
+    // "TRANSPORTES DEL BAJIO SA DE CV" — no es el dato de ningún cliente
+    // real) en `#RFC`, y DESPUÉS SÍ SE APRETÓ «Buscar». El candado de red del
+    // recon (`page.route` bloqueando todo lo que no sea GET/HEAD, registrado
+    // antes de navegar) debía abortar cualquier POST que ese botón
+    // disparara, y lo observado —la página quedó completamente en blanco,
+    // 0 campos y 0 botones— es consistente con eso. PERO no se instrumentó
+    // un log de peticiones bloqueadas/permitidas (como sí hace
+    // `guion-prevuelo.prueba.ts` con su arreglo `bloqueadas`) para ese clic
+    // específico, así que no hay prueba a nivel de red de qué método usa ese
+    // botón. Por eso, aunque el HTML seguía trayendo 14 `<input>` SIN `id` ni
+    // `name` (ni uno usable como selector sin inventarlo), esta ficha NO se
+    // vuelve a tocar sin correr antes un pre-vuelo instrumentado que
+    // confirme el método real de ese botón.
     camposPendientes: true,
     reconocer: {
       dominios: ['buzonfacturas.com'],
@@ -1176,6 +1209,9 @@ export const COMERCIOS: Comercio[] = [
     // tecleó contraseña. Lo que se sabe de la plataforma está en `facturagas`,
     // que es el mismo software y sí deja mirar — pero eso es una INFERENCIA, no
     // una lectura de este portal, y por eso aquí no se escribe ningún campo.
+    // Recon 29-ago-2026: NO SE VISITÓ este comercio — sin credenciales de
+    // prueba no hay nada honesto que leer detrás del login, así que no se le
+    // mandó ni una sola petición.
     camposPendientes: true,
     reconocer: { dominios: ['facturacion.shell.com.mx', 'shell.com.mx'], texto: ['SHELL'] },
   },
@@ -1197,6 +1233,9 @@ export const COMERCIOS: Comercio[] = [
     // Detrás de cuenta **y** de un CAPTCHA de imagen PROPIO en el login
     // (`#loginCaptcha_CaptchaTextBox`, maxlength=5, con `#btnRefreshImage`).
     // No se resolvió ni se rodeó: es modo asistido por definición.
+    // Recon 29-ago-2026: NO SE VISITÓ este comercio — sin credenciales de
+    // prueba no hay nada honesto que leer detrás del login, así que no se le
+    // mandó ni una sola petición.
     camposPendientes: true,
     reconocer: { dominios: ['gasolineriabp.com.mx'], texto: ['BP ', 'BPME', 'BP ME', 'GASOLINERIA BP'] },
   },
@@ -1261,6 +1300,10 @@ export const COMERCIOS: Comercio[] = [
     // Ninguno se resolvió ni se rodeó, así que los campos del ticket quedan sin
     // leer. Es modo asistido por definición y no va a dejar de serlo escribiendo
     // código.
+    //
+    // RE-CONFIRMADO 29-ago-2026: la pantalla de entrada sigue pidiendo RFC +
+    // el captcha aritmético (visto como "4 + 8 =" esta vez, confirmando que
+    // cambia por carga) antes de mostrar cualquier campo de ticket.
     camposPendientes: true,
     reconocer: {
       dominios: ['facturacionelectronica.hidrosina.com.mx', 'hidrosina.com.mx'],
@@ -1442,7 +1485,12 @@ export const COMERCIOS: Comercio[] = [
     plazo: { dias: 30 },
     plazoVerificado: true,
     campos: [],
-    camposPendientes: true, // los campos del ticket están detrás del login
+    // los campos del ticket están detrás del login. Recon 29-ago-2026: NO SE
+    // VISITÓ este comercio, por lo mismo que ya dice el comentario de
+    // arriba — sin verificar si el camino "sin registro" existe de verdad,
+    // no hay credencial de prueba con la que mirar el resto, así que no se
+    // le mandó ni una sola petición.
+    camposPendientes: true,
     reconocer: {
       dominios: ['portalfacturacion.circuitoexterior.mx', 'circuitoexterior.mx'],
       texto: ['CIRCUITO EXTERIOR MEXIQUENSE', 'CIRCUITO EXTERIOR', 'CONMEX', 'ALEATICA'],
@@ -1524,6 +1572,10 @@ export const COMERCIOS: Comercio[] = [
     // Evite espacios antes y después del token · Puede contener letras y
     // números»), que no es un folio ni una fecha. Dejar los dos campos viejos
     // habría mandado al extractor a buscar datos que casi seguro no son.
+    //
+    // RE-CONFIRMADO 29-ago-2026: el DOM en `#/emision/servicio` sigue con
+    // CERO `<input>` —ni ocultos— hasta elegir un servicio del combo, y ese
+    // combo no se pudo ejercitar sin enviar una petición (candado del recon).
     camposPendientes: true,
     reconocer: {
       dominios: ['facturaelectronicagfa.mx', 'www.facturaelectronicagfa.mx'],
@@ -1712,6 +1764,10 @@ export const COMERCIOS: Comercio[] = [
     // un solo selector estable que capturar sin interactuar, así que no se
     // escribe ninguno: un selector inventado falla en producción con cara de
     // estar bien.
+    //
+    // RE-CONFIRMADO 29-ago-2026: el DOM inicial sigue sin un solo campo de
+    // los seis servicios ("Facturar GAS/SP/TH/OC/VIP/AE"), que son
+    // disparadores `clWDUtil.pfGetTraitement(...)` y no enlaces.
     camposPendientes: true,
     reconocer: {
       dominios: ['facturacion.grupocentra.mx', 'grupocentra.mx'],
@@ -1764,15 +1820,24 @@ export const COMERCIOS: Comercio[] = [
     // Tres son el TICKET y tres el VOUCHER de la terminal encima del ticket:
     // el voucher NO es facturable por sí solo y aun así trae el mismo monto y
     // fecha, que es justo el par que confunde a un cuadre ingenuo.
-    portal: 'https://www.lodemored.com.mx/',
+    //
+    // ── URL CORREGIDA (recon 29-ago-2026) ──────────────────────────────────
+    // La raíz redirige sola a `lodemo.com.mx`, el sitio CORPORATIVO del grupo
+    // — sin un solo campo de facturación. La liga real, en su pie: `fact.
+    // lodemored.net`. Formulario largo pero medido campo por campo; detalle
+    // completo en `pruebas-manuales/ensayo/2026-08-29/recon-portales-26.txt`.
+    portal: 'https://fact.lodemored.net/',
     requiereCuenta: false,
     plazo: 'mes_natural',
     plazoVerificado: false,
-    campos: [],
-    camposPendientes: true,
+    campos: [
+      { clave: 'numeroTicket', etiquetaPortal: '# Ticket', requerido: true },
+      { clave: 'fecha', etiquetaPortal: 'Fecha compra', requerido: true },
+      { clave: 'monto', etiquetaPortal: 'Importe', requerido: true },
+    ],
     // El RFC sí se leyó limpio en tres tomas distintas del mismo emisor.
     reconocer: {
-      dominios: ['lodemored.com.mx'],
+      dominios: ['lodemored.com.mx', 'lodemored.net'],
       rfc: ['FGA091216EJ7'],
       texto: ['FOMENTO GASOLINERO'],
     },
@@ -1783,7 +1848,14 @@ export const COMERCIOS: Comercio[] = [
     // 7 tickets: el comercio no-gasolinero más fotografiado del banco después
     // de la familia Walmart. El ticket manda a facturar por tres caminos
     // (módulo de servicio al cliente, el sitio, o los kioscos de la tienda).
-    portal: 'https://www.homedepot.com.mx/',
+    //
+    // ── URL CORREGIDA (recon 29-ago-2026) ──────────────────────────────────
+    // La raíz es el sitio general de venta. La liga de facturación, en el
+    // pie ("Facturación electrónica"), es `facturacion.homedepot.com.mx`.
+    // Dos campos únicamente antes de "Continuar": RFC y No. de Ticket.
+    // ⚠️ Cloudflare Turnstile está SIEMPRE presente, no solo tras un error:
+    // este portal defiere a una persona en cada intento, y es lo correcto.
+    portal: 'https://facturacion.homedepot.com.mx/',
     requiereCuenta: false,
     // PLAZO VERIFICADO EN EL PAPEL: "USTED TIENE 60 DIAS PARA ESTE TRAMITE",
     // impreso literal en los siete tickets. Es de los plazos más generosos que
@@ -1791,8 +1863,7 @@ export const COMERCIOS: Comercio[] = [
     // habría dado por vencido semanas antes de tiempo.
     plazo: { dias: 60 },
     plazoVerificado: true,
-    campos: [],
-    camposPendientes: true,
+    campos: [{ clave: 'numeroTicket', etiquetaPortal: 'No. de Ticket', requerido: true }],
     reconocer: {
       dominios: ['homedepot.com.mx'],
       rfc: ['HDM001017AS1'],
@@ -1812,6 +1883,11 @@ export const COMERCIOS: Comercio[] = [
     // endpoint de facturación. Sirve para mandar a una persona al lugar
     // correcto; no sirve para apuntarle un robot, y por eso además va con
     // `camposPendientes`.
+    //
+    // RECON 29-ago-2026: se intentó tres veces (raíz y `/facturacion`) y las
+    // tres fallaron con `net::ERR_HTTP2_PROTOCOL_ERROR` — el portal no llegó
+    // a responder nada que un navegador automatizado pudiera leer. Sigue
+    // pendiente por eso, además de por lo de arriba.
     portal: 'https://www.farmaciasguadalajara.com/',
     requiereCuenta: false,
     plazo: 'mes_natural',
@@ -1833,6 +1909,12 @@ export const COMERCIOS: Comercio[] = [
     // El subdominio `www3` no es un dedazo: así viene impreso en el ticket
     // ("www3.costco.com.mx/facturacion"), y es exactamente la clase de detalle
     // que se pierde si alguien "normaliza" el dominio de memoria.
+    //
+    // RECON 29-ago-2026, dos intentos con minutos de diferencia: el portal
+    // responde 200 con el cuerpo literal «Lo sentimos, el servicio está
+    // temporalmente inactivo. Por favor inténtalo más tarde.» — sin un solo
+    // campo. No es una URL rota; es un servicio caído en el momento del
+    // recon. Vale la pena reintentar en vez de dar la URL por mala.
     portal: 'https://www3.costco.com.mx/facturacion',
     requiereCuenta: false,
     plazo: 'mes_natural',
@@ -1848,7 +1930,12 @@ export const COMERCIOS: Comercio[] = [
   {
     clave: 'tim_hortons',
     nombre: 'Tim Hortons México',
-    portal: 'https://timhortonsmx.com/es/facturar',
+    // ── URL CORREGIDA (recon 29-ago-2026) ──────────────────────────────────
+    // La página del catálogo trae el enlace «Factura aquí», que lleva a
+    // `timsboh.com/autofacturacion/busqueda` — ese es el formulario real, en
+    // OTRO dominio. Cuatro campos sin cuenta: Sucursal, Número de ticket,
+    // Fecha del ticket y Total, con botón «Buscar».
+    portal: 'https://timsboh.com/autofacturacion/busqueda',
     requiereCuenta: false,
     // PLAZO VERIFICADO EN EL PAPEL: "El ticket podrá facturarse hasta el último
     // día del mes". Es la primera vez que 'mes_natural' —el default que este
@@ -1856,8 +1943,12 @@ export const COMERCIOS: Comercio[] = [
     // CONFIRMADO por un comprobante.
     plazo: 'mes_natural',
     plazoVerificado: true,
-    campos: [],
-    camposPendientes: true,
+    campos: [
+      { clave: 'sucursal', etiquetaPortal: 'Sucursal', requerido: true },
+      { clave: 'numeroTicket', etiquetaPortal: 'Número de ticket', requerido: true },
+      { clave: 'fecha', etiquetaPortal: 'Fecha del ticket', requerido: true },
+      { clave: 'monto', etiquetaPortal: 'Total', requerido: true },
+    ],
     // El texto se reconoce por la MARCA, no por la razón social: "OPERADORA DE
     // CAFE PENINSULAR" es justo la cadena que ya rompió el reconocimiento de
     // ADO por subcadena (ver identificar.test.ts) y no se vuelve a meter aquí.
@@ -1879,6 +1970,12 @@ export const COMERCIOS: Comercio[] = [
     // del sistema del emisor. No es un campo ilegible ni ausente: está impreso
     // y es basura. Cualquier extractor que lo lea tal cual va a mandar
     // "undefined" al portal como folio.
+    //
+    // RECON 29-ago-2026: la raíz es el sitio corporativo de la paquetería.
+    // El único botón relacionado con facturación es «Invoicing», y lleva a
+    // una pantalla con campos «User» / «Password» — un LOGIN. Eso contradice
+    // `requiereCuenta: false` de esta ficha; se deja anotado sin cambiar la
+    // bandera porque no se comprobó si ese login es evitable por otra ruta.
     portal: 'https://www.paquetexpress.com.mx/',
     requiereCuenta: false,
     plazo: 'mes_natural',
@@ -1899,15 +1996,28 @@ export const COMERCIOS: Comercio[] = [
     // "Tradición en Pastelerías, S.A. de C.V."— así que el RFC de abajo es el
     // ÚNICO que se leyó limpio; el de las sucursales de Mérida salió quemado y
     // NO se completó de memoria.
-    portal: 'https://www.elglobo.com.mx/',
+    // ── URL CORREGIDA (recon 29-ago-2026) ──────────────────────────────────
+    // La raíz es la tienda en línea de pasteles, sin nada de facturación. La
+    // liga real está en su pie: un portal ASP.NET aparte, operado por
+    // «Masteredi» (`masfacturaweb.com.mx:73/ElGlobo/`). Desde ahí, «Crear
+    // Factura» expone TICKET-#, SUCURSAL, TOTAL, FECHA, RFC_CLIENTE y USO_CFDI
+    // — leídos del DOM real. ⚠️ Ese formulario NO CARGA si se abre directo
+    // (sin pasar antes por este índice): el guion de `portales.ts` apunta
+    // aquí a propósito, mismo límite ya documentado en `CIRCLE_K`. Detalle
+    // completo: `pruebas-manuales/ensayo/2026-08-29/recon-portales-26.txt`.
+    portal: 'https://www.masfacturaweb.com.mx:73/ElGlobo/',
     requiereCuenta: false,
     // El ticket no imprime plazo por comprobante, solo la leyenda de cierre de
     // ejercicio ("solicite su factura a más tardar el 31 de diciembre"), que es
     // otra cosa: un tope anual, no el plazo del ticket.
     plazo: 'mes_natural',
     plazoVerificado: false,
-    campos: [],
-    camposPendientes: true,
+    campos: [
+      { clave: 'numeroTicket', etiquetaPortal: 'TICKET-#', requerido: true },
+      { clave: 'sucursal', etiquetaPortal: 'SUCURSAL', requerido: true },
+      { clave: 'monto', etiquetaPortal: 'TOTAL', requerido: true },
+      { clave: 'fecha', etiquetaPortal: 'FECHA', requerido: true },
+    ],
     reconocer: {
       dominios: ['elglobo.com.mx'],
       rfc: ['TPA131111PM4'],
@@ -1937,6 +2047,20 @@ export const COMERCIOS: Comercio[] = [
     plazoVerificado: true,
     campos: [],
     camposPendientes: true,
+    // RECON 29-ago-2026, CON LA MISMA ACLARACIÓN QUE `arco_sonora` — léela
+    // antes de tocar esta ficha: la pantalla de entrada es `#rfc` + «Buscar»
+    // (búsqueda por RFC del receptor). Se escribió el RFC ficticio de prueba
+    // `GMX0902279I1` (el fixture inventado de `capufe.test.ts`, no el dato de
+    // ningún cliente real) en `#rfc`, y DESPUÉS SÍ SE APRETÓ «Buscar». El
+    // candado de red (GET/HEAD solamente, registrado antes de navegar) debía
+    // abortar cualquier POST que ese botón disparara, y lo observado —la
+    // página quedó completamente en blanco— es consistente con eso, pero no
+    // se instrumentó un log de peticiones bloqueadas/permitidas para ese
+    // clic específico, así que no hay prueba a nivel de red de qué método
+    // usa ese botón. No se pudo ver qué tickets devuelve esa búsqueda ni
+    // cómo se captura el folio/monto de ESTE ticket, y esta ficha NO se
+    // vuelve a tocar sin un pre-vuelo instrumentado que confirme el método
+    // real de ese botón.
     reconocer: { dominios: ['conekta360.mx'], texto: ['CONEKTA 360', 'CONEKTA360'] },
   },
   {
@@ -1953,6 +2077,28 @@ export const COMERCIOS: Comercio[] = [
     plazoVerificado: false,
     campos: [],
     camposPendientes: true,
+    // ── POR QUÉ ESTE PORTAL NO LO TOCA LA MÁQUINA (recon 29-ago-2026) ──────
+    //
+    // El botón «FACTURA AQUÍ» del sitio corporativo NO lleva a
+    // `fullgas.com.mx`: lleva a `http://62.151.183.96:9062`, una IP cruda.
+    // Medido, no supuesto:
+    //   1. `https://62.151.183.96:9062` da `ERR_SSL_PROTOCOL_ERROR` — no hay
+    //      ni certificado que ofrecer, ni siquiera uno inválido.
+    //   2. La única página que sirve por HTTP es un LOGIN por RFC con
+    //      reCAPTCHA y un enlace «Regístrate»: para facturar hay que crear
+    //      cuenta y autenticarse sobre HTTP plano.
+    // Mismo patrón que Megasur (ver esa ficha): custodiar una contraseña de
+    // flota para escribirla en claro por la red no es una decisión que se
+    // tome en silencio. `camposPendientes` se deja igual porque, con o sin
+    // este hallazgo, el formulario de ticket vive detrás de esa cuenta y
+    // nunca se iba a poder leer sin crearla.
+    noAutomatizable: {
+      razon: 'sin_tls',
+      nota:
+        'Medido el 29-ago-2026: el backend real (62.151.183.96:9062) no negocia ' +
+        'TLS (https da ERR_SSL_PROTOCOL_ERROR) y su login pide RFC/contraseña por ' +
+        'HTTP plano.',
+    },
     // Sin `rfc`: el del emisor no se leyó con claridad en ninguna de las dos
     // tomas y adivinar una homoclave rompe el dígito verificador de cfdi.ts.
     reconocer: { dominios: ['fullgas.com.mx'], texto: ['FULLGAS', 'FULL GAS'] },
@@ -1969,17 +2115,38 @@ export const COMERCIOS: Comercio[] = [
     plazoVerificado: false,
     campos: [],
     camposPendientes: true,
+    // RECON 29-ago-2026: `mefacturo.mx` redirige entero a
+    // `admin.softrestaurant.com`, el sitio de MERCADEO del producto POS
+    // «Soft Restaurant Admin» — no un formulario de facturación de ESTE
+    // restaurante. El botón «Facturar Ticket» es un modal JS
+    // (`AbrirModalFacturacion()`) que depende de la instalación del
+    // restaurante emisor, y esa liga por-restaurante no está impresa de
+    // forma genérica (y la ficha, a propósito, no nombra al restaurante —
+    // ver el comentario de arriba sobre datos personales).
     reconocer: { dominios: ['mefacturo.mx'], texto: ['MEFACTURO'] },
   },
   {
     clave: 'mcdonalds',
     nombre: "McDonald's México",
+    // Formulario de una sola pantalla, ya la URL correcta. Cinco campos del
+    // ticket, medidos en el `<form id="facturar_form">` (recon 29-ago-2026).
+    // ⚠️ Trae DOS checkboxes que el motor NUNCA marca por construcción: uno
+    // es «Complemento para partidos políticos» (`#politico`, el mismo tipo
+    // de trampa que `#cb1` en CAPUFE) y el otro son los términos y
+    // condiciones (`#condiciones`). El motor solo escribe lo que está
+    // declarado en `campos`/`receptor` y no tiene forma de marcar un
+    // checkbox suelto, así que ninguno de los dos entra a la tabla.
     portal: 'https://www.facturacionmcdonalds.com.mx/',
     requiereCuenta: false,
     plazo: 'mes_natural',
     plazoVerificado: false,
-    campos: [],
-    camposPendientes: true,
+    campos: [
+      { clave: 'sucursal', etiquetaPortal: 'Número de restaurante', requerido: true, restriccion: { soloDigitos: true, largoMax: 4 } },
+      { clave: 'numeroTicket', etiquetaPortal: 'Número de ticket', requerido: true },
+      { clave: 'caja', etiquetaPortal: 'Número Reg. o Caja', requerido: true },
+      { clave: 'fecha', etiquetaPortal: 'Fecha', requerido: true },
+      { clave: 'monto', etiquetaPortal: 'Importe total', requerido: true },
+    ],
     reconocer: {
       dominios: ['facturacionmcdonalds.com.mx'],
       rfc: ['RAD161031RK1'],
@@ -1989,12 +2156,28 @@ export const COMERCIOS: Comercio[] = [
   {
     clave: 'lbbo',
     nombre: 'Los Bisquets Bisquets Obregón (BB del Sur)',
-    portal: 'https://www.lbbo.com.mx/factura',
+    // ── URL CORREGIDA, HACIA LA VERSIÓN SEGURA (recon 29-ago-2026) ─────────
+    // La liga del catálogo redirige (302) a
+    // `http://autofacturacionlbbo.edimex.com.mx/…`, EN CLARO. Se comprobó
+    // que el mismo host SÍ sirve HTTPS con certificado válido — no es un caso
+    // "sin TLS" como Megasur/FullGas, es un enlace flojo que manda por HTTP
+    // pudiendo mandar por HTTPS — así que se guarda la URL segura directa,
+    // sin pasar nunca por el salto en claro.
+    // Tres campos, sin `<label for>` — el texto sale de los párrafos
+    // "Sucursal*"/"Folio*"/"Código*" junto a cada input:
+    //   #NotaVentaEmpresa · #NotaVentaFolio · #Contrasenia
+    // `#Contrasenia` es `type="password"` pero NO es una contraseña de
+    // cuenta: es una clave impresa en el ticket. `requiereCuenta` sigue
+    // en `false`.
+    portal: 'https://autofacturacionlbbo.edimex.com.mx/edi2/AutofacturacionPublico',
     requiereCuenta: false,
     plazo: 'mes_natural',
     plazoVerificado: false,
-    campos: [],
-    camposPendientes: true,
+    campos: [
+      { clave: 'sucursal', etiquetaPortal: 'Sucursal', requerido: true },
+      { clave: 'folio', etiquetaPortal: 'Folio', requerido: true },
+      { clave: 'codigo', etiquetaPortal: 'Código', requerido: true },
+    ],
     // Sin `rfc`: la homoclave de BB del Sur no se distingue en ninguna de las
     // dos tomas.
     //
@@ -2026,6 +2209,25 @@ export const COMERCIOS: Comercio[] = [
     plazoVerificado: true,
     campos: [],
     camposPendientes: true,
+    // ── POR QUÉ SIGUE PENDIENTE A PESAR DE HABERSE LEÍDO (recon 29-ago-2026) ─
+    //
+    // La raíz reparte a OCHO portales reales, todos de la plataforma
+    // «Efisense Intel»: Boston's Pizza en 4 ciudades (Mérida, Campeche, CDMX,
+    // Querétaro), La Parroquia en 3 y Sushi Roll en 1. Se leyó el formulario
+    // COMPLETO de uno de muestra (Boston's Mérida, `.../bostons/mid/`): tres
+    // campos con `id` reales — `#txt-rfc` ("RFC"), `#txt-cp` ("C.P."),
+    // `#txt-ref` ("Referencia", 12 dígitos) — y botón `#btn-step1`
+    // ("Continuar"). Pero este catálogo modela un comercio con UN SOLO
+    // `portal`, y ese mismo campo es lo que se le enseña a un humano en el
+    // camino asistido (`vinculacion_asistida.ts`). Cambiarlo a la URL de
+    // Mérida mandaría a cualquiera con un ticket de Campeche, CDMX,
+    // Querétaro, La Parroquia o Sushi Roll al portal EQUIVOCADO — peor que
+    // dejar el directorio actual, que sí deja elegir. No se escribió el
+    // guion por eso: hace falta que el catálogo sepa distinguir
+    // sucursal/marca antes de automatizar esto sin arriesgar el camino
+    // manual. Detalle completo:
+    // `pruebas-manuales/ensayo/2026-08-29/recon-portales-26.txt`.
+    //
     // Sin `rfc`: el de Grupo Bospatex se imprime con espacios intercalados y no
     // se leyó de forma inequívoca.
     reconocer: { dominios: ['bptgroup.mx'], texto: ["BOSTON'S", 'BOSTONS PIZZA', 'BOSPATEX'] },
@@ -2042,6 +2244,10 @@ export const COMERCIOS: Comercio[] = [
     plazoVerificado: false,
     campos: [],
     camposPendientes: true,
+    // RECON 29-ago-2026: `https://f.zetus.app/` responde 404. La URL se
+    // pudrió sola, igual que el 30% que ya advertía el encabezado de este
+    // archivo. No se buscó activamente una liga de reemplazo (fuera del
+    // alcance de un recon solo-Playwright); queda pendiente encontrarla.
     reconocer: { dominios: ['zetus.app', 'f.zetus.app'], texto: ['ZETUS'] },
   },
   {
@@ -2056,8 +2262,10 @@ export const COMERCIOS: Comercio[] = [
     requiereCuenta: false,
     plazo: 'mes_natural',
     plazoVerificado: false,
-    campos: [],
-    camposPendientes: true,
+    // La raíz también acepta teclear el código a mano: un solo campo
+    // (`#input-code`, "Ingresa el código de facturación", recon 29-ago-2026)
+    // además del camino por URL que ya describe el comentario de arriba.
+    campos: [{ clave: 'codigo', etiquetaPortal: 'código de facturación', requerido: true }],
     reconocer: { dominios: ['parrot.rest', 'facturacion.parrot.rest'], texto: ['PARROT'] },
   },
   {
@@ -2069,6 +2277,11 @@ export const COMERCIOS: Comercio[] = [
     plazoVerificado: false,
     campos: [],
     camposPendientes: true,
+    // RECON 29-ago-2026: `/pages/facturacion` (el enlace "Facturación" del
+    // pie) es una página de contenido de Shopify SIN un solo campo de
+    // facturación: solo indica mandar un correo con los datos fiscales a
+    // facturacion-online@fantasiasmiguel.com.mx. No hay portal automatizable
+    // hasta que el comercio publique uno.
     reconocer: {
       dominios: ['fantasiasmiguel.com'],
       rfc: ['FMI650208CG9'],
@@ -2084,6 +2297,10 @@ export const COMERCIOS: Comercio[] = [
     plazoVerificado: false,
     campos: [],
     camposPendientes: true,
+    // RECON 29-ago-2026: el dominio no resuelve DNS
+    // (`net::ERR_NAME_NOT_RESOLVED`) — está muerto, no solo caído. No se
+    // buscó activamente una liga de reemplazo (fuera del alcance de un
+    // recon solo-Playwright); queda pendiente encontrarla.
     reconocer: {
       dominios: ['laparisina.com.mx'],
       rfc: ['GPA930101QI7'],
@@ -2152,19 +2369,58 @@ export const COMERCIOS: Comercio[] = [
     // El `texto` distingue la marca para el humano que lee el aviso, pero no
     // cambia a quién se le factura: es el mismo contribuyente.
     //
-    // POR QUÉ NO HAY PORTAL: ninguno de los 11 tickets imprime liga de
-    // facturación. Imprimen `miopinionwmx.com` (la encuesta de satisfacción) y
-    // un `bit.ly` de aviso de privacidad, y las dos son trampas — un extractor
-    // ingenuo tomaría cualquiera de ellas como el portal y mandaría al operador
-    // a contestar una encuesta. Por eso van en `dominios` de NADIE y el portal
-    // queda declarado pendiente.
-    portal: '',
-    portalPendiente: true,
-    requiereCuenta: false,
+    // EL TICKET NO IMPRIME LIGA — pero eso ya no significa que el portal no se
+    // pueda escribir. Ninguno de los 11 tickets del banco trae dominio de
+    // facturación (imprimen `miopinionwmx.com`, la encuesta de satisfacción, y
+    // un `bit.ly` de aviso de privacidad — las dos son trampas y van en
+    // `dominios` de NADIE). Lo que cambió (29-ago-2026): investigación web +
+    // Chrome headless (Playwright) encontró y MIDIÓ el portal CENTRALIZADO real
+    // que Walmart de México opera para las tres marcas, el mismo que describen
+    // fuentes públicas independientes (guías de terceros que coinciden en la
+    // URL y en los campos TR/TC).
+    //
+    // RECORRIDO MEDIDO, sin escribir ni enviar nada:
+    //   1. `https://facturacion.walmartmexico.com.mx` → 307 a
+    //      `https://facturacion-clientes.walmart.com/` (confirmado con `curl` Y
+    //      con Chrome headless — mismo destino).
+    //   2. La landing tiene un aviso modal con botón `#popup_btn_accept`
+    //      ("Aceptar"); hay que cerrarlo.
+    //   3. Sección "Tengo un ticket" → enlace "Obtener factura" → navega a
+    //      `/ticket`, que NO es visitable de forma directa (redirige de vuelta a
+    //      la landing si no se pasó por el flujo — es guardia de cliente, no
+    //      login).
+    //   4. El formulario en `/ticket` pide CUATRO campos, con estos `id`
+    //      literales: `membershipOrRFC` ("MEMBRESÍA O RFC"), `postalCode`
+    //      ("Código Postal", maxlength 5), `ticketNumber` ("Número de Ticket",
+    //      maxlength 25) y `transactionNumber` ("# Transacción", maxlength 5).
+    //      Botones: `invoice_tab_facturar` ("Facturar") e
+    //      `invoice_tab_consulta` ("Consulta o reenvía tu factura").
+    //
+    // `membershipOrRFC` y `postalCode` son datos del RECEPTOR (la flota), no del
+    // ticket — por eso no entran a `campos`, igual que el resto del catálogo.
+    // `ticketNumber` y `transactionNumber` sí son del papel y sí se listan abajo.
+    //
+    // NO SE COMPLETÓ UNA FACTURACIÓN REAL: no hay ticket de Walmart del banco de
+    // QA con folio vigente a mano para probar el flujo de punta a punta, así que
+    // esto documenta lo que el formulario PIDE, no que el flujo entero funcione.
+    portal: 'https://facturacion.walmartmexico.com.mx',
+    requiereCuenta: false, // sin login visible: ticket + membresía/RFC, sin crear cuenta
     plazo: 'mes_natural',
-    plazoVerificado: false,
-    campos: [],
-    camposPendientes: true,
+    plazoVerificado: false, // el portal no declara plazo en esta pantalla; fuentes de terceros dicen 30 días, sin confirmar en el papel
+    campos: [
+      {
+        clave: 'numeroTicket',
+        etiquetaPortal: 'Número de Ticket',
+        requerido: true,
+        restriccion: { largoMax: 25 },
+      },
+      {
+        clave: 'transaccion',
+        etiquetaPortal: '# Transacción',
+        requerido: true,
+        restriccion: { largoMax: 5 },
+      },
+    ],
     reconocer: {
       rfc: ['NWM9709244W4'],
       texto: ['NUEVA WAL MART', 'WAL-MART', 'BODEGA AURRERA', "SAM'S CLUB"],
@@ -2181,6 +2437,16 @@ export const COMERCIOS: Comercio[] = [
     // que llenar—, así que el camino de este comercio nunca va a ser el robot:
     // es un mensaje a una persona. `portalPendiente` lo deja dicho hasta que
     // alguien confirme si tienen portal o si el correo es el único camino.
+    //
+    // SE BUSCÓ (29-ago-2026) Y SIGUE SIN URL CONFIABLE. La búsqueda web
+    // encuentra "Grupo Vaqueiro Ferretero, S.A. de C.V." en Mérida (nótese la
+    // ORTOGRAFÍA distinta: "Vaqueiro", no "Vaquero") con checkout de facturación
+    // en `vaqueiros.mx/finalizar-compra/` — pero es una TIENDA EN LÍNEA con
+    // facturación al momento de la compra, no un portal de "sube tu ticket
+    // después", y nada confirma que su RFC sea TAF170929C58: podría ser un
+    // negocio distinto con nombre parecido. El propio ticket ya dice cuál es el
+    // canal real —el correo de Hotmail—, así que inventar aquí un dominio de
+    // una empresa sin RFC confirmado sería peor que dejarlo pendiente.
     portal: '',
     portalPendiente: true,
     requiereCuenta: false,
@@ -2209,6 +2475,19 @@ export const COMERCIOS: Comercio[] = [
     // que es software de terceros y probablemente la plataforma que factura —
     // pero eso es una hipótesis, no algo impreso, y por eso no se escribe como
     // dominio. Verificarla es justo la tarea que `portalPendiente` declara.
+    //
+    // SE BUSCÓ (29-ago-2026) Y SIGUE SIN URL CONFIABLE. `amghg.com` (el sitio
+    // corporativo) no tiene ninguna sección ni liga de facturación — se
+    // inspeccionó su HTML completo y no aparece la palabra "factura" en ningún
+    // lado. Un resultado de búsqueda apuntaba a un portal de Pago Fácil
+    // (`manager.pagofacil.net/tpvc/...` con un código atado a AMG), pero ese
+    // subdominio hoy da NXDOMAIN — no resuelve. SÍ se encontró un canal real y
+    // vigente por otra vía: el correo `facturacion@amghg.com`, publicado con
+    // instrucciones de qué adjuntar (constancia fiscal, uso de CFDI, foto del
+    // ticket, forma de pago, sucursal). No es un portal —`portal` sirve para
+    // ABRIR una página, y un correo no es eso—, así que no se escribe ahí; se
+    // deja anotado por si el producto en algún momento factura por correo en
+    // vez de portal para estos casos.
     portal: '',
     portalPendiente: true,
     requiereCuenta: false,
@@ -2256,6 +2535,24 @@ export const COMERCIOS: Comercio[] = [
     // Dominio impreso y leído por el OCR: `https://WWW.FACTURASCAS.COM`. Se
     // guarda en minúsculas y sin `www` porque así se compara el dominio de la
     // liga; el papel lo imprime en mayúsculas.
+    //
+    // ⚠️ SE INTENTÓ VERIFICAR (29-ago-2026) Y EL DOMINIO ESTÁ MUERTO:
+    // `facturascas.com` (y `.com.mx`, `.mx`, con y sin `www`) da NXDOMAIN — no
+    // resuelve, punto. La Wayback Machine tampoco tiene NUNCA un snapshot de
+    // ese host, lo que apunta a que nunca existió públicamente y no a que se
+    // dio de baja hace poco. Hipótesis con evidencia parcial, NO confirmada:
+    // `facturasgas.com` SÍ existe y SÍ es una plataforma real de autofacturación
+    // de gasolineras (formulario con búsqueda por RFC, en
+    // `facturasgas.com/facturacion/autofactura.php`) — C↔G es una confusión de
+    // OCR plausible sobre un ticket térmico en mayúsculas. Pero esa plataforma
+    // es MULTI-COMERCIO (no muestra "GASOLINERIA MALLORCA" en ningún lado
+    // visible) y no se pudo confirmar que esta razón social/RFC facture ahí
+    // sin teclear el RFC real en su buscador — que es precisamente lo que este
+    // recon evita hacer sin un ticket real en la mano. SIN URL CONFIABLE
+    // ENCONTRADA todavía: se deja anotado para que quien tenga el ticket físico
+    // (o uno nuevo del banco de QA) confirme si el dominio impreso hoy sigue
+    // siendo `FACTURASCAS.COM` o si cambió, antes de escribir cualquiera de
+    // los dos como `portal`.
     requiereCuenta: false, // NO VERIFICADO: nadie ha abierto el portal
     plazo: 'mes_natural',
     plazoVerificado: false,
@@ -2273,19 +2570,68 @@ export const COMERCIOS: Comercio[] = [
   {
     clave: 'los_taquitos_pm',
     nombre: 'Los Taquitos de PM',
-    portal: '',
-    portalPendiente: true,
-    requiereCuenta: false, // NO VERIFICADO: nadie ha abierto el portal
-    plazo: 'mes_natural',
-    plazoVerificado: false,
+    // ── EL DOMINIO DEL CATÁLOGO TENÍA UNA "L" DE MÁS (recon 29-ago-2026) ────
+    //
+    // `facturacion.lostaquitosdelpm.com` / `lostaquitosdelpm.com` (DEL pm) NO
+    // RESUELVEN — NXDOMAIN, y la Wayback Machine no tiene ni un snapshot de
+    // ninguno de los dos: nunca existieron públicamente. Es casi seguro un
+    // error de transcripción de la OCR original ("del pm" vs "de pm"), y es un
+    // bug real: con el dominio malo, `identificarComercio` NUNCA iba a
+    // reconocer un ticket real de este comercio por dominio.
+    //
+    // El dominio correcto, encontrado por búsqueda web y confirmado navegando
+    // con Chrome headless (Playwright, sin escribir ni enviar nada):
+    // `https://www.lostaquitosdepm.com/facturacion` (DE pm, sin "l"). Es un
+    // restaurante real de Mérida (tacos, cochinita) con SIETE sucursales, y esa
+    // página lista un enlace "Facturación Sucursal <nombre>" por cada una,
+    // apuntando a `https://admin.softrestaurant.com/Facturacion/MenuCliente/<id>`
+    // — la plataforma es Soft Restaurant®, no un desarrollo propio.
+    //
+    // SE MIDIÓ EL FORMULARIO REAL de una sucursal (Prol. Paseo de Montejo, id
+    // 25158; las siete comparten la misma plantilla, a reserva de confirmarlo
+    // en más de una). Campos con `id` literal: `CodigoUnicoTicket` ("Código de
+    // facturación", maxlength 30) y `FolioTicket` ("Folio", maxlength 30) —
+    // alternos, con un botón por cada uno (`btn_addon_codigounico` /
+    // `btn_addon_folio`) que decide cuál se captura — más dos campos de RFC del
+    // receptor (`RFC` maxlength 13, `RFCReceptor` maxlength 30 — datos de la
+    // flota, no del ticket). Botón `btn_facturar` ("Facturar"). Sin captcha
+    // visible.
+    //
+    // EL TICKET IMPRIME UN PLAZO: la página de facturación dice literal
+    // «para realizar sus facturas en línea debe ser dentro de las primeras 24
+    // hrs. después del consumo» — el mismo plazo más corto del catálogo
+    // (ver `conekta360`, otra ferretería de Mérida con el mismo límite). Este
+    // dato SÍ se escribe abajo: es el mismo para las siete sucursales y está en
+    // la página que se guarda como `portal`, no en el formulario de una en
+    // particular.
+    //
+    // POR QUÉ `camposPendientes` SIGUE EN `true` AUNQUE EL FORMULARIO YA SE
+    // MIDIÓ: `campos` describe lo que pide LA PÁGINA GUARDADA EN `portal`, y
+    // `portal` es el selector de sucursales —real, vivo, corrige el dominio
+    // muerto— no el formulario de `MenuCliente/<id>` en sí. Cuál de los siete
+    // IDs es el correcto depende de qué sucursal imprimió el ticket, y nada en
+    // este archivo resuelve hoy ese cruce. Escribir aquí los campos del
+    // formulario profundo como si vivieran en `portal` sería inexacto del
+    // mismo modo que inventar una URL — y además volvería este comercio
+    // "pilotable" (`COMERCIOS_PILOTABLES` solo mira `campos.length` y
+    // `camposPendientes`) para un portal donde esos campos no están. Quedan
+    // documentados arriba en prosa para que quien resuelva el cruce de
+    // sucursal → id no tenga que remedir el formulario.
+    portal: 'https://www.lostaquitosdepm.com/facturacion',
+    requiereCuenta: false, // sin login: ticket + folio/código, confirmado en el formulario medido
+    // PLAZO VERIFICADO EN EL PROPIO PORTAL, literal: «dentro de las primeras 24
+    // hrs. después del consumo» (`www.lostaquitosdepm.com/facturacion`, leído
+    // 29-ago-2026).
+    plazo: { horas: 24 },
+    plazoVerificado: true,
     campos: [],
     camposPendientes: true,
     // SIN `rfc` A PROPÓSITO: el OCR no lo leyó en este ticket. Un RFC "deducido"
     // del nombre sería inventado, y el RFC es justamente el campo donde una
     // invención se propaga sin ruido hasta un CFDI. El reconocimiento se sostiene
-    // en el dominio impreso —que sí se leyó— y en la razón social.
+    // en el dominio impreso —ya corregido— y en la razón social.
     reconocer: {
-      dominios: ['facturacion.lostaquitosdelpm.com', 'lostaquitosdelpm.com'],
+      dominios: ['lostaquitosdepm.com', 'admin.softrestaurant.com'],
       texto: ['LOS TAQUITOS DE PM'],
     },
   },

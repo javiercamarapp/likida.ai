@@ -14554,7 +14554,107 @@ begin
     cliente_vivo_sigue, cliente_muerto_se_fue, cliente_joven_sigue, codigo_viejo_se_fue, codigo_reciente_sigue, r;
 end $$;
 
--- ── 214. El hilo del ticket: la nota interna NO la ve el cliente y el hilo ajeno ni se lee ni se escribe (mig. 0266, auditoría H1) ──
+-- ── 214. El estudio de marketing: banco de hooks y personajes/lugares, deny-all con su dominio cerrado (mig. 0266) ──
+--
+-- Lo que solo la base puede demostrar: las dos tablas nuevas (marketing_hook,
+-- marketing_referencia) quedan CERRADAS a anon/authenticated y abiertas solo
+-- a service_role (mismo doble candado que aliado_objetivo, bloque 185), sus
+-- CHECK de "no vacío" rebotan una fila vacía en vez de guardar un hook o una
+-- referencia sin contenido, el dominio de `tipo` es cerrado (personaje/lugar,
+-- nada más), y los dos buckets nuevos (marketing_hooks_video,
+-- marketing_referencias) nacen PRIVADOS — un video o una foto de referencia
+-- interna servida en un bucket público sería indexable por cualquiera que
+-- adivine la ruta (mismo criterio que `comprobantes`, 0039).
+do $$
+declare
+  hook_id uuid;
+  hook_creado boolean;
+  hook_vacio_rebota boolean;
+  ruta_vacia_rebota boolean;
+  ref_id uuid;
+  ref_creado boolean;
+  ref_nombre_vacio_rebota boolean;
+  ref_foto_vacia_rebota boolean;
+  tipo_inventado_rebota boolean;
+  hook_cerrado boolean;
+  referencia_cerrado boolean;
+  bucket_hooks_privado boolean;
+  bucket_referencias_privado boolean;
+begin
+  -- El hook normal entra.
+  insert into public.marketing_hook (video_ruta, hook_texto)
+    values ('verif/0266/video.mp4', 'la pregunta llega igual en todas las flotas')
+    returning id into hook_id;
+  hook_creado := hook_id is not null;
+
+  -- Un hook sin texto (solo espacios) rebota.
+  begin
+    insert into public.marketing_hook (video_ruta, hook_texto) values ('verif/0266/otro.mp4', '   ');
+    hook_vacio_rebota := false;
+  exception when check_violation then
+    hook_vacio_rebota := true;
+  end;
+
+  -- Una ruta vacía también rebota.
+  begin
+    insert into public.marketing_hook (video_ruta, hook_texto) values ('   ', 'algo');
+    ruta_vacia_rebota := false;
+  exception when check_violation then
+    ruta_vacia_rebota := true;
+  end;
+
+  -- La referencia normal entra.
+  insert into public.marketing_referencia (tipo, nombre, foto_ruta)
+    values ('personaje', 'Chofer Ramon', 'verif/0266/ramon.jpg')
+    returning id into ref_id;
+  ref_creado := ref_id is not null;
+
+  -- Un nombre vacío rebota.
+  begin
+    insert into public.marketing_referencia (tipo, nombre, foto_ruta) values ('lugar', '   ', 'verif/0266/x.jpg');
+    ref_nombre_vacio_rebota := false;
+  exception when check_violation then
+    ref_nombre_vacio_rebota := true;
+  end;
+
+  -- Una foto vacía rebota.
+  begin
+    insert into public.marketing_referencia (tipo, nombre, foto_ruta) values ('lugar', 'Patio norte', '   ');
+    ref_foto_vacia_rebota := false;
+  exception when check_violation then
+    ref_foto_vacia_rebota := true;
+  end;
+
+  -- El dominio de tipo es cerrado: ni un tercer valor entra.
+  begin
+    insert into public.marketing_referencia (tipo, nombre, foto_ruta) values ('vehiculo', 'x', 'verif/0266/y.jpg');
+    tipo_inventado_rebota := false;
+  exception when check_violation then
+    tipo_inventado_rebota := true;
+  end;
+
+  -- El doble candado de las dos tablas.
+  hook_cerrado := not has_table_privilege('anon', 'public.marketing_hook', 'SELECT')
+    and not has_table_privilege('authenticated', 'public.marketing_hook', 'SELECT')
+    and has_table_privilege('service_role', 'public.marketing_hook', 'SELECT')
+    and (select relrowsecurity from pg_class where oid = 'public.marketing_hook'::regclass);
+  referencia_cerrado := not has_table_privilege('anon', 'public.marketing_referencia', 'SELECT')
+    and not has_table_privilege('authenticated', 'public.marketing_referencia', 'SELECT')
+    and has_table_privilege('service_role', 'public.marketing_referencia', 'SELECT')
+    and (select relrowsecurity from pg_class where oid = 'public.marketing_referencia'::regclass);
+
+  -- Los dos buckets nacen privados.
+  select public = false into bucket_hooks_privado
+    from storage.buckets where id = 'marketing_hooks_video';
+  select public = false into bucket_referencias_privado
+    from storage.buckets where id = 'marketing_referencias';
+
+  raise exception 'ESTUDIO_MARKETING_0266  hook_creado=%  hook_vacio_rebota=%  ruta_vacia_rebota=%  ref_creado=%  ref_nombre_vacio_rebota=%  ref_foto_vacia_rebota=%  tipo_inventado_rebota=%  hook_cerrado=%  referencia_cerrado=%  bucket_hooks_privado=%  bucket_referencias_privado=%   (esperado t / t / t / t / t / t / t / t / t / t / t)',
+    hook_creado, hook_vacio_rebota, ruta_vacia_rebota, ref_creado, ref_nombre_vacio_rebota, ref_foto_vacia_rebota,
+    tipo_inventado_rebota, hook_cerrado, referencia_cerrado, bucket_hooks_privado, bucket_referencias_privado;
+end $$;
+
+-- ── 215. El hilo del ticket: la nota interna NO la ve el cliente y el hilo ajeno ni se lee ni se escribe (mig. 0268, auditoría H1) ──
 --
 -- La 0051 escribió, textual, que «una nota interna no la ve el cliente». Su
 -- policy no lo hacía: `tenant_data` era `for all` con un único predicado de
@@ -14573,7 +14673,7 @@ end $$;
 --   c) El dueño de B no ve NADA del hilo de A.                          → 0
 --   d) El dueño de B no puede ESCRIBIR en el hilo de A (with check).    → t
 --   e) El dueño de A no puede fabricar una nota interna en su hilo.     → t
---   f) `asignado_a` (0266) existe y acepta el id de un app_user.        → t
+--   f) `asignado_a` (0268) existe y acepta el id de un app_user.        → t
 --
 -- Lo que este bloque NO prueba, y por eso no se presenta como si lo probara:
 -- el camino REAL del producto corre con `service_role`, que salta RLS. Esa
@@ -14589,13 +14689,13 @@ declare
   a_no_fabrica_interna boolean := false;
   asignado_ok boolean := false;
 begin
-  insert into tenant (nombre) values ('ZZZ VERIF 0266 A') returning id into v_a;
-  insert into tenant (nombre) values ('ZZZ VERIF 0266 B') returning id into v_b;
-  insert into app_user (id, tenant_id, email, rol) values (v_u_a, v_a, 'zzz-0266-a@likida.test', 'flota_admin');
-  insert into app_user (id, tenant_id, email, rol) values (v_u_b, v_b, 'zzz-0266-b@likida.test', 'flota_admin');
+  insert into tenant (nombre) values ('ZZZ VERIF 0268 A') returning id into v_a;
+  insert into tenant (nombre) values ('ZZZ VERIF 0268 B') returning id into v_b;
+  insert into app_user (id, tenant_id, email, rol) values (v_u_a, v_a, 'zzz-0268-a@likida.test', 'flota_admin');
+  insert into app_user (id, tenant_id, email, rol) values (v_u_b, v_b, 'zzz-0268-b@likida.test', 'flota_admin');
 
   insert into ticket_soporte (tenant_id, abierto_por, asunto)
-    values (v_a, v_u_a, 'ZZZ ticket 0266') returning id into v_tk;
+    values (v_a, v_u_a, 'ZZZ ticket 0268') returning id into v_tk;
   -- El hilo, escrito con service_role (que es como lo escribe el producto):
   -- una respuesta pública del equipo y una nota interna sobre la misma flota.
   insert into ticket_mensaje (ticket_id, autor_id, cuerpo, interna)
@@ -14603,7 +14703,7 @@ begin
   insert into ticket_mensaje (ticket_id, autor_id, cuerpo, interna)
     values (v_tk, null, 'Nota interna: esta flota lleva tres tickets del mismo tema.', true);
 
-  -- `asignado_a` acepta a un app_user (0266). Si la columna no existiera, la
+  -- `asignado_a` acepta a un app_user (0268). Si la columna no existiera, la
   -- migración no habría aplicado y esto tronaría antes de llegar aquí.
   update ticket_soporte set asignado_a = v_u_a where id = v_tk;
   select (asignado_a = v_u_a) into asignado_ok from ticket_soporte where id = v_tk;
@@ -14638,6 +14738,6 @@ begin
   reset role;
 
   delete from tenant where id in (v_a, v_b);   -- cascade limpia el resto
-  raise exception E'HILO_TICKET_0266  publico-propio=%  interna-propia=%  hilo-ajeno=%  b-no-escribe=%  a-no-fabrica-interna=%  asignado=%   (esperado 1 / 0 / 0 / t / t / t)',
+  raise exception E'HILO_TICKET_0268  publico-propio=%  interna-propia=%  hilo-ajeno=%  b-no-escribe=%  a-no-fabrica-interna=%  asignado=%   (esperado 1 / 0 / 0 / t / t / t)',
     n_publico_propio, n_interna_propia, n_hilo_ajeno, b_no_escribe, a_no_fabrica_interna, asignado_ok;
 end $$;

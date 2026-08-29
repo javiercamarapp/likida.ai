@@ -54,7 +54,7 @@ el panel afirma "aún no hay liquidaciones" estando ciego. Ver `exigir()` y
     `facturacion_escritura.ts` — verificado 16-ago con el insert en :279/:406
     llamado desde `/dashboard/facturacion`). Si vas a "construir el escritor",
     ya existe.
-  - **`ticket_mensaje` YA tiene quien lo escriba** (0266, 29-ago-2026):
+  - **`ticket_mensaje` YA tiene quien lo escriba** (0268, 29-ago-2026):
     `src/lib/likida/soporte.ts` — responder, tomar, cerrar y reabrir, con las
     dos pantallas cableadas (/admin/soporte y /dashboard/soporte). Hasta esa
     fecha el hilo del ticket tenía dos LECTORES y cero escritores, y por eso la

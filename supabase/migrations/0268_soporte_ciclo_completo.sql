@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- 0266 — SOPORTE: cerrar el ciclo que la 0051 dejó abierto.
+-- 0268 — SOPORTE: cerrar el ciclo que la 0051 dejó abierto.
 --
 -- La 0051 construyó la tabla, el reloj de SLA y el hilo con notas internas.
 -- Tres años de producto después (auditoría de dashboards, 29-ago-2026, H1) el

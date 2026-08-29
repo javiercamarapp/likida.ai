@@ -40,7 +40,7 @@ function crearBuilder(tabla: string) {
   b.lt = (c: string, v: unknown) => { l.lt.push([c, v]); return b; };
   b.order = (c: string, o?: unknown) => { l.order.push([c, o]); return b; };
   b.limit = (n: number) => { l.limite = n; return Promise.resolve(resp()); };
-  // `resolverTicketCruzado` (0266) termina en `.maybeSingle()`, no en
+  // `resolverTicketCruzado` (0268) termina en `.maybeSingle()`, no en
   // `.limit()`. Lee su propia entrada del mapa para no pisarse con la cola.
   b.maybeSingle = () => Promise.resolve(respuestas.get(`${tabla}#single`) ?? { data: null, error: null });
   return b;
@@ -116,7 +116,7 @@ describe('getTicketsCruzados', () => {
     expect(r[2].tenantId).toBe('t2');
   });
 
-  // 0266: SIN TOMAR no es lo mismo que "en proceso", y la cola lo dice con
+  // 0268: SIN TOMAR no es lo mismo que "en proceso", y la cola lo dice con
   // esas palabras. Un ticket sin dueño tiene `asignadoA` null — no un nombre
   // de relleno.
   it('trae quién tomó el ticket, y null cuando nadie lo ha tomado', async () => {
@@ -174,7 +174,7 @@ describe('getTicketsCruzados', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// `resolverTicketCruzado` (0266) — LA ÚNICA LECTURA DE TODO EL CICLO DE
+// `resolverTicketCruzado` (0268) — LA ÚNICA LECTURA DE TODO EL CICLO DE
 // SOPORTE QUE CRUZA FLOTAS, y por eso vive en este archivo (el barrio con ese
 // permiso, declarado en su encabezado y en el ALLOWLIST de
 // `consultas_admin_filtran_tenant.test.ts`).

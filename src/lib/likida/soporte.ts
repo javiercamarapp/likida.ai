@@ -17,7 +17,7 @@
 //     escritores esa condición era INSATISFACIBLE POR CONSTRUCCIÓN — una
 //     alarma que no se puede apagar es una alarma que se deja de leer.
 //
-// Este módulo es el escritor que faltaba. La 0266 puso las dos piezas de
+// Este módulo es el escritor que faltaba. La 0268 puso las dos piezas de
 // esquema (`asignado_a` y las policies que esconden la nota interna).
 //
 // ── POR QUÉ TODO PIDE `tenantId`, INCLUSO EL SUPERADMIN ────────────────────
@@ -43,7 +43,7 @@
 //     rechazado aquí, antes de tocar la base. El cliente no puede fabricar una
 //     nota "del equipo" en su propio hilo.
 //
-// La 0266 repite las dos reglas como policy de RLS. Ésa es la segunda red (el
+// La 0268 repite las dos reglas como policy de RLS. Ésa es la segunda red (el
 // producto consulta con `service_role`, que salta RLS); ésta es la primera.
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -268,7 +268,7 @@ export async function responderTicket(
     throw new DatoInvalido(`El mensaje no puede pasar de ${LARGO_MAX_MENSAJE} caracteres.`);
   }
   // La flota no fabrica notas "del equipo" en su propio hilo. Es la misma
-  // regla que la policy de la 0266, dicha del lado que de verdad corre (el
+  // regla que la policy de la 0268, dicha del lado que de verdad corre (el
   // producto consulta con service_role, que salta RLS).
   if (mensaje.interna && actor.tipo !== 'likida') {
     throw new DatoInvalido('Una nota interna solo la escribe el equipo de Likida.');
@@ -314,7 +314,7 @@ export async function responderTicket(
  *
  * `estado='en_proceso'` decía que alguien lo estaba viendo y no decía quién —
  * y una cola donde tres personas creen que lo tiene otra es una cola donde
- * nadie contesta. `asignado_a` (0266) dice quién.
+ * nadie contesta. `asignado_a` (0268) dice quién.
  *
  * Solo el equipo de Likida toma tickets: para el cliente el ticket ya es
  * suyo, y "asignárselo" no querría decir nada.

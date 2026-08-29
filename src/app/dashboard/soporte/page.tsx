@@ -23,7 +23,7 @@ async function safe<T>(fn: () => Promise<T>): Promise<T | null> {
 
 /**
  * SOPORTE — cola de tickets con reloj de SLA, sobre `ticket_soporte` (0051), y
- * —desde la 0266— EL HILO: lo que Likida contestó, y la forma de seguirlo.
+ * —desde la 0268— EL HILO: lo que Likida contestó, y la forma de seguirlo.
  *
  * ── LO QUE FALTABA (auditoría de dashboards, 29-ago-2026, H1) ─────────────
  *
@@ -37,7 +37,7 @@ async function safe<T>(fn: () => Promise<T>): Promise<T | null> {
  *
  * `getHilo(..., { verInternas: false })`. Las notas internas del equipo de
  * Likida (`ticket_mensaje.interna`, 0051) se excluyen EN LA CONSULTA — no se
- * traen y se esconden al pintar. La 0266 lo repite como policy de RLS para la
+ * traen y se esconden al pintar. La 0268 lo repite como policy de RLS para la
  * sesión de navegador. Y el server action de responder entra como
  * `{ tipo: 'flota' }`, que tiene prohibido escribir una nota interna: nadie
  * desde aquí puede fabricar un mensaje "del equipo".

@@ -13,7 +13,7 @@ import type { MensajeHilo } from '@/lib/likida/soporte';
 //
 // LA NOTA INTERNA SE PINTA DISTINTA, Y SOLO LLEGA AQUÍ CUANDO DEBE. Este
 // componente NO decide qué se ve: `getHilo(..., { verInternas })` ya excluyó
-// las internas de la consulta del cliente (0266 y `lib/likida/soporte.ts`).
+// las internas de la consulta del cliente (0268 y `lib/likida/soporte.ts`).
 // El candado de aquí es para que quien SÍ las ve —el equipo— no confunda una
 // nota consigo mismo hablándole al cliente. Ése es el error que hace que
 // alguien escriba en el hilo público lo que iba a decir de la flota.
