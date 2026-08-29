@@ -6,7 +6,11 @@ import { FileText, Image as ImageIcon, Video, Link2, MessageSquare, UploadCloud 
 import { fechaHoraMx } from '@/lib/formato';
 import { StatusPill } from '../../../ui/kit';
 import { Aviso, type AccionDeForma, type ResultadoAccion } from '../../../ui/forma';
-import { TIPOS_ARCHIVO as TIPOS_ARCHIVO_LISTA, type InsumoAgente, type TipoInsumo } from '@/lib/likida/agentes/insumos';
+// De `insumos_tipos.ts`, NUNCA de `insumos.ts`: ese módulo importa
+// `supabaseAdmin` (usa `node:async_hooks`), y este archivo es 'use client' —
+// importar un VALOR desde ahí arrastra ese módulo entero al bundle del
+// navegador y revienta el build ("UnhandledSchemeError: node:async_hooks").
+import { TIPOS_ARCHIVO as TIPOS_ARCHIVO_LISTA, type InsumoAgente, type TipoInsumo } from '@/lib/likida/agentes/insumos_tipos';
 
 const ICONO_TIPO: Record<TipoInsumo, React.ReactNode> = {
   documento: <FileText width={15} height={15} strokeWidth={1.75} />,
