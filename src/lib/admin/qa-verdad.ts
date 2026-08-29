@@ -97,24 +97,37 @@ export function normalizarTextoVerdad(v: string | null | undefined): string | nu
 }
 
 /**
- * RFC comparable — comparador DEDICADO, no la rama genérica de texto.
+ * RFC comparable. Se trata APARTE del texto genérico porque la normalización
+ * genérica DESTRUYE dos caracteres que en un RFC del SAT son válidos y
+ * significativos (auditoría adversarial tandas 21-24, hallazgo 2):
  *
- * El agujero que cierra (auditoría adversarial, 28-ago-2026, reproducido con
- * el código real): `normalizarTextoVerdad` descompone `Ñ`→`N` (NFD + quitar
- * diacríticos) y elimina `&` con su charset, y LOS DOS son caracteres
- * válidos y SIGNIFICATIVOS de un RFC del SAT — `AÑB123456XY0` contra
- * `ANB123456XY0` daba `ok`, y `J&B840101XX1` contra `JB840101XX1` también,
- * siendo contribuyentes DISTINTOS. El porcentaje de RFC salía inflado justo
- * en los casos difíciles.
+ *   · la `Ñ` — NFD la descompone en N + tilde y el filtro tira la tilde:
+ *     "AÑB123456XY0" y "ANB123456XY0" quedaban iguales y son DOS
+ *     contribuyentes distintos.
+ *   · el `&` — `[^A-Z0-9]` lo elimina: "J&B840101XX1" y "JB840101XX1"
+ *     quedaban iguales. El SAT usa `&` en razones sociales reales.
  *
- * Aquí solo se quita lo que un ticket imprime de decoración —espacios,
- * guiones, puntos, paréntesis— y se sube a mayúsculas. `Ñ` y `&` se quedan:
- * es el MISMO charset que `RFC_RE` y que el saneador del intake
- * (`[A-ZÑ&0-9]`). Un carácter distinto es la llave fiscal de un tercero.
+ * El propio archivo llama a esto el fallo más caro (decisión 2 de la
+ * cabecera): un RFC mal dado por bueno manda a facturar contra un
+ * contribuyente que no existe — y el porcentaje del campo salía inflado
+ * JUSTO en los casos difíciles.
+ *
+ * Lo que se quita es LA DECORACIÓN IMPRESA, con el charset del propio RFC:
+ * espacios, guiones, puntos y paréntesis — el prompt del extractor cita
+ * literal el caso "(AAA-860523-1N4)" pegado a la razón social, y el saneador
+ * del intake canonicaliza con el MISMO `[^A-ZÑ&0-9]` (ocr.ts), así que las
+ * dos puntas comparan la misma forma. `NFC` primero recompone la Ñ que
+ * llegue descompuesta (NFD): la MISMA letra en dos codificaciones no puede
+ * contar como error. `Ñ` y `&` se QUEDAN — un carácter distinto es la llave
+ * fiscal de un tercero.
+ *
+ * (Esta versión FUNDE las dos que el merge del 28-ago dejó enfrente: la de
+ * master traía el NFC y ésta el charset completo de decoración; quedó UNA,
+ * con las dos correcciones y las dos tandas de pruebas en verde.)
  */
 export function normalizarRfcVerdad(v: string | null | undefined): string | null {
   if (v === null || v === undefined) return null;
-  const t = v.toUpperCase().replace(/[^A-ZÑ&0-9]/g, '');
+  const t = v.normalize('NFC').toUpperCase().replace(/[^A-ZÑ&0-9]/g, '');
   return t === '' ? null : t;
 }
 
