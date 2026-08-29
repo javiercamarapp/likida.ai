@@ -14664,16 +14664,32 @@ end $$;
 -- policy no daba — y eso es peor que no prometerla, porque nadie la vuelve a
 -- revisar.
 --
--- Este bloque ataca las cuatro esquinas con dos flota_admin REALES,
--- impersonados con `set local role authenticated` + el claim del sub (que es
--- lo que hace PostgREST en cada request):
+-- Y LA SUPLANTACIÓN DE AUTOR, que encontró la revisión de Fable (29-ago-2026)
+-- sobre la primera versión de esta migración: la rama tenant del `with check`
+-- no anclaba `autor_id` a `auth.uid()`, así que un flota_admin con sesión de
+-- navegador insertaba un mensaje PÚBLICO firmado con el uuid de OTRO usuario —
+-- un compañero suyo, o un uuid de superadmin filtrado, y entonces la pantalla
+-- lo pinta como "Likida". Ese mensaje falso cumple `cuentaComoRespuesta`
+-- (interna=false, autor≠solicitante) y APAGA la alarma «sin respuesta» del
+-- agente de Éxito sin que nadie haya contestado: el hueco dejaba que el propio
+-- cliente desactivara la garantía que esta migración vino a construir.
+--
+-- Este bloque ataca las esquinas con TRES app_user REALES (dos de la flota A,
+-- uno de la B), impersonados con `set local role authenticated` + el claim del
+-- sub (que es lo que hace PostgREST en cada request):
 --
 --   a) El dueño de A ve el mensaje PÚBLICO de su ticket.                → 1
 --   b) El dueño de A NO ve la nota interna de su propio ticket.         → 0
 --   c) El dueño de B no ve NADA del hilo de A.                          → 0
 --   d) El dueño de B no puede ESCRIBIR en el hilo de A (with check).    → t
 --   e) El dueño de A no puede fabricar una nota interna en su hilo.     → t
---   f) `asignado_a` (0268) existe y acepta el id de un app_user.        → t
+--   f) El dueño de A no puede FIRMAR COMO OTRO usuario de su flota.     → t
+--   g) …pero SÍ puede escribir firmando con su propio uuid.             → t
+--   h) `asignado_a` (0268) existe y acepta el id de un app_user.        → t
+--
+-- (g) NO es relleno: sin un control positivo, una policy que negara TODA
+-- escritura del tenant pasaría este bloque con honores, y el panel del cliente
+-- se habría quedado mudo sin que nada lo dijera.
 --
 -- Lo que este bloque NO prueba, y por eso no se presenta como si lo probara:
 -- el camino REAL del producto corre con `service_role`, que salta RLS. Esa
@@ -14683,15 +14699,22 @@ end $$;
 do $$
 declare
   v_a uuid; v_b uuid; v_u_a uuid := gen_random_uuid(); v_u_b uuid := gen_random_uuid();
+  -- El COMPAÑERO de flota del dueño de A: la víctima de la suplantación. Tiene
+  -- que ser del MISMO tenant, porque si no el rechazo podría venir del filtro
+  -- de tenant y no del ancla de autor — y entonces el bloque probaría otra cosa.
+  v_u_a2 uuid := gen_random_uuid();
   v_tk uuid;
   n_publico_propio int; n_interna_propia int; n_hilo_ajeno int;
   b_no_escribe boolean := false;
   a_no_fabrica_interna boolean := false;
+  a_no_suplanta boolean := false;
+  a_firma_propia boolean := false;
   asignado_ok boolean := false;
 begin
   insert into tenant (nombre) values ('ZZZ VERIF 0268 A') returning id into v_a;
   insert into tenant (nombre) values ('ZZZ VERIF 0268 B') returning id into v_b;
   insert into app_user (id, tenant_id, email, rol) values (v_u_a, v_a, 'zzz-0268-a@likida.test', 'flota_admin');
+  insert into app_user (id, tenant_id, email, rol) values (v_u_a2, v_a, 'zzz-0268-a2@likida.test', 'encargado');
   insert into app_user (id, tenant_id, email, rol) values (v_u_b, v_b, 'zzz-0268-b@likida.test', 'flota_admin');
 
   insert into ticket_soporte (tenant_id, abierto_por, asunto)
@@ -14721,6 +14744,25 @@ begin
   exception when insufficient_privilege then a_no_fabrica_interna := true;
   end;
 
+  -- LA SUPLANTACIÓN (hallazgo de Fable): mensaje PÚBLICO, en SU propio ticket,
+  -- de SU propia flota — todo legítimo salvo la firma, que es la de su
+  -- compañero. Sin el ancla `autor_id = (select auth.uid())` esto entraba, y
+  -- ese mensaje apagaba la alarma «sin respuesta» sin que nadie contestara.
+  begin
+    insert into ticket_mensaje (ticket_id, autor_id, cuerpo, interna)
+      values (v_tk, v_u_a2, 'Respuesta falsa firmada por otro usuario', false);
+  exception when insufficient_privilege then a_no_suplanta := true;
+  end;
+
+  -- EL CONTROL POSITIVO: lo mismo, firmado con su propio uuid, SÍ entra. Sin
+  -- esto, una policy que negara toda escritura del tenant pasaría el bloque.
+  begin
+    insert into ticket_mensaje (ticket_id, autor_id, cuerpo, interna)
+      values (v_tk, v_u_a, 'Sigo esperando, ¿alguna novedad?', false);
+    a_firma_propia := true;
+  exception when insufficient_privilege then a_firma_propia := false;
+  end;
+
   reset role;
 
   -- ── El flota_admin de B, impersonado ────────────────────────────────────
@@ -14738,6 +14780,7 @@ begin
   reset role;
 
   delete from tenant where id in (v_a, v_b);   -- cascade limpia el resto
-  raise exception E'HILO_TICKET_0268  publico-propio=%  interna-propia=%  hilo-ajeno=%  b-no-escribe=%  a-no-fabrica-interna=%  asignado=%   (esperado 1 / 0 / 0 / t / t / t)',
-    n_publico_propio, n_interna_propia, n_hilo_ajeno, b_no_escribe, a_no_fabrica_interna, asignado_ok;
+  raise exception E'HILO_TICKET_0268  publico-propio=%  interna-propia=%  hilo-ajeno=%  b-no-escribe=%  a-no-fabrica-interna=%  a-no-suplanta=%  a-firma-propia=%  asignado=%   (esperado 1 / 0 / 0 / t / t / t / t / t)',
+    n_publico_propio, n_interna_propia, n_hilo_ajeno, b_no_escribe, a_no_fabrica_interna,
+    a_no_suplanta, a_firma_propia, asignado_ok;
 end $$;

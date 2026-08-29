@@ -323,7 +323,7 @@ export async function tomarTicket(
   ticketId: string,
   tenantId: string,
   actor: ActorSoporte,
-): Promise<{ estado: string; asignadoA: string }> {
+): Promise<{ estado: string; asignadoA: string; anotado: boolean }> {
   if (actor.tipo !== 'likida') {
     throw new DatoInvalido('Tomar un ticket es del equipo de Likida: para tu flota el ticket ya es tuyo.');
   }
@@ -341,7 +341,12 @@ export async function tomarTicket(
     .eq('tenant_id', tenantId), 'tomarTicket');
   if (error) throw new Error(`tomarTicket: ${error.message}`);
 
-  await anotarBitacora({
+  // `anotarBitacora` NUNCA lanza: la acción ya ocurrió y tirarla por no poder
+  // anotarla deja el sistema peor que sin registro. Pero DEVUELVE si quedó
+  // escrita, y ese booleano sube hasta la pantalla: decir "quedó en la
+  // bitácora" sin haberlo comprobado es exactamente el tipo de rótulo que este
+  // repo no se permite.
+  const anotado = await anotarBitacora({
     tenantId,
     actor: { id: actor.userId },
     accion: 'ticket.tomado',
@@ -350,7 +355,7 @@ export async function tomarTicket(
     detalle: { estadoPrevio: ticket.estado, estado },
   }, { evento: 'soporte.bitacora_no_escribio' });
 
-  return { estado, asignadoA: actor.userId };
+  return { estado, asignadoA: actor.userId, anotado };
 }
 
 /**
@@ -372,7 +377,7 @@ export async function cambiarEstadoTicket(
   tenantId: string,
   actor: ActorSoporte,
   nuevo: string,
-): Promise<{ estado: EstadoTicket; estadoPrevio: string }> {
+): Promise<{ estado: EstadoTicket; estadoPrevio: string; anotado: boolean }> {
   if (!(ESTADOS_TICKET as readonly string[]).includes(nuevo)) {
     throw new DatoInvalido('Ese estado no existe para un ticket.');
   }
@@ -398,7 +403,8 @@ export async function cambiarEstadoTicket(
     .eq('tenant_id', tenantId), 'cambiarEstadoTicket');
   if (error) throw new Error(`cambiarEstadoTicket: ${error.message}`);
 
-  await anotarBitacora({
+  // Mismo criterio que `tomarTicket`: no lanza, pero SÍ dice si quedó escrita.
+  const anotado = await anotarBitacora({
     tenantId,
     actor: { id: actor.userId },
     accion: `ticket.${estado}`,
@@ -407,5 +413,5 @@ export async function cambiarEstadoTicket(
     detalle: { estadoPrevio: ticket.estado, estado, porLikida: actor.tipo === 'likida' },
   }, { evento: 'soporte.bitacora_no_escribio' });
 
-  return { estado, estadoPrevio: ticket.estado };
+  return { estado, estadoPrevio: ticket.estado, anotado };
 }

@@ -181,6 +181,10 @@ describe('LA NOTA INTERNA — ni se lee ni se escribe desde el lado del cliente'
 describe('responderTicket', () => {
   beforeEach(() => conTicket());
 
+  // El escritor firma con el actor de la SESIÓN, nunca con un id que venga del
+  // formulario. Es la primera red del hallazgo de Fable (29-ago-2026); la
+  // segunda es el ancla `autor_id = (select auth.uid())` que la 0268 pone en la
+  // policy de INSERT, demostrada en el bloque 215 de verificaciones.sql.
   it('firma el mensaje con el actor y guarda `interna` tal cual se pidió', async () => {
     await responderTicket('tk-1', TENANT_A, ADMIN_LIKIDA, { cuerpo: '  ya quedó  ', interna: false });
     const ins = llamadas.find((l) => l.op === 'insert' && l.tabla === 'ticket_mensaje')!;
@@ -247,7 +251,7 @@ describe('tomarTicket', () => {
 
   it('le pone dueño y saca el ticket de «abierto»', async () => {
     const r = await tomarTicket('tk-1', TENANT_A, ADMIN_LIKIDA);
-    expect(r).toEqual({ estado: 'en_proceso', asignadoA: 'u-likida' });
+    expect(r).toEqual({ estado: 'en_proceso', asignadoA: 'u-likida', anotado: true });
     const upd = llamadas.find((l) => l.op === 'update')!;
     expect(upd.fila).toEqual({ asignado_a: 'u-likida', estado: 'en_proceso' });
     expect(upd.eq).toEqual([['id', 'tk-1'], ['tenant_id', TENANT_A]]);
@@ -276,6 +280,16 @@ describe('tomarTicket', () => {
       expect.objectContaining({ accion: 'ticket.tomado', entidad: 'ticket_soporte', entidadId: 'tk-1', tenantId: TENANT_A }),
       expect.anything(),
     );
+  });
+
+  // La bitácora es best-effort A PROPÓSITO (la acción ya ocurrió; tirarla por
+  // no poder anotarla deja el sistema peor). Pero el resultado SUBE: la
+  // pantalla decía "Quedó en la bitácora" sin haberlo comprobado nunca.
+  it('si la bitácora no se pudo escribir, la operación sigue y lo DICE (anotado:false)', async () => {
+    anotarBitacora.mockResolvedValueOnce(false);
+    const r = await tomarTicket('tk-1', TENANT_A, ADMIN_LIKIDA);
+    expect(r.asignadoA).toBe('u-likida');
+    expect(r.anotado).toBe(false);
   });
 });
 

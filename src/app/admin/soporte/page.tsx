@@ -159,7 +159,14 @@ export default async function SoportePage({
       const { id, tenantId } = await flotaDelTicket(fd);
       const r = await cambiarEstadoTicket(id, tenantId, { tipo: 'likida', userId: s.userId }, String(fd.get('estado') ?? ''));
       revalidatePath('/admin/soporte');
-      return { ok: `De «${r.estadoPrevio}» a «${r.estado}». Quedó en la bitácora.` };
+      // «Quedó en la bitácora» solo si de verdad quedó: `anotarBitacora` es
+      // best-effort a propósito (la acción ya ocurrió y no se tira por no poder
+      // anotarla), así que la pantalla LEE su resultado en vez de afirmarlo.
+      return {
+        ok: r.anotado
+          ? `De «${r.estadoPrevio}» a «${r.estado}». Quedó en la bitácora.`
+          : `De «${r.estadoPrevio}» a «${r.estado}». El cambio SÍ se guardó; lo que no se pudo escribir fue la entrada de bitácora (quedó en el log del servidor).`,
+      };
     } catch (e) {
       return { error: mensajeParaPantalla(e, 'cambiar el estado del ticket') };
     }

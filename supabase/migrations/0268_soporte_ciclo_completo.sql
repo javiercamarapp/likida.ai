@@ -42,7 +42,8 @@
 --
 --   · SELECT  — el tenant ve su hilo PÚBLICO; el superadmin ve el hilo entero.
 --   · INSERT  — el tenant escribe solo mensajes públicos (no puede fabricar
---     una nota interna a nombre del equipo); el superadmin escribe las dos.
+--     una nota interna a nombre del equipo) Y FIRMADOS CON SU PROPIO uuid (no
+--     puede fabricar una respuesta a nombre de otro); el superadmin, las dos.
 --   · UPDATE/DELETE — sin policy, o sea DENIEGA-TODO para `authenticated`.
 --     Es deliberado: el hilo de un ticket es el registro de qué se dijo y
 --     cuándo. Un registro que su propia parte interesada puede editar después
@@ -54,7 +55,7 @@
 -- es el `.eq('interna', false)` que `getHilo` pone a mano cuando quien mira es
 -- la flota, probado en `src/lib/likida/soporte.test.ts`. Esta policy es la que
 -- protege una sesión de navegador con `authenticated`, y se demuestra contra
--- Postgres real en el bloque 82 de `supabase/verificaciones.sql`.
+-- Postgres real en el bloque 215 de `supabase/verificaciones.sql`.
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- ── 1. Quién tomó el ticket ────────────────────────────────────────────────
@@ -71,6 +72,13 @@ create index if not exists ticket_asignado_idx
 
 -- ── 2. El hilo: la nota interna deja de ser visible para el cliente ────────
 drop policy if exists tenant_data on public.ticket_mensaje;
+-- Los `drop … if exists` de las policies NUEVAS no son ceremonia: sin ellos la
+-- migración truena al reaplicarse ("policy already exists") y deja el trabajo a
+-- medias — la de lectura creada y la de escritura no, que es exactamente el
+-- estado en el que el ancla de autor NO existe. Mismo criterio que el resto del
+-- archivo, donde todo va con `if not exists`.
+drop policy if exists hilo_lectura on public.ticket_mensaje;
+drop policy if exists hilo_escritura on public.ticket_mensaje;
 
 create policy hilo_lectura on public.ticket_mensaje for select
   using (
@@ -95,5 +103,26 @@ create policy hilo_escritura on public.ticket_mensaje for insert
            and t.tenant_id = any(get_user_tenant_ids())
       )
       and ticket_mensaje.interna = false
+      -- ── QUIEN ESCRIBE FIRMA CON SU PROPIO NOMBRE ─────────────────────────
+      -- Revisión de Fable (29-ago-2026), demostrada en vivo contra Postgres
+      -- con impersonación real: sin esta línea, un flota_admin con sesión de
+      -- navegador insertaba un mensaje PÚBLICO firmado con el uuid de OTRO
+      -- usuario — un compañero suyo, o un uuid de superadmin que se hubiera
+      -- filtrado, y entonces `HiloSoporte` lo pinta como "Likida".
+      --
+      -- No es solo una firma falsa en pantalla: ese mensaje cumple
+      -- `cuentaComoRespuesta` (interna=false, autor≠solicitante) y por lo
+      -- tanto APAGA la alarma «sin respuesta» del agente de Éxito sin que
+      -- nadie haya contestado. O sea que el hueco convertía la garantía que
+      -- esta migración vino a construir en algo que el propio cliente podía
+      -- desactivar. El `(select …)` es la forma que Postgres cachea una vez
+      -- por consulta en vez de evaluar por fila.
+      --
+      -- La rama del superadmin NO lleva el ancla, a propósito: necesita poder
+      -- escribir con `autor_id` NULL (mensajes de sistema) y ya tiene acceso a
+      -- todas las flotas por definición — firmar por otro no le concede nada
+      -- que no tuviera. Aquí el ancla existe contra la ESCALACIÓN, y del lado
+      -- del tenant es donde había escalación que impedir.
+      and ticket_mensaje.autor_id = (select auth.uid())
     )
   );
