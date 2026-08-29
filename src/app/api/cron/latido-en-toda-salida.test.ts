@@ -48,6 +48,7 @@ describe('todo camino de salida de un cron deja latido (hallazgo 4, tandas 21-24
   });
 
   for (const { cron, archivo } of rutas) {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- recorre las rutas de cron del propio repo en tiempo de prueba; la ruta sale de readdirSync sobre una constante, no de ninguna entrada de usuario.
     const fuente = readFileSync(archivo, 'utf8');
 
     it(`${cron}: interruptor ilegible → registrarLatido('fallo', interruptor_ilegible) antes del 500`, () => {
