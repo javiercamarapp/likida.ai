@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- 0266 — LA BANDEJA DE CONTEXTO UNIVERSAL (Fase D, orden del 16-ago-2026:
+-- 0267 — LA BANDEJA DE CONTEXTO UNIVERSAL (Fase D, orden del 16-ago-2026:
 -- "los 65, fácil y muy visual" — docs/conocimiento/plan-de-cierre.md).
 --
 -- CADA agente del catálogo (`agente_definicion`, 0116) tiene hoy una fila y

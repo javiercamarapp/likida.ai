@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// LA BANDEJA DE CONTEXTO UNIVERSAL (Fase D, 0266) — los contratos:
+// LA BANDEJA DE CONTEXTO UNIVERSAL (Fase D, 0267) — los contratos:
 //  · Cada agente acepta SOLO los tipos que su tabla declara (o el default de
 //    su departamento, o el piso universal 'texto') — nunca "cualquier cosa".
 //  · `insumosPendientes` es de PLATAFORMA (tenant_id is null) — es el filtro

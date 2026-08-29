@@ -398,7 +398,7 @@ describe('las corridas — fail closed, idempotencia y el ROJO que no espera', (
       expect.objectContaining({ estado: 'ok' }));
   });
 
-  it('DEMOSTRACIÓN: un insumo subido a la bandeja (Fase D, 0266) SÍ llega al agente en su siguiente corrida y queda marcado', async () => {
+  it('DEMOSTRACIÓN: un insumo subido a la bandeja (Fase D, 0267) SÍ llega al agente en su siguiente corrida y queda marcado', async () => {
     respuestas.set('cola_aprobacion', [{ count: 0, error: null }]);
     respuestas.set('finanzas_config', [{ data: null, error: null }]);
     // Lo que Javier "subió" en /admin/agentes/control_costos/insumos: una

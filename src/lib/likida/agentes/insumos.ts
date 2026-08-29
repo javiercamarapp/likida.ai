@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════
 // LA BANDEJA DE CONTEXTO UNIVERSAL (Fase D, plan-de-cierre.md, orden del
-// 16-ago-2026) — la parte de TypeScript de `agente_insumo` (0266).
+// 16-ago-2026) — la parte de TypeScript de `agente_insumo` (0267).
 //
 // Lo que este módulo hace y nada más:
 //  · Declara qué TIPOS acepta cada agente del catálogo (`TIPOS_POR_AGENTE`),
@@ -263,7 +263,7 @@ export async function crearInsumoTexto(a: AltaInsumoTexto): Promise<string> {
 
 /** URL firmada (1 h) de un insumo en Storage — para previsualizar/descargar
  *  desde la tarjeta. `null` si no se pudo firmar (bucket privado, sin
- *  policy para authenticated a propósito — ver cabecera de la 0266): la
+ *  policy para authenticated a propósito — ver cabecera de la 0267): la
  *  tarjeta enseña "sin vista previa", nunca revienta. */
 export async function urlFirmadaInsumo(storagePath: string): Promise<string | null> {
   const { data, error } = await supabaseAdmin().storage.from('agente-insumos').createSignedUrl(storagePath, 3600);

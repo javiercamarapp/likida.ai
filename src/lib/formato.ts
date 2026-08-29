@@ -391,7 +391,7 @@ export function fechaHoraSat(iso: string): string | null {
 
 /**
  * Tamaño de archivo legible («340 KB», «2.3 MB») — para la bandeja de
- * insumos (0266) y cualquier otra pantalla que enseñe un archivo subido.
+ * insumos (0267) y cualquier otra pantalla que enseñe un archivo subido.
  * Vive aquí por el mismo guardia que el resto del archivo: un tamaño no se
  * formatea dos veces distinto en dos pantallas. `null`/negativo/NaN ⇒ '—',
  * nunca "0 KB" — un tamaño desconocido no es un archivo vacío.

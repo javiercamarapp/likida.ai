@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// LOS TIPOS PUROS DE LA BANDEJA DE CONTEXTO UNIVERSAL (0266) — SIN IO.
+// LOS TIPOS PUROS DE LA BANDEJA DE CONTEXTO UNIVERSAL (0267) — SIN IO.
 //
 // Vive APARTE de `insumos.ts` por una razón de bundle, no de gusto:
 // `zona-insumos.tsx` ('use client', el formulario de arrastrar-y-soltar)
@@ -23,7 +23,7 @@ export function esTipoInsumo(v: string): v is TipoInsumo {
 
 /** Los tipos que van a Storage (`storage_path`) contra los que viven en la
  *  propia fila (`contenido_texto`) — el mismo criterio que el CHECK
- *  `agente_insumo_contenido_segun_tipo` de la 0266. */
+ *  `agente_insumo_contenido_segun_tipo` de la 0267. */
 export const TIPOS_ARCHIVO: readonly TipoInsumo[] = ['documento', 'imagen', 'video'];
 export const TIPOS_TEXTO: readonly TipoInsumo[] = ['link', 'texto'];
 

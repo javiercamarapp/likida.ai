@@ -14554,7 +14554,7 @@ begin
     cliente_vivo_sigue, cliente_muerto_se_fue, cliente_joven_sigue, codigo_viejo_se_fue, codigo_reciente_sigue, r;
 end $$;
 
--- ── 214. `agente_insumo` es deny-all: ningún `authenticated` —dueño de la fila o no— la lee ni la escribe (mig. 0266) ──
+-- ── 214. `agente_insumo` es deny-all: ningún `authenticated` —dueño de la fila o no— la lee ni la escribe (mig. 0267) ──
 --
 -- La bandeja de contexto universal (Fase D, plan-de-cierre.md): RLS activa,
 -- CERO policies, y REVOKE ALL de `public, anon, authenticated` — mismo
@@ -14568,7 +14568,7 @@ end $$;
 -- Se impersonan DOS sesiones (mismo mecanismo del bloque 27): un app_user de
 -- la flota DUEÑA de un insumo con `tenant_id` (el caso reservado para el día
 -- que un agente de producto reciba un insumo de una flota concreta — hoy
--- casi todo insumo nace con `tenant_id` NULL, ver la cabecera de la 0266) y
+-- casi todo insumo nace con `tenant_id` NULL, ver la cabecera de la 0267) y
 -- un app_user de OTRA flota. Las DOS quedan ciegas exactamente igual: el
 -- candado no depende de a quién pertenezca la fila, que es la demostración
 -- de aislamiento que esta migración pide — ni siquiera el dueño legítimo
@@ -14587,10 +14587,10 @@ declare
   escribe_propio boolean;
   escribe_ajeno boolean;
 begin
-  insert into public.tenant (id, nombre) values (t_propio, '__verif_0266_propio__');
-  insert into public.tenant (id, nombre) values (t_ajeno, '__verif_0266_ajeno__');
-  insert into public.app_user (id, email, rol, tenant_id) values (u_propio, '__verif_0266_u1__@likida.ai', 'flota_admin', t_propio);
-  insert into public.app_user (id, email, rol, tenant_id) values (u_ajeno, '__verif_0266_u2__@likida.ai', 'flota_admin', t_ajeno);
+  insert into public.tenant (id, nombre) values (t_propio, '__verif_0267_propio__');
+  insert into public.tenant (id, nombre) values (t_ajeno, '__verif_0267_ajeno__');
+  insert into public.app_user (id, email, rol, tenant_id) values (u_propio, '__verif_0267_u1__@likida.ai', 'flota_admin', t_propio);
+  insert into public.app_user (id, email, rol, tenant_id) values (u_ajeno, '__verif_0267_u2__@likida.ai', 'flota_admin', t_ajeno);
 
   -- Un insumo de PLATAFORMA (tenant_id null, el caso normal de hoy) y uno
   -- hipotético atado a t_propio — las dos formas a la vez.
@@ -14650,11 +14650,11 @@ begin
   -- tiene que separarlas por tenant.
   select count(*) into n_sin_rls from public.agente_insumo where agente = v_agente;
 
-  raise exception 'AGENTE_INSUMO_DENY_ALL_0266  ve_propio=%  escribe_propio=%  ve_ajeno=%  escribe_ajeno=%  ve_sin_rls=%   (esperado -1 / false / -1 / false / >=2)',
+  raise exception 'AGENTE_INSUMO_DENY_ALL_0267  ve_propio=%  escribe_propio=%  ve_ajeno=%  escribe_ajeno=%  ve_sin_rls=%   (esperado -1 / false / -1 / false / >=2)',
     n_propio, escribe_propio, n_ajeno, escribe_ajeno, n_sin_rls;
 end $$;
 
--- ── 215. Los CHECK de `agente_insumo` rechazan basura: tipo fuera de dominio, contenido en el campo equivocado, y un resumen sin fecha de proceso (mig. 0266) ──
+-- ── 215. Los CHECK de `agente_insumo` rechazan basura: tipo fuera de dominio, contenido en el campo equivocado, y un resumen sin fecha de proceso (mig. 0267) ──
 --
 -- Tres garantías que solo la base puede demostrar con certeza (un mock de
 -- supabase-js jamás ejercita un CHECK real): (1) el dominio de `tipo` es
@@ -14680,7 +14680,7 @@ declare
 begin
   -- `subido_por` exige un app_user real (FK) — de PLATAFORMA (tenant_id
   -- null): el superadmin también sube insumos, sin necesitar una flota.
-  insert into public.app_user (id, email, rol, tenant_id) values (u, '__verif_0266_check__@likida.ai', 'superadmin', null);
+  insert into public.app_user (id, email, rol, tenant_id) values (u, '__verif_0267_check__@likida.ai', 'superadmin', null);
 
   begin
     insert into public.agente_insumo (agente, tenant_id, tipo, titulo, contenido_texto, subido_por)
@@ -14739,6 +14739,6 @@ begin
   exception when others then acepta_resumen_con_proceso := false;
   end;
 
-  raise exception 'AGENTE_INSUMO_CHECKS_0266  tipo=%  doc_sin_ruta=%  doc_con_texto=%  texto_sin_contenido=%  texto_con_ruta=%  resumen_sin_proceso=%  ok_doc=%  ok_texto=%  ok_procesado=%   (esperado t / t / t / t / t / t / t / t / t)',
+  raise exception 'AGENTE_INSUMO_CHECKS_0267  tipo=%  doc_sin_ruta=%  doc_con_texto=%  texto_sin_contenido=%  texto_con_ruta=%  resumen_sin_proceso=%  ok_doc=%  ok_texto=%  ok_procesado=%   (esperado t / t / t / t / t / t / t / t / t)',
     rebota_tipo, rebota_doc_sin_ruta, rebota_doc_con_texto, rebota_texto_sin_contenido, rebota_texto_con_ruta, rebota_resumen_sin_proceso, acepta_documento, acepta_texto, acepta_resumen_con_proceso;
 end $$;

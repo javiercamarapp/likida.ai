@@ -266,7 +266,7 @@ export function evaluarUmbralesCostos(
 
 /**
  * La sección "lo que Javier dejó en la bandeja" (Fase D, la bandeja de
- * contexto universal, 0266) — PURA, para poder probarla sin base. Vacía
+ * contexto universal, 0267) — PURA, para poder probarla sin base. Vacía
  * cuando no hay insumos pendientes: un parte no debe cargar una sección
  * fantasma. Un `link`/`texto` enseña su contenido recortado (200
  * caracteres — el parte es para leerse, no para transcribir un documento
@@ -346,7 +346,7 @@ async function correrControlCostos(disparo: DisparoCorrida, hoy: string): Promis
     // leer. Siete días delatan el override caído Y el cambio a mitad de
     // camino sin arrastrar la historia entera.
     const desde7d = new Date(Date.parse(`${hoy}T12:00:00Z`) - 7 * 86_400_000).toISOString();
-    // La bandeja de contexto universal (Fase D, 0266): lo que Javier dejó
+    // La bandeja de contexto universal (Fase D, 0267): lo que Javier dejó
     // pendiente para ESTE agente entra en el mismo Promise.all que el resto
     // de las lecturas — si insumosPendientes truena, la corrida entera falla
     // (fail-closed, mismo contrato que el resto de este archivo).
