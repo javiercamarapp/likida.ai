@@ -54,10 +54,14 @@ el panel afirma "aún no hay liquidaciones" estando ciego. Ver `exigir()` y
     `facturacion_escritura.ts` — verificado 16-ago con el insert en :279/:406
     llamado desde `/dashboard/facturacion`). Si vas a "construir el escritor",
     ya existe.
+  - **`ticket_mensaje` YA tiene quien lo escriba** (0266, 29-ago-2026):
+    `src/lib/likida/soporte.ts` — responder, tomar, cerrar y reabrir, con las
+    dos pantallas cableadas (/admin/soporte y /dashboard/soporte). Hasta esa
+    fecha el hilo del ticket tenía dos LECTORES y cero escritores, y por eso la
+    alarma «sin respuesta» del agente de Éxito era insatisfacible.
   - Siguen SIN escritor: `posicion`, `geocerca`, `terminal` (huérfana desde
     0001: la referencian operador/viaje y solo la lee un join en repo.ts),
-    `mantenimiento`, `cotizacion`, `ticket_mensaje` (el hilo del ticket nunca
-    se implementó), `portal_credencial`, `invitacion`, y las muertas de facto
+    `mantenimiento`, `cotizacion`, `portal_credencial`, `invitacion`, y las muertas de facto
     `campania`/`envio_mensaje` (las sustituyó `campana`, 0123).
   - La base entera está en cero (0 viajes, 14-ago-2026) porque **no hay
     clientes todavía**, no porque falte código. Ver `project_likida_sin_clientes`.

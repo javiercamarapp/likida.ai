@@ -14553,3 +14553,91 @@ begin
     piso_rebota, vivo_token_sigue, revocado_viejo_se_fue, revocado_reciente_sigue, expirado_viejo_se_fue,
     cliente_vivo_sigue, cliente_muerto_se_fue, cliente_joven_sigue, codigo_viejo_se_fue, codigo_reciente_sigue, r;
 end $$;
+
+-- ── 214. El hilo del ticket: la nota interna NO la ve el cliente y el hilo ajeno ni se lee ni se escribe (mig. 0266, auditoría H1) ──
+--
+-- La 0051 escribió, textual, que «una nota interna no la ve el cliente». Su
+-- policy no lo hacía: `tenant_data` era `for all` con un único predicado de
+-- tenant (y la 0086 la reescribió conservando esa forma), así que un
+-- `flota_admin` con sesión de navegador leía `interna=true` de SUS tickets
+-- igual que cualquier otro mensaje. El comentario prometía una garantía que la
+-- policy no daba — y eso es peor que no prometerla, porque nadie la vuelve a
+-- revisar.
+--
+-- Este bloque ataca las cuatro esquinas con dos flota_admin REALES,
+-- impersonados con `set local role authenticated` + el claim del sub (que es
+-- lo que hace PostgREST en cada request):
+--
+--   a) El dueño de A ve el mensaje PÚBLICO de su ticket.                → 1
+--   b) El dueño de A NO ve la nota interna de su propio ticket.         → 0
+--   c) El dueño de B no ve NADA del hilo de A.                          → 0
+--   d) El dueño de B no puede ESCRIBIR en el hilo de A (with check).    → t
+--   e) El dueño de A no puede fabricar una nota interna en su hilo.     → t
+--   f) `asignado_a` (0266) existe y acepta el id de un app_user.        → t
+--
+-- Lo que este bloque NO prueba, y por eso no se presenta como si lo probara:
+-- el camino REAL del producto corre con `service_role`, que salta RLS. Esa
+-- primera red es el `.eq('interna', false)` de `getHilo` y el rechazo de
+-- `responderTicket`, probados en `src/lib/likida/soporte.test.ts`. Esto es la
+-- segunda red: la que protege una sesión de navegador.
+do $$
+declare
+  v_a uuid; v_b uuid; v_u_a uuid := gen_random_uuid(); v_u_b uuid := gen_random_uuid();
+  v_tk uuid;
+  n_publico_propio int; n_interna_propia int; n_hilo_ajeno int;
+  b_no_escribe boolean := false;
+  a_no_fabrica_interna boolean := false;
+  asignado_ok boolean := false;
+begin
+  insert into tenant (nombre) values ('ZZZ VERIF 0266 A') returning id into v_a;
+  insert into tenant (nombre) values ('ZZZ VERIF 0266 B') returning id into v_b;
+  insert into app_user (id, tenant_id, email, rol) values (v_u_a, v_a, 'zzz-0266-a@likida.test', 'flota_admin');
+  insert into app_user (id, tenant_id, email, rol) values (v_u_b, v_b, 'zzz-0266-b@likida.test', 'flota_admin');
+
+  insert into ticket_soporte (tenant_id, abierto_por, asunto)
+    values (v_a, v_u_a, 'ZZZ ticket 0266') returning id into v_tk;
+  -- El hilo, escrito con service_role (que es como lo escribe el producto):
+  -- una respuesta pública del equipo y una nota interna sobre la misma flota.
+  insert into ticket_mensaje (ticket_id, autor_id, cuerpo, interna)
+    values (v_tk, null, 'Ya lo estamos viendo.', false);
+  insert into ticket_mensaje (ticket_id, autor_id, cuerpo, interna)
+    values (v_tk, null, 'Nota interna: esta flota lleva tres tickets del mismo tema.', true);
+
+  -- `asignado_a` acepta a un app_user (0266). Si la columna no existiera, la
+  -- migración no habría aplicado y esto tronaría antes de llegar aquí.
+  update ticket_soporte set asignado_a = v_u_a where id = v_tk;
+  select (asignado_a = v_u_a) into asignado_ok from ticket_soporte where id = v_tk;
+
+  -- ── El flota_admin de A, impersonado ────────────────────────────────────
+  set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', v_u_a)::text, true);
+
+  select count(*) into n_publico_propio from ticket_mensaje where ticket_id = v_tk and interna = false;
+  select count(*) into n_interna_propia  from ticket_mensaje where ticket_id = v_tk and interna = true;
+
+  begin
+    insert into ticket_mensaje (ticket_id, autor_id, cuerpo, interna)
+      values (v_tk, v_u_a, 'Nota que el cliente NO debería poder fabricar', true);
+  exception when insufficient_privilege then a_no_fabrica_interna := true;
+  end;
+
+  reset role;
+
+  -- ── El flota_admin de B, impersonado ────────────────────────────────────
+  set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', v_u_b)::text, true);
+
+  select count(*) into n_hilo_ajeno from ticket_mensaje where ticket_id = v_tk;
+
+  begin
+    insert into ticket_mensaje (ticket_id, autor_id, cuerpo, interna)
+      values (v_tk, v_u_b, 'Mensaje en el hilo de otra flota', false);
+  exception when insufficient_privilege then b_no_escribe := true;
+  end;
+
+  reset role;
+
+  delete from tenant where id in (v_a, v_b);   -- cascade limpia el resto
+  raise exception E'HILO_TICKET_0266  publico-propio=%  interna-propia=%  hilo-ajeno=%  b-no-escribe=%  a-no-fabrica-interna=%  asignado=%   (esperado 1 / 0 / 0 / t / t / t)',
+    n_publico_propio, n_interna_propia, n_hilo_ajeno, b_no_escribe, a_no_fabrica_interna, asignado_ok;
+end $$;
