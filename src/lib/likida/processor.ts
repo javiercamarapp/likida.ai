@@ -65,7 +65,7 @@ import {
   registrarSolicitudArco,
 } from '@/lib/likida/repo';
 import {
-  resolveOperador, getOpenViaje, viajeAbiertoDesdeMs, getTenantContext, type ResolvedOperador,
+  resolveOperador, getOpenViaje, viajeAbiertoDesdeMs, liquidacionRecienteDe, getTenantContext, type ResolvedOperador,
   loadConversation, saveConversation, claimMessage,
   acquireViajeLock, intentarLockViaje, TTL_LOCK_CIERRE_MS,
   releaseViajeLock, releaseMessageClaim, completarMessageClaim,
@@ -1588,6 +1588,26 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
         }
       }
 
+      // ── ¿ES EL REINTENTO DE UN CIERRE QUE SÍ OCURRIÓ? (auditoría 21, C1) ──
+      // El chofer al que un fallo posterior a `guardar_liquidacion` le dijo
+      // "se me trabó, ¿me reenvías tu último mensaje?" obedece y cae AQUÍ,
+      // porque su viaje ya es `liquidado`. "No tienes un viaje abierto" es
+      // verdad a medias y él la lee como "tu cierre no existió". Si hay una
+      // liquidación reciente suya, se le confirma el cierre — la verdad
+      // completa. `liquidacionRecienteDe` es fail-open (null si no se supo):
+      // el mensaje genérico de abajo sigue siendo cierto en ese caso.
+      try {
+        const reciente = await liquidacionRecienteDe(op.tenantId, op.operadorId);
+        if (reciente) {
+          logger.info('sin_viaje.cierre_confirmado', { tenant: op.tenantId, operador: op.operadorId, viaje: reciente.viajeId, liq: reciente.liquidacionId });
+          await sendText(msg.from, 'Tu último viaje ya quedó liquidado ✅ — no tienes ninguno abierto ahorita. Si no te llegó tu PDF, pídeselo a tu contralor: él ya lo tiene en el panel. 👍');
+          return;
+        }
+      } catch (e) {
+        // Nunca debería lanzar (es fail-open), pero un aviso accesorio no
+        // puede tirar la respuesta del turno.
+        logger.warn('sin_viaje.liquidacion_reciente', { err: e instanceof Error ? e.message : String(e) });
+      }
       await sendText(msg.from, 'No tienes un viaje abierto para liquidar ahorita. Cuando tu flota te asigne uno, aquí lo cerramos. 👍');
       return;
     }
@@ -3339,9 +3359,15 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
       // partialToolCalls. Sin recuperación: liquidacion persistida en DB pero el
       // operador recibe "se trabó" y NUNCA su PDF → huérfano. Se recupera tratando
       // el cierre como válido, vinculando costos y armando el resumen REAL del motor.
-      // FLAG (HARD RULE 3): default off = comportamiento actual EXACTO (mensaje de
-      // error, sin cierre). Se recomienda ON para el demo (ver REPORTE_NOCHE).
-      const recuperar = process.env.LIKIDA_RECUPERAR_CIERRE_PARCIAL === '1';
+      // AUDITORÍA 21, CRÍTICO (C1): esto era opt-in (`=== '1'`) con default
+      // APAGADO, así que el comportamiento de fábrica era exactamente el peor
+      // caso que el comentario de arriba describe: liquidación persistida,
+      // chofer con "se me trabó", y su reintento chocando con "no tienes viaje
+      // abierto". La recuperación decide por EVIDENCIA —`partialToolCalls` trae
+      // `guardar_liquidacion` exitoso o no la trae—, no por configuración de
+      // infraestructura. Default ENCENDIDO; `=0` queda como apagador de
+      // emergencia (`.env.example` ya recomendaba prenderlo desde AUDIT_V3).
+      const recuperar = process.env.LIKIDA_RECUPERAR_CIERRE_PARCIAL !== '0';
       const parcial = e instanceof PartialExecutionError ? e.partialToolCalls : null;
 
       // LO QUE SE GASTÓ ANTES DE CAERSE TAMBIÉN SE PAGÓ. Esta rama nunca llamaba
