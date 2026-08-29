@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- 0266 · `ultimas_posiciones_tenant()` — la ÚLTIMA posición de cada unidad,
+-- 0267 · `ultimas_posiciones_tenant()` — la ÚLTIMA posición de cada unidad,
 -- resuelta en la base. Auditoría 20, hallazgo 5 (MEDIO): el GPS es invisible.
 --
 -- ── LO MEDIDO ───────────────────────────────────────────────────────────────

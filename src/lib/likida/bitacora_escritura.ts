@@ -76,7 +76,19 @@ export type EntidadBitacora =
   // vuelva una presunción en contra del patrón. La anotación vive además EN LA
   // FILA (`anulado_por_email`, `cerrado_por_email`); esto es la copia
   // cross-tenant que /admin puede reconstruir sin tocar el expediente.
-  | 'jornada_dia';
+  | 'jornada_dia'
+  // Comandos de administración de PLATAFORMA recibidos por WhatsApp (0059,
+  // `admin_comandos_wa.ts`): "aprobar <id>", "correr <rutina>", "estatus".
+  // Van sin tenant (`tenantId: null`, igual que 'cola_aprobacion') porque las
+  // tablas que tocan (`cola_aprobacion`, `bus_*`) tampoco tienen una — son de
+  // Javier, no de una flota. `entidadId` es el id de la pieza, el nombre de
+  // la rutina, o 'general' para un "estatus" sin argumento.
+  | 'comando_admin_wa'
+  // 0260/0265: los accesos MCP (Claude, ChatGPT) de un usuario a los datos de
+  // su flota. Cortarlos es un acto sobre una credencial —de la misma clase que
+  // revocar una `tenant_api_key`— y quién lo cortó no tiene columna en
+  // `mcp_oauth_token`: esta anotación es su única memoria.
+  | 'mcp_oauth_token';
 
 /**
  * Quién lo hizo. `'sistema'` es una decisión, no un olvido: un cron o una
