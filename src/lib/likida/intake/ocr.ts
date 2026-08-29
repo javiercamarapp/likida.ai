@@ -262,9 +262,26 @@ function normalizarUrl(v: string | null | undefined): string | undefined {
   const t = v.trim().replace(/[),.;:]+$/, '');
   if (!t || /\s/.test(t) || t.includes('@') || !t.includes('.')) return undefined;
   if (t.length > 200) return undefined;
+  if (esEnlaceWhatsApp(t)) return undefined;
   if (/^https?:\/\//i.test(t)) return t;
   if (!/^[\w.-]+\.[a-z]{2,}(\/|$)/i.test(t)) return undefined;
   return `https://${t}`;
+}
+
+/**
+ * Un enlace de WhatsApp NO es un portal de facturación, venga de donde venga.
+ *
+ * El caso medido (banco de QA, 28-ago-2026): varios tickets traen un QR
+ * `wa.me/…` para "facturar por WhatsApp", y como lo del QR GANA sobre lo
+ * leído por visión, ese enlace pisaba al portal web impreso en el mismo
+ * papel. `urlFacturacion` alimenta `identificarComercio` (el dominio es su
+ * señal más fuerte) y la automatización de portales — un `wa.me` rompe las
+ * dos: no identifica al comercio y no hay página que abrir. Se descarta en
+ * la ÚNICA puerta, para el QR y para la visión por igual; si el papel además
+ * imprime un portal web, la visión lo aporta.
+ */
+function esEnlaceWhatsApp(v: string): boolean {
+  return /(^|\/\/)(www\.)?(wa\.me|api\.whatsapp\.com|chat\.whatsapp\.com)([/?]|$)/i.test(v.trim());
 }
 
 /**
@@ -482,7 +499,11 @@ export async function extraerComprobante(
   // portales el folio y el total viajan codificados DENTRO de esa liga.
   const portal = codigos.find((c) => c.urlFacturacion);
   if (portal) {
-    urlFacturacion = portal.urlFacturacion;
+    // El QR también pasa por la puerta de WhatsApp: un `wa.me` del código
+    // pisaba al portal web impreso en el mismo papel (ver esEnlaceWhatsApp).
+    if (portal.urlFacturacion && !esEnlaceWhatsApp(portal.urlFacturacion)) {
+      urlFacturacion = portal.urlFacturacion;
+    }
     if (montoCodigo === undefined && portal.totalPortal != null) montoCodigo = portal.totalPortal;
   }
   if (montoCodigo != null) monto = montoCodigo;

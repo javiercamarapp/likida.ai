@@ -3,7 +3,7 @@ import {
   normalizarTextoVerdad, normalizarDominio, normalizarFechaVerdad, montosIguales,
   compararCampo, medir, medicionSinLeer, agregar, ocrVacio, ocrLeidoDeGasto,
   medirSinGasto, esAlucinacion, contarAlucinaciones, agregarPorCampo, resumenPrecision, variantesEmisorEsperado,
-  agregarClaves, CAMPOS_FISCALES, CAMPOS_DESCRIPTIVOS,
+  agregarClaves, CAMPOS_FISCALES, CAMPOS_DESCRIPTIVOS, normalizarRfcVerdad,
   type OcrLeido, type MedicionFotoResumen,
 } from './qa-verdad';
 import { CLAVES_VERDAD, type ClaveVerdad, type VerdadTerreno } from './qa-tipos';
@@ -485,5 +485,33 @@ describe('la sucursal con anotación entre paréntesis (pares medidos, 1ª pasad
     expect(compararCampo('sucursal', v, leido({ sucursal: 'LAGAS BOLICHE' })).veredicto).toBe('mal');
     // Y agregar palabras que la etiqueta no trae sigue siendo mal.
     expect(compararCampo('sucursal', verdad({ sucursal: 'MERIDA NORTE' }), leido({ sucursal: 'UNIDAD MERIDA NORTE' })).veredicto).toBe('mal');
+  });
+});
+
+describe('el RFC compara con su charset REAL — Ñ y & distinguen contribuyentes', () => {
+  // El agujero reproducido por la auditoría adversarial: la rama genérica
+  // descomponía Ñ→N y borraba &, y dos contribuyentes DISTINTOS salían "ok".
+  test('Ñ perdida en la lectura es MAL — antes salía ok', () => {
+    const v = verdad({ rfcEmisor: 'AÑB123456XY0' });
+    expect(compararCampo('rfcEmisor', v, leido({ rfcEmisor: 'ANB123456XY0' })).veredicto).toBe('mal');
+    expect(compararCampo('rfcEmisor', v, leido({ rfcEmisor: 'AÑB123456XY0' })).veredicto).toBe('ok');
+  });
+
+  test('& perdido en la lectura es MAL — antes salía ok', () => {
+    const v = verdad({ rfcEmisor: 'J&B840101XX1' });
+    expect(compararCampo('rfcEmisor', v, leido({ rfcEmisor: 'JB840101XX1' })).veredicto).toBe('mal');
+    expect(compararCampo('rfcEmisor', v, leido({ rfcEmisor: 'J&B840101XX1' })).veredicto).toBe('ok');
+  });
+
+  test('la decoración impresa (guiones, espacios, paréntesis, minúsculas) sí se perdona', () => {
+    const v = verdad({ rfcEmisor: 'CPF890101AAA' });
+    expect(compararCampo('rfcEmisor', v, leido({ rfcEmisor: 'cpf-890101-aaa' })).veredicto).toBe('ok');
+    expect(compararCampo('rfcEmisor', v, leido({ rfcEmisor: '(CPF 890101 AAA)' })).veredicto).toBe('ok');
+  });
+
+  test('normalizarRfcVerdad preserva Ñ y & y vacía a null', () => {
+    expect(normalizarRfcVerdad('a-ñ&b 123')).toBe('AÑ&B123');
+    expect(normalizarRfcVerdad('---')).toBeNull();
+    expect(normalizarRfcVerdad(null)).toBeNull();
   });
 });

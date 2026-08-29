@@ -97,6 +97,28 @@ export function normalizarTextoVerdad(v: string | null | undefined): string | nu
 }
 
 /**
+ * RFC comparable — comparador DEDICADO, no la rama genérica de texto.
+ *
+ * El agujero que cierra (auditoría adversarial, 28-ago-2026, reproducido con
+ * el código real): `normalizarTextoVerdad` descompone `Ñ`→`N` (NFD + quitar
+ * diacríticos) y elimina `&` con su charset, y LOS DOS son caracteres
+ * válidos y SIGNIFICATIVOS de un RFC del SAT — `AÑB123456XY0` contra
+ * `ANB123456XY0` daba `ok`, y `J&B840101XX1` contra `JB840101XX1` también,
+ * siendo contribuyentes DISTINTOS. El porcentaje de RFC salía inflado justo
+ * en los casos difíciles.
+ *
+ * Aquí solo se quita lo que un ticket imprime de decoración —espacios,
+ * guiones, puntos, paréntesis— y se sube a mayúsculas. `Ñ` y `&` se quedan:
+ * es el MISMO charset que `RFC_RE` y que el saneador del intake
+ * (`[A-ZÑ&0-9]`). Un carácter distinto es la llave fiscal de un tercero.
+ */
+export function normalizarRfcVerdad(v: string | null | undefined): string | null {
+  if (v === null || v === undefined) return null;
+  const t = v.toUpperCase().replace(/[^A-ZÑ&0-9]/g, '');
+  return t === '' ? null : t;
+}
+
+/**
  * Dominio comparable. Se trata aparte del texto porque un dominio tiene partes
  * que NO son contenido: el esquema y el `www.` son decoración, y el camino
  * (`/facturacion`) cambia de un ticket a otro del mismo comercio.
@@ -211,6 +233,20 @@ export function compararCampo(clave: ClaveVerdad, verdad: VerdadTerreno, leido: 
       clave, esperado, leido: crudoLeido,
       veredicto: iguales ? 'ok' : 'mal',
       motivo: iguales ? null : b === null ? 'lo leído no es una fecha yyyy-mm-dd' : 'la fecha leída no coincide',
+    };
+  }
+
+  if (clave === 'rfcEmisor') {
+    // Comparador DEDICADO: `Ñ` y `&` son parte del RFC y distinguen
+    // contribuyentes — la rama genérica los borraba y daba `ok` a llaves
+    // fiscales de terceros (ver `normalizarRfcVerdad`).
+    const a = normalizarRfcVerdad(esperado as string | null);
+    const b = normalizarRfcVerdad(String(crudoLeido));
+    const iguales = a !== null && a === b;
+    return {
+      clave, esperado, leido: crudoLeido,
+      veredicto: iguales ? 'ok' : 'mal',
+      motivo: iguales ? null : 'el RFC no coincide carácter por carácter (Ñ y & cuentan: un carácter distinto es la llave fiscal de un tercero)',
     };
   }
 
