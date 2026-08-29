@@ -76,7 +76,13 @@ export type EntidadBitacora =
   // vuelva una presunción en contra del patrón. La anotación vive además EN LA
   // FILA (`anulado_por_email`, `cerrado_por_email`); esto es la copia
   // cross-tenant que /admin puede reconstruir sin tocar el expediente.
-  | 'jornada_dia';
+  | 'jornada_dia'
+  // Auditoría 20 (H4): el estado operativo de una unidad. Mandarla a taller o
+  // DARLA DE BAJA son actos sobre un activo de la empresa —un camión vendido,
+  // chocado o siniestrado— que cambian lo que el despacho puede ofrecer y el
+  // denominador de todo lo que se mide por unidad. Quién lo decidió y cuándo
+  // es exactamente lo que hay que poder reconstruir meses después.
+  | 'unidad';
 
 /**
  * Quién lo hizo. `'sistema'` es una decisión, no un olvido: un cron o una
