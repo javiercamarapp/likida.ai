@@ -235,6 +235,15 @@ const AREA_POR_RUTA: Record<string, Area> = {
   // quien decide sobre una grúa a las 3 a.m. es el jefe de tráfico o el dueño.
   '/dashboard/asistencia': 'operacion',
   '/dashboard/llaves-api': 'administracion',
+  // Los hilos de WhatsApp de la flota (auditoría 20, H6). Es `administracion`
+  // y NO `operacion`, aunque el interlocutor sea el chofer: en esa
+  // conversación el bot dicta montos comprobados y diferencias de
+  // liquidación, y el jefe de tráfico no ve el dinero de la flota. Un hilo de
+  // WhatsApp es dinero en prosa, y `dinero_por_area.test.ts` no lo atraparía
+  // porque no hay un `mxn(` en la página: las cifras vienen en los datos.
+  // Tampoco `dinero`: el contador no tiene por qué leer la conversación
+  // personal de un trabajador. Queda con el dueño, que es de quien es el dato.
+  '/dashboard/conversaciones': 'administracion',
   '/dashboard/usuarios': 'administracion',
   '/dashboard/politicas': 'administracion',
   '/dashboard/configuracion': 'administracion',
