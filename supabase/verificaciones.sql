@@ -14276,7 +14276,10 @@ begin
     col_existe, duplicado_rebota, nulls_conviven;
 end $$;
 
--- ── 210. Ligar un CFDI a un gasto es ATÓMICO: un fallo a medio camino no deja la cuña sin salida (mig. 0262, auditoría E.28 C-1) ──
+-- ── 211. Ligar un CFDI a un gasto es ATÓMICO: un fallo a medio camino no deja la cuña sin salida (mig. 0263, auditoría E.28 C-1) ──
+-- (Nació 210 en su rama; renumerado a 211 al fusionar con el 210 de la 0262
+-- de LEG-C2, que reclamó el mismo número desde otra rama — mismo patrón que
+-- ya le pasó al 201 y al 207 esta noche.)
 --
 -- `ligarComprobante` hacía DOS escrituras sueltas desde TypeScript —primero
 -- el gasto, después el comprobante—, con el expediente escrito después de
@@ -14361,7 +14364,7 @@ begin
   select has_function_privilege('anon', 'public.sat_cfdi_ligar_tx(uuid,uuid,uuid,text,jsonb,uuid,text)', 'EXECUTE') into anon_ok;
   select has_function_privilege('authenticated', 'public.sat_cfdi_ligar_tx(uuid,uuid,uuid,text,jsonb,uuid,text)', 'EXECUTE') into auth_ok;
 
-  raise exception E'LIGAR_TX_0262  gasto_ok=%  cfdi_ok=%  expediente_ok=%  retorno_ok=%  carrera_rebota=%  falla_sqlstate=%  gasto_intacto=%  cfdi_intacto=%  expediente_vacio=%  anon=%  auth=%   (esperado t/t/t/t/t/23514/t/t/t/f/f)',
+  raise exception E'LIGAR_TX_0263  gasto_ok=%  cfdi_ok=%  expediente_ok=%  retorno_ok=%  carrera_rebota=%  falla_sqlstate=%  gasto_intacto=%  cfdi_intacto=%  expediente_vacio=%  anon=%  auth=%   (esperado t/t/t/t/t/23514/t/t/t/f/f)',
     coalesce(exito_gasto,false), coalesce(exito_cfdi,false), coalesce(exito_expediente,false), coalesce(retorno_ok,false),
     carrera_rebota, falla_sqlstate, coalesce(gasto_intacto,false), coalesce(cfdi_intacto,false),
     coalesce(expediente_vacio,false), anon_ok, auth_ok;
