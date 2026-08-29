@@ -57,7 +57,7 @@ meses después, vuelve a mirar la especificación antes de asumir nada.
 | Descubrimiento (.well-known) | `src/app/.well-known/…` + `src/lib/mcp/metadata.ts` |
 | DCR y canje de tokens | `src/app/api/mcp/oauth/{registro,token}/route.ts` |
 | Pantalla de consentimiento | `src/app/mcp/autorizar/page.tsx` |
-| Tablas (clientes, códigos, tokens) | `supabase/migrations/0259_mcp_oauth.sql` (verificación: bloque 207) |
+| Tablas (clientes, códigos, tokens) | `supabase/migrations/0260_mcp_oauth.sql` (verificación: bloque 207) |
 
 ## Las reglas que no se negocian
 
@@ -105,7 +105,7 @@ descubrimiento OAuth se derivan de ahí), `NEXT_PUBLIC_SUPABASE_URL` y
 
 ## Qué falta para encenderlo en producción
 
-1. Aplicar la migración **0259** (`scripts/aplicar-migraciones-y-humos.sh`).
+1. Aplicar la migración **0260** (`scripts/aplicar-migraciones-y-humos.sh`).
 2. Desplegar con la bandera `[deploy]` en el asunto del commit.
 3. Humo de 2 minutos, en orden:
    - `curl https://app.likida.ai/.well-known/oauth-protected-resource/api/mcp` → JSON con `authorization_servers`;
