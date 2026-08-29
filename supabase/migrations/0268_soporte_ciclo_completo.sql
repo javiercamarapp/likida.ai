@@ -55,7 +55,7 @@
 -- es el `.eq('interna', false)` que `getHilo` pone a mano cuando quien mira es
 -- la flota, probado en `src/lib/likida/soporte.test.ts`. Esta policy es la que
 -- protege una sesión de navegador con `authenticated`, y se demuestra contra
--- Postgres real en el bloque 215 de `supabase/verificaciones.sql`.
+-- Postgres real en el bloque 217 de `supabase/verificaciones.sql`.
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- ── 1. Quién tomó el ticket ────────────────────────────────────────────────

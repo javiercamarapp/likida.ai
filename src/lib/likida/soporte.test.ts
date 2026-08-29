@@ -184,7 +184,7 @@ describe('responderTicket', () => {
   // El escritor firma con el actor de la SESIÓN, nunca con un id que venga del
   // formulario. Es la primera red del hallazgo de Fable (29-ago-2026); la
   // segunda es el ancla `autor_id = (select auth.uid())` que la 0268 pone en la
-  // policy de INSERT, demostrada en el bloque 215 de verificaciones.sql.
+  // policy de INSERT, demostrada en el bloque 217 de verificaciones.sql.
   it('firma el mensaje con el actor y guarda `interna` tal cual se pidió', async () => {
     await responderTicket('tk-1', TENANT_A, ADMIN_LIKIDA, { cuerpo: '  ya quedó  ', interna: false });
     const ins = llamadas.find((l) => l.op === 'insert' && l.tabla === 'ticket_mensaje')!;
