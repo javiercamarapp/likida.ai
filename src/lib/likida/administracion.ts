@@ -481,16 +481,32 @@ export async function actualizarOperador(
   // así que sin leer el valor anterior toda corrección de licencia quedaría
   // anotada como "reactivado". Se lee SOLO cuando la baja está en juego: es la
   // única acción de esta pantalla que un abogado laboral puede querer fechar.
+  //
+  // "NO PUDE PREGUNTAR" NO ES "ERA DISTINTO" (revisión de Fable, 29-ago-2026).
+  // El `error` del destructure se descartaba, así que un bache transitorio de
+  // Supabase dejaba `previo = null` y de ahí el código concluía "cambió el
+  // alta" — un guardado rutinario de licencia se anotaba como
+  // `operador.reactivado`. Nunca escondía una baja real, pero ensuciaba con
+  // reactivaciones inventadas justo el registro que existe para reconstruir
+  // quién movió el alta de quién. Ante la duda se cae al nombre que no afirma
+  // nada (`operador.editado`) y se deja dicho POR QUÉ en el detalle: el UPDATE
+  // sigue adelante, porque la baja que el usuario pidió sí tiene que ocurrir.
   let activoAntes: boolean | null = null;
+  let previaLeida = true;
   if (cambios.activo !== undefined) {
-    const { data: previo } = await admin
+    const { data: previo, error: errPrevio } = await admin
       .from('operador')
       .select('activo')
       .eq('id', operadorId)
       .eq('tenant_id', tenantId)
       .maybeSingle();
-    const v = (previo as { activo?: unknown } | null)?.activo;
-    activoAntes = typeof v === 'boolean' ? v : null;
+    if (errPrevio) {
+      previaLeida = false;
+      logger.warn('operador.alta_previa_ilegible', { tenantId, operadorId, err: errPrevio.message });
+    } else {
+      const v = (previo as { activo?: unknown } | null)?.activo;
+      activoAntes = typeof v === 'boolean' ? v : null;
+    }
   }
 
   const { data, error } = await admin
@@ -510,12 +526,18 @@ export async function actualizarOperador(
   // acciones de esta pantalla que cortan (o devuelven) el acceso de una
   // persona al canal de WhatsApp de la flota. `quién` y `cuándo` los pone
   // `anotarBitacora` con el actor y el `creado_en` de la tabla.
-  const cambioDeAlta = cambios.activo !== undefined && activoAntes !== cambios.activo;
+  const cambioDeAlta = previaLeida && cambios.activo !== undefined && activoAntes !== cambios.activo;
   const accion = !cambioDeAlta
     ? 'operador.editado'
     : cambios.activo ? 'operador.reactivado' : 'operador.baja';
 
-  await anotar(tenantId, accion, 'operador', operadorId, fila, actor);
+  // Cuando la lectura previa falló, el detalle lo dice: el `activo` que se
+  // escribió sigue ahí (la fila entera va en `detalle`), y quien lea la
+  // bitácora sabe que el NOMBRE de la acción se quedó corto por una consulta
+  // caída, no porque el alta no se hubiera movido.
+  const detalle = previaLeida ? fila : { ...fila, alta_previa_ilegible: true };
+
+  await anotar(tenantId, accion, 'operador', operadorId, detalle, actor);
 }
 
 // ── 3. Editar la política de gastos ────────────────────────────────────────

@@ -33,6 +33,8 @@ interface Escritura { tabla: string; op: 'insert' | 'update'; valores: Record<st
 
 let TABLAS: Record<string, Array<Record<string, unknown>>> = {};
 let escrituras: Escritura[] = [];
+/** El bache transitorio de Supabase en la lectura del alta anterior. */
+let LECTURA_PREVIA_FALLA = false;
 
 function enlace(tabla: string) {
   let filas = () => TABLAS[tabla] ?? [];
@@ -66,6 +68,12 @@ function enlace(tabla: string) {
       return api;
     },
     maybeSingle: () => {
+      // La ÚNICA lectura de este módulo que termina en `maybeSingle` es el
+      // pre-read del alta anterior — por eso el interruptor de abajo alcanza
+      // para simular ese bache transitorio sin tocar el resto.
+      if (LECTURA_PREVIA_FALLA) {
+        return Promise.resolve({ data: null, error: { message: 'canceling statement due to statement timeout' } });
+      }
       const r = filas();
       return Promise.resolve({ data: r.length > 0 ? r[0] : null, error: null });
     },
@@ -98,6 +106,7 @@ const AJENO = '22222222-2222-4222-8222-222222222222';
 
 beforeEach(() => {
   escrituras = [];
+  LECTURA_PREVIA_FALLA = false;
   rpc.mockClear();
   TABLAS = {
     operador: [
@@ -184,6 +193,26 @@ describe('BITÁCORA — quién dio de baja a quién, y cuándo', () => {
     TABLAS.operador[0].activo = false;
     await actualizarOperador('t-1', OP_ID, { activo: true }, { id: 'u-jefe' });
     expect(escrituraDe('bitacora_auditoria')!.valores).toMatchObject({ accion: 'operador.reactivado' });
+  });
+
+  it('si la LECTURA PREVIA falla, se cae a `operador.editado` y se dice por qué', async () => {
+    // Revisión de Fable (29-ago-2026): el `error` del pre-read se descartaba,
+    // así que un bache transitorio de Supabase dejaba `previo = null` y de ahí
+    // el código concluía "cambió el alta". Un guardado rutinario de licencia
+    // se anotaba como `operador.reactivado`: nunca escondía una baja real,
+    // pero llenaba de reactivaciones inventadas justo el registro que existe
+    // para reconstruir quién movió el alta de quién.
+    //
+    // "No pude preguntar" ≠ "era distinto": ante la duda, el nombre que no
+    // afirma nada. Y el UPDATE sigue adelante — la baja que el usuario pidió
+    // tiene que ocurrir aunque la bitácora se quede corta de nombre.
+    LECTURA_PREVIA_FALLA = true;
+    await actualizarOperador('t-1', OP_ID, { licencia: 'B-99', activo: true });
+
+    expect(escrituraDe('operador')!.valores).toMatchObject({ activo: true });
+    const b = escrituraDe('bitacora_auditoria')!;
+    expect(b.valores).toMatchObject({ accion: 'operador.editado' });
+    expect((b.valores.detalle as Record<string, unknown>).alta_previa_ilegible).toBe(true);
   });
 
   it('corregir la licencia SIN cambiar el alta sigue siendo `operador.editado`', async () => {
