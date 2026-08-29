@@ -14026,9 +14026,9 @@ begin
     faltantes, cardinality(exentas), ledger_cubierto;
 end $$;
 
--- ── 207. Los secretos OAuth del MCP no se pueden guardar en claro, y un código solo se canjea una vez (mig. 0259) ──
+-- ── 207. Los secretos OAuth del MCP no se pueden guardar en claro, y un código solo se canjea una vez (mig. 0260) ──
 --
--- Lo que SOLO la base puede demostrar de la 0259 — el código de la app ya
+-- Lo que SOLO la base puede demostrar de la 0260 — el código de la app ya
 -- promete hashear y marcar usado con condición; aquí se prueba que la BASE
 -- lo exige aunque el código de la app se equivoque:
 --
@@ -14062,11 +14062,11 @@ declare
   primer_canje int;
   segundo_canje int;
 begin
-  insert into public.tenant (id, nombre) values (t, '__verif_0259__');
+  insert into public.tenant (id, nombre) values (t, '__verif_0260__');
   insert into public.app_user (id, email, rol, tenant_id)
-    values (u, '__verif_0259__@likida.ai', 'contador', t);
+    values (u, '__verif_0260__@likida.ai', 'contador', t);
   insert into public.mcp_oauth_cliente (nombre, redirect_uris)
-    values ('__verif_0259__', '["https://claude.ai/api/mcp/auth_callback"]'::jsonb)
+    values ('__verif_0260__', '["https://claude.ai/api/mcp/auth_callback"]'::jsonb)
     returning id into cli;
 
   -- (a) el secreto en claro no entra: ni como código…
@@ -14113,6 +14113,6 @@ begin
   update public.mcp_oauth_codigo set usado_en = now() where id = cod and usado_en is null;
   get diagnostics segundo_canje = row_count;
 
-  raise exception 'MCP_OAUTH_0259  claro_rebota_codigo=%  claro_rebota_token=%  tipo_rebota=%  primer_canje=%  segundo_canje=%   (esperado t / t / t / 1 / 0)',
+  raise exception 'MCP_OAUTH_0260  claro_rebota_codigo=%  claro_rebota_token=%  tipo_rebota=%  primer_canje=%  segundo_canje=%   (esperado t / t / t / 1 / 0)',
     claro_rebota_codigo, claro_rebota_token, tipo_rebota, primer_canje, segundo_canje;
 end $$;

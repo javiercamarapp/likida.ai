@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- 0259 — EL ESTACIONAMIENTO OAUTH DEL SERVIDOR MCP.
+-- 0260 — EL ESTACIONAMIENTO OAUTH DEL SERVIDOR MCP.
 --
 -- Likida expone un servidor MCP (/api/mcp) para que el contador o el jefe de
 -- flota le pregunte a SUS datos desde Claude o ChatGPT. Esos clientes se
@@ -56,7 +56,7 @@ create table if not exists public.mcp_oauth_cliente (
 );
 
 comment on table public.mcp_oauth_cliente is
-  'Clientes OAuth del servidor MCP (0259), registrados por DCR (RFC 7591). No guarda secretos: son clientes públicos con PKCE obligatorio. El único escritor es /api/mcp/oauth/registro.';
+  'Clientes OAuth del servidor MCP (0260), registrados por DCR (RFC 7591). No guarda secretos: son clientes públicos con PKCE obligatorio. El único escritor es /api/mcp/oauth/registro.';
 
 alter table public.mcp_oauth_cliente enable row level security;
 revoke all on table public.mcp_oauth_cliente from public, anon, authenticated;
@@ -108,7 +108,7 @@ create index if not exists mcp_oauth_codigo_expira_idx
   on public.mcp_oauth_codigo (expira_en);
 
 comment on table public.mcp_oauth_codigo is
-  'Códigos de autorización OAuth del servidor MCP (0259): hasheados, con PKCE, de un solo uso y vida de minutos. Escritor: la pantalla de consentimiento /mcp/autorizar; lector/canjeador: /api/mcp/oauth/token.';
+  'Códigos de autorización OAuth del servidor MCP (0260): hasheados, con PKCE, de un solo uso y vida de minutos. Escritor: la pantalla de consentimiento /mcp/autorizar; lector/canjeador: /api/mcp/oauth/token.';
 
 alter table public.mcp_oauth_codigo enable row level security;
 revoke all on table public.mcp_oauth_codigo from public, anon, authenticated;
@@ -150,7 +150,7 @@ create index if not exists mcp_oauth_token_tenant_idx
   on public.mcp_oauth_token (tenant_id, emitido_en);
 
 comment on table public.mcp_oauth_token is
-  'Tokens OAuth del servidor MCP (0259): hasheados, con expiración corta (acceso) y rotación con detección de reuso (refresco). Cada token nace atado a UN tenant, UN usuario y UN rol — no existe el token global. Escritor: /api/mcp/oauth/token; lector: la puerta de /api/mcp.';
+  'Tokens OAuth del servidor MCP (0260): hasheados, con expiración corta (acceso) y rotación con detección de reuso (refresco). Cada token nace atado a UN tenant, UN usuario y UN rol — no existe el token global. Escritor: /api/mcp/oauth/token; lector: la puerta de /api/mcp.';
 
 alter table public.mcp_oauth_token enable row level security;
 revoke all on table public.mcp_oauth_token from public, anon, authenticated;

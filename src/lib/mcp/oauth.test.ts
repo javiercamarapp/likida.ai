@@ -288,7 +288,7 @@ describe('registrarCliente', () => {
 
   it('el hash guardado JAMÁS es el secreto: lo que se inserta es 64 hex', () => {
     // Guardia estructural barata: el hash de cualquier secreto emitido tiene
-    // la forma que el CHECK de la 0259 exige, y no contiene el secreto.
+    // la forma que el CHECK de la 0260 exige, y no contiene el secreto.
     const h = hashDeLlave(`${PREFIJO_ACCESO}loquesea`);
     expect(h).toMatch(/^[0-9a-f]{64}$/);
     expect(h.includes('loquesea')).toBe(false);

@@ -11,7 +11,7 @@
 //
 // 1. NINGÚN secreto se guarda en claro. Códigos y tokens se guardan por su
 //    SHA-256 (mismo criterio y mismas funciones que `auth/llave-api.ts`);
-//    la migración 0259 tiene un CHECK que hace fallar el insert si alguien
+//    la migración 0260 tiene un CHECK que hace fallar el insert si alguien
 //    intentara guardar el secreto entero.
 // 2. TODO nace atado a (tenant, usuario, rol). No existe el token global:
 //    el que valida recibe la flota YA resuelta, no una llave para resolverla.
