@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- 0262 — AUDITORÍA E.28, C-1 (MEDIA-BAJA): ligar un CFDI del SAT a un gasto
+-- 0263 — AUDITORÍA E.28, C-1 (MEDIA-BAJA): ligar un CFDI del SAT a un gasto
 --         no era transaccional, y la cuña que dejaba no tenía salida.
 --
 -- `ligarComprobante` (resolucion.ts) hacía DOS escrituras SUELTAS desde
@@ -47,7 +47,7 @@
 -- Reversible:
 --   drop function public.sat_cfdi_ligar_tx(uuid, uuid, uuid, text, jsonb, uuid, text);
 --
--- Verificado por el bloque 210 de supabase/verificaciones.sql, incluido un
+-- Verificado por el bloque 211 de supabase/verificaciones.sql, incluido un
 -- fallo INYECTADO a medio camino (un CHECK temporal que solo dispara para la
 -- fila de la prueba) que demuestra que la escritura del gasto —que ya había
 -- corrido dentro de la misma llamada— se deshace también.
@@ -125,7 +125,7 @@ begin
          resuelto_en = now()
    where id = p_cfdi and tenant_id = p_tenant;
 
-  -- El expediente, EN LA MISMA TRANSACCIÓN. Antes de la 0262, `anotarActo`
+  -- El expediente, EN LA MISMA TRANSACCIÓN. Antes de esta migración, `anotarActo`
   -- lo escribía DESPUÉS de que las dos escrituras de arriba ya habían
   -- terminado, a propósito "mejor esfuerzo" (su comentario en TypeScript:
   -- "si falla, se grita en el log — nunca se traga en silencio", pero
