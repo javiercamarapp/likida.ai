@@ -1,0 +1,51 @@
+id: rlisr-57
+tipo: reglamento
+jerarquia: 2
+instrumento: "Reglamento de la Ley del Impuesto sobre la Renta"
+articulo_o_regla: "57"
+titulo: "Establecimiento del contribuyente y viáticos a nombre del trabajador"
+citas_en_codigo: ["RLISR 57"]
+texto_vigente: >
+  Artículo 57. Para efectos del artículo 28, fracción V de la Ley, se entenderá por
+  establecimiento del contribuyente aquél en el que presta normalmente sus servicios
+  la persona a favor de la cual se realice la erogación.
+  ---
+  Cuando los viáticos y gastos a que se refiere este artículo, beneficien a personas
+  que presten al contribuyente servicios profesionales, los comprobantes fiscales
+  deberán ser expedidos a nombre del propio contribuyente. Si benefician a personas
+  que le prestan servicios personales subordinados, los comprobantes fiscales podrán
+  ser expedidos a nombre de dichas personas, en cuyo caso y para efectos del artículo
+  18, fracción VIII de la Ley, se tendrá por cumplido el requisito de respaldar
+  dichos gastos con el comprobante fiscal a nombre de aquél por cuenta de quién se
+  efectuó el gasto.
+fuente_url: "https://www.diputados.gob.mx/LeyesBiblio/regley/Reg_LISR.pdf"
+fuente_tipo: diputados_oficial
+estado_verificacion: verificado_fuente_primaria
+por_que_importa: >
+  Confirma con el texto el dictamen de la ola 2: el comprobante de un viático de un
+  trabajador SUBORDINADO PUEDE ir a nombre del trabajador. Un motor que rechace todo
+  comprobante que no vaya a nombre de la flota le tira deducciones legítimas.
+  El operador de una flota es trabajador subordinado.
+verificado_el: 2026-07-27
+estado_implementacion: >
+  IMPLEMENTADO. `rfc_receptor` ya no marca como no deducible un viático a nombre de
+  una persona: si coincide con `operadorRfc` no se reporta nada, y si ese dato falta
+  se emite `viatico_rfc_operador` (revisión, sin quitar la deducción). Para diésel y
+  facturas el comportamiento anterior se conserva.
+pendiente: >
+  ACTUALIZADO 16-ago-2026 (la nota anterior quedó vieja): la migración 0080
+  (05-ago-2026, `fix(fiscal): RLISR 57 alcanzable`) YA agregó `operador.rfc` y
+  `cuadre/desde_db.ts:52` YA puebla `operadorRfc` desde ahí. La columna existe y
+  el motor la lee. Lo que SIGUE faltando es la CAPTURA: no hay ningún formulario
+  ni endpoint en `src/app/dashboard` o `src/app/api` que escriba `operador.rfc`
+  (`grep` de `.rfc` contra `operador` en esas carpetas → 0 resultados). En la
+  práctica el campo sigue vacío para toda flota y `viatico_rfc_operador` sigue
+  disparando siempre — mismo síntoma que antes, causa distinta: ya no es un
+  hueco de esquema, es un hueco de UI de captura.
+impacto_en_el_motor: >
+  La regla `rfc_receptor` marca como no deducible cualquier CFDI cuyo receptor no sea
+  el RFC de la empresa. Para viáticos de alimentación, hospedaje y transporte de un
+  operador subordinado, eso es INCORRECTO por este artículo.
+usado_en_codigo:
+  - "cuadre/engine.ts — regla rfc_receptor con la excepción de viáticos IMPLEMENTADA: si el receptor coincide con operadorRfc no se reporta nada, y sin ese dato se emite viatico_rfc_operador (revisión, sin tirar la deducción)"
+  - "cuadre/desde_db.ts — puebla operadorRfc desde operador.rfc (mig. 0080); sin escritor de UI el campo llega null en la práctica"

@@ -1,0 +1,166 @@
+# Las cuatro puertas que hoy se corren a mano antes de cada commit.
+#
+# Nada de esto llama a un modelo ni toca Supabase: la suite de `npm test` es
+# offline y reproducible a propósito (los arneses que sí gastan dinero se llaman
+# `*.prueba.ts` y viven fuera del include de vitest). Por eso CI no necesita
+# secretos, y por eso puede correr en cada push sin costo.
+name: CI
+
+# EN TODAS LAS RAMAS, y no solo en master/main.
+#
+# El disparador anterior era `branches: [master, main]`, así que un push a
+# cualquier otra rama no corría NADA salvo que ya existiera un PR abierto contra
+# master. Y es justo donde aterriza el trabajo autónomo: las rutinas de nube
+# pushean a `claude/*`, y hay ramas vivas fuera de esas dos (`claude/auditoria-4`,
+# `rutinas/paquete-completo`, `tooling/auditoria-diaria`). El typecheck, el lint,
+# las pruebas y el build podían no correr una sola vez sobre ese código.
+#
+# Correr en cada push cuesta ~2 minutos de runner y no necesita secretos (ver el
+# encabezado). Que el PR corra otra vez es duplicado a propósito: es la corrida
+# que decide el merge, y el `concurrency` de abajo ya cancela lo que quedó atrás.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+# Un push nuevo cancela la corrida anterior de la misma rama: no sirve de nada
+# esperar el resultado de un commit que ya quedó atrás.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          cache: npm
+
+      # `npm ci` y no `npm install`: instala exactamente el lockfile y falla si
+      # se desincronizó del package.json, que es justo lo que se quiere saber.
+      - run: npm ci
+
+      # ── LA PUERTA DE SUPPLY CHAIN (auditoría externa 16-ago-2026) ─────────
+      # "CI verde" mentía sobre las dependencias: npm ci reportaba 2 critical
+      # + 1 high y el workflow seguía de largo. La clasificación del 16-ago:
+      # las 6 vulnerabilidades eran 100% de TOOLING (vitest/vite/esbuild vía
+      # devDependencies) — `npm audit --omit=dev` daba CERO en runtime.
+      #
+      # Esta puerta convierte esa clasificación en regla permanente:
+      #   · runtime high/critical  → CI ROJO (es lo que corre en producción)
+      #   · tooling                → Dependabot lo va subiendo; no bloquea
+      # Sin `audit fix --force` ciego jamás: un fallo aquí se resuelve
+      # mirando el path (`npm audit --omit=dev`) y subiendo el paquete real.
+      - name: Auditoría completa de dependencias
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Chromium para las pruebas de navegador
+        run: npx playwright install --with-deps chromium
+
+      # OPERABILIDAD-19C2-5: comentario corregido — es AL REVÉS de como decía.
+      # La auditoría de ARRIBA (`--omit=dev`) es la que omite devDependencies
+      # y hacía invisibles las vulnerabilidades de Vitest/Vite/esbuild; ESTA
+      # SÍ las incluye. No bloquea todavía la entrega porque la deuda
+      # histórica se está reduciendo gradualmente, pero deja resumen en el
+      # job y JSON descargable en cada push/PR.
+      - name: Auditoría de dependencias de DESARROLLO (visible, no bloqueante)
+        id: audit-dev
+        continue-on-error: true
+        run: |
+          set +e
+          npm audit --include=dev --audit-level=moderate --json > "$RUNNER_TEMP/npm-audit-dev.json"
+          audit_exit=$?
+          node scripts/ci/audit-dev.mjs "$RUNNER_TEMP/npm-audit-dev.json" >> "$GITHUB_STEP_SUMMARY"
+          echo "npm_exit=$audit_exit" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Publicar reporte de auditoría dev
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: npm-audit-dev
+          path: ${{ runner.temp }}/npm-audit-dev.json
+          if-no-files-found: warn
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint:ratchet
+
+      - name: Tests offline de resiliencia (sin credenciales)
+        run: bash scripts/test-resiliencia.sh
+
+      # CON COBERTURA, y no `npm test` a secas: el umbral de `vitest.config.ts`
+      # es lo que convierte la cobertura en una puerta en vez de en un número
+      # que nadie mira.
+      #
+      # Aquí decía que "`--coverage` corre las MISMAS pruebas". Dejó de ser
+      # cierto: `vitest.config.ts` exporta `LIKIDA_COBERTURA=1` bajo `--coverage`
+      # y dos pruebas de TIEMPO se saltan con esa bandera —la instrumentación de
+      # v8 cobra por llamada y el umbral acabaría midiéndola—. Como CI corría
+      # SOLO este comando, esas dos no se ejecutaban aquí ni una vez: la guardia
+      # de ReDoS del buscador de fundamentos y la de crecimiento no lineal del
+      # deduplicador de CFDI existían y nadie las corría más que Javier en su
+      # máquina. El paso de abajo las recupera.
+      - name: Tests (con umbral de cobertura)
+        run: npm run test:coverage
+
+      # LAS PRUEBAS DE TIEMPO, SIN INSTRUMENTAR — lo que el paso de arriba salta.
+      #
+      # Son segundos: cuatro archivos, no la suite. `pruebas_en_ci.test.ts` falla
+      # si alguien añade un `skipIf(LIKIDA_COBERTURA)` en un archivo que este
+      # comando no alcanza, que es como se perdieron estas dos.
+      - name: Pruebas de tiempo (sin cobertura)
+        run: npx vitest run fundamento duplicados
+
+      # El build va al final porque es el más lento, y porque los tres de arriba
+      # atrapan casi todo lo que lo haría fallar. Ya cazó un fallo real que solo
+      # aparecía aquí: Turbopack no resolvía el .wasm del lector de códigos.
+      - name: Build
+        run: npm run build
+        env:
+          # El build no llama a nadie, pero Next evalúa los módulos y algunos
+          # leen el entorno al importarse. Valores de relleno: si alguno se usara
+          # de verdad, el fallo sería ruidoso en vez de silencioso.
+          OPENROUTER_API_KEY: ci-placeholder
+          NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+          SUPABASE_SERVICE_ROLE_KEY: ci-placeholder
+
+      # Smoke de navegador sin secretos ni proveedores: arranca el build que
+      # acaba de pasar, visita solo rutas públicas y falla ante página vacía,
+      # overlay de Next o errores de consola/hidratación.
+      - name: Iniciar servidor para Playwright smoke
+        run: |
+          nohup npm run start -- --hostname 127.0.0.1 --port 3000 > "$RUNNER_TEMP/likida-next.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/likida-next.pid"
+          for i in $(seq 1 30); do
+            if curl -fsS --max-time 2 http://127.0.0.1:3000/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/likida-next.log"
+          exit 1
+
+      - name: Playwright smoke público (sin secretos)
+        run: npm run test:smoke
+        env:
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+
+      - name: Logs del smoke si falla
+        if: failure()
+        run: cat "$RUNNER_TEMP/likida-next.log"
+
+      - name: Detener servidor del smoke
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/likida-next.pid" ]; then kill "$(cat "$RUNNER_TEMP/likida-next.pid")" 2>/dev/null || true; fi

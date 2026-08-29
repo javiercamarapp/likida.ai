@@ -1,0 +1,207 @@
+// @ts-nocheck
+import { ShieldCheck, CheckCircle2, CircleAlert } from 'lucide-react';
+import { EstadoVacio, KpiTile } from '../../admin/ui/kit';
+import { FormaConAviso, type ResultadoAccion } from '../../admin/ui/forma';
+import { requireSessionTenant } from '@/lib/auth/guard';
+import { resolverTenantEfectivo } from '@/lib/auth/tenant-efectivo';
+import { revalidatePath } from 'next/cache';
+import { listarSolicitudesArco, resolverSolicitudArco, ejecutarCancelacionArco } from '@/lib/likida/repo';
+import { supabaseAdmin } from '@/lib/supabase/admin';
+import { mensajeParaPantalla } from '@/lib/likida/administracion';
+import { fechaMx, hoyMx } from '@/lib/formato';
+import { venceDentroDe, yaVencio, DIAS_VENCE_PRONTO } from './vencimiento';
+
+export const dynamic = 'force-dynamic';
+
+const ETIQUETA_TIPO: Record<string, string> = {
+  acceso: 'Acceso', rectificacion: 'Rectificación', cancelacion: 'Cancelación', oposicion: 'Oposición',
+};
+
+type Params = { tenant?: string; vista?: string; rol?: string };
+const RUTA = '/dashboard/arco';
+
+/**
+ * Solicitudes ARCO de ESTA flota — la responsable obligada a contestar en 20
+ * días hábiles (LFPDPPP 2025 art. 31). AUDITORÍA 16: antes vivía solo en /admin
+ * (superadmin), y la flota no tenía dónde ver sus solicitudes ni responderlas.
+ */
+export default async function ArcoPage({ searchParams }: { searchParams: Promise<Params> }) {
+  const sp = await searchParams;
+  const { tenantId } = await resolverTenantEfectivo(RUTA, sp);
+  // AUDITORÍA 16, ALTO (arquitectura): `Date.now()` en el render rompe la
+  // puerta de pureza del repo; la fecha se inyecta desde el servidor.
+  //
+  // DAT-08 (auditoría prod): y ese día tiene que ser el DE MÉXICO. Con el día
+  // UTC, a partir de las 18:00 una solicitud ARCO que vence HOY se pintaba
+  // como vencida —el plazo del art. 31 de la LFPDPPP corre en días hábiles de
+  // México, no de Londres— y la de mañana entraba en "vencen pronto" un día
+  // antes de tiempo.
+  const hoy = hoyMx();
+
+  async function accionResponder(_previo: ResultadoAccion, fd: FormData): Promise<ResultadoAccion> {
+    'use server';
+    // AUDITORÍA 16, MEDIO: el superadmin que previsualiza una flota real
+    // (?tenant=t-otra) no podía resolver — el action usaba el tenant de sesión.
+    const s = await requireSessionTenant(RUTA);
+    const sp = await searchParams;
+    let tenantEfectivo = s.tenantId;
+    if (s.rol === 'superadmin' && sp?.tenant) {
+      const { resolverTenantPedido } = await import('@/lib/auth/tenant-api');
+      tenantEfectivo = await resolverTenantPedido(supabaseAdmin(), tenantEfectivo, sp.tenant);
+    }
+    const resolucion = String(fd.get('resolucion') ?? '').trim();
+    const solicitudId = String(fd.get('solicitudId') ?? '');
+    if (!solicitudId) return { error: 'Falta la solicitud.' };
+    if (resolucion.length < 5) return { error: 'Escribe la respuesta que se entrega al titular (qué se resolvió y cómo).' };
+    try {
+      const r = await resolverSolicitudArco(tenantEfectivo, solicitudId, resolucion);
+      revalidatePath(RUTA);
+      return r.enviada
+        ? { ok: 'Solicitud resuelta y la respuesta se envió al titular por WhatsApp.' }
+        : { ok: `Solicitud resuelta. La respuesta NO se pudo enviar por WhatsApp${r.error ? ` (${r.error})` : ''} — entrégala al titular por otro canal.` };
+    } catch (e) {
+      return { error: mensajeParaPantalla(e, 'resolver la solicitud') };
+    }
+  }
+
+  // AUDITORÍA 19 (legal, reincidente #5): `ejecutar_arco_cancelacion` (0178)
+  // existía sin un solo llamador — una cancelación se "resolvía" escribiendo
+  // prosa sin que la base cambiara. Este botón la ejecuta DE VERDAD:
+  // anonimiza nombre y teléfono del titular, borra sus conversaciones, y la
+  // RPC misma deja la solicitud resuelta con la evidencia de qué tocó. El
+  // humano firma (aprieta el botón); el sistema ejecuta — en ese orden.
+  async function accionEjecutarCancelacion(_previo: ResultadoAccion, fd: FormData): Promise<ResultadoAccion> {
+    'use server';
+    const s = await requireSessionTenant(RUTA);
+    const sp = await searchParams;
+    let tenantEfectivo = s.tenantId;
+    if (s.rol === 'superadmin' && sp?.tenant) {
+      const { resolverTenantPedido } = await import('@/lib/auth/tenant-api');
+      tenantEfectivo = await resolverTenantPedido(supabaseAdmin(), tenantEfectivo, sp.tenant);
+    }
+    const solicitudId = String(fd.get('solicitudId') ?? '');
+    if (!solicitudId) return { error: 'Falta la solicitud.' };
+    try {
+      const r = await ejecutarCancelacionArco(tenantEfectivo, solicitudId);
+      revalidatePath(RUTA);
+      if (!r.ok) return { error: `No se ejecutó la cancelación: ${r.motivo}` };
+      return r.avisada
+        ? { ok: 'Cancelación ejecutada: el titular quedó anonimizado en la base y se le confirmó por WhatsApp. La documentación fiscal se conserva por el CFF art. 30, desligada de su persona.' }
+        : { ok: `Cancelación ejecutada: el titular quedó anonimizado en la base. La confirmación NO salió por WhatsApp${r.errorAviso ? ` (${r.errorAviso})` : ''} — entrégasela por otro canal.` };
+    } catch (e) {
+      return { error: mensajeParaPantalla(e, 'ejecutar la cancelación') };
+    }
+  }
+
+  // AUDITORÍA 16, ALTO (operabilidad): fail-cerrado — una base caída NO se
+  // pinta como "Ninguna solicitud registrada" (la regla del repo). El error de
+  // lectura se muestra; solo el vacío REAL es vacío.
+  let solicitudes: Awaited<ReturnType<typeof listarSolicitudesArco>> = [];
+  let errorCarga: string | null = null;
+  try {
+    solicitudes = await listarSolicitudesArco(tenantId);
+  } catch (e) {
+    errorCarga = e instanceof Error ? e.message : String(e);
+  }
+  const pendientes = solicitudes.filter((s) => s.estado === 'recibida' || s.estado === 'en_proceso');
+  // AUDITORÍA 18, ALTO (A14): antes era `venceEn <= hoy` — "ya venció", no
+  // "faltan ≤ 5 días". Lo vencido se cuenta APARTE: es incumplimiento del
+  // art. 31, no algo que esté por pasar.
+  const vencenPronto = pendientes.filter((s) => venceDentroDe(s.venceEn, hoy, DIAS_VENCE_PRONTO));
+  const vencidas = pendientes.filter((s) => yaVencio(s.venceEn, hoy));
+
+  return (
+    <div className="flex flex-col gap-4">
+      <header className="glass-panel flex items-center gap-2.5 px-5 py-4">
+        <ShieldCheck width={16} height={16} strokeWidth={1.75} />
+        <div>
+          <span className="text-sm font-medium block">Privacidad (ARCO)</span>
+          <span className="text-xs" style={{ color: 'var(--muted)' }}>
+            Solicitudes de tus operadores y cómo responderlas a tiempo (LFPDPPP art. 31: 20 días hábiles)
+          </span>
+        </div>
+      </header>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <KpiTile icono={<CircleAlert width={15} height={15} strokeWidth={1.75} />} etiqueta="Por responder" valor={pendientes.length} />
+        <KpiTile icono={<CheckCircle2 width={15} height={15} strokeWidth={1.75} />} etiqueta={`Vencen pronto (≤ ${DIAS_VENCE_PRONTO} días)`} valor={vencenPronto.length} />
+        <KpiTile icono={<CircleAlert width={15} height={15} strokeWidth={1.75} />} etiqueta="Vencidas sin responder" valor={vencidas.length} />
+      </div>
+
+      <div className="glass-panel overflow-hidden">
+        <section className="p-5">
+          <h2 className="text-sm font-semibold uppercase tracking-wide mb-3" style={{ color: 'var(--muted)' }}>
+            Solicitudes de tus operadores
+          </h2>
+          {errorCarga ? (
+            <div className="rounded-lg p-3 text-sm" style={{ background: 'color-mix(in srgb, var(--color-warn) 10%, transparent)', color: 'var(--color-warn)' }}>
+              No se pudieron leer las solicitudes ahora mismo ({errorCarga.slice(0, 120)}). Recarga en un momento — no hay
+              forma de saber si hay solicitudes pendientes hasta que la base responda.
+            </div>
+          ) : solicitudes.length === 0 ? (
+            <EstadoVacio>
+              Ninguna solicitud ARCO registrada. Cuando un operador escribe *PRIVACIDAD* por WhatsApp, la solicitud
+              queda registrada aquí y tú —la responsable— tienes 20 días hábiles para responder.
+            </EstadoVacio>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr style={{ color: 'var(--muted)' }} className="text-left">
+                    <th className="px-3 py-2.5 font-medium">Recibida</th>
+                    <th className="px-3 py-2.5 font-medium">Derecho</th>
+                    <th className="px-3 py-2.5 font-medium">Titular</th>
+                    <th className="px-3 py-2.5 font-medium">Vence</th>
+                    <th className="px-3 py-2.5 font-medium">Estado</th>
+                    <th className="px-3 py-2.5 font-medium">Respuesta</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {solicitudes.map((s) => (
+                    <tr key={s.id} className="border-t align-top" style={{ borderColor: 'var(--line)' }}>
+                      <td className="px-3 py-3">{fechaMx(s.recibidaEn)}</td>
+                      <td className="px-3 py-3 font-medium">{ETIQUETA_TIPO[s.tipo] ?? s.tipo}</td>
+                      <td className="px-3 py-3">
+                        {s.operadorNombre ?? '—'}
+                        <span className="block text-xs font-mono" style={{ color: 'var(--muted)' }}>{s.titularRef}</span>
+                      </td>
+                      <td className="px-3 py-3 tabular">{fechaMx(s.venceEn)}</td>
+                      <td className="px-3 py-3">
+                        <span className="text-xs font-semibold" style={{ color: s.estado === 'resuelta' || s.estado === 'improcedente' ? 'var(--color-ok)' : 'var(--color-warn)' }}>
+                          {s.estado === 'resuelta' ? 'Resuelta' : s.estado === 'en_proceso' ? 'En proceso' : s.estado === 'improcedente' ? 'Improcedente' : 'Recibida'}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3">
+                        {s.estado === 'resuelta' || s.estado === 'improcedente' ? (
+                          <span className="text-xs" style={{ color: 'var(--muted)' }}>{s.resolucion ?? '—'}</span>
+                        ) : s.tipo === 'cancelacion' ? (
+                          <div className="flex flex-col gap-2">
+                            {/* La cancelación NO se resuelve con prosa: se
+                                EJECUTA (anonimiza al titular). El botón dice
+                                lo que hace antes de que alguien lo apriete. */}
+                            <FormaConAviso accion={accionEjecutarCancelacion} boton="Ejecutar cancelación" columnas="auto">
+                              <input type="hidden" name="solicitudId" value={s.id} />
+                            </FormaConAviso>
+                            <span className="text-xs" style={{ color: 'var(--muted)' }}>
+                              Anonimiza nombre y teléfono del titular y borra sus conversaciones. Los comprobantes
+                              fiscales se conservan por ley (CFF art. 30), desligados de su persona. No se puede deshacer.
+                            </span>
+                          </div>
+                        ) : (
+                          <FormaConAviso accion={accionResponder} boton="Responder" columnas="260px auto">
+                            <input type="hidden" name="solicitudId" value={s.id} />
+                            <input name="resolucion" placeholder="Qué se resolvió y cómo se entrega al titular" style={{ width: 260 }} />
+                          </FormaConAviso>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+}

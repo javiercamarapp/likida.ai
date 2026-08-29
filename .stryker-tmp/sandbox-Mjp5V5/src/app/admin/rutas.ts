@@ -1,0 +1,116 @@
+// @ts-nocheck
+import {
+  Cpu, GitCommitHorizontal,
+  LayoutGrid, ScanText, Calculator, MessagesSquare, MessageCircle, UserPlus,
+  Settings2, FlaskConical, Truck, LineChart, DollarSign, Receipt, TrendingUp, Presentation,
+  Server, Blocks, BookOpen, Megaphone, ShieldAlert, ShieldCheck, Users, Settings,
+  Activity, ClipboardCheck, Code2, HeartPulse, LifeBuoy, Gauge, Handshake, Inbox,
+  Bot, Bug, ListChecks, Sparkles, Hand, Globe2, AlarmClock,
+} from 'lucide-react';
+
+/**
+ * El mapa de navegación de /admin — plano, SIN 'use client', a propósito:
+ * lo consumen tanto Client Components (`sidebar-nav.tsx`,
+ * `command-palette.tsx`) como Server Components (`sidebar-nav-iconos.tsx`).
+ * Importar una constante desde un archivo 'use client' hacia un Server
+ * Component no funciona (`TODAS_LAS_RUTAS.map is not a function` —
+ * Next.js la sustituye por una referencia de cliente, no el arreglo real);
+ * un módulo plano no tiene ese problema, se ejecuta igual en ambos lados.
+ */
+export type Item = { href: string; nombre: string; Icono: typeof LayoutGrid };
+
+export const AGENTES: Item[] = [
+  // El copiloto va PRIMERO en Agentes: es la puerta que sustituye recorrer
+  // pantallas — las demás son fichas; esta opera (Fase 2 pieza 1).
+  { href: '/admin/copiloto', nombre: 'Copiloto', Icono: Sparkles },
+  { href: '/admin/agentes', nombre: 'Panel de agentes', Icono: Bot },
+  { href: '/admin/agente-ocr', nombre: 'Agente OCR', Icono: ScanText },
+  { href: '/admin/agente-cuadre', nombre: 'Agente de Cuadre', Icono: Calculator },
+  { href: '/admin/agente-whatsapp', nombre: 'Agente de WhatsApp', Icono: MessagesSquare },
+  { href: '/admin/model-ops', nombre: 'Model Ops', Icono: Settings2 },
+  // EvalOps (0134): el examen del agente y la regla de re-examen visible.
+  { href: '/admin/evals', nombre: 'Evals', Icono: Bug },
+  { href: '/admin/playground', nombre: 'Playground', Icono: FlaskConical },
+  // El panel de QA (Fase A): fotos reales contra el pipeline real, veredicto
+  // por oráculos del ejército (scripts/qa-agentes/). Diseño: 00-PANEL-DE-QA.md.
+  { href: '/admin/qa', nombre: 'QA autónomo', Icono: Bug },
+];
+
+export const NEGOCIO: Item[] = [
+  // Tu turno va PRIMERO: es la bandeja única de Fase D — todo lo que espera
+  // el tap de Javier (piezas del bus, envíos, PRs, escalaciones, rutinas) en
+  // una pantalla operable desde el teléfono. Escalaciones sigue viva como la
+  // cola profunda de lo escalado; Tu turno la resume y enlaza.
+  { href: '/admin/tu-turno', nombre: 'Tu turno', Icono: Hand },
+  // El mundo de la cartera (17-ago): país → estado → calles, luces por etapa
+  // del embudo, refresco solo. Globe2 y no Map: Map es literal de más para
+  // un "cerebro" y Globe2 no choca con ningún ícono vivo del sidebar.
+  { href: '/admin/mapa-prospectos', nombre: 'Cerebro de ventas', Icono: Globe2 },
+  { href: '/admin/escalaciones', nombre: 'Escalaciones', Icono: Inbox },
+  // La cola de lo que los agentes REDACTAN (0117) — hermana de Escalaciones
+  // (lo que el sistema no pudo resolver solo): allá se destraba, aquí se
+  // aprueba lo que va a salir.
+  { href: '/admin/aprobaciones', nombre: 'Aprobaciones', Icono: ListChecks },
+  { href: '/admin/flotas', nombre: 'Flotas / Clientes', Icono: Truck },
+  // El equipo de ventas (prospectos y comisiones) — la página vive en
+  // /admin/vendedores. `Handshake` y no `Users`: Users ya es Equipo (RBAC) y
+  // dos íconos iguales en el mismo sidebar se leen como la misma pantalla.
+  { href: '/admin/vendedores', nombre: 'Vendedores', Icono: Handshake },
+  { href: '/admin/conversaciones', nombre: 'Conversaciones', Icono: MessageCircle },
+  { href: '/admin/analitica', nombre: 'Analítica & Stats', Icono: LineChart },
+  { href: '/admin/costos-facturacion', nombre: 'Costos & Facturación', Icono: DollarSign },
+  // A dónde y por qué se va el dinero de IA — por agente/modelo con insights
+  // deterministas (16-ago-2026). Hermana de Costos: allá el desglose contable,
+  // aquí el diagnóstico.
+  { href: '/admin/consumo', nombre: 'Consumo de IA', Icono: Cpu },
+  { href: '/admin/cobranza', nombre: 'Cobranza', Icono: Receipt },
+  { href: '/admin/crecimiento', nombre: 'Crecimiento', Icono: TrendingUp },
+  { href: '/admin/ejecutivo', nombre: 'Ejecutivo / Board', Icono: Presentation },
+  { href: '/admin/usuarios/nuevo', nombre: 'Nuevo usuario', Icono: UserPlus },
+];
+
+export const PLATAFORMA: Item[] = [
+  { href: '/admin/whatsapp-infra', nombre: 'WhatsApp Infra', Icono: Server },
+  { href: '/admin/integraciones', nombre: 'Integraciones', Icono: Blocks },
+  { href: '/admin/conocimiento-rag', nombre: 'Conocimiento / RAG', Icono: BookOpen },
+  { href: '/admin/comunicacion', nombre: 'Comunicación', Icono: Megaphone },
+];
+
+export const CONTROL: Item[] = [
+  { href: '/admin/trust-safety', nombre: 'Trust & Safety', Icono: ShieldAlert },
+  { href: '/admin/compliance', nombre: 'Compliance & Datos', Icono: ShieldCheck },
+  { href: '/admin/equipo', nombre: 'Equipo', Icono: Users },
+  { href: '/admin/configuracion', nombre: 'Configuración', Icono: Settings },
+];
+
+export const SISTEMA: Item[] = [
+  { href: '/admin/observabilidad', nombre: 'Observabilidad', Icono: Activity },
+  { href: '/admin/crons', nombre: 'Relojes', Icono: AlarmClock },
+  { href: '/admin/calidad-evals', nombre: 'Calidad & Evals', Icono: ClipboardCheck },
+  { href: '/admin/dev', nombre: 'Dev', Icono: Code2 },
+  { href: '/admin/salud-sistema', nombre: 'Salud del sistema', Icono: HeartPulse },
+  { href: '/admin/actividad-codigo', nombre: 'Actividad de código', Icono: GitCommitHorizontal },
+  { href: '/admin/soporte', nombre: 'Soporte', Icono: LifeBuoy },
+  { href: '/admin/capacidad-forecast', nombre: 'Capacidad & Forecast', Icono: Gauge },
+];
+
+/** Las cinco secciones CON su rótulo — el MISMO agrupamiento y los MISMOS
+ *  títulos que pinta el sidebar (`sidebar-nav.tsx`), exportados para que el
+ *  grid de accesos del Inicio se genere DESDE este mapa: una página nueva
+ *  aparece ahí sola, y una lista escrita a mano en la página es la que se
+ *  desincroniza al primer alta. */
+export const SECCIONES: Array<{ titulo: string; items: Item[] }> = [
+  { titulo: 'Agentes', items: AGENTES },
+  { titulo: 'Negocio', items: NEGOCIO },
+  { titulo: 'Plataforma', items: PLATAFORMA },
+  { titulo: 'Control', items: CONTROL },
+  { titulo: 'Sistema', items: SISTEMA },
+];
+
+/** Lista plana de todas las rutas (no cites el conteo: crece) — la usan
+ *  `command-palette.tsx` (⌘K) y `sidebar-nav-iconos.tsx` (rail colapsado).
+ *  Inicio se agrega aparte porque no vive en ninguna de las 5 secciones. */
+export const TODAS_LAS_RUTAS: Item[] = [
+  { href: '/admin', nombre: 'Inicio', Icono: LayoutGrid },
+  ...AGENTES, ...NEGOCIO, ...PLATAFORMA, ...CONTROL, ...SISTEMA,
+];

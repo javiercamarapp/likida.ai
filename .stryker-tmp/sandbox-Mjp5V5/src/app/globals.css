@@ -1,0 +1,436 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Likida — Sistema de diseño macOS / Apple premium (monocromo + glass).
+   Neutros fríos, hairlines de 1px, sombras difusas, un solo acento.
+   Ver DESIGN.md. Light + dark automáticos.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+
+  --color-bg: #fbfbfd;
+  --color-surface: #ffffff;
+  --color-ink: #17100d;      /* negro cálido: sigue siendo tinta, ya no es azulado */
+  --color-muted: #616876;
+  --color-line: #ececef;
+  /* NARANJA DE MARCA. Un solo tono para las dos cosas que tiene que hacer:
+     rellenar (con texto blanco encima) y ser tinta sobre blanco. #c2410c mide
+     5.18:1 contra blanco por la fórmula de luminancia WCAG — pasa AA en los
+     dos sentidos, que es justo lo que un naranja vivo (#f97316, 2.9:1) no
+     hace: se ve bien en un mockup y deja el texto del botón ilegible. */
+  --color-accent: #c2410c;
+  --color-accent-fg: #ffffff;
+
+  /* #34c759 (el verde de semáforo de Apple) mide 2.22:1 sobre blanco y 2.15:1
+     sobre --bg. AA pide 3:1 hasta para texto grande, así que reprobaba en los
+     dos. Y es TINTA, no adorno: `[id]/page.tsx` lo usa como color de las cuatro
+     cifras acreditables —"IVA acreditable $12,480"—, que son las que se
+     proyectan en la sala. Este verde llega a 7.67:1 sobre blanco y 7.42:1 sobre
+     --bg; es el mismo que el sistema de diseño del repo ya había elegido para
+     `.tag-ok` (design-system/styles.css), por esta misma razón.
+     En oscuro se invierte: #14602c cae a 2.35:1 y el de Apple sube a 8.12:1, así
+     que el override de abajo lo devuelve. Medido con la fórmula de luminancia
+     relativa de WCAG, no a ojo (auditoría 5, frontend, MEDIO 2). */
+  --color-ok: #14602c;
+  --color-warn: #a16207;      /* movido del naranja: la marca ya es naranja y un aviso naranja deja de avisar */
+  /* #ff3b30 daba ~3.6:1 sobre blanco y AA pide 4.5:1 para texto normal. Este
+     tono llega a 4.6:1 y se sigue leyendo como el rojo de sistema. */
+  --color-bad: #d70015;
+
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px -12px rgba(0,0,0,0.12);
+  --shadow-pop: 0 1px 2px rgba(0,0,0,0.05), 0 12px 32px -8px rgba(0,0,0,0.18);
+}
+
+:root {
+  --bg: var(--color-bg);
+  --surface: var(--color-surface);
+  --ink: var(--color-ink);
+  --muted: var(--color-muted);
+  --line: var(--color-line);
+  --accent: var(--color-accent);
+  --accent-fg: #ffffff;          /* texto sobre el acento (verde oscuro → blanco) */
+
+  /* ── Design system v2 de /admin (mockup aprobado, ago-2026) ──────────────
+     Tokens NUEVOS, aditivos — no tocan --ink/--muted/--line/--color-ok/
+     --color-bad de arriba (esos ya tienen historia de contraste auditada y
+     los usa TODA la app, no solo /admin). --panel es alias directo de
+     --surface (mismo blanco, #ffffff, nombre nuevo para los componentes de
+     la librería compartida). --g1..--g5 es la rampa de gris para gráficas
+     — identidad por opacidad/paso, nunca por color, sigue siendo monocromo. */
+  --panel: var(--surface);
+  --canvas: #f9f9fa;
+  --canvas2: #fafafa;
+  --ink2: #3f3f46;
+  /* AUDITORÍA 10, MEDIO — medido sobre los píxeles: #a1a1aa daba 2.56:1
+     contra blanco, por debajo del 4.5:1 que AA pide para texto normal (esto
+     SIEMPRE pinta texto de 12px o menos — notas de KpiTile, subtítulos de
+     ChartCard, citas legales, ejes de gráfica —, nunca texto grande, así que
+     no hay excepción de "texto grande" que lo salve). Se revisaron los ~40
+     usos antes de tocar el token: casi todos son texto real que un
+     contralor puede necesitar leer (la cita "LIF 2026, Art. 20-A", "Sin
+     capturar", "plazo sin verificar"), no relleno decorativo — no hay una
+     intención distinta entre "nota de KpiTile" y "cita legal" que justifique
+     dos tokens.
+     BARRIDO MEDIO/BAJO (auditoría 19): #73737c/#6b7280 pasaban AA contra
+     blanco y --bg, pero --g1 es el fondo de TODA la consola (el div raíz de
+     cada página de /admin y /dashboard pinta background: var(--g1) sobre
+     el layout completo, no solo barras de gráfica) y ninguno de los dos se
+     había medido ahí: #73737c daba 4.04:1 contra el --g1 claro por defecto
+     (#fdebd9) y 4.27:1 contra el de `.tema-neutro` (#f4f4f5) — los dos por
+     debajo del 4.5:1 de AA. #6a6a73/#616876 pasan AA contra blanco, --bg y
+     los dos --g1 claros, y #6a6a73 se queda MÁS CLARO que --muted (#616876,
+     ver contraste exacto en contraste.test.ts) para conservar el orden de
+     la jerarquía: ink > ink2 > muted > faint. */
+  --faint: #6a6a73;
+  --line2: #e4e4e7;
+
+  --g1: #fdebd9;
+  --g2: #f9c99f;
+  --g3: #f2913f;
+  --g4: #ea580c;
+  --g5: #c2410c;
+
+  /* El relleno de marca: lo que antes era negro sólido —botones primarios,
+     barras, pills activos, puntos de leyenda—. Es el MISMO valor que --g5 y
+     que --accent a propósito: tres nombres para el mismo naranja según lo
+     que cada componente cree estar pintando (grafismo, acción, acento), y
+     un solo sitio donde cambiarlo. */
+  --marca: #c2410c;
+  --marca-fg: #ffffff;
+
+  /* --ok/--warn/--bad NUEVOS (para la librería de componentes de /admin) —
+     no reemplazan --color-ok/--color-bad, que siguen siendo los que usa el
+     resto de la app (auditados AA arriba). Estos también pasan AA sobre
+     blanco (--ok 5.02:1, --warn 5.02:1, --bad 6.47:1 — misma fórmula de
+     luminancia WCAG de la nota de arriba, no a ojo). */
+  --ok: #137a38;
+  --okbg: #e7f5ec;
+  --warn: #9a5c00;
+  --warnbg: #fbf3e0;
+  --bad: #b91c1c;
+  --badbg: #fbeaea;
+}
+
+/* Antes había un `@media (prefers-color-scheme: dark)` aquí que cambiaba el
+   tema solo por el ajuste del sistema operativo del contralor, sin que nadie
+   lo pidiera en la app — así se veía "todo negro" sin que Likida lo hubiera
+   decidido. Se quita: el sistema de diseño actual no tiene modo
+   oscuro, y esta app tampoco tiene hoy un switch manual que lo active — las
+   dos reglas `[data-theme]` de abajo quedan listas para ESE switch, si algún
+   día se construye, pero ya no se disparan solas. */
+:root[data-theme="dark"] {
+  /* Oscuro PREMIUM (13-ago-2026): negro suave y grises tenues NEUTROS (zinc,
+     sin tinte azul ni cálido) — "minimalista elegante, letra que se lea".
+     Contrastes medidos con la fórmula de luminancia WCAG, no a ojo:
+     --ink 17.6:1, --ink2 12.1:1, --muted 6.6:1, --faint 5.6:1 — todos sobre
+     --surface #131316, y la jerarquía se conserva invertida:
+     ink > ink2 > muted > faint. */
+  --bg: #09090b; --surface: #131316; --ink: #f4f4f5; --muted: #a6a6ae; --line: #232328; --accent: #fb923c; --accent-fg: #2a1206;
+  --color-bad: #ff453a;   /* ver la nota de contraste arriba */
+  --color-ok: #34c759;    /* 8.4:1 sobre #131316 */
+
+  /* Los tokens v2 también pivotan — sin esto el switch dejaba media consola
+     clara (láminas --g1, fondos --canvas, texto --faint) sobre fondo negro. */
+  --panel: var(--surface);
+  --canvas: #0e0e11;
+  --canvas2: #101013;
+  --ink2: #d4d4d8;
+  --faint: #98989f;
+  --line2: #29292e;
+  --g1: #2f1c0e; --g2: #573413; --g3: #b45309; --g4: #f2913f; --g5: #fb923c;
+  --marca: #fb923c;
+  --marca-fg: #2a1206;
+  --ok: #4ade80;  --okbg: #132a1d;
+  --warn: #fbbf24; --warnbg: #2b230f;
+  --bad: #f87171; --badbg: #2b1517;
+  /* La sombra difusa no existe sobre negro: el relieve lo dan las hairlines. */
+  --shadow-card: 0 0 0 1px rgba(255,255,255,0.02);
+  --shadow-pop: 0 0 0 1px rgba(255,255,255,0.03);
+}
+/* El tema neutro de las consolas, en oscuro: la "tinta" de marca se invierte
+   a casi-blanco y la rampa de grises se voltea — la pill activa del sidebar
+   y las barras de gráfica siguen siendo monocromas, ahora sobre negro. */
+:root[data-theme="dark"] .tema-neutro {
+  --marca: #f4f4f5;
+  --marca-fg: #131316;
+  --accent: #f4f4f5;
+  --accent-fg: #131316;
+  --g1: #1b1b1f; --g2: #2a2a30; --g3: #707078; --g4: #d4d4d8; --g5: #f4f4f5;
+}
+:root[data-theme="light"] {
+  --bg: #fbfbfd; --surface: #ffffff; --ink: #17100d; --muted: #616876; --line: #ececef; --accent: #c2410c; --accent-fg: #ffffff;
+  --color-bad: #d70015;   /* 5.38:1 sobre blanco */
+  --color-ok: #14602c;    /* 7.67:1 sobre blanco */
+}
+
+/* ── Tema NEUTRO de las consolas (12-ago-2026, pedido explícito) ───────────
+   "Usa el logo en color negro, ya no paleta de color naranja" — los DOS
+   paneles (/admin y /dashboard) van neutros: tinta, gris
+   y blanco; el color solo en semáforos y estatus. El naranja QUEDA para la
+   marca hacia afuera (login, landing, PDF, ads) — por eso esto es un
+   override con alcance y no un cambio de los tokens base: los chromes de
+   las dos consolas ponen esta clase en su raíz y todo lo de adentro
+   (logo, chips de ícono, pill activa del sidebar, rampa de gráficas,
+   botones --marca) pivota a neutro sin tocar componente por componente.
+   #18181b sobre blanco ≈ 16.9:1 y sobre --g1 #f4f4f5 ≈ 15.4:1 — AA sobra. */
+.tema-neutro {
+  --marca: #18181b;
+  --marca-fg: #ffffff;
+  --accent: #18181b;
+  --accent-fg: #ffffff;
+  --g1: #f4f4f5;
+  --g2: #e4e4e7;
+  --g3: #a1a1aa;
+  --g4: #3f3f46;
+  --g5: #18181b;
+}
+
+* { border-color: var(--line); }
+
+html, body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.011em;
+}
+
+/* Material translúcido macOS para barras/overlays */
+.glass {
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+/* La LÁMINA de las consolas (antes "glass": blur + sombra de ventana sobre
+   el fondo naranja). La dirección del 12-ago-2026 (DESIGN.md v3, referencias
+   de Desktop/DASHBOARD) la vuelve tarjeta blanca sólida con hairline y
+   sombra suave — el mismo material que `.card`, en grande. EL NOMBRE SE
+   QUEDA a propósito: lo usan ~30 páginas de las dos consolas y renombrarlo
+   es churn sin cambio de comportamiento; el material vive aquí, en un solo
+   lugar. Sin blur: ya no hay imagen detrás que difuminar (ver fondo.tsx). */
+.glass-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.hairline { border: 1px solid var(--line); }
+
+/* Reloj retro de tarjetas plegables (admin/reloj-retro.tsx) — la hoja que
+   "cae" al cambiar un dígito, tipo reloj Solari. */
+@keyframes reloj-flip {
+  0% { transform: rotateX(0deg); opacity: 1; }
+  60% { opacity: 1; }
+  100% { transform: rotateX(-100deg); opacity: 0; }
+}
+
+/* Números tabulares para montos y tablas */
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* Entrada sutil (fade + blur), gesto premium de macOS */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(6px); filter: blur(4px); }
+  to   { opacity: 1; transform: translateY(0);   filter: blur(0); }
+}
+.animate-in { animation: fadeSlideIn 0.25s ease-out both; }
+
+/* Shimmer de carga (§E del complemento: "skeleton shimmer, no spinners
+   genéricos") — un solo barrido de brillo cruzando el bloque gris, en vez
+   de un ícono girando. `--canvas`/`--line` (design system v2), no colores
+   nuevos. Desactivado si el visitante pidió menos movimiento. */
+@keyframes skeleton-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+.skeleton {
+  background-image: linear-gradient(90deg, var(--canvas) 25%, var(--line2) 37%, var(--canvas) 63%);
+  background-size: 300% 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; background-position: 0 0; }
+}
+
+/* ── El centro se retira cuando el asistente se expande ─────────────────────
+   El rail del asistente y la columna de contenido son HERMANOS en el marco
+   (chrome.tsx), así que ninguno puede animar al otro por props sin levantar
+   estado a un padre cliente y volver cliente todo el layout. El rail marca la
+   raíz del documento y el CSS hace el resto: es la vía más barata para un
+   estado de UI que cruza el árbol.
+
+   La transición es la MISMA curva y duración que usa el asistente al crecer
+   (easeOutQuint, 480ms). Si se fueran a destiempo se vería como dos
+   animaciones peleando en vez de una sola: el centro cediéndole el lugar. */
+.columna-centro {
+  transition: opacity 480ms cubic-bezier(0.22, 1, 0.36, 1),
+              transform 480ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+:root[data-asistente="expandido"] .columna-centro {
+  opacity: 0;
+  /* Se va HACIA LA IZQUIERDA, no se encoge: encogerlo reflowea la página
+     entera cada frame (las gráficas se recalculan) y la animación tironea.
+     Mover con `transform` no toca el layout. */
+  transform: translateX(-24px);
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .columna-centro { transition: none; }
+  :root[data-asistente="expandido"] .columna-centro { transform: none; }
+}
+
+/* El logo de la pantalla de carga: respira, no parpadea. `animate-pulse` de
+   Tailwind salta entre dos opacidades; esta curva es la misma easeOutQuint de
+   los paneles, así que el producto entero se mueve igual. */
+@keyframes likida-respira {
+  0%, 100% { opacity: 0.35; transform: scale(0.985); }
+  50%      { opacity: 1;    transform: scale(1); }
+}
+.likida-respira { animation: likida-respira 1.6s cubic-bezier(0.22, 1, 0.36, 1) infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .likida-respira { animation: none; opacity: 0.6; }
+}
+/* El PNG del glifo es negro. En consola oscura hay que invertirlo para que
+   se vea; en claro se queda negro. */
+:root[data-theme="dark"] .logo-icono-negro { filter: invert(1); }
+
+/* ── Voces tipográficas (12-ago-2026) ────────
+   Tres voces, cada una con su papel — pedido explícito: "tipografía más
+   corporativa":
+   · Inter (base, --font-sans-ui) — todo el texto de UI.
+   · Inter Tight (--font-display) — SOLO titulares y la cifra grande de una
+     stat: la grotesca apretada de los encabezados.
+   · IBM Plex Mono (--font-mono) — micro-rótulos en mayúsculas y cifras de
+     tabla: la voz que hace que el panel se lea como estado de cuenta. */
+.font-display {
+  font-family: var(--font-display), var(--font-sans);
+  letter-spacing: -0.02em;
+}
+.etiqueta-mono {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  letter-spacing: 0.08em;
+}
+.cifra-mono {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Sidebar colapsable (12-ago-2026) ───────────────────
+   `boton-sidebar.tsx` marca la raíz con data-sidebar='min' (y lo recuerda en
+   localStorage). El CSS hace el resto: la lámina baja a 72px y todo lo
+   textual marcado con .sb-texto desaparece — así el colapso no depende del
+   breakpoint responsive, que sigue funcionando igual por debajo de `lg`. */
+:root[data-sidebar='min'] .sb-aside { width: 72px !important; }
+:root[data-sidebar='min'] .sb-texto { display: none !important; }
+:root[data-sidebar='min'] .sb-centrable { justify-content: center !important; }
+/* Colapsado, 72px no dan para logo + botón con aire: queda solo el botón
+   (que es el único camino de regreso). El logo vuelve al expandir. */
+:root[data-sidebar='min'] .sb-logo { display: none; }
+:root[data-sidebar='min'] .sb-aside .ml-auto { margin-left: 0; }
+.sb-aside a:focus-visible, .sb-aside button:focus-visible {
+  outline: 3px solid var(--accent, var(--marca));
+  outline-offset: 2px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Textura punteada (16-ago-2026, ref. shadcn-dashboard) ─────────────────
+   La convención nueva de la dirección visual: los DIVISORES INTERNOS de una
+   tarjeta van punteados — filas de tabla, y los pies de StatCard/KpiTile
+   (esos dos lo traen inline en kit.tsx). El borde EXTERNO de la tarjeta
+   sigue sólido: la textura distingue "separación dentro del mismo bloque"
+   de "límite del bloque". Se aplica al estilo del borde YA existente, nunca
+   agrega bordes donde no había. */
+.card table tbody tr { border-bottom-style: dashed; }
+.card table thead tr { border-bottom-style: solid; }
+
+/* ── Microinteracciones (16-ago-2026, ref. Amicro — principios, no la
+   librería): feedback de PRENSADO en todo botón y un lift sutil en las
+   tarjetas-link. CSS puro, cero dependencias, y TODO detrás de
+   prefers-reduced-motion — la misma regla que ya rige el count-up. */
+@media (prefers-reduced-motion: no-preference) {
+  button:not(:disabled):active { transform: scale(0.97); transition: transform 80ms ease-out; }
+  a.card { transition: transform 150ms ease-out, box-shadow 150ms ease-out, opacity 150ms ease, border-color 150ms ease; }
+  a.card:hover { transform: translateY(-1px); box-shadow: var(--shadow-card-hover, var(--shadow-card)); }
+}
+
+/* ── Píldora de marca (17-ago-2026, ref. likida.ai) ────────────────────────
+   El CTA de la landing nueva: cápsula de tinta, y el GLIFO de Likida que sale
+   de la nada al pasar el cursor —empieza con ancho 0, encogido y girado, y se
+   despliega empujando el texto—. Vive aquí y no en línea porque todo el gesto
+   es un `:hover`, que un `style=` no puede expresar.
+
+   Es la píldora de `.btn`/`.btn-tinta`/`.btn-borde` de main.css traducida a
+   los TOKENS del software, no copiada en hex: así el 404 respeta el tema
+   oscuro del panel (tinta y papel se invierten solos) en vez de quedarse
+   con un #17100d fijo sobre fondo negro.
+
+   El color del glifo lo pone quien lo monta (`editorial.tsx`), y nunca es
+   `--marca`: la landing no tiene naranja. */
+.pildora {
+  display: inline-flex; align-items: center; gap: 9px;
+  border-radius: 999px; padding: 12px 22px;
+  font-size: 15px; font-weight: 600; letter-spacing: 0.005em;
+  border: 1px solid transparent; cursor: pointer; text-decoration: none;
+}
+.pildora-tinta { background: var(--ink); color: var(--bg); }
+.pildora-borde { background: transparent; border-color: var(--line); color: var(--ink); }
+.pildora-borde:hover { border-color: color-mix(in srgb, var(--ink) 30%, transparent); }
+/* La caja que se abre. `overflow: hidden` + ancho 0 es lo que hace que el
+   glifo no ocupe lugar mientras está guardado; el margen negativo se come el
+   `gap` para que el texto no baile 9px de más al aparecer. */
+.pildora-glifo {
+  display: block; height: 16px; width: 0; margin-right: -9px;
+  opacity: 0; overflow: hidden;
+  transform: scale(0.55) rotate(-35deg); transform-origin: center;
+}
+.pildora:hover .pildora-glifo,
+.pildora:focus-visible .pildora-glifo { width: 18px; margin-right: 0; opacity: 1; transform: none; }
+/* Todo el movimiento detrás de la misma puerta que el resto del repo: quien
+   pidió menos animación ve el glifo aparecer de golpe, sin rebote ni lift. */
+@media (prefers-reduced-motion: no-preference) {
+  .pildora { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+  .pildora:hover { transform: translateY(-1px); }
+  .pildora-tinta:hover { box-shadow: 0 10px 26px color-mix(in srgb, var(--ink) 26%, transparent); }
+  .pildora-glifo {
+    transition: width .3s cubic-bezier(.22,1,.36,1), margin-right .3s cubic-bezier(.22,1,.36,1),
+                opacity .2s ease, transform .45s cubic-bezier(.34,1.56,.64,1);
+  }
+}
+
+/* La rejilla punteada tenue del papel — el fondo de las figuras del 404. Se
+   desvanece hacia los bordes con una máscara para que no choque contra el
+   hairline de la tarjeta. Va en un <span> propio y no en la tarjeta: la
+   máscara recortaría también el diagrama que va encima. */
+.rejilla-punteada {
+  background-image: radial-gradient(circle at 1px 1px,
+    color-mix(in srgb, var(--ink) 16%, transparent) 1px, transparent 0);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse 72% 72% at 50% 50%, #000 35%, transparent 100%);
+  mask-image: radial-gradient(ellipse 72% 72% at 50% 50%, #000 35%, transparent 100%);
+}
+
+/* Los rótulos del diagrama del 404. Van en CSS y no como atributo del <text>
+   porque necesitan MEDIA QUERY: el texto de un SVG escala con el viewBox, así
+   que un solo `font-size` no puede servir a los dos anchos — 9.5 unidades son
+   12px en escritorio y 6.8px en un teléfono. Bajo 640px suben a 13 unidades
+   (≈9px reales) y los dos rótulos marcados como opcionales se retiran: a ese
+   tamaño los cuatro se encimarían, y la pareja que cuenta la historia es
+   "último punto → sin destino". */
+.rotulos-diagrama text { font-size: 9.5px; letter-spacing: 1.3px; }
+@media (max-width: 640px) {
+  .rotulos-diagrama text { font-size: 13px; letter-spacing: 0.7px; }
+  .rotulos-diagrama .rotulo-opcional { display: none; }
+}

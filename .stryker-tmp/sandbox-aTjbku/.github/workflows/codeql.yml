@@ -1,0 +1,87 @@
+# P2 de la auditoría externa (15-ago-2026): supply chain / SAST.
+#
+# Análisis estático de GitHub sobre JS/TS — inyección, uso inseguro de
+# regex, flujos de dato sin sanear entre lo que entra por WhatsApp/HTTP y lo
+# que llega a una consulta o a un `eval`-like. Corre APARTE de `verificar` y
+# de `ci-postgres.yml`: no comparte runner ni bloquea a ninguno de los dos,
+# así que no les agrega ni un segundo.
+#
+# EN PUSH A master/main Y EN CADA PULL REQUEST, no en cada rama — a
+# diferencia de `ci.yml` (que sí corre en todas: es barato y rápido). El
+# análisis de CodeQL es más caro (build + consulta de un grafo), y lo que
+# importa vigilar es lo que va a fusionarse, no cada commit intermedio de
+# una rama de trabajo en curso. Semanal además, por si algo nuevo en las
+# consultas de CodeQL encuentra algo en código que no cambió esta semana.
+#
+# 24-AGO-2026 — El preflight de abajo hace verificable el supuesto de licencia:
+# un repo privado solo continúa si la API de GitHub confirma
+# `advanced_security.status=enabled`. Si no puede comprobarlo, el job falla con
+# un mensaje accionable; nunca se presenta un CodeQL verde cuando GHAS está
+# apagado o el token no puede verificarlo.
+#
+# NO SUSTITUYE al análisis del lint, lo complementa: `eslint-plugin-security`
+# (reglas elegidas una por una en `eslint.config.mjs`) corre en cada push y es
+# lo que quedó cubriendo el hueco; y lo de las regex lo mide de verdad
+# `regex_sin_redos.test.ts`, con entrada adversarial en vez de por la forma.
+name: CodeQL
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analizar (JavaScript/TypeScript)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      security-events: write # para publicar los hallazgos en la pestaña Security
+      packages: read
+      actions: read
+      contents: read
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Verificar GHAS para repositorio privado
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          repo_json=$(gh api "repos/${GITHUB_REPOSITORY}")
+          visibility=$(printf '%s' "$repo_json" | jq -r '.visibility // "unknown"')
+          ghas=$(printf '%s' "$repo_json" | jq -r '.security_and_analysis.advanced_security.status // "unknown"')
+          {
+            echo "### CodeQL / GHAS"
+            echo "- Visibilidad: \`$visibility\`"
+            echo "- Advanced Security: \`$ghas\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$visibility" = "private" ] && [ "$ghas" != "enabled" ]; then
+            echo "::error::El repositorio es privado pero GitHub Advanced Security no está confirmado como enabled (estado: $ghas). Habilita GHAS o corrige el permiso del token antes de confiar en CodeQL."
+            exit 1
+          fi
+          if [ "$visibility" = "unknown" ]; then
+            echo "::error::No se pudo verificar la visibilidad del repositorio; CodeQL no puede continuar a ciegas."
+            exit 1
+          fi
+
+      - name: Inicializar CodeQL
+        uses: github/codeql-action/init@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # v4.37.8
+        with:
+          languages: javascript-typescript
+          queries: security-and-quality
+
+      # Sin build manual: el análisis de JS/TS de CodeQL no necesita que el
+      # proyecto compile (a diferencia de Java/Go/C#) — lee el fuente
+      # directamente. `autobuild` existe para otros lenguajes; aquí sobra.
+      - name: Analizar
+        uses: github/codeql-action/analyze@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # v4.37.8
+        with:
+          category: '/language:javascript-typescript'
+          wait-for-processing: true

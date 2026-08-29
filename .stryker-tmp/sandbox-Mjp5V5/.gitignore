@@ -1,0 +1,66 @@
+node_modules
+.next/
+.env
+.env.local
+*.log
+/tmp/
+.tickets_calibracion/
+
+# Artefactos de build de TS
+tsconfig.tsbuildinfo
+.vercel
+
+# Assets de marca (revisión, no van al repo)
+_brand/
+
+# Comprobantes reales para probar el OCR: traen RFC, folios y datos fiscales.
+# El arnés sí va al repo; las fotos no.
+pruebas-manuales/imagenes/
+#
+# EXCEPCIÓN consciente: `src/lib/likida/intake/__fixtures__/ticket-codigos.jpg`
+# SÍ está versionado. Es el acercamiento a un ticket de papelería (sin datos de
+# persona) y es la evidencia del test de regresión del lector de códigos: sin
+# él, nadie puede comprobar que zxing lee donde jsQR no.
+# ADVERTENCIA: el repo es PÚBLICO en GitHub (verificado 16-ago-2026) — esta
+# excepción se escribió asumiendo lo contrario. Cualquier OTRA foto de
+# comprobante sigue fuera.
+.env*
+.gstack/
+
+# Material interno que no debe verse en el árbol público: bitácoras de
+# auditoría de código, estado de reporte y propuestas comerciales con nombres
+# reales de prospectos. Vive fuera del repo, en likida-archivo-privado/
+# (16-ago-2026, para lectura externa tipo VC/diligence).
+docs/auditoria-*/
+docs/comercial/
+docs/REPORTE-ESTADO.md
+PROMPT-SESION-NUEVA.md
+
+# Worktrees de sesiones de Claude Code. Sin esto, un worktree activo aparece
+# como "untracked" en `git status` desde la raíz del repo, y vitest (sin el
+# exclude propio en vitest.config.ts) escanea dentro de él y corre una
+# segunda copia de cada prueba en paralelo con la real.
+.claude/worktrees/
+
+# Material de referencia de sitios de terceros (scrape para clonar diseño):
+# HTML/CSS/capturas ajenas, no van al repo.
+.firecrawl/
+
+# Previews temporales para mirar el render (CLAUDE.md). Son RUTAS VIVAS fuera
+# del gateo por rol: el 4-ago dos llegaron a producción por un `git add -A`.
+# `src/app/sin_previews.test.ts` los caza en la suite; esto los caza antes.
+zzz-*/
+zzz-*.mjs
+
+# Config personal de Claude Code (hooks/permisos propios de esta máquina,
+# p.ej. el guardado automático a Obsidian) — no es config de equipo.
+.claude/settings.local.json
+
+# Estado local del pipeline de mejora diaria (registro de hallazgos, logs,
+# kill switch APAGADO). Los scripts SÍ van al repo; el estado no — y el
+# registro trae títulos de bugs aún sin arreglar en un repo público.
+.mejora-diaria/
+
+# Cache del CLI de Supabase (project-ref, versiones) — local, no del repo.
+supabase/.temp/
+.DS_Store

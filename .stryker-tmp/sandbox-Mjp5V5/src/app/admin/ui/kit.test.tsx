@@ -1,0 +1,238 @@
+// @ts-nocheck
+import { describe, it, expect } from 'vitest';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { Fuel } from 'lucide-react';
+import { KpiTile, ChartCard, StatCard } from './kit';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUDITORÍA 10, ALTO — `KpiTile` manda "$0.00" en el HTML servido, sea cual
+// sea la cifra real.
+//
+// `useCountUp(valor, !reducido)` (`kit.tsx`): en el servidor
+// `usePrefersReducedMotion()` devuelve su `getServerSnapshot()`, que vale
+// `false` — no es una medición, es el default de "no sé, asumo que no". Con
+// `reducido=false`, `animar=true`, y `useCountUp` devuelve su `useState(0)`
+// inicial porque en el servidor no corre NINGÚN `useEffect` que lo mueva.
+// Eso es lo que sale en el HTML: "$0.00" sobre una flota que comprobó
+// $1,234,567.89 — exactamente el cero que CLAUDE.md prohíbe, uno que se lee
+// como medición.
+//
+// Se prueba con `renderToStaticMarkup`, el mismo mecanismo que produce el
+// HTML que un navegador con JS lento, roto o bloqueado se queda viendo.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const ICONO = <Fuel width={15} height={15} />;
+
+describe('KpiTile — el HTML servido (antes de hidratar)', () => {
+  it('con una cifra real distinta de cero, el texto servido NO es "$0.00"', () => {
+    const html = renderToStaticMarkup(
+      <KpiTile icono={ICONO} etiqueta="Monto comprobado" valor={1234567.89} formato="mxn" />,
+    );
+    expect(html).not.toContain('$0.00');
+  });
+
+  it('con una cifra real distinta de cero, el texto servido ES la cifra real', () => {
+    const html = renderToStaticMarkup(
+      <KpiTile icono={ICONO} etiqueta="Monto comprobado" valor={1234567.89} formato="mxn" />,
+    );
+    expect(html).toContain('$1,234,567.89');
+  });
+
+  it('mismo caso con un entero (viajes liquidados), no solo con moneda', () => {
+    const html = renderToStaticMarkup(
+      <KpiTile icono={ICONO} etiqueta="Viajes liquidados" valor={12} formato="entero" />,
+    );
+    expect(html).not.toContain('>0<');
+    expect(html).toContain('>12<');
+  });
+
+  it('un valor que de verdad es cero SÍ se sirve como "$0.00" — no es el mismo bug al revés', () => {
+    // El arreglo no puede ser "nunca mostrar 0": una flota que de verdad
+    // comprobó $0 tiene que poder decirlo. El bug era mostrar 0 CUANDO LA
+    // CIFRA REAL NO ES 0, no la existencia del cero en sí.
+    const html = renderToStaticMarkup(
+      <KpiTile icono={ICONO} etiqueta="Monto comprobado" valor={0} formato="mxn" />,
+    );
+    expect(html).toContain('$0.00');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUDITORÍA 10, MEDIO — rótulos cortados a la mitad. "IVA acreditable
+// documentado" salía visible al 52% en el panel fiscal a 1280px: `truncate`
+// (una sola línea + "…") cortaba la palabra que carga el significado
+// fiscal ("documentado"). `line-clamp-2` deja envolver a una segunda línea
+// antes de recortar, así que a los anchos reales del producto (~1100px de
+// contenido tras descontar sidebar + rail) el rótulo entero cabe.
+// ═══════════════════════════════════════════════════════════════════════════
+describe('KpiTile y ChartCard — el rótulo ya no se corta a la mitad', () => {
+  it('KpiTile: ninguna clase del tile es `truncate` (una sola línea + elipsis)', () => {
+    const html = renderToStaticMarkup(
+      <KpiTile icono={ICONO} etiqueta="IVA acreditable documentado" valor={12480} formato="mxn" />,
+    );
+    expect(html).not.toContain('truncate');
+    expect(html).toContain('line-clamp-2');
+  });
+
+  it('KpiTile: el rótulo completo sigue en el DOM, sin recortar el texto', () => {
+    const html = renderToStaticMarkup(
+      <KpiTile icono={ICONO} etiqueta="IVA acreditable documentado" valor={12480} formato="mxn" />,
+    );
+    expect(html).toContain('IVA acreditable documentado');
+  });
+
+  it('ChartCard: el título tampoco usa `truncate` — "El gasto del periodo, por su suerte fiscal" se cortaba al 98%', () => {
+    const html = renderToStaticMarkup(
+      <ChartCard titulo="El gasto del periodo, por su suerte fiscal">
+        <div />
+      </ChartCard>,
+    );
+    expect(html).not.toContain('truncate');
+    expect(html).toContain('line-clamp-2');
+    expect(html).toContain('El gasto del periodo, por su suerte fiscal');
+  });
+});
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUDITORÍA 1, CRÍTICO (Frontend) — `StatCard` colapsaba `null` a `0` y pintaba
+// "$0.00" + "0% · sin movimiento" en la primera tarjeta del Resumen cuando NO
+// había viajes que medir (costo por viaje = división indefinida). El backend
+// devuelve `null` a propósito; la UI lo tapaba con un cero con cara de medición.
+// ═══════════════════════════════════════════════════════════════════════════
+describe('KpiTile — no medible (valor null) pinta guion, no 0/0%', () => {
+  it('con valor null muestra "—" y el mensaje de `vacio`, sin "0%"', () => {
+    const html = renderToStaticMarkup(
+      <KpiTile icono={ICONO} etiqueta="Sin CFDI" valor={null} formato="porcentaje"
+        vacio="Sin comprobantes de estos conceptos todavía" />,
+    );
+    expect(html).toContain('—');
+    expect(html).toContain('Sin comprobantes de estos conceptos');
+    expect(html).not.toContain('0%');
+  });
+});
+
+describe('StatCard — no medible (valor null) NO es "$0.00"', () => {
+  it('con valor null pinta un guion y DICE por qué, sin cifra ni "sin movimiento"', () => {
+    const html = renderToStaticMarkup(
+      <StatCard icono={ICONO} etiqueta="Costo por viaje" valor={null} formato="mxn"
+        sinDato="sin viajes en el periodo" />,
+    );
+    expect(html).toContain('—');
+    expect(html).toContain('sin viajes en el periodo');
+    expect(html).not.toContain('$0.00');
+    expect(html).not.toContain('sin movimiento');
+  });
+
+  it('con un 0 REAL (medido) sigue mostrando la cifra, no el guion', () => {
+    const html = renderToStaticMarkup(
+      <StatCard icono={ICONO} etiqueta="Liquidado" valor={0} formato="mxn" />,
+    );
+    // Un 0 medido es "$0.00", no "sin dato": la distinción que el arreglo protege.
+    expect(html).toContain('$0.00');
+    expect(html).not.toContain('sin viajes en el periodo');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUDITORÍA 18, ALTO (A12) — `delta === null` es "se intentó comparar y no hay
+// contra qué" (`pctCambio(84300, 0)` → null; o el bucket único de "histórico").
+// La tarjeta imprimía "0% · sin movimiento": el contralor que NO gastó la
+// semana pasada y gastó $84,300 esta leía que su gasto no se movió.
+// ═══════════════════════════════════════════════════════════════════════════
+describe('StatCard — delta null (sin comparable) no afirma "0%"', () => {
+  it('con cifra real y delta null: ni "0%" ni "sin movimiento"; dice que no hubo comparación', () => {
+    const html = renderToStaticMarkup(
+      <StatCard icono={ICONO} etiqueta="Gasto total — últimos 7 días" valor={84300} formato="mxn" delta={null} />,
+    );
+    expect(html).toContain('$84,300.00');
+    expect(html).not.toContain('0%');
+    expect(html).not.toContain('sin movimiento');
+    expect(html).toContain('sin periodo comparable');
+  });
+
+  it('un 0% REAL (comparó y no cambió) sigue diciéndolo — no es el mismo bug al revés', () => {
+    const html = renderToStaticMarkup(
+      <StatCard icono={ICONO} etiqueta="Gasto total" valor={500} formato="mxn" delta={{ pct: 0, bueno: true }} />,
+    );
+    expect(html).toContain('0%');
+    expect(html).toContain('sin cambio vs periodo anterior');
+    expect(html).not.toContain('sin periodo comparable');
+  });
+
+  it('con delta OMITIDO no se pinta ningún pie (Diésel va limpio)', () => {
+    const html = renderToStaticMarkup(
+      <StatCard icono={ICONO} etiqueta="Diésel elegible" valor={1200} formato="litros" />,
+    );
+    expect(html).not.toContain('sin periodo comparable');
+    expect(html).not.toContain('sin movimiento');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ESCALA 50k (docs/escala-50k/MAPA.md §UI, 22-ago-2026) — `BannerInsight`
+// tenía `truncate` sobre un span que lleva un MONTO: "$12,345,6…" mutilado.
+// `StatCard`/`KpiTile`/`WidgetUso` no tenían regla de ancho: a ~1e14 se
+// desbordaban de la tarjeta. La prueba de ancho es con $999,999,999.00 (12
+// dígitos con separadores): la cifra entera tiene que llegar al HTML, el
+// contenedor tiene que recortar por ANCHO (no por valor) y el `title` tiene
+// que llevar la cifra completa para el hover y el lector de pantalla.
+// ═══════════════════════════════════════════════════════════════════════════
+import { BannerInsight, WidgetUso } from './kit';
+
+const GRANDE = 999_999_999;
+const GRANDE_TXT = '$999,999,999.00';
+
+describe('BannerInsight — el monto nunca se trunca', () => {
+  it('no lleva `truncate`; el monto completo está en el HTML', () => {
+    const html = renderToStaticMarkup(
+      <BannerInsight etiqueta="Esta semana" deltaPct={12.3} href="#estadisticas">
+        Tu flota liquidó <b className="tabular">{GRANDE_TXT}</b> en viajes cerrados
+      </BannerInsight>,
+    );
+    expect(html).not.toContain('truncate');
+    expect(html).toContain(GRANDE_TXT);
+    // El <b> del monto no se parte en dos líneas.
+    expect(html).toContain('whitespace-nowrap');
+  });
+});
+
+describe('KpiTile / StatCard / WidgetUso — prueba de ancho con $999,999,999.00', () => {
+  it('KpiTile: cifra completa en el HTML, recorte por ancho y `title` completo', () => {
+    const html = renderToStaticMarkup(
+      <KpiTile icono={ICONO} etiqueta="Monto comprobado" valor={GRANDE} formato="mxn" />,
+    );
+    expect(html).toContain(`>${GRANDE_TXT}<`);
+    expect(html).toContain(`title="${GRANDE_TXT}"`);
+    expect(html).toMatch(/min-w-0 overflow-hidden text-ellipsis whitespace-nowrap[^>]*title="\$999,999,999\.00"/);
+    // Sin `truncate` (la prueba de la auditoría 10 sigue valiendo para el rótulo).
+    expect(html).not.toContain('truncate');
+  });
+
+  it('StatCard: lo mismo', () => {
+    const html = renderToStaticMarkup(
+      <StatCard icono={ICONO} etiqueta="Gasto del periodo" valor={GRANDE} formato="mxn" />,
+    );
+    expect(html).toContain(`>${GRANDE_TXT}<`);
+    expect(html).toContain(`title="${GRANDE_TXT}"`);
+    expect(html).toMatch(/overflow-hidden text-ellipsis whitespace-nowrap[^>]*title="\$999,999,999\.00"/);
+  });
+
+  it('KpiTile/StatCard no medibles: el guion va SIN title (no hay cifra que completar)', () => {
+    const a = renderToStaticMarkup(<KpiTile icono={ICONO} etiqueta="x" valor={null} formato="mxn" vacio="sin dato" />);
+    const b = renderToStaticMarkup(<StatCard icono={ICONO} etiqueta="x" valor={null} formato="mxn" />);
+    expect(a).not.toContain('title="');
+    expect(b).not.toContain('title="');
+    expect(a).toContain('—');
+    expect(b).toContain('—');
+  });
+
+  it('WidgetUso: la cifra ya formateada se recorta por ancho con `title` completo', () => {
+    const html = renderToStaticMarkup(
+      <WidgetUso etiqueta="COSTO DE IA · AGOSTO" valor={`US${GRANDE_TXT}`} />,
+    );
+    expect(html).toContain(`US${GRANDE_TXT}`);
+    expect(html).toContain(`title="US${GRANDE_TXT}"`);
+    expect(html).toContain('overflow-hidden text-ellipsis whitespace-nowrap');
+  });
+});

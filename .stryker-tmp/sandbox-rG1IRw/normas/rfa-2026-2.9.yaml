@@ -1,0 +1,90 @@
+id: rfa-2026-2.9
+tipo: rfa
+jerarquia: 3
+instrumento: "Resolución de Facilidades Administrativas para 2026"
+articulo_o_regla: "2.9"
+titulo: "Adquisición de combustibles"
+citas_en_codigo: ["RFA 2026 regla 2.9"]
+texto_vigente: >
+  Los contribuyentes personas físicas o morales, dedicados exclusivamente al
+  autotransporte terrestre de carga federal, que tributen conforme al Título II,
+  Capítulo VII o Título IV, Capítulo II, Sección I de la Ley del ISR, considerarán
+  cumplida la obligación establecida en el artículo 27, fracción III, segundo
+  párrafo de la Ley del ISR, cuando los pagos por consumo de combustible se
+  realicen con medios distintos a cheque nominativo de la cuenta del contribuyente;
+  tarjeta de crédito, de débito o de servicios; o monederos electrónicos autorizados
+  por el SAT, siempre que estos no excedan el 15 por ciento del total de los pagos
+  efectuados por consumo de combustible para realizar su actividad. Además, en el
+  comprobante fiscal deberá constar la información del permiso vigente, expedido de
+  acuerdo con la Ley de Hidrocarburos al proveedor del combustible y que, en su
+  caso, dicho permiso no se encuentre suspendido en el momento de la expedición del
+  comprobante fiscal.
+fecha_publicacion: 2026-02-17
+fecha_vigencia_desde: 2026-02-18
+fecha_vigencia_hasta: 2026-12-31
+fuente_url: "https://sidof.segob.gob.mx/notas/docFuente/5780249"
+fuente_tipo: dof_oficial
+estado_verificacion: verificado_fuente_primaria
+nota_verificacion: >
+  Leído en el DOF (SIDOF) y corroborado en tres reproducciones independientes.
+  La Resolución entra en vigor el 18-feb-2026 y rige todo el ejercicio 2026.
+cambio_de_numero: false
+condiciones_de_aplicacion:
+  - "Dedicados EXCLUSIVAMENTE al autotransporte terrestre de carga federal"
+  - "Tributar en Título II Cap. VII (coordinados) o Título IV Cap. II Secc. I (PF act. empresarial)"
+  - "El efectivo no puede exceder el 15% del total pagado por combustible — OJO: EL PERIODO LO PONE EL PRODUCTO, NO LA REGLA (ver periodicidad_del_15_no_esta_en_la_norma)"
+  - "El CFDI debe consignar el permiso vigente y no suspendido"
+periodicidad_del_15_no_esta_en_la_norma:
+  hallazgo_20_ago_2026: >
+    Esta ficha afirmaba "el 15% del total pagado por combustible EN EL EJERCICIO" como
+    si fuera condición de la regla. NO LO ES. El texto dice sólo "siempre que estos no
+    excedan el 15 por ciento del total de los pagos efectuados por consumo de
+    combustible para realizar su actividad", SIN fijar periodo de medición alguno:
+    ni mensual, ni acumulado, ni anual.
+  verificacion: >
+    Comparado el 20-ago-2026 contra la RFA 2025 (DOF 17-feb-2025), cuya regla 2.9 tiene
+    redacción idéntica y tampoco fija periodo. Buscado además en el Anexo 7 completo
+    (110 pp.), el Anexo 3 y la RMF 2026: ninguno lo aborda.
+  por_que_la_lectura_anual_es_la_razonable: >
+    El denominador "para realizar su actividad" y el hecho de que la RFA sea anual (su
+    transitorio Primero declara las facilidades aplicables "para todo el ejercicio
+    fiscal 2026") apuntan al ejercicio. Pero es INFERENCIA del producto, no mandato de
+    la norma, y así debe declararse ante un cliente y ante el fiscalista.
+  lo_que_hace_el_codigo: >
+    `periodo/combustible.ts` (evaluarTope15, TOPE_EFECTIVO 0.15, alerta al 12%) y
+    `repo.ts` (getAcumuladoCombustible) miden ACUMULADO DEL EJERCICIO. Es la lectura
+    conservadora y la correcta mientras nadie diga lo contrario: un tope anual se
+    rebasa más difícil que uno mensual, así que el motor avisa antes, no después.
+    NO SE CAMBIA EL CÓDIGO — se corrige la ficha, que era la que mentía sobre su base.
+  pregunta_abierta_para_el_fiscalista: "¿Mensual, acumulado o anual? Sin texto que lo resuelva."
+lectura_aplicada_por_el_motor: >
+  El "siempre que estos no excedan el 15 por ciento" admite dos lecturas y
+  esta ficha NO las resuelve (la condición de aplicación de arriba tampoco).
+  (a) TOPE prorrateable: solo el excedente sobre el 15% pierde la deducción
+  — la lectura más usada en la práctica. (b) CONDICIÓN de procedencia:
+  rebasado el 15%, la facilidad no se tiene por cumplida y todo el efectivo
+  del ejercicio cae bajo LISR 27-III. El motor aplica (a), y desde la
+  auditoría 18 (B4) LO DICE en la nota de `efectivo_sobre_15`
+  (`LECTURA_RFA_29_PRORRATEO` en cuadre/engine.ts): sobre $1,000,000 de
+  combustible con $200,000 en efectivo la diferencia entre lecturas son
+  $150,000 de deducción, y una interpretación callada no se puede discutir.
+  Pendiente para el fiscalista: confirmar (a) o cambiar el motor a (b).
+limite_importante: >
+  Conserva la DEDUCCIÓN para ISR. NO habilita el acreditamiento del IEPS: son dos
+  beneficios distintos y el efectivo solo salva uno.
+verificado_por: "ola1 / 03-isr-facilidades.md; verificador adversarial (refutó la versión absoluta de LISR 27-III)"
+verificado_el: 2026-07-27
+usado_en_codigo:
+  - "cuadre/engine.ts — la matriz completa de la regla: combustible_efectivo (sin declarar, o sin base medida — fail-closed), combustible_efectivo_dentro15, efectivo_sobre_15 (la frontera del 15% se reparte POR COMPROBANTE vía proporcionDeducible) y efectivo_no_elegible"
+  - "cuadre/engine.ts — SIN_ACREDITAMIENTO: la facilidad salva la deducción de ISR, NO el IEPS ni el IVA"
+  - "repo.ts — getAcumuladoCombustible (el contador del ejercicio: efectivo y total, paginado con count exact para que PostgREST no lo recorte) y actualizarFacilidad15 (la declaración de elegibilidad de la flota)"
+  - "cuadre/desde_db.ts — le pasa al motor el acumulado del ejercicio, best-effort declarado"
+  - "periodo/combustible.ts — evaluarTope15 (TOPE_EFECTIVO 0.15, umbral de alerta al 12%)"
+  - "fiscal.ts — tope15DeGastos y las causas combustible_efectivo / efectivo_no_elegible del panel del contador"
+pendiente_en_producto: >
+  EL CONTADOR YA EXISTE (esta ficha decía "no existe todavía" semanas después de
+  que getAcumuladoCombustible en repo.ts llevara la cuenta del ejercicio y el
+  motor evaluara la matriz completa con fail-closed: sin base medida no afirma
+  nada). Lo que SIGUE pendiente es la otra condición de la regla: que el CFDI
+  consigne el permiso vigente del proveedor — el motor NO lo verifica contra el
+  padrón, solo lo avisa una vez por liquidación (permiso_cre_no_verificable).
