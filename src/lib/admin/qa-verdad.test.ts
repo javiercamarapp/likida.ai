@@ -1,8 +1,9 @@
 import { describe, test, expect } from 'vitest';
 import {
-  normalizarTextoVerdad, normalizarDominio, normalizarFechaVerdad, montosIguales,
+  normalizarTextoVerdad, normalizarDominio, normalizarFechaVerdad, normalizarRfcVerdad, montosIguales,
   compararCampo, medir, medicionSinLeer, agregar, ocrVacio, ocrLeidoDeGasto,
   medirSinGasto, esAlucinacion, contarAlucinaciones, agregarPorCampo, resumenPrecision, variantesEmisorEsperado,
+  agregarClaves, CAMPOS_FISCALES, CAMPOS_DESCRIPTIVOS,
   type OcrLeido, type MedicionFotoResumen,
 } from './qa-verdad';
 import { CLAVES_VERDAD, type ClaveVerdad, type VerdadTerreno } from './qa-tipos';
@@ -99,6 +100,44 @@ describe('fecha y monto', () => {
     expect(montosIguales(1234.5, 1234.05)).toBe(false);   // dígito transpuesto: error
     expect(montosIguales(1234.5, null)).toBe(false);
     expect(montosIguales(null, null)).toBe(true);
+  });
+});
+
+describe('comparador de RFC — la Ñ y el & cuentan (auditoría tandas 21-24, hallazgo 2)', () => {
+  // El comparador genérico descomponía la Ñ (NFD) y eliminaba el & con
+  // [^A-Z0-9]: dos RFC de contribuyentes DISTINTOS daban `ok` — el fallo que
+  // la cabecera del módulo llama el más caro, con el porcentaje inflado justo
+  // en los casos difíciles. Reproducido con el código real antes del arreglo.
+  test('una Ñ leída como N es OTRO contribuyente → mal', () => {
+    const c = compararCampo('rfcEmisor', verdad({ rfcEmisor: 'AÑB123456XY0' }), leido({ rfcEmisor: 'ANB123456XY0' }));
+    expect(c.veredicto).toBe('mal');
+    expect(c.motivo).toMatch(/carácter por carácter/);
+  });
+
+  test('un & omitido es OTRO contribuyente → mal', () => {
+    const c = compararCampo('rfcEmisor', verdad({ rfcEmisor: 'J&B840101XX1' }), leido({ rfcEmisor: 'JB840101XX1' }));
+    expect(c.veredicto).toBe('mal');
+  });
+
+  test('la Ñ y el & bien leídos son acierto — no se castigan por raros', () => {
+    expect(compararCampo('rfcEmisor', verdad({ rfcEmisor: 'AÑB123456XY0' }), leido({ rfcEmisor: 'AÑB123456XY0' })).veredicto).toBe('ok');
+    expect(compararCampo('rfcEmisor', verdad({ rfcEmisor: 'J&B840101XX1' }), leido({ rfcEmisor: 'J&B840101XX1' })).veredicto).toBe('ok');
+  });
+
+  test('espacios, guiones y minúsculas NO son error de lectura → ok', () => {
+    const c = compararCampo('rfcEmisor', verdad({ rfcEmisor: 'XAX-010101-AB1' }), leido({ rfcEmisor: ' xax 010101 ab1 ' }));
+    expect(c.veredicto).toBe('ok');
+  });
+
+  test('la MISMA Ñ en NFC y en NFD es la misma letra → ok', () => {
+    // 'Ñ' compuesta (U+00D1) vs 'N' + tilde combinante (U+004E U+0303).
+    const c = compararCampo('rfcEmisor', verdad({ rfcEmisor: 'A\u00D1B123456XY0' }), leido({ rfcEmisor: 'AN\u0303B123456XY0' }));
+    expect(c.veredicto).toBe('ok');
+  });
+
+  test('normalizarRfcVerdad: vacío y nulo salen null — jamás cadena vacía', () => {
+    expect(normalizarRfcVerdad(null)).toBeNull();
+    expect(normalizarRfcVerdad('  - ')).toBeNull();
   });
 });
 
@@ -431,5 +470,86 @@ describe('el emisor con su nombre comercial entre paréntesis (caso medido, corr
   test('variantesEmisorEsperado: sin paréntesis no duplica variantes', () => {
     expect(variantesEmisorEsperado('OXXO GAS')).toEqual(['OXXOGAS']);
     expect(variantesEmisorEsperado('A.D.F.S.A. (ARCO 8039)')).toEqual(['ADFSAARCO8039', 'ADFSA']);
+  });
+});
+
+describe('la sucursal del extractor general, con la estación de respaldo', () => {
+  test('extra.sucursal manda; estacion respalda a las lecturas viejas y gasolineras', () => {
+    expect(ocrLeidoDeGasto({ ocrExtra: { sucursal: 'MERIDA NORTE', estacion: 'E07814' } }).sucursal).toBe('MERIDA NORTE');
+    expect(ocrLeidoDeGasto({ ocrExtra: { estacion: 'E07814' } }).sucursal).toBe('E07814');
+    expect(ocrLeidoDeGasto({ ocrExtra: {} }).sucursal).toBeNull();
+    // Una sucursal en blanco no pisa una estación real.
+    expect(ocrLeidoDeGasto({ ocrExtra: { sucursal: '  ', estacion: '8039' } }).sucursal).toBe('8039');
+  });
+});
+
+describe('la ponderación declarada: fiscales y descriptivos, con la MISMA vara', () => {
+  test('las dos listas parten las 7 claves sin traslape ni hueco', () => {
+    const union = [...CAMPOS_FISCALES, ...CAMPOS_DESCRIPTIVOS].sort();
+    expect(union).toEqual([...CLAVES_VERDAD].sort());
+    expect(CAMPOS_FISCALES.filter((c) => CAMPOS_DESCRIPTIVOS.includes(c))).toEqual([]);
+  });
+
+  test('fiscales + descriptivos suman EXACTO el global — la partición no esconde nada', () => {
+    const meds = [
+      medir(VERDAD, LEIDO_PERFECTO),
+      medir(VERDAD, leido({ folio: 'otro', sucursal: null })),
+      medicionSinLeer('fallo técnico'),
+    ];
+    const r = resumenPrecision(meds.map((m, i) => ({
+      fotoId: `f${i}`, etiqueta: `f${i}.jpg`, clase: 'ticket' as const,
+      medicion: m, modelo: 'm', motivo: null, costoUsd: 0,
+    })));
+    expect(r.fiscales.ok + r.descriptivos.ok).toBe(r.global.ok);
+    expect(r.fiscales.mal + r.descriptivos.mal).toBe(r.global.mal);
+    expect(r.fiscales.noMedidos + r.descriptivos.noMedidos).toBe(r.global.noMedidos);
+    // Y el par sin medir jamás sale 0%.
+    const vacio = agregarClaves([medicionSinLeer('x')], CAMPOS_FISCALES);
+    expect(vacio.exactitud).toBeNull();
+  });
+});
+
+describe('la sucursal con anotación entre paréntesis (pares medidos, 1ª pasada del campo, 28-ago)', () => {
+  test('el nombre exacto acierta aunque la etiqueta anote contexto en paréntesis', () => {
+    const v = verdad({ sucursal: 'LAGAS NOVIA DEL MAR (CAMPECHE)' });
+    expect(compararCampo('sucursal', v, leido({ sucursal: 'LAGAS NOVIA DEL MAR' })).veredicto).toBe('ok');
+    const v2 = verdad({ sucursal: 'SODZIL (No. E.S. 4147, SIIC 0000116652)' });
+    expect(compararCampo('sucursal', v2, leido({ sucursal: 'Sodzil' })).veredicto).toBe('ok');
+  });
+
+  test('la anotación sola NO acierta, y un nombre distinto sigue mal', () => {
+    const v = verdad({ sucursal: 'LAGAS NOVIA DEL MAR (CAMPECHE)' });
+    expect(compararCampo('sucursal', v, leido({ sucursal: 'CAMPECHE' })).veredicto).toBe('mal');
+    expect(compararCampo('sucursal', v, leido({ sucursal: 'LAGAS BOLICHE' })).veredicto).toBe('mal');
+    // Y agregar palabras que la etiqueta no trae sigue siendo mal.
+    expect(compararCampo('sucursal', verdad({ sucursal: 'MERIDA NORTE' }), leido({ sucursal: 'UNIDAD MERIDA NORTE' })).veredicto).toBe('mal');
+  });
+});
+
+describe('el RFC compara con su charset REAL — Ñ y & distinguen contribuyentes', () => {
+  // El agujero reproducido por la auditoría adversarial: la rama genérica
+  // descomponía Ñ→N y borraba &, y dos contribuyentes DISTINTOS salían "ok".
+  test('Ñ perdida en la lectura es MAL — antes salía ok', () => {
+    const v = verdad({ rfcEmisor: 'AÑB123456XY0' });
+    expect(compararCampo('rfcEmisor', v, leido({ rfcEmisor: 'ANB123456XY0' })).veredicto).toBe('mal');
+    expect(compararCampo('rfcEmisor', v, leido({ rfcEmisor: 'AÑB123456XY0' })).veredicto).toBe('ok');
+  });
+
+  test('& perdido en la lectura es MAL — antes salía ok', () => {
+    const v = verdad({ rfcEmisor: 'J&B840101XX1' });
+    expect(compararCampo('rfcEmisor', v, leido({ rfcEmisor: 'JB840101XX1' })).veredicto).toBe('mal');
+    expect(compararCampo('rfcEmisor', v, leido({ rfcEmisor: 'J&B840101XX1' })).veredicto).toBe('ok');
+  });
+
+  test('la decoración impresa (guiones, espacios, paréntesis, minúsculas) sí se perdona', () => {
+    const v = verdad({ rfcEmisor: 'CPF890101AAA' });
+    expect(compararCampo('rfcEmisor', v, leido({ rfcEmisor: 'cpf-890101-aaa' })).veredicto).toBe('ok');
+    expect(compararCampo('rfcEmisor', v, leido({ rfcEmisor: '(CPF 890101 AAA)' })).veredicto).toBe('ok');
+  });
+
+  test('normalizarRfcVerdad preserva Ñ y & y vacía a null', () => {
+    expect(normalizarRfcVerdad('a-ñ&b 123')).toBe('AÑ&B123');
+    expect(normalizarRfcVerdad('---')).toBeNull();
+    expect(normalizarRfcVerdad(null)).toBeNull();
   });
 });

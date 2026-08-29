@@ -97,6 +97,41 @@ export function normalizarTextoVerdad(v: string | null | undefined): string | nu
 }
 
 /**
+ * RFC comparable. Se trata APARTE del texto genérico porque la normalización
+ * genérica DESTRUYE dos caracteres que en un RFC del SAT son válidos y
+ * significativos (auditoría adversarial tandas 21-24, hallazgo 2):
+ *
+ *   · la `Ñ` — NFD la descompone en N + tilde y el filtro tira la tilde:
+ *     "AÑB123456XY0" y "ANB123456XY0" quedaban iguales y son DOS
+ *     contribuyentes distintos.
+ *   · el `&` — `[^A-Z0-9]` lo elimina: "J&B840101XX1" y "JB840101XX1"
+ *     quedaban iguales. El SAT usa `&` en razones sociales reales.
+ *
+ * El propio archivo llama a esto el fallo más caro (decisión 2 de la
+ * cabecera): un RFC mal dado por bueno manda a facturar contra un
+ * contribuyente que no existe — y el porcentaje del campo salía inflado
+ * JUSTO en los casos difíciles.
+ *
+ * Lo que se quita es LA DECORACIÓN IMPRESA, con el charset del propio RFC:
+ * espacios, guiones, puntos y paréntesis — el prompt del extractor cita
+ * literal el caso "(AAA-860523-1N4)" pegado a la razón social, y el saneador
+ * del intake canonicaliza con el MISMO `[^A-ZÑ&0-9]` (ocr.ts), así que las
+ * dos puntas comparan la misma forma. `NFC` primero recompone la Ñ que
+ * llegue descompuesta (NFD): la MISMA letra en dos codificaciones no puede
+ * contar como error. `Ñ` y `&` se QUEDAN — un carácter distinto es la llave
+ * fiscal de un tercero.
+ *
+ * (Esta versión FUNDE las dos que el merge del 28-ago dejó enfrente: la de
+ * master traía el NFC y ésta el charset completo de decoración; quedó UNA,
+ * con las dos correcciones y las dos tandas de pruebas en verde.)
+ */
+export function normalizarRfcVerdad(v: string | null | undefined): string | null {
+  if (v === null || v === undefined) return null;
+  const t = v.normalize('NFC').toUpperCase().replace(/[^A-ZÑ&0-9]/g, '');
+  return t === '' ? null : t;
+}
+
+/**
  * Dominio comparable. Se trata aparte del texto porque un dominio tiene partes
  * que NO son contenido: el esquema y el `www.` son decoración, y el camino
  * (`/facturacion`) cambia de un ticket a otro del mismo comercio.
@@ -214,18 +249,37 @@ export function compararCampo(clave: ClaveVerdad, verdad: VerdadTerreno, leido: 
     };
   }
 
-  if (clave === 'emisor') {
-    // El emisor acepta la etiqueta con o sin su anotación entre paréntesis
-    // (el nombre comercial) — ver `variantesEmisorEsperado` para el caso
-    // medido que lo obliga. El leído NO recibe el mismo trato: el alias solo
-    // no demuestra la razón social.
+  if (clave === 'rfcEmisor') {
+    // Comparador DEDICADO: `Ñ` y `&` son parte del RFC y distinguen
+    // contribuyentes — la rama genérica los borraba y daba `ok` a llaves
+    // fiscales de terceros (ver `normalizarRfcVerdad`).
+    const a = normalizarRfcVerdad(esperado as string | null);
+    const b = normalizarRfcVerdad(String(crudoLeido));
+    const iguales = a !== null && a === b;
+    return {
+      clave, esperado, leido: crudoLeido,
+      veredicto: iguales ? 'ok' : 'mal',
+      motivo: iguales ? null : 'el RFC no coincide carácter por carácter (Ñ y & cuentan: un carácter distinto es la llave fiscal de un tercero)',
+    };
+  }
+
+  if (clave === 'emisor' || clave === 'sucursal') {
+    // Emisor Y sucursal aceptan la etiqueta con o sin su anotación entre
+    // paréntesis — ver `variantesEmisorEsperado` para el caso medido del
+    // emisor. La sucursal entró con la MISMA evidencia, en la primera pasada
+    // en que el extractor la pidió (28-ago-2026): la etiqueta anota contexto
+    // entre paréntesis — «LAGAS NOVIA DEL MAR (CAMPECHE)», «SODZIL (No. E.S.
+    // 4147, SIIC 0000116652)», «CHUBURNA (CALLE 20 POR 25 …)» — y el modelo
+    // leyó EXACTO el nombre impreso; contarlo error castiga la anotación del
+    // auditor, no la lectura. El leído NO recibe el mismo trato: la anotación
+    // sola no demuestra el nombre.
     const variantes = variantesEmisorEsperado(String(esperado ?? ''));
     const b = normalizarTextoVerdad(String(crudoLeido));
     const iguales = b !== null && variantes.includes(b);
     return {
       clave, esperado, leido: crudoLeido,
       veredicto: iguales ? 'ok' : 'mal',
-      motivo: iguales ? null : 'no coincide con lo etiquetado (comparado sin acentos, mayúsculas ni puntuación, con o sin el nombre comercial entre paréntesis)',
+      motivo: iguales ? null : 'no coincide con lo etiquetado (comparado sin acentos, mayúsculas ni puntuación, con o sin la anotación entre paréntesis)',
     };
   }
 
@@ -417,8 +471,50 @@ export interface MedicionFotoResumen {
   costoUsd: number;
 }
 
+/**
+ * LA PONDERACIÓN DECLARADA: fiscales vs descriptivos. No es cosmética y no
+ * cambia la vara — cada campo se sigue midiendo igual de estricto y el global
+ * sigue contando los 7. Lo que cambia es que la pantalla enseña LOS DOS
+ * números por separado, porque no fallan igual de caro:
+ *
+ *  · FISCALES — rfcEmisor, folio, monto, fecha: entran a la liquidación, a la
+ *    deducción y al timbrado en el portal. Un fallo aquí es un intento de
+ *    factura fallido o una cifra fiscal equivocada.
+ *  · DESCRIPTIVOS — emisor, sucursal, dominioFacturacion: ubican y enrutan el
+ *    gasto. La sucursal esperada, en particular, mezcla nombre+número+ciudad
+ *    («ARCO 8039, CIUDAD JUAREZ, CHIHUAHUA») y aun leyéndose bien rara vez
+ *    casa exacta — su techo de coincidencia textual es estructuralmente más
+ *    bajo, y promediarla con el monto escondería a los dos.
+ *
+ * Esconder un campo del denominador en silencio sería maquillar; partir el
+ * número EN LA PANTALLA, con las dos cifras a la vista, es decir la verdad
+ * con más resolución.
+ */
+export const CAMPOS_FISCALES: readonly ClaveVerdad[] = ['rfcEmisor', 'folio', 'monto', 'fecha'];
+export const CAMPOS_DESCRIPTIVOS: readonly ClaveVerdad[] = ['emisor', 'sucursal', 'dominioFacturacion'];
+
+/** Agrega solo los campos de `claves` — para el par fiscales/descriptivos. */
+export function agregarClaves(mediciones: Array<Pick<Medicion, 'campos'>>, claves: readonly ClaveVerdad[]): Agregado {
+  let ok = 0, mal = 0, noMedidos = 0;
+  for (const m of mediciones) {
+    for (const c of m.campos) {
+      if (!claves.includes(c.clave)) continue;
+      if (c.veredicto === 'ok') ok += 1;
+      else if (c.veredicto === 'mal') mal += 1;
+      else noMedidos += 1;
+    }
+  }
+  const medidos = ok + mal;
+  return { ok, mal, noMedidos, medidos, exactitud: medidos === 0 ? null : ok / medidos };
+}
+
 export interface ResumenPrecisionCorrida {
   global: Agregado;
+  /** Los campos que facturan (rfc, folio, monto, fecha) — el número que más
+   *  cuesta cuando falla. Misma vara, más resolución. */
+  fiscales: Agregado;
+  /** Los campos que describen (emisor, sucursal, dominio). */
+  descriptivos: Agregado;
   /** El desglose por campo — cuál se lee peor vale más que el global. */
   porCampo: AgregadoPorCampo[];
   /** Los CASOS NEGATIVOS del banco (clase `no_comprobante`), aparte y con
@@ -455,6 +551,8 @@ export function resumenPrecision(fotos: MedicionFotoResumen[]): ResumenPrecision
   }
   return {
     global: agregar(mediciones),
+    fiscales: agregarClaves(mediciones, CAMPOS_FISCALES),
+    descriptivos: agregarClaves(mediciones, CAMPOS_DESCRIPTIVOS),
     porCampo: agregarPorCampo(mediciones),
     negativos: {
       fotos: negativos.length,
@@ -499,8 +597,10 @@ export function ocrLeidoDeGasto(gasto: {
     // comprobante de $0 no existe, así que la ambigüedad no cuesta nada.
     monto: typeof gasto.monto === 'number' && Number.isFinite(gasto.monto) && gasto.monto > 0 ? gasto.monto : null,
     fecha: texto(gasto.fecha),
-    // El nombre/número de estación es lo que la etiqueta llama sucursal.
-    sucursal: texto(extra.estacion),
+    // La sucursal general primero (el extractor la pide para todo comercio
+    // desde la subida de precisión); `estacion` queda de respaldo para
+    // lecturas viejas y gasolineras que solo llenaron ese campo.
+    sucursal: texto(extra.sucursal) ?? texto(extra.estacion),
     dominioFacturacion: texto(extra.urlFacturacion),
   };
 }
