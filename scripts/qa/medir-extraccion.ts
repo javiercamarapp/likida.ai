@@ -35,7 +35,7 @@ import { leerManifiesto, dataUrlDeFoto } from '../../src/lib/admin/qa-storage';
 import { extraerComprobante } from '../../src/lib/likida/intake/ocr';
 import {
   medir, medirSinGasto, medicionSinLeer, ocrLeidoDeGasto, ocrVacio, resumenPrecision,
-  type Medicion, type MedicionFotoResumen, type ResumenPrecisionCorrida,
+  type Medicion, type MedicionFotoResumen, type ResumenPrecisionCorrida, type OcrLeido,
 } from '../../src/lib/admin/qa-verdad';
 import { NOMBRE_CLAVE_VERDAD, CLAVES_VERDAD } from '../../src/lib/admin/qa-tipos';
 
@@ -49,17 +49,23 @@ function pct(v: number | null): string {
   return v === null ? 'sin medir' : `${(v * 100).toFixed(1)}%`;
 }
 
+/** Cada foto guarda TAMBIÉN el crudo (`ocrLeido`): con él, una regla nueva de
+ *  comparación se re-aplica sobre pasadas viejas sin volver a gastar en el
+ *  modelo — el mismo criterio que `qa_foto_lectura.ocr_leido` (0239). */
+type FotoPasada = MedicionFotoResumen & { ocrLeido?: OcrLeido };
+
 interface Pasada {
   rotulo: string;
   cuando: string;
   costoUsd: number;
-  fotos: MedicionFotoResumen[];
+  fotos: FotoPasada[];
 }
 
 function imprimir(r: ResumenPrecisionCorrida, contra: ResumenPrecisionCorrida | null): void {
   const d = (a: number | null, b: number | null | undefined) =>
     a === null || b === null || b === undefined ? '' : `  (${a - b >= 0 ? '+' : ''}${((a - b) * 100).toFixed(1)} pts)`;
   console.log(`\nGlobal: ${pct(r.global.exactitud)}${d(r.global.exactitud, contra?.global.exactitud)}  ✅ ${r.global.ok} · ❌ ${r.global.mal} sobre ${r.global.medidos}; ${r.global.noMedidos} fuera del denominador`);
+  console.log(`Fiscales (rfc, folio, monto, fecha): ${pct(r.fiscales.exactitud)}${d(r.fiscales.exactitud, contra?.fiscales.exactitud)}  ·  Descriptivos (emisor, sucursal, dominio): ${pct(r.descriptivos.exactitud)}${d(r.descriptivos.exactitud, contra?.descriptivos.exactitud)}`);
   console.log('\nPor campo:');
   for (const c of r.porCampo) {
     const antes = contra?.porCampo.find((x) => x.clave === c.clave);
@@ -92,7 +98,7 @@ async function main(): Promise<number> {
   console.log(`${conVerdad.length} fotos con verdad-de-terreno. Tope de gasto: $${TOPE_USD.toFixed(2)} USD.`);
 
   let costoTotal = 0;
-  const fotos: MedicionFotoResumen[] = [];
+  const fotos: FotoPasada[] = [];
   for (const [i, foto] of conVerdad.entries()) {
     if (costoTotal >= TOPE_USD) {
       console.error(`⛔ TOPE de $${TOPE_USD} tocado tras ${i} fotos — PARA aquí. Las restantes NO se midieron.`);
@@ -128,7 +134,7 @@ async function main(): Promise<number> {
     }
     fotos.push({
       fotoId: foto.id, etiqueta: foto.etiqueta, clase: verdad.clase,
-      medicion, modelo, motivo, costoUsd: costo,
+      medicion, modelo, motivo, costoUsd: costo, ocrLeido: leido,
     });
     // La suma SIEMPRE es 7 — misma garantía que el CHECK de la 0239.
     const m = medicion;
