@@ -347,7 +347,7 @@ describe('validarAcceso', () => {
 
   // AUDITORÍA 21 (modelo de datos), HALLAZGO ALTO: el escenario exacto del
   // hallazgo — user_id de un contador de la flota A, tenant_id de la flota
-  // B — reproducido tal como llegaría si la FK compuesta de la 0270 alguna
+  // B — reproducido tal como llegaría si la FK compuesta de la 0271 alguna
   // vez se sorteara (a mano contra la base, o por un bug futuro). Antes de
   // este cambio, `validarAcceso` solo miraba la fila del token y esto pasaba.
   it('tenant_id cruzado con el de app_user (identidad desalineada) → no_valido, aunque el token no esté ni expirado ni revocado', async () => {

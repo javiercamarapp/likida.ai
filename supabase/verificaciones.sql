@@ -14974,12 +14974,107 @@ begin
     a_no_suplanta, a_firma_propia, asignado_ok;
 end $$;
 
--- ── 218. Un token/código MCP con (user_id, tenant_id, rol) cruzados nunca se escribe, y un rol fuera de dominio tampoco (mig. 0270) ──
+-- ── 218. `cola_correo_frio_por_prospecto`: dos invocaciones que compiten por el mismo prospecto no fabrican dos piezas `correo_frio` pendientes (mig. 0270) ──
+--
+-- (auditoría 21, agéntico, MEDIO.)
+--
+-- El hallazgo: `redactarCorreoFrio` frenaba la duplicada con una LECTURA
+-- previa ("¿hay una pieza pendiente de este prospecto?"), que basta contra un
+-- humano pero no contra el botón del tablero y el cron nivel 2 compitiendo por
+-- el mismo prospecto — las dos pasan la lectura ANTES de que ninguna inserte,
+-- las dos ven cero, las dos intentan encolar. Este bloque simula esa carrera
+-- con dos INSERT consecutivos dentro de la misma transacción (la forma en que
+-- esta batería reproduce una condición de carrera real — mismo patrón que el
+-- bloque 172, `parte_costos`/0215, y el 64, `cobranza_contacto`/0089): si el
+-- índice es el árbitro, el SEGUNDO insert debe rebotar con 23505 sin importar
+-- que la lectura de ambas invocaciones haya dado "cero pendientes".
+--
+-- (a) primera pieza entra; (b) la segunda, MISMO prospecto y MISMO tipo,
+-- rebota — exactamente la carrera del hallazgo; (c) tras esas dos, sigue
+-- habiendo UNA sola pendiente de ese prospecto (el índice no dejó pasar la
+-- segunda ni a medias); (d) resuelto (rechazado) el sobreviviente, el
+-- prospecto queda libre y una TERCERA pieza SÍ entra — la parcialidad a
+-- `estado = 'pendiente'` funciona en el sentido "se resuelve, se libera"; (e)
+-- una pieza `respuesta_ads` (el SDR) del MISMO prospecto convive con un
+-- `correo_frio` pendiente — el índice es parcial también a `tipo`, a
+-- propósito (0270, misma exclusión que 0215/0218 hacen con el Redactor); (f)
+-- dos prospectos DISTINTOS con el MISMO título de campaña no chocan entre
+-- sí — el árbitro es por prospecto, no por título (a diferencia de 0215/0218,
+-- cuyos títulos SÍ son deterministas por periodo).
+do $$
+declare
+  v_p1 uuid; v_p2 uuid;
+  segunda_rebota boolean := false;
+  n_pendientes_tras_carrera int;
+  tercera_entra boolean := false;
+  ads_convive boolean := false;
+  otro_prospecto_entra boolean := false;
+begin
+  insert into prospecto (empresa, fuente) values ('ZZZ VERIF 0270 — uno', 'censo') returning id into v_p1;
+  insert into prospecto (empresa, fuente) values ('ZZZ VERIF 0270 — dos', 'censo') returning id into v_p2;
+
+  -- (a) La primera invocación gana la carrera.
+  insert into cola_aprobacion (tipo, agente, prospecto_id, titulo, cuerpo)
+    values ('correo_frio', 'redactor', v_p1, 'Asunto de campaña 0270', 'pieza de la 1a invocación');
+
+  -- (b) La segunda invocación, la que la LECTURA previa no pudo frenar
+  -- (leyó cero pendientes antes de que la primera terminara de insertar):
+  -- el índice único parcial es quien de verdad arbitra.
+  begin
+    insert into cola_aprobacion (tipo, agente, prospecto_id, titulo, cuerpo)
+      values ('correo_frio', 'redactor', v_p1, 'Asunto de campaña 0270', 'pieza de la 2a invocación (perdedora)');
+  exception when unique_violation then
+    segunda_rebota := true;
+  end;
+
+  -- (c) Sigue habiendo UNA sola pendiente de v_p1.
+  select count(*) into n_pendientes_tras_carrera
+    from cola_aprobacion where prospecto_id = v_p1 and tipo = 'correo_frio' and estado = 'pendiente';
+
+  -- (d) Se resuelve (rechaza) la sobreviviente: el prospecto queda libre.
+  update cola_aprobacion
+    set estado = 'rechazado', motivo_rechazo = 'prueba 0270', resuelto_en = now(), resuelto_por_email = 'verif@likida.ai'
+    where prospecto_id = v_p1 and tipo = 'correo_frio' and estado = 'pendiente';
+  begin
+    insert into cola_aprobacion (tipo, agente, prospecto_id, titulo, cuerpo)
+      values ('correo_frio', 'redactor', v_p1, 'Asunto de campaña 0270', 'pieza de la 3a invocación (tras liberar)');
+    tercera_entra := true;
+  exception when unique_violation then
+    tercera_entra := false;
+  end;
+
+  -- (e) `respuesta_ads` del mismo prospecto convive con el `correo_frio`
+  -- pendiente que acaba de entrar arriba (la 3a invocación sigue pendiente).
+  begin
+    insert into cola_aprobacion (tipo, agente, prospecto_id, titulo, cuerpo)
+      values ('respuesta_ads', 'redactor', v_p1, 'Respondió el ads de Facebook', 'pieza del SDR');
+    ads_convive := true;
+  exception when unique_violation then
+    ads_convive := false;
+  end;
+
+  -- (f) Otro prospecto, MISMO título de campaña: el árbitro es por
+  -- prospecto, no por título — no debe chocar con nada de lo de arriba.
+  begin
+    insert into cola_aprobacion (tipo, agente, prospecto_id, titulo, cuerpo)
+      values ('correo_frio', 'redactor', v_p2, 'Asunto de campaña 0270', 'pieza de otro prospecto, mismo asunto');
+    otro_prospecto_entra := true;
+  exception when unique_violation then
+    otro_prospecto_entra := false;
+  end;
+
+  delete from cola_aprobacion where prospecto_id in (v_p1, v_p2);
+  delete from prospecto where id in (v_p1, v_p2);
+  raise exception E'CORREO_FRIO_UNICO_0270  segunda-rebota=%  pendientes-tras-carrera=%  tercera-entra=%  ads-convive=%  otro-prospecto-entra=%   (esperado t / 1 / t / t / t)',
+    segunda_rebota, n_pendientes_tras_carrera, tercera_entra, ads_convive, otro_prospecto_entra;
+end $$;
+
+-- ── 219. Un token/código MCP con (user_id, tenant_id, rol) cruzados nunca se escribe, y un rol fuera de dominio tampoco (mig. 0271) ──
 --
 -- El hallazgo: `mcp_oauth_codigo`/`mcp_oauth_token` llevaban `user_id` y
 -- `tenant_id` con FK SIMPLES e INDEPENDIENTES a `app_user(id)` y `tenant(id)`
 -- — nada ataba el par, así que un INSERT con el usuario de la flota A y el
--- `tenant_id` de la flota B pasaba las dos FK. La 0270 cierra esto con la
+-- `tenant_id` de la flota B pasaba las dos FK. La 0271 cierra esto con la
 -- misma técnica de 0028/0145 (FK compuesta contra una `unique (id, tenant_id,
 -- rol)` en `app_user`) y le agrega a `rol` el dominio cerrado que le faltaba
 -- desde la 0260 — más ESTRECHO que `app_user_rol_dominio` a propósito: solo
@@ -14997,7 +15092,7 @@ end $$;
 --      esto es lo que la FK compuesta cierra y un CHECK de dominio, solo,
 --      jamás habría podido cerrar.
 --  (d) Un rol que NUNCA es de `app_user` (`auditor`) → `check_violation` del
---      dominio de la 0270, ANTES de que la FK ni se evalúe.
+--      dominio de la 0271, ANTES de que la FK ni se evalúe.
 do $$
 declare
   ta uuid := gen_random_uuid();
@@ -15009,11 +15104,11 @@ declare
   rol_no_vigente_codigo boolean := false; rol_no_vigente_token boolean := false;
   rol_fuera_dominio_codigo boolean := false; rol_fuera_dominio_token boolean := false;
 begin
-  insert into public.tenant (id, nombre) values (ta, '__verif_0270_a__');
-  insert into public.tenant (id, nombre) values (tb, '__verif_0270_b__');
-  insert into public.app_user (id, email, rol, tenant_id) values (u, '__verif_0270__@likida.ai', 'contador', ta);
+  insert into public.tenant (id, nombre) values (ta, '__verif_0271_a__');
+  insert into public.tenant (id, nombre) values (tb, '__verif_0271_b__');
+  insert into public.app_user (id, email, rol, tenant_id) values (u, '__verif_0271__@likida.ai', 'contador', ta);
   insert into public.mcp_oauth_cliente (nombre, redirect_uris)
-    values ('__verif_0270__', '["https://claude.ai/api/mcp/auth_callback"]'::jsonb)
+    values ('__verif_0271__', '["https://claude.ai/api/mcp/auth_callback"]'::jsonb)
     returning id into cli;
 
   -- (a) el trío real: pasa en las dos tablas.
@@ -15065,7 +15160,7 @@ begin
   end;
 
   -- (d) un rol que ni siquiera es de app_user: el CHECK de dominio de la
-  -- 0270 lo rechaza antes de tocar la FK.
+  -- 0271 lo rechaza antes de tocar la FK.
   begin
     insert into public.mcp_oauth_codigo
       (codigo_hash, cliente_id, user_id, tenant_id, rol, redirect_uri, code_challenge, familia, expira_en)
@@ -15080,7 +15175,7 @@ begin
   exception when check_violation then rol_fuera_dominio_token := true;
   end;
 
-  raise exception E'MCP_OAUTH_IDENTIDAD_ATADA_0270  real-codigo=%  real-token=%  tenant-cruzado-codigo=%  tenant-cruzado-token=%  rol-no-vigente-codigo=%  rol-no-vigente-token=%  rol-fuera-dominio-codigo=%  rol-fuera-dominio-token=%   (esperado t / t / t / t / t / t / t / t)',
+  raise exception E'MCP_OAUTH_IDENTIDAD_ATADA_0271  real-codigo=%  real-token=%  tenant-cruzado-codigo=%  tenant-cruzado-token=%  rol-no-vigente-codigo=%  rol-no-vigente-token=%  rol-fuera-dominio-codigo=%  rol-fuera-dominio-token=%   (esperado t / t / t / t / t / t / t / t)',
     real_codigo, real_token, tenant_cruzado_codigo, tenant_cruzado_token,
     rol_no_vigente_codigo, rol_no_vigente_token, rol_fuera_dominio_codigo, rol_fuera_dominio_token;
 end $$;

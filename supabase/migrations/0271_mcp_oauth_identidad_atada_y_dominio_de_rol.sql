@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- 0270 — El servidor MCP deja de confiar en la identidad congelada del token
+-- 0271 — El servidor MCP deja de confiar en la identidad congelada del token
 -- sin que la base la pueda desmentir.
 -- Auditoría 21 (modelo de datos), ALTO + MEDIO.
 --
@@ -106,7 +106,7 @@ begin
 end $$;
 
 comment on constraint app_user_id_tenant_rol_key on public.app_user is
-  'Precondición de la FK compuesta de mcp_oauth_codigo/mcp_oauth_token (0270): id ya es PK, así que esto no relaja unicidad, es el precio de poder apuntarle desde (user_id, tenant_id, rol).';
+  'Precondición de la FK compuesta de mcp_oauth_codigo/mcp_oauth_token (0271): id ya es PK, así que esto no relaja unicidad, es el precio de poder apuntarle desde (user_id, tenant_id, rol).';
 
 -- ── 2. El dominio de rol (MEDIO): más estrecho que app_user_rol_dominio a ──
 -- propósito — son los tres roles que /mcp/autorizar de verdad deja consentir.

@@ -474,12 +474,12 @@ export async function validarAcceso(token: string): Promise<ResultadoAcceso> {
   // AUDITORÍA 21 (modelo de datos), ALTO: `app_user:user_id(tenant_id, rol)`
   // revalida la identidad congelada del token EN LA MISMA CONSULTA, anclada a
   // la columna (regla de embeds del repo, `embeds_con_alias.test.ts` — sin
-  // ancla, la FK compuesta que la 0270 le agregó a esta misma relación vuelve
+  // ancla, la FK compuesta que la 0271 le agregó a esta misma relación vuelve
   // ambiguo el embed a secas). Es DELIBERADAMENTE más ligera que la RPC
   // `mcp_oauth_usuario_vigente()` (0265, que solo corre en `refrescarTokens`
   // al rotar): no es un viaje extra a la base, es una columna más en la
   // consulta que este camino caliente YA hacía por cada llamada de
-  // herramienta MCP. La FK compuesta de la 0270 ya impide que la fila NAZCA
+  // herramienta MCP. La FK compuesta de la 0271 ya impide que la fila NAZCA
   // desalineada; esto cierra la ventana que la FK no puede cerrar — un
   // `app_user` que cambia de tenant/rol DESPUÉS de emitido el token, sin que
   // nadie llame `revocar_mcp_oauth_usuario` — para que deje de servir en el
@@ -510,7 +510,7 @@ export async function validarAcceso(token: string): Promise<ResultadoAcceso> {
   ) {
     // La fila del token ya no describe a `app_user` tal como es HOY: el
     // usuario se movió de flota, le cambiaron el rol, o (con la FK compuesta
-    // de la 0270 ya en pie) esta rama ya casi no debería alcanzarse — y si se
+    // de la 0271 ya en pie) esta rama ya casi no debería alcanzarse — y si se
     // alcanza, es la señal de que algo la sorteó.
     logger.warn('mcp.oauth.identidad_desalineada', { tokenId: String(data.id) });
     return { ok: false, error: 'no_valido', detalle: ACCESO_INVALIDO };
