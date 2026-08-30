@@ -15290,3 +15290,55 @@ begin
   raise exception E'ARCO_TEXTO_LIBRE_0273  incidencia-viva=%  desc-sin-nombre=%  evento-sin-nombre=%  operador-suelto=%  evidencia=%   (esperado t / t / t / t / t)',
     incidencia_viva, sin_nombre_desc, sin_nombre_evento, operador_suelto, evidencia_lo_cuenta;
 end $$;
+
+-- ── 222. La conversación de WhatsApp se identifica por el teléfono NORMALIZADO (mig. 0274) ──
+--
+-- AUDITORÍA 22, DATOS-1 (ALTO). `wa_conversacion_tenant_tel_uidx` (0005:13) es
+-- `(tenant_id, telefono)` sobre el TEXTO CRUDO. La 0024 diagnosticó este mismo
+-- modo de falla para `operador` y lo cerró con `telefono_normalizado(...)`;
+-- `wa_conversacion` nunca recibió ese tratamiento, aunque `conv.ts:64` documenta
+-- que el mismo celular llega como 52… o 521… según por dónde entre.
+--
+-- Se asevera lo único que la base puede demostrar y que es justo el arreglo:
+--   (a) dos formas del MISMO número chocan contra el índice nuevo;
+--   (b) dos números DISTINTOS de la misma flota siguen conviviendo;
+--   (c) el mismo número en OTRA flota también (el índice es por tenant).
+do $$
+declare
+  ta uuid := gen_random_uuid(); tb uuid := gen_random_uuid();
+  choca_variante boolean := false;
+  otro_numero_ok boolean := false;
+  otra_flota_ok  boolean := false;
+begin
+  insert into public.tenant (id, nombre) values (ta, '__verif_0274_a__');
+  insert into public.tenant (id, nombre) values (tb, '__verif_0274_b__');
+
+  insert into public.wa_conversacion (tenant_id, telefono, estado)
+    values (ta, '529993700779', '{}'::jsonb);
+
+  -- (a) la MISMA persona con el "1" de Telmex: tiene que rebotar.
+  begin
+    insert into public.wa_conversacion (tenant_id, telefono, estado)
+      values (ta, '5219993700779', '{}'::jsonb);
+  exception when unique_violation then choca_variante := true;
+  end;
+
+  -- (b) otro chofer de la misma flota: convive.
+  begin
+    insert into public.wa_conversacion (tenant_id, telefono, estado)
+      values (ta, '528112345678', '{}'::jsonb);
+    otro_numero_ok := true;
+  exception when others then otro_numero_ok := false;
+  end;
+
+  -- (c) el mismo número en otra flota: convive (el índice es por tenant).
+  begin
+    insert into public.wa_conversacion (tenant_id, telefono, estado)
+      values (tb, '5219993700779', '{}'::jsonb);
+    otra_flota_ok := true;
+  exception when others then otra_flota_ok := false;
+  end;
+
+  raise exception E'WA_CONVERSACION_TEL_NORM_0274  variante-choca=%  otro-numero=%  otra-flota=%   (esperado t / t / t)',
+    choca_variante, otro_numero_ok, otra_flota_ok;
+end $$;
