@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
 import { acotada } from './presupuesto';
+import { traerTodo } from './pg';
 import { strip_accents } from './cuadre/util';
 import { getTableroOperacion } from './operacion';
 import { generarInformePDF, type Informe, type KpiInforme } from './informes/pdf';
@@ -74,19 +75,37 @@ export async function mandarInformePdf(cuenta: CuentaInforme, telefono: string):
     // La MISMA consulta que el informe de texto (informes_wa): suma de
     // anticipos de viajes sin cerrar. Fallar cerrado: si no se puede leer,
     // la sección lo dice — nunca un cero con cara de medición.
-    const { data, error } = await admin.from('viaje')
-      .select('anticipo').eq('tenant_id', cuenta.tenantId).in('estatus', ['abierto', 'en_cuadre']);
-    if (error) {
-      secciones.push({ titulo: 'Dinero', parrafos: ['Los anticipos no se pudieron leer en este momento — la cifra existe, el sistema no la alcanzó. Vuelve a pedir el informe en unos minutos.'] });
-    } else {
-      const suma = (data ?? []).reduce((acc, v) => acc + (typeof v.anticipo === 'number' ? v.anticipo : 0), 0);
+    //
+    // AUDITORÍA 22, REN-1 (CRÍTICO): esto manejaba `error` y ahí se detenía,
+    // que es la mitad del problema. PostgREST recorta a 1,000 filas EN
+    // SILENCIO —sin error y sin bandera—, así que una flota con 1,500 viajes
+    // sin cerrar recibía la suma de 1,000 impresa como «Anticipos en la
+    // calle», y «Viajes sin liquidar» decía 1,000. Una cifra incompleta con
+    // cara de completa es el mismo pecado que el cero con cara de medición, y
+    // esta va en un PDF firmado que el dueño reenvía a su contador.
+    //
+    // `traerTodo` pagina con `count` y LANZA `LecturaIncompleta` si no puede
+    // demostrar que leyó todo — que es justo lo que este `catch` necesita para
+    // decirlo en vez de imprimirlo corto.
+    try {
+      const filas = await traerTodo<{ anticipo: number | null }>(
+        (desde, hasta) => admin.from('viaje')
+          .select('anticipo', { count: 'exact' })
+          .eq('tenant_id', cuenta.tenantId).in('estatus', ['abierto', 'en_cuadre'])
+          .range(desde, hasta),
+        'oficina.anticipos_en_calle',
+      );
+      const suma = filas.reduce((acc, v) => acc + (typeof v.anticipo === 'number' ? v.anticipo : 0), 0);
       secciones.push({
         titulo: 'Dinero',
         filas: [
           ['Anticipos en la calle', mxn(suma)],
-          ['Viajes sin liquidar', numero((data ?? []).length)],
+          ['Viajes sin liquidar', numero(filas.length)],
         ],
       });
+    } catch (e) {
+      logger.error('oficina.anticipos_no_leidos', { tenantId: cuenta.tenantId, err: String(e) });
+      secciones.push({ titulo: 'Dinero', parrafos: ['Los anticipos no se pudieron leer completos en este momento — la cifra existe, el sistema no la alcanzó. Vuelve a pedir el informe en unos minutos.'] });
     }
   }
   secciones.push({
