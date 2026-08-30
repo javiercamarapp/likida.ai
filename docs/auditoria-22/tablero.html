@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="es" data-palette="#3563b4,#b8562f,#4a7f5e,#8a5aa8,#a8324a,#2f7d8c">
+<head>
+<meta charset="utf-8">
+<title>Auditoría 22 — Likida</title>
+<style>
+  :root{
+    --surface:#fbfaf8; --card:#ffffff; --ink:#1a1815; --ink-2:#4a4640; --ink-3:#7c766c;
+    --linea:#e3ded4; --linea-fuerte:#cdc5b7;
+    --bad:#a8324a; --serious:#b8562f; --warn:#9a7a1e; --good:#4a7f5e; --info:#3563b4;
+    --barra:#3563b4; --nodata:#cdc5b7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--surface);color:var(--ink);
+    font:14px/1.55 ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .env{max-width:1080px;margin:0 auto;padding:32px 28px 56px}
+  h1{font-size:25px;line-height:1.2;margin:0 0 4px;letter-spacing:-.015em;font-weight:640}
+  .sub{color:var(--ink-3);font-size:13px;margin:0 0 26px}
+  .sub b{color:var(--ink-2);font-weight:600}
+  h2{font-size:12px;text-transform:uppercase;letter-spacing:.075em;color:var(--ink-3);
+     font-weight:650;margin:34px 0 12px;padding-bottom:7px;border-bottom:1px solid var(--linea)}
+
+  /* ── Cinta superior ─────────────────────────────────────────── */
+  .cinta{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:12px;margin-bottom:6px}
+  .tile{background:var(--card);border:1px solid var(--linea);border-radius:9px;padding:14px 15px}
+  .tile .k{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:600}
+  .tile .v{font-size:27px;font-weight:660;letter-spacing:-.02em;margin-top:5px;line-height:1.05}
+  .tile .n{font-size:11.5px;color:var(--ink-3);margin-top:3px}
+  .v.bad{color:var(--bad)} .v.good{color:var(--good)} .v.serious{color:var(--serious)}
+
+  /* ── Tabla de rubros ────────────────────────────────────────── */
+  .wrap{overflow-x:auto;background:var(--card);border:1px solid var(--linea);border-radius:9px}
+  table{border-collapse:collapse;width:100%;min-width:660px}
+  th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--linea);vertical-align:middle}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:650;
+     background:#f6f4f0;white-space:nowrap}
+  tbody tr:last-child td{border-bottom:none}
+  td.rubro{font-weight:560;white-space:nowrap}
+  td.num{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+  .nota{font-weight:650;font-variant-numeric:tabular-nums}
+
+  /* barra horizontal: extremo redondeado 4px, anclada a la línea base */
+  .bar-cel{width:172px}
+  .bar-pista{position:relative;height:9px;background:#efece6;border-radius:4px;overflow:hidden}
+  .bar-fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--barra)}
+  .bar-fill.r4{background:var(--bad)} .bar-fill.r5{background:var(--serious)}
+  .bar-fill.r6{background:var(--warn)} .bar-fill.r7{background:var(--info)}
+  .bar-fill.r8{background:var(--good)}
+
+  .sev{display:inline-flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums;
+       font-size:12px;margin-right:9px;white-space:nowrap}
+  .dot{width:8px;height:8px;border-radius:50%;flex:none}
+  .d-c{background:var(--bad)} .d-a{background:var(--serious)}
+  .d-m{background:var(--warn)} .d-b{background:var(--ink-3)}
+  .cero{color:var(--ink-3)}
+
+  .delta{color:var(--ink-3);font-size:12px;font-style:italic}
+  .pend{color:var(--ink-3);font-style:italic}
+
+  /* ── Avisos ─────────────────────────────────────────────────── */
+  .aviso{border:1px solid var(--linea);border-left:3px solid var(--serious);background:#fdf8f4;
+    border-radius:7px;padding:13px 15px;margin:14px 0;font-size:13px;color:var(--ink-2)}
+  .aviso.rojo{border-left-color:var(--bad);background:#fdf5f6}
+  .aviso.verde{border-left-color:var(--good);background:#f5faf7}
+  .aviso b{color:var(--ink)}
+  .aviso code{background:#f0ede7;border-radius:3px;padding:1px 4px;font-size:12px}
+
+  ul.lista{margin:10px 0 0;padding-left:0;list-style:none}
+  ul.lista li{padding:8px 0 8px 13px;border-left:2px solid var(--linea);margin-bottom:7px;font-size:13px;color:var(--ink-2)}
+  ul.lista li.crit{border-left-color:var(--bad)}
+  ul.lista li.alto{border-left-color:var(--serious)}
+  ul.lista li.ok{border-left-color:var(--good)}
+  ul.lista b{color:var(--ink);font-weight:600}
+  ul.lista code{background:#f0ede7;border-radius:3px;padding:1px 4px;font-size:11.5px}
+  .etq{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;
+       padding:1px 6px;border-radius:3px;margin-right:7px;vertical-align:1px;color:#fff}
+  .etq.c{background:var(--bad)} .etq.a{background:var(--serious)}
+  .etq.f{background:var(--good)} .etq.p{background:var(--ink-3)}
+  .pie{color:var(--ink-3);font-size:12px;margin-top:30px;border-top:1px solid var(--linea);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="env">
+
+  <h1>Auditoría 22 — Likida</h1>
+  <p class="sub">30-ago-2026 · ronda <b>COMPLETA</b>, desatendida, en la nube · rama <b>claude/auditoria-22</b> sobre master <b>86813f4</b></p>
+
+  <div class="cinta">
+    <div class="tile"><div class="k">Global</div><div class="v serious">6.0</div><div class="n">media de 11 rubros · sin delta</div></div>
+    <div class="tile"><div class="k">Compuerta</div><div class="v good">verde</div><div class="n">9,924 pruebas · tsc 0 · lint 0</div></div>
+    <div class="tile"><div class="k">Críticos</div><div class="v bad">9</div><div class="n">reportados · 4 verificados</div></div>
+    <div class="tile"><div class="k">Altos</div><div class="v serious">21</div><div class="n">reportados · 3 verificados y arreglados</div></div>
+    <div class="tile"><div class="k">Arreglados</div><div class="v good">3</div><div class="n">con prueba que los reproduce</div></div>
+  </div>
+
+  <div class="aviso rojo">
+    <b>No hay serie histórica ni delta, y no se inventa ninguno.</b>
+    <code>.gitignore</code> ignora <code>docs/auditoria-*/</code>, así que ninguna ronda anterior
+    deja rastro en <code>master</code>: la síntesis de la 21 vive en un archivo privado fuera de
+    este clon. Estas once notas son una <b>línea base nueva</b>, no una mejora ni una caída.
+    Un tablero con flechas contra un número que no se pudo leer sería exactamente la cifra
+    inventada que la regla mayor del producto prohíbe.
+    <br><br>
+    La global <b>6.0</b> es la media aritmética de los <b>11</b> rubros que sí entregaron, con un
+    decimal. <b>Pruebas no entra en el promedio</b>: su auditor no cerró dentro de la ronda, y
+    meterlo con un número supuesto movería la global sin que nadie hubiera mirado el rubro.
+  </div>
+
+  <h2>Los doce rubros</h2>
+  <div class="wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Rubro</th><th class="num">Antes</th><th class="num">Hoy</th>
+          <th class="bar-cel">Nivel</th><th>Hallazgos</th><th>Movimiento</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="rubro">Modelo de datos</td><td class="num delta">s/d</td><td class="num nota">8</td>
+          <td class="bar-cel"><div class="bar-pista"><div class="bar-fill r8" style="width:80%"></div></div></td>
+          <td><span class="sev cero"><i class="dot d-c"></i>0</span><span class="sev"><i class="dot d-a"></i>1</span><span class="sev"><i class="dot d-m"></i>2</span><span class="sev"><i class="dot d-b"></i>2</span></td>
+          <td class="delta">línea base</td></tr>
+
+        <tr><td class="rubro">Backend y API</td><td class="num delta">s/d</td><td class="num nota">7</td>
+          <td class="bar-cel"><div class="bar-pista"><div class="bar-fill r7" style="width:70%"></div></div></td>
+          <td><span class="sev cero"><i class="dot d-c"></i>0</span><span class="sev"><i class="dot d-a"></i>3</span><span class="sev"><i class="dot d-m"></i>1</span><span class="sev cero"><i class="dot d-b"></i>0</span></td>
+          <td class="delta">línea base</td></tr>
+
+        <tr><td class="rubro">Frontend</td><td class="num delta">s/d</td><td class="num nota">7</td>
+          <td class="bar-cel"><div class="bar-pista"><div class="bar-fill r7" style="width:70%"></div></div></td>
+          <td><span class="sev cero"><i class="dot d-c"></i>0</span><span class="sev"><i class="dot d-a"></i>1</span><span class="sev"><i class="dot d-m"></i>5</span><span class="sev"><i class="dot d-b"></i>3</span></td>
+          <td class="delta">línea base</td></tr>
+
+        <tr><td class="rubro">Seguridad</td><td class="num delta">s/d</td><td class="num nota">7</td>
+          <td class="bar-cel"><div class="bar-pista"><div class="bar-fill r7" style="width:70%"></div></div></td>
+          <td><span class="sev cero"><i class="dot d-c"></i>0</span><span class="sev cero"><i class="dot d-a"></i>0</span><span class="sev"><i class="dot d-m"></i>3</span><span class="sev"><i class="dot d-b"></i>2</span></td>
+          <td class="delta">línea base</td></tr>
+
+        <tr><td class="rubro">Arquitectura</td><td class="num delta">s/d</td><td class="num nota">6</td>
+          <td class="bar-cel"><div class="bar-pista"><div class="bar-fill r6" style="width:60%"></div></div></td>
+          <td><span class="sev cero"><i class="dot d-c"></i>0</span><span class="sev"><i class="dot d-a"></i>2</span><span class="sev"><i class="dot d-m"></i>2</span><span class="sev"><i class="dot d-b"></i>3</span></td>
+          <td class="delta">línea base</td></tr>
+
+        <tr><td class="rubro">Tool calling</td><td class="num delta">s/d</td><td class="num nota">6</td>
+          <td class="bar-cel"><div class="bar-pista"><div class="bar-fill r6" style="width:60%"></div></div></td>
+          <td><span class="sev cero"><i class="dot d-c"></i>0</span><span class="sev"><i class="dot d-a"></i>2</span><span class="sev"><i class="dot d-m"></i>2</span><span class="sev"><i class="dot d-b"></i>1</span></td>
+          <td class="delta">línea base</td></tr>
+
+        <tr><td class="rubro">Rendimiento y costo</td><td class="num delta">s/d</td><td class="num nota">6</td>
+          <td class="bar-cel"><div class="bar-pista"><div class="bar-fill r6" style="width:60%"></div></div></td>
+          <td><span class="sev"><i class="dot d-c"></i>2</span><span class="sev"><i class="dot d-a"></i>2</span><span class="sev"><i class="dot d-m"></i>3</span><span class="sev"><i class="dot d-b"></i>1</span></td>
+          <td class="delta">línea base</td></tr>
+
+        <tr><td class="rubro">Agéntico</td><td class="num delta">s/d</td><td class="num nota">5</td>
+          <td class="bar-cel"><div class="bar-pista"><div class="bar-fill r5" style="width:50%"></div></div></td>
+          <td><span class="sev"><i class="dot d-c"></i>1</span><span class="sev"><i class="dot d-a"></i>2</span><span class="sev"><i class="dot d-m"></i>2</span><span class="sev cero"><i class="dot d-b"></i>0</span></td>
+          <td class="delta">línea base</td></tr>
+
+        <tr><td class="rubro">Cumplimiento legal</td><td class="num delta">s/d</td><td class="num nota">5</td>
+          <td class="bar-cel"><div class="bar-pista"><div class="bar-fill r5" style="width:50%"></div></div></td>
+          <td><span class="sev"><i class="dot d-c"></i>2</span><span class="sev"><i class="dot d-a"></i>4</span><span class="sev"><i class="dot d-m"></i>3</span><span class="sev"><i class="dot d-b"></i>1</span></td>
+          <td class="delta">línea base</td></tr>
+
+        <tr><td class="rubro">Operabilidad y DX</td><td class="num delta">s/d</td><td class="num nota">5</td>
+          <td class="bar-cel"><div class="bar-pista"><div class="bar-fill r5" style="width:50%"></div></div></td>
+          <td><span class="sev"><i class="dot d-c"></i>1</span><span class="sev"><i class="dot d-a"></i>3</span><span class="sev"><i class="dot d-m"></i>3</span><span class="sev"><i class="dot d-b"></i>1</span></td>
+          <td class="delta">línea base</td></tr>
+
+        <tr><td class="rubro">Cumplimiento fiscal</td><td class="num delta">s/d</td><td class="num nota">4</td>
+          <td class="bar-cel"><div class="bar-pista"><div class="bar-fill r4" style="width:40%"></div></div></td>
+          <td><span class="sev"><i class="dot d-c"></i>3</span><span class="sev"><i class="dot d-a"></i>1</span><span class="sev"><i class="dot d-m"></i>3</span><span class="sev cero"><i class="dot d-b"></i>0</span></td>
+          <td class="delta">línea base · la nota más baja</td></tr>
+
+        <tr><td class="rubro pend">Pruebas</td><td class="num delta">s/d</td><td class="num pend">—</td>
+          <td class="bar-cel"><div class="bar-pista"></div></td>
+          <td class="pend">sin entregar</td>
+          <td class="delta">el auditor no cerró dentro de la ronda</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="sub" style="margin-top:9px">
+    <i class="dot d-c" style="display:inline-block"></i> crítico &nbsp;
+    <i class="dot d-a" style="display:inline-block"></i> alto &nbsp;
+    <i class="dot d-m" style="display:inline-block"></i> medio &nbsp;
+    <i class="dot d-b" style="display:inline-block"></i> bajo &nbsp;·&nbsp;
+    la pista vacía de <b>Pruebas</b> es ausencia de dato, no un cero.
+  </p>
+
+  <h2>Compuerta, corrida de verdad</h2>
+  <div class="wrap">
+    <table>
+      <thead><tr><th>Comando</th><th>Resultado</th><th>Al arrancar</th><th>Al cerrar</th></tr></thead>
+      <tbody>
+        <tr><td class="rubro"><code>npm test</code></td><td style="color:var(--good);font-weight:600">VERDE</td><td class="num">9,918</td><td class="num">9,924</td></tr>
+        <tr><td class="rubro"><code>npx tsc --noEmit -p .</code></td><td style="color:var(--good);font-weight:600">VERDE</td><td class="num">0 errores</td><td class="num">0 errores</td></tr>
+        <tr><td class="rubro"><code>npm run lint</code></td><td style="color:var(--good);font-weight:600">VERDE</td><td class="num">0 err · 166 adv</td><td class="num">0 err · 166 adv</td></tr>
+        <tr><td class="rubro"><code>npm run build</code></td><td class="pend">no corre aquí</td><td colspan="2" class="delta">pide Supabase, OpenRouter, Facturapi y Upstash; su fallo no diría nada del código</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Arreglado en esta ronda</h2>
+  <ul class="lista">
+    <li class="ok"><span class="etq f">HECHO</span><b>Un gasto «por confirmar» ya no acredita su IVA.</b>
+      <code>engine.ts:1267</code> — <code>renglones_ajenos</code> estaba en <code>POR_CONFIRMAR</code> y en
+      <code>REVISAR</code>, pero no en <code>SIN_ACREDITAMIENTO</code>: deducible $0 y aun así $137.93 de IVA
+      acreditado. Tercera vez que este bloque cae en el mismo hueco. <code>694fd8b</code></li>
+    <li class="ok"><span class="etq f">HECHO</span><b>«No leí» deja de leerse como «no hay» en Facturación.</b>
+      <code>facturacion/page.tsx:85</code> — una flota con 40 clientes leía «no tienes clientes dados de
+      alta» cuando lo que falló fue la consulta. <code>a6493be</code></li>
+    <li class="ok"><span class="etq f">HECHO</span><b>El informe PDF del jefe deja de sumar una lectura recortada.</b>
+      <code>oficina_wa.ts:77</code> — con 1,500 viajes abiertos imprimía $100,000.00 donde la verdad son
+      $150,000.00. El mock del arnés emulaba mal a PostgREST y por eso la suite no lo veía. <code>078cc12</code></li>
+  </ul>
+
+  <h2>Los críticos que quedan pendientes</h2>
+  <ul class="lista">
+    <li class="crit"><span class="etq c">FISCAL</span><b>La póliza asienta como deducible lo que el motor declaró no deducible.</b>
+      <code>poliza.ts:101-115</code> — <code>LiquidacionParaPoliza</code> no tiene ningún campo de
+      deducibilidad. Cablearlo cruza la RPC de la 0178, el export y el catálogo: no es quirúrgico.</li>
+    <li class="crit"><span class="etq c">FISCAL</span><b>El tope de efectivo de LISR 27-III solo mira <code>'01'</code>.</b>
+      <code>engine.ts:571</code> — la lista de la norma es cerrada. Arreglarlo bien exige un tercer
+      estado nuevo (dación en pago, compensación y novación no son «no deducible», son «a confirmar»)
+      cableado en cinco listas, el PDF y el panel.</li>
+    <li class="crit"><span class="etq c">FISCAL</span><b>Diésel en efectivo dentro del 15%: deducible al 100% y $0 de IVA acreditable.</b>
+      <code>engine.ts:1267/1285</code> — decisión fiscal, no bug mecánico.</li>
+    <li class="crit"><span class="etq c">OPERAB</span><b>El watchdog de producción lleva ≥30 corridas seguidas en rojo.</b>
+      <code>salud-produccion.yml:34-42</code> — un hueco de configuración declarado tumba el health, así
+      que una muerte real de cron no cambiaría nada. Y arrastra el cotejo del sha desplegado, que nunca corre.</li>
+    <li class="crit"><span class="etq c">LEGAL</span><b>GPS y jornada derivada sin aviso puesto a disposición.</b>
+      <code>sincronizar_gps.ts:149</code>, <code>jornada/derivar.ts:159</code> — LFPDPPP 14 y 16-II.</li>
+    <li class="crit"><span class="etq c">LEGAL</span><b>El aviso jura que no se conservan datos de salud; el circuito de asistencia los guarda.</b>
+      <code>privacidad.ts:644</code> vs <code>0198:46</code> — dato sensible, sanción hasta el doble.</li>
+    <li class="crit"><span class="etq c">AGÉNT</span><b>Una <code>guardar_liquidacion</code> abortada commitea pero se registra como fallida.</b>
+      <code>tool-executor.ts:223</code> — la base dice cerrado, el chofer oye lo contrario.</li>
+    <li class="crit"><span class="etq c">RENDIM</span><b>El registro de jornada (LFT) pierde marcas en silencio.</b>
+      <code>jornada/repo.ts:324</code> — mismo recorte de 1,000 filas que el informe ya arreglado.</li>
+  </ul>
+
+  <div class="aviso">
+    <b>Tope de presupuesto alcanzado:</b> 3 vueltas de arreglo, las tres retenidas (prueba que
+    reproduce → arreglo → prueba verde → suite completa → commit atómico). Lo demás queda
+    <b>propuesto</b>, con la razón escrita. Ninguno de los pendientes se dejó a medias: o exige una
+    decisión fiscal o legal que no se toma a ciegas de madrugada, o cruza más archivos de los que
+    un arreglo quirúrgico admite.
+  </div>
+
+  <div class="aviso verde">
+    <b>El dato de apoyo más útil de la ronda:</b> <code>traerTodo()</code> —la defensa documentada
+    contra el recorte silencioso de PostgREST— existe en <code>pg.ts:183</code> y tenía
+    <b>un solo llamador</b> en todo el repo antes de esta ronda. Dos de los cuatro críticos de
+    cifra incompleta son la misma causa raíz, y el barrido de las consultas restantes queda propuesto.
+  </div>
+
+  <p class="pie">
+    Generado por la rutina de auditoría diaria · los doce reportes de rubro viven en
+    <code>docs/auditoria-22/</code> · <code>progreso.md</code> lleva el diario con sha por acción.
+  </p>
+</div>
+</body>
+</html>
