@@ -87,10 +87,10 @@
   <p class="sub">30-ago-2026 · ronda <b>COMPLETA</b>, desatendida, en la nube · rama <b>claude/auditoria-22</b> sobre master <b>86813f4</b></p>
 
   <div class="cinta">
-    <div class="tile"><div class="k">Global</div><div class="v serious">6.0</div><div class="n">media de 11 rubros · sin delta</div></div>
+    <div class="tile"><div class="k">Global</div><div class="v serious">6.1</div><div class="n">media de los 12 · sin delta</div></div>
     <div class="tile"><div class="k">Compuerta</div><div class="v good">verde</div><div class="n">9,924 pruebas · tsc 0 · lint 0</div></div>
-    <div class="tile"><div class="k">Críticos</div><div class="v bad">9</div><div class="n">reportados · 4 verificados</div></div>
-    <div class="tile"><div class="k">Altos</div><div class="v serious">21</div><div class="n">reportados · 3 verificados y arreglados</div></div>
+    <div class="tile"><div class="k">Críticos</div><div class="v bad">10</div><div class="n">reportados · 5 verificados</div></div>
+    <div class="tile"><div class="k">Altos</div><div class="v serious">24</div><div class="n">reportados · 3 verificados y arreglados</div></div>
     <div class="tile"><div class="k">Arreglados</div><div class="v good">3</div><div class="n">con prueba que los reproduce</div></div>
   </div>
 
@@ -102,9 +102,9 @@
     Un tablero con flechas contra un número que no se pudo leer sería exactamente la cifra
     inventada que la regla mayor del producto prohíbe.
     <br><br>
-    La global <b>6.0</b> es la media aritmética de los <b>11</b> rubros que sí entregaron, con un
-    decimal. <b>Pruebas no entra en el promedio</b>: su auditor no cerró dentro de la ronda, y
-    meterlo con un número supuesto movería la global sin que nadie hubiera mirado el rubro.
+    La global <b>6.1</b> es la media aritmética de los <b>12</b> rubros, con un decimal.
+    <b>Pruebas entregó tarde</b> —después de que la ronda ya había cerrado y abierto su PR— y se
+    incorporó: 7/10, medido por mutación (16 mutaciones dirigidas, 6 sobrevivientes).
   </div>
 
   <h2>Los doce rubros</h2>
@@ -131,6 +131,11 @@
           <td class="bar-cel"><div class="bar-pista"><div class="bar-fill r7" style="width:70%"></div></div></td>
           <td><span class="sev cero"><i class="dot d-c"></i>0</span><span class="sev"><i class="dot d-a"></i>1</span><span class="sev"><i class="dot d-m"></i>5</span><span class="sev"><i class="dot d-b"></i>3</span></td>
           <td class="delta">línea base</td></tr>
+
+        <tr><td class="rubro">Pruebas</td><td class="num delta">s/d</td><td class="num nota">7</td>
+          <td class="bar-cel"><div class="bar-pista"><div class="bar-fill r7" style="width:70%"></div></div></td>
+          <td><span class="sev"><i class="dot d-c"></i>1</span><span class="sev"><i class="dot d-a"></i>3</span><span class="sev"><i class="dot d-m"></i>2</span><span class="sev"><i class="dot d-b"></i>1</span></td>
+          <td class="delta">línea base · medido por mutación</td></tr>
 
         <tr><td class="rubro">Seguridad</td><td class="num delta">s/d</td><td class="num nota">7</td>
           <td class="bar-cel"><div class="bar-pista"><div class="bar-fill r7" style="width:70%"></div></div></td>
@@ -172,10 +177,6 @@
           <td><span class="sev"><i class="dot d-c"></i>3</span><span class="sev"><i class="dot d-a"></i>1</span><span class="sev"><i class="dot d-m"></i>3</span><span class="sev cero"><i class="dot d-b"></i>0</span></td>
           <td class="delta">línea base · la nota más baja</td></tr>
 
-        <tr><td class="rubro pend">Pruebas</td><td class="num delta">s/d</td><td class="num pend">—</td>
-          <td class="bar-cel"><div class="bar-pista"></div></td>
-          <td class="pend">sin entregar</td>
-          <td class="delta">el auditor no cerró dentro de la ronda</td></tr>
       </tbody>
     </table>
   </div>
@@ -184,7 +185,7 @@
     <i class="dot d-a" style="display:inline-block"></i> alto &nbsp;
     <i class="dot d-m" style="display:inline-block"></i> medio &nbsp;
     <i class="dot d-b" style="display:inline-block"></i> bajo &nbsp;·&nbsp;
-    la pista vacía de <b>Pruebas</b> es ausencia de dato, no un cero.
+    <b>Antes</b> dice <i>s/d</i> en los doce: no hay síntesis previa legible desde la nube.
   </p>
 
   <h2>Compuerta, corrida de verdad</h2>
@@ -236,6 +237,10 @@
       <code>tool-executor.ts:223</code> — la base dice cerrado, el chofer oye lo contrario.</li>
     <li class="crit"><span class="etq c">RENDIM</span><b>El registro de jornada (LFT) pierde marcas en silencio.</b>
       <code>jornada/repo.ts:324</code> — mismo recorte de 1,000 filas que el informe ya arreglado.</li>
+    <li class="crit"><span class="etq c">PRUEBAS</span><b>El export de póliza no tiene una sola prueba que ejecute su salida.</b>
+      <code>export/poliza/route.ts:182</code> y <code>:204</code> — su único archivo de prueba tiene
+      4 casos y los 4 son de rol: los dos frenos de dinero se pueden borrar con la suite en verde.
+      Es la misma ruta que carga FIS-1.</li>
   </ul>
 
   <div class="aviso">

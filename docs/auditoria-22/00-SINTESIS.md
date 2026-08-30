@@ -1,6 +1,6 @@
 # Auditoría 22 — Síntesis y recalificación
 
-**Global: 6.0** (anterior: **s/d** — ver abajo por qué no hay delta).
+**Global: 6.1** (anterior: **s/d** — ver abajo por qué no hay delta).
 
 Ronda COMPLETA, desatendida, en la nube. Rama `claude/auditoria-22` sobre
 `master` = `86813f4`. Árbol limpio al arrancar → **autofix habilitado**.
@@ -16,7 +16,7 @@ así que hoy Likida no puede enterarse de que algo dejó de correr.
 
 `.gitignore` ignora `docs/auditoria-*/`: ninguna ronda deja rastro en `master`,
 y la síntesis de la 21 vive en `likida-archivo-privado/`, fuera de este clon.
-**No pude leer una sola nota previa.** Las once notas de abajo son una **línea
+**No pude leer una sola nota previa.** Las doce notas de abajo son una **línea
 base nueva**.
 
 Esto es una limitación de la corrida, no un resultado. Publicar un delta contra
@@ -33,10 +33,10 @@ frío para siempre.
 
 ## Las notas
 
-Global = media aritmética de los **11** rubros que entregaron, con un decimal.
-**Pruebas no entra en el promedio**: su auditor no cerró dentro de la ronda, y
-meterlo con un número supuesto movería la global sin que nadie hubiera mirado el
-rubro.
+Global = media aritmética de los **12** rubros, con un decimal. **Pruebas
+entregó tarde** —después de que la ronda cerró y abrió su PR— y se incorporó en
+una actualización de la rama; la global subió de 6.0 a 6.1 por eso, no porque
+nada mejorara.
 
 | Rubro | Antes | Hoy | Porqué del movimiento |
 |---|---|---|---|
@@ -51,7 +51,7 @@ rubro.
 | Cumplimiento legal | s/d | **5** | Línea base. Dos CRÍTICOS y cuatro ALTOS, todos del mismo tipo: **el aviso de privacidad describe un sistema distinto del que corre**. El caso peor es afirmativo, no omisivo — el aviso *jura* que no se conservan datos de salud y el circuito de asistencia los guarda en columna propia. |
 | Operabilidad y DX | s/d | **5** | Línea base. La nota la fija el CRÍTICO: el watchdog está permanentemente rojo por una causa conocida, así que una muerte real de cron es indistinguible del ruido, y arrastra consigo el cotejo del sha desplegado. |
 | Cumplimiento fiscal | s/d | **4** | Línea base y **la nota más baja de la ronda**. Tres CRÍTICOS de dinero, todos verificables contra texto normativo. El más grave es una **regresión del arreglo de ayer**: `010a7f5` convirtió un bloqueo (409) en una exportación que asienta como deducible lo que el motor declaró que no lo es. |
-| Pruebas | s/d | **—** | **Sin entregar.** El auditor seguía corriendo al cerrar la ronda. Su nota no se mueve porque no hay nota que mover, y el rubro queda **sin cubrir** en esta ronda. |
+| Pruebas | s/d | **7** | Línea base, y **la única nota del lote medida y no leída**: el auditor corrió 16 mutaciones dirigidas contra la suite completa en un sandbox fuera del repo — 10 muertas, 6 sobrevivientes, y las 6 caen en tres módulos. Siete y no más porque las 6 sobrevivientes están todas en caminos de dinero. |
 
 ## Arreglado, con prueba que lo reproduce
 
@@ -81,6 +81,7 @@ Abrí el archivo de cada uno antes de anotarlo.
 | REN-1 | `oficina_wa.ts:77` | **CONFIRMADO y arreglado.** |
 | ARQ-1 | `engine.ts:252` vs `:1267` | **CONFIRMADO y arreglado.** |
 | FE-1 | `facturacion/page.tsx:85` | **CONFIRMADO y arreglado.** |
+| PRU-1 | `export/poliza/route.ts:182`/`:204` vs `rol_dinero.test.ts:55` | **CONFIRMADO.** El único archivo de prueba de la ruta tiene 4 casos y los 4 son de rol (encargado, operador, contador, dueño). Ni el freno de `sinBase` ni el 409 de `bloqueos` se ejecutan nunca: los dos se pueden borrar con la suite en verde. Es la misma ruta que carga FIS-1. |
 | TC-1 | `cuadre/guardia.ts:87-102` | **CONFIRMADO con matiz.** Con solo `estado_viaje` en el turno, `cuadro=false` y `consultoPolitica=false`, así que el bloque de `cifrasSinRespaldo` nunca corre y el texto se sustituye siempre por `resumenCuadre`. **No imprime una cifra falsa** —sustituye por verdad de base—, pero la narración que `prompts.ts:79-81` promete es inalcanzable por construcción y cada mensaje abierto paga una consulta de más. Baja de ALTO a **MEDIO**. |
 
 ## Descartados y matizados
@@ -124,7 +125,13 @@ Ninguno se dejó a medias: cada uno tiene escrito por qué no se tocó.
 6. **AGEN-1 · `guardar_liquidacion` abortada commitea y se registra fallida.**
    `tool-executor.ts:223`. No pude reproducirlo con una prueba dentro del tope
    de vueltas. **No se arregla lo que no se reprodujo.**
-7. **REN-2 · El registro de jornada pierde marcas.** `jornada/repo.ts:324`.
+7. **PRU-1 · El export de póliza no tiene prueba que ejecute su salida.**
+   `export/poliza/route.ts:182`/`:204`. Escribir esa prueba es trabajo de un
+   rato y no cabía en el tope de vueltas ya agotado, pero **ordena arreglar
+   FIS-1**: hoy no hay red que atrape una regresión en esa ruta, que es
+   exactamente cómo `010a7f5` convirtió un bloqueo en una exportación sin que
+   nadie se enterara.
+8. **REN-2 · El registro de jornada pierde marcas.** `jornada/repo.ts:324`.
    Misma causa raíz que REN-1 y probablemente el mismo arreglo, pero el tope de
    3 vueltas se agotó. Es el candidato número uno de mañana.
 
@@ -135,6 +142,12 @@ está bien escrito, falla cerrado y lanza `LecturaIncompleta`. Y casi nadie lo
 usa. Dos de los cuatro críticos de «cifra incompleta con cara de completa» son
 esa misma ausencia. **El barrido de las consultas restantes es el trabajo de más
 valor por hora que tiene este repo hoy**, y queda propuesto.
+
+**El rubro de pruebas fue el único que midió en vez de leer.** Corrió mutación
+—16 dirigidas, 6 sobrevivientes— en vez de contar archivos. Es la técnica que
+distingue «9,924 pruebas» de «9,924 pruebas que prueban algo», y las 6
+sobrevivientes cayeron todas en caminos de dinero. Vale la pena que los otros
+once la copien.
 
 **Tres de los hallazgos de esta ronda nacieron de arreglos de ayer** (FIS-1 de
 `010a7f5`, y los de seguridad que NO aparecieron porque los de la 21
