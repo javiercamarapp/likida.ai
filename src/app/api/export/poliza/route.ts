@@ -49,7 +49,9 @@ interface FilaPoliza {
   porConcepto: Array<{ concepto: ConceptoGasto; subtotal: number | null; baseConocida?: boolean }>;
   baseDesconocida: number;
   /** FIS-C1: un renglón por comprobante, para clasificarlo con `cubetaDe`. */
-  gastos?: Array<{ id: string; concepto: ConceptoGasto; subtotal: number | null; tieneCfdi: boolean }>;
+  gastos?: Array<{ id: string; concepto: ConceptoGasto; subtotal: number | null; descuento?: number | null; tieneCfdi: boolean }>;
+  /** FIS-A1: Σ IVA/ISR retenido al proveedor. Va como ABONO en el asiento. */
+  retenciones?: number;
   /** Las diferencias que la liquidación ya guarda (`gastoId` + `tipo`). */
   diferencias?: Diferencia[];
 }
@@ -77,7 +79,10 @@ function repartirPorCubeta(f: FilaPoliza): LiquidacionParaPoliza['porConcepto'] 
   const porConcepto = new Map(base.map((b) => [b.concepto, { ...b, subtotal: 0 }]));
   const difs = f.diferencias ?? [];
   for (const g of f.gastos) {
-    const monto = Number(g.subtotal ?? 0);
+    // FIS-A1: la base va NETA de `@Descuento`. El Total del CFDI ya lo está,
+    // así que el asiento tiene que estarlo o el residuo sale negativo y el
+    // export contesta «dato de origen roto» tirando el periodo entero.
+    const monto = Number(g.subtotal ?? 0) - Number(g.descuento ?? 0);
     if (!Number.isFinite(monto) || monto === 0) continue;
     const fila = porConcepto.get(g.concepto);
     if (!fila) continue;
@@ -238,6 +243,7 @@ export async function GET(req: Request) {
       anticipo: Number(f.anticipo),
       porConcepto: repartirPorCubeta(f),
       ivaAcreditable: Number(f.ivaAcreditable),
+      retenciones: Number(f.retenciones ?? 0),
       diferencia: Number(f.diferencia),
     };
     const r = polizaDeLiquidacion(liq, catalogo);

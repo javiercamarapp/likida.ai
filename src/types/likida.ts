@@ -84,6 +84,11 @@ export interface Gasto {
   descuento?: number;
   iepsTraslado?: number;           // IEPS desglosado (Traslado 003) → acreditable vs ISR
   ivaTraslado?: number;            // IVA desglosado (Traslado 002) → acreditable
+  /** IVA RETENIDO (Retencion 002). No es gasto: es cuenta POR PAGAR al SAT.
+   *  Columnas de la mig. 0063, huérfanas hasta la auditoría 22 (FIS-A1). */
+  ivaRetenido?: number;
+  /** ISR retenido (Retencion 001). Mismo criterio. */
+  isrRetenido?: number;
 }
 
 export type TipoDiferencia =

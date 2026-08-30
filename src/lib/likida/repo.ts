@@ -381,6 +381,8 @@ export async function addGasto(tenantId: string, viajeId: string, g: Gasto): Pro
     descuento: g.descuento ?? null,
     ieps_traslado: g.iepsTraslado ?? null,
     iva_traslado: g.ivaTraslado ?? null,
+    iva_retenido: g.ivaRetenido ?? null,
+    isr_retenido: g.isrRetenido ?? null,
     folio_norm: g.folioNorm ?? null,
     ocr_extra: g.ocrExtra ?? null,
     img_hash: g.imgHash ?? null,
@@ -730,7 +732,7 @@ export async function corregirFechaGasto(
 export async function updateGastoCfdiXml(
   tenantId: string,
   gastoId: string,
-  x: { claveProdServ?: string; claveUnidad?: string; tipoComprobante?: string; complementoHidrocarburos?: boolean; esquemaAlterno?: boolean; formaPago?: string; metodoPago?: string; subTotal?: number; descuento?: number; iepsTraslado?: number; ivaTraslado?: number;
+  x: { claveProdServ?: string; claveUnidad?: string; tipoComprobante?: string; complementoHidrocarburos?: boolean; esquemaAlterno?: boolean; formaPago?: string; metodoPago?: string; subTotal?: number; descuento?: number; iepsTraslado?: number; ivaTraslado?: number; ivaRetenido?: number; isrRetenido?: number;
        // Cuando el XML se pega a un TICKET (que no traía UUID), estos tres campos
        // pasan a ser autoritativos: vienen del comprobante timbrado, no del OCR.
        uuid?: string; rfcEmisor?: string; rfcReceptor?: string; total?: number; fecha?: string;
@@ -796,6 +798,11 @@ export async function updateGastoCfdiXml(
     descuento: x.descuento ?? null,
     ieps_traslado: x.iepsTraslado ?? null,
     iva_traslado: x.ivaTraslado ?? null,
+    // FIS-A1: las columnas existen desde la 0063 y nadie las escribía. Una
+    // retención no es un gasto: es una cuenta POR PAGAR al SAT, y sin ella la
+    // póliza derivaba un residuo negativo y tiraba el periodo entero.
+    iva_retenido: x.ivaRetenido ?? null,
+    isr_retenido: x.isrRetenido ?? null,
     xml_verificado: true,
   }).eq('id', gastoId).eq('tenant_id', tenantId), 'updateGastoCfdiXml');
   if (error) {
@@ -934,7 +941,7 @@ export async function reclamarCodigoPendiente(tenantId: string, id: string): Pro
 export async function getGastos(viajeId: string, tenantId: string): Promise<Gasto[]> {
   const { data, error } = await acotada(supabaseAdmin()
     .from('gasto')
-    .select('id, concepto, monto, fecha, folio, folio_norm, ocr_extra, rfc_emisor, rfc_receptor, cfdi_uuid, cfdi_orden, imagen_url, ocr_confianza, cfdi_valido, estado_sat, efos, efos_revisar, clave_prod_serv, clave_unidad, tipo_comprobante, complemento_hidrocarburos, cfdi_esquema_alterno, xml_verificado, forma_pago, metodo_pago, pagado_en, pagado_forma, sub_total, descuento, ieps_traslado, iva_traslado')
+    .select('id, concepto, monto, fecha, folio, folio_norm, ocr_extra, rfc_emisor, rfc_receptor, cfdi_uuid, cfdi_orden, imagen_url, ocr_confianza, cfdi_valido, estado_sat, efos, efos_revisar, clave_prod_serv, clave_unidad, tipo_comprobante, complemento_hidrocarburos, cfdi_esquema_alterno, xml_verificado, forma_pago, metodo_pago, pagado_en, pagado_forma, sub_total, descuento, ieps_traslado, iva_traslado, iva_retenido, isr_retenido')
     .eq('tenant_id', tenantId)
     .eq('viaje_id', viajeId), 'getGastos');
   if (error) throw new Error(`getGastos: ${error.message}`);
@@ -968,6 +975,8 @@ export async function getGastos(viajeId: string, tenantId: string): Promise<Gast
     pagadoForma: (r.pagado_forma as string) || undefined,
     subTotal: r.sub_total != null ? Number(r.sub_total) : undefined,
     descuento: r.descuento != null ? Number(r.descuento) : undefined,
+    ivaRetenido: r.iva_retenido != null ? Number(r.iva_retenido) : undefined,
+    isrRetenido: r.isr_retenido != null ? Number(r.isr_retenido) : undefined,
     iepsTraslado: r.ieps_traslado != null ? Number(r.ieps_traslado) : undefined,
     ivaTraslado: r.iva_traslado != null ? Number(r.iva_traslado) : undefined,
   }));

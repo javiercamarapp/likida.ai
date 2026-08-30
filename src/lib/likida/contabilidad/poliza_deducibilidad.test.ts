@@ -30,6 +30,7 @@ const CATALOGO: CatalogoContable = {
   ivaNoAcreditable: '1180-002',
   gastoNoDeducible: '5990-001',
   gastoPorConfirmar: '5990-002',
+  retencionesPorPagar: '2015-001',
   anticipoOperador: '1190-001',
   porCobrarOperador: '1190-002',
   porPagarOperador: '2010-001',
@@ -122,5 +123,63 @@ describe('FIS-C1: lo no deducible NO se asienta en la cuenta de gasto deducible'
     if (!r.ok) return;
     const c = cuentasDe(r.poliza.movimientos);
     expect(c['1180-002']).toBeUndefined();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUDITORÍA 22 · FIS-A1 (ALTO) — el residuo derivado por resta se envenenaba.
+//
+// El módulo deriva el impuesto no acreditado de una identidad
+// (`comprobado − base − IVA acreditable`) en vez de leerlo del comprobante, así
+// que cualquier término del CFDI que no sea SubTotal ni traslado la envenena.
+// Dos ocurren a diario y los dos daban residuo NEGATIVO, que el módulo lee como
+// «dato de origen roto» y que en la ruta HTTP tira el periodo ENTERO con 409:
+//
+//   A) `@Descuento` — factura de casetas con descuento del emisor.
+//   B) RETENCIÓN de IVA — flete subcontratado a un permisionario persona
+//      física, lo normal en carga federal. Ahí el bloqueo es permanente.
+//
+// El reverso era peor que el 409: si en el mismo periodo había IVA no
+// acreditado que compensara la retención, el residuo cuadraba y el IVA retenido
+// —que es cuenta POR PAGAR al SAT— desaparecía del asiento sin renglón.
+// ═══════════════════════════════════════════════════════════════════════════
+describe('FIS-A1: descuento y retención dejan de leerse como dato roto', () => {
+  it('un flete con retención de IVA sale, y la retención va como ABONO por pagar', () => {
+    // SubTotal 10,000 · IVA 1,600 · retención 4% = 400 · Total 11,200.
+    const r = polizaDeLiquidacion(
+      {
+        folioViaje: 'VJ-RET', operador: 'Ana', fecha: '2026-08-20',
+        anticipo: 11_200,
+        porConcepto: [{ concepto: 'flete', subtotal: 10_000 }],
+        ivaAcreditable: 1_600,
+        retenciones: 400,
+        diferencia: 0,
+      },
+      { ...CATALOGO, gastos: { flete: '5010-005' } },
+    );
+    // Lo que rompía: `ok:false` con «la póliza no cuadra… por 400.00».
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const abono = r.poliza.movimientos.find((m) => m.cuenta === '2015-001');
+    expect(abono?.abono).toBe(400);
+    const cargos = r.poliza.movimientos.reduce((s, m) => s + m.cargo, 0);
+    const abonos = r.poliza.movimientos.reduce((s, m) => s + m.abono, 0);
+    expect(cargos).toBeCloseTo(abonos, 2);
+  });
+
+  it('sin cuenta de retenciones declarada se dice qué falta, no «dato roto»', () => {
+    const { retencionesPorPagar: _sin, ...cat } = { ...CATALOGO, gastos: { flete: '5010-005' } };
+    const r = polizaDeLiquidacion(
+      {
+        folioViaje: 'VJ-RET2', operador: 'Ana', fecha: '2026-08-20',
+        anticipo: 11_200, porConcepto: [{ concepto: 'flete', subtotal: 10_000 }],
+        ivaAcreditable: 1_600, retenciones: 400, diferencia: 0,
+      },
+      cat,
+    );
+    expect(r.ok).toBe(false);
+    if (r.ok) return;
+    expect(r.falta.join(' ')).toContain('retenciones por pagar');
+    expect(r.falta.join(' ')).not.toContain('revisar la liquidación a mano');
   });
 });

@@ -54,6 +54,14 @@ export interface CatalogoContable {
    * le diría al contador que ya se perdió algo que todavía se puede recuperar.
    */
   gastoPorConfirmar?: string;
+  /**
+   * IVA/ISR RETENIDO al proveedor (AUDITORÍA 22, FIS-A1). No es un gasto: es
+   * una cuenta POR PAGAR al SAT, y va como ABONO. Sin ella, la retención de un
+   * flete subcontratado a un permisionario persona física —lo normal en carga
+   * federal— envenenaba el residuo derivado por resta y el export contestaba
+   * «dato de origen roto» tirando el periodo ENTERO.
+   */
+  retencionesPorPagar?: string;
   /** El anticipo entregado al operador: se cancela contra los comprobantes. */
   anticipoOperador?: string;
   /** Lo que el operador debe devolver (comprobó de menos). */
@@ -98,6 +106,8 @@ export interface LiquidacionParaPoliza {
     subtotalPorConfirmar?: number;
   }>;
   ivaAcreditable: number;
+  /** Σ retenciones (IVA + ISR) de los comprobantes. Van como ABONO. */
+  retenciones?: number;
   /** anticipo − comprobado. Positivo: el operador devuelve. Negativo: se le debe. */
   diferencia: number;
 }
@@ -193,7 +203,39 @@ export function polizaDeLiquidacion(
   const subtotalDeclarado = REDONDEO(liq.porConcepto.reduce(
     (s, g) => s + g.subtotal + (g.subtotalNoDeducible ?? 0) + (g.subtotalPorConfirmar ?? 0), 0));
   const comprobado = REDONDEO(liq.anticipo - liq.diferencia);
-  const impuestoNoAcreditado = REDONDEO(comprobado - subtotalDeclarado - liq.ivaAcreditable);
+
+  // ── AUDITORÍA 22, FIS-A1 (ALTO): LOS DOS TÉRMINOS QUE ENVENENABAN LA RESTA ─
+  // El residuo se deriva de una identidad (`anticipo − diferencia`) en vez de
+  // leerse del comprobante, así que CUALQUIER término del CFDI que no sea
+  // SubTotal ni traslado la envenena. Dos ocurren a diario:
+  //
+  //  · `@Descuento` — el Total del CFDI ya viene NETO, así que la base del
+  //    asiento también tiene que estarlo. Una factura de casetas con SubTotal
+  //    10,000, Descuento 500 e IVA 1,520 daba residuo −500 y el export
+  //    contestaba «dato de origen roto» tirando el periodo ENTERO. Se resta
+  //    POR COMPROBANTE en la ruta (no aquí, agregado): un descuento agregado
+  //    descuadraría el asiento por su propio monto, porque los renglones de
+  //    gasto de arriba cargan la base que reciben. `porConcepto[].subtotal`
+  //    llega ya neto.
+  //
+  //  · RETENCIONES — un flete subcontratado a un permisionario persona física
+  //    (lo normal en carga federal) retiene 4% de IVA. El proveedor cobra
+  //    menos, así que `comprobado` baja, pero el GASTO no baja: la retención
+  //    es una cuenta POR PAGAR al SAT. Va como ABONO, no restando la base.
+  //
+  // El reverso era peor que el 409: si en el mismo periodo había IVA no
+  // acreditado que compensara la retención, el residuo cuadraba y el IVA
+  // retenido desaparecía del asiento sin renglón.
+  const retenciones = REDONDEO(liq.retenciones ?? 0);
+  const impuestoNoAcreditado = REDONDEO(comprobado + retenciones - subtotalDeclarado - liq.ivaAcreditable);
+
+  if (retenciones > 0.01) {
+    if (!catalogo.retencionesPorPagar) falta.push('cuenta de retenciones por pagar (IVA/ISR retenido al proveedor)');
+    else movimientos.push({
+      cuenta: catalogo.retencionesPorPagar, cargo: 0, abono: retenciones,
+      concepto: `IVA/ISR retenido al proveedor — viaje ${liq.folioViaje}`, referencia: ref,
+    });
+  }
   if (impuestoNoAcreditado > 0.01) {
     if (!catalogo.ivaNoAcreditable) falta.push('cuenta de IVA/IEPS no acreditable');
     else

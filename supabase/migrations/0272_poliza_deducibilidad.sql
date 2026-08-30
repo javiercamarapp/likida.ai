@@ -17,8 +17,12 @@
 --
 -- Así que esta función NO decide: entrega los insumos y la ruta clasifica con
 -- la misma función que el motor.
---   · `gastos`      → un renglón por gasto: id, concepto, base y si tiene CFDI
---                     (lo único que `cubetaDe` mira además de las diferencias).
+--   · `gastos`      → un renglón por gasto: id, concepto, base, `@Descuento` y
+--                     si tiene CFDI (lo único que `cubetaDe` mira además de
+--                     las diferencias).
+--   · `retenciones` → Σ IVA/ISR retenido del periodo (FIS-A1): el proveedor
+--                     cobra menos pero el gasto no baja, así que va como ABONO
+--                     a una cuenta por pagar, no restando la base.
 --   · `diferencias` → el jsonb que la liquidación ya guarda, con `gastoId` y
 --                     `tipo` por diferencia.
 --
@@ -48,7 +52,10 @@ as $$
     'baseDesconocida', coalesce(g.sin_subtotal, 0),
     -- FIS-C1: los insumos para que la ruta clasifique con `cubetaDe`.
     'gastos',         coalesce(gd.por_gasto, '[]'::jsonb),
-    'diferencias',    coalesce(l.diferencias, '[]'::jsonb)
+    'diferencias',    coalesce(l.diferencias, '[]'::jsonb),
+    -- FIS-A1: la retención NO es un gasto, es cuenta por pagar al SAT. Las
+    -- columnas existen desde la 0063 y nadie las leía.
+    'retenciones',    coalesce(gd.retenciones, 0)
   ) order by l.created_at), '[]'::jsonb)
   from liquidacion l
   join viaje v on v.id = l.viaje_id
@@ -76,8 +83,10 @@ as $$
              'id',        gg.id,
              'concepto',  gg.concepto,
              'subtotal',  gg.sub_total,
+             'descuento', gg.descuento,
              'tieneCfdi', gg.cfdi_uuid is not null
-           ) order by gg.concepto, gg.id) as por_gasto
+           ) order by gg.concepto, gg.id) as por_gasto,
+           sum(coalesce(gg.iva_retenido, 0) + coalesce(gg.isr_retenido, 0)) as retenciones
       from gasto gg
      where gg.tenant_id = p_tenant and gg.viaje_id = l.viaje_id
   ) gd on true
