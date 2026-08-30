@@ -15236,3 +15236,57 @@ begin
   raise exception E'POLIZA_DEDUCIBILIDAD_0272  gastos=%  por-comprobante=%  diferencias=%  conserva-porConcepto=%   (esperado t / t / t / t)',
     trae_gastos, gasto_por_comprobante, trae_diferencias, conserva_por_concepto;
 end $$;
+
+-- ── 221. La cancelación ARCO retira el texto libre que el titular escribió (mig. 0273) ──
+--
+-- AUDITORÍA 22, LEG-A4 (ALTO). La 0262 declaró su alcance como «el esquema
+-- completo de `operador`», y las tablas donde vive lo que el TITULAR ESCRIBIÓ
+-- quedaron fuera. Si Juan escribió «soy Juan Pérez de la unidad 12, choqué en
+-- el km 84», esa cadena sobrevivía íntegra mientras el panel le confirmaba al
+-- contralor «el titular quedó anonimizado en la base».
+--
+-- Se asevera lo que la base sí puede demostrar, END TO END sobre la RPC real:
+--   (a) `incidencia.descripcion` deja de contener el nombre del titular;
+--   (b) `incidencia.operador_id` queda suelto;
+--   (c) `incidencia_evento.detalle->>'texto'` tampoco lo contiene;
+--   (d) el RENGLÓN de la incidencia SIGUE ahí — es un hecho operativo de la
+--       flota, y borrarlo sería pasarse del derecho que se está ejerciendo;
+--   (e) la evidencia de la solicitud cuenta lo retirado.
+do $$
+declare
+  t uuid := gen_random_uuid(); op uuid := gen_random_uuid();
+  inc uuid := gen_random_uuid(); sol uuid := gen_random_uuid();
+  desc_final text; ev_final jsonb; op_final uuid; txt_evento text;
+  incidencia_viva boolean;
+  sin_nombre_desc boolean := false; sin_nombre_evento boolean := false;
+  operador_suelto boolean := false; evidencia_lo_cuenta boolean := false;
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0273__');
+  insert into public.operador (id, tenant_id, nombre, telefono)
+    values (op, t, 'Juan Pérez', '+5218112345678');
+  insert into public.incidencia (id, tenant_id, operador_id, tipo, prioridad, descripcion, hay_lesionados)
+    values (inc, t, op, 'accidente', 'critica',
+            'soy Juan Pérez de la unidad 12, choqué en el km 84 y me llevaron al IMSS', true);
+  insert into public.incidencia_evento (tenant_id, incidencia_id, tipo, detalle)
+    values (t, inc, 'mensaje_adicional',
+            jsonb_build_object('texto', 'aquí Juan Pérez otra vez, ya llegó la grúa'));
+  insert into public.solicitud_arco (id, tenant_id, operador_id, tipo, estado)
+    values (sol, t, op, 'cancelacion', 'pendiente');
+
+  perform public.ejecutar_arco_cancelacion(t, sol);
+
+  select i.descripcion, i.operador_id into desc_final, op_final
+    from public.incidencia i where i.id = inc;
+  select e.detalle->>'texto' into txt_evento
+    from public.incidencia_evento e where e.incidencia_id = inc limit 1;
+  select s.evidencia into ev_final from public.solicitud_arco s where s.id = sol;
+
+  incidencia_viva     := desc_final is not null;
+  sin_nombre_desc     := desc_final not ilike '%Juan Pérez%';
+  sin_nombre_evento   := coalesce(txt_evento, '') not ilike '%Juan Pérez%';
+  operador_suelto     := op_final is null;
+  evidencia_lo_cuenta := (ev_final->>'incidencia_texto_anonimizado')::int >= 1;
+
+  raise exception E'ARCO_TEXTO_LIBRE_0273  incidencia-viva=%  desc-sin-nombre=%  evento-sin-nombre=%  operador-suelto=%  evidencia=%   (esperado t / t / t / t / t)',
+    incidencia_viva, sin_nombre_desc, sin_nombre_evento, operador_suelto, evidencia_lo_cuenta;
+end $$;
