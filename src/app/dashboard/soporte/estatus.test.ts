@@ -45,8 +45,8 @@ describe('pillTicket — el mapa compartido de estados de ticket', () => {
 });
 
 describe('las dos pantallas de soporte usan el mapa compartido', () => {
-  const fuenteCliente = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8');
-  const fuenteAdmin = readFileSync(new URL('../../admin/soporte/page.tsx', import.meta.url), 'utf8');
+  const fuenteCliente = readFileSync('src/app/dashboard/soporte/page.tsx', 'utf8');
+  const fuenteAdmin = readFileSync('src/app/admin/soporte/page.tsx', 'utf8');
 
   it('/dashboard/soporte traduce con pillTicket y ya no imprime t.estado dentro del pill', () => {
     expect(fuenteCliente, 'el panel del cliente dejó de usar el mapa compartido').toContain('pillTicket(');
