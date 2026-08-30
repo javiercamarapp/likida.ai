@@ -1305,7 +1305,31 @@ export function cuadrarViaje(input: CuadreInput): Omit<Liquidacion, 'id' | 'crea
   // lista, y NO se agrega: es una foto de bomba, nunca trae CFDI, y el
   // `if (!g.xmlVerificado) continue` de abajo ya lo ataja estructuralmente.
   // Meterlo aquí sugeriría que sin esta línea acreditaría, y no es cierto.
-  const SIN_ACREDITAMIENTO: TipoDiferencia[] = ['rfc_receptor', 'rfc_receptor_no_verificable', 'cfdi_cancelado', 'cfdi_efos', 'cfdi_efos_indeterminado', 'cfdi_no_encontrado', 'complemento_hidrocarburos', 'combustible_efectivo', 'combustible_efectivo_dentro15', 'efectivo_sobre_15', 'efectivo_no_elegible', 'efectivo_sobre_tope', 'monto_invalido', 'cfdi_pendiente', 'consumo_bar', 'moneda_extranjera', 'gasto_otro_ejercicio', 'renglones_ajenos', 'medio_pago_no_admitido'];
+  // ── AUDITORÍA 22, FIS-C2 (CRÍTICO): DOS PREGUNTAS, DOS LISTAS ─────────────
+  // Esto era UNA lista para dos preguntas distintas —«¿acredita IVA?» y
+  // «¿acredita el estímulo de diésel/peaje?»— y los dos tipos de la RFA 2.9
+  // entraron para cerrar la segunda y cerraron las dos.
+  //
+  // Lo que dicen las fichas, leídas:
+  //   · `rfa-2026-2.9.yaml` → `limite_importante`: «Conserva la DEDUCCIÓN para
+  //     ISR. NO habilita el acreditamiento del IEPS». Dice IEPS. NO dice IVA.
+  //   · `liva-5.yaml` art. 5 fr. I: son indispensables «las erogaciones… que
+  //     sean deducibles para los fines del impuesto sobre la renta», y las
+  //     parcialmente deducibles acreditan «en la proporción».
+  //
+  // O sea: el mismo CFDI de diésel perdía sus $16,000 de IVA solo por el medio
+  // de pago, bajo el rótulo «IVA acreditable (LIVA art. 5)» — el artículo que
+  // lo contradice. Una flota con $5,000,000 de combustible al año y su 15% en
+  // efectivo perdía ~$103,000 anuales que la ley le concede.
+  //
+  // El `iepsAcreditable` de abajo es `const … = 0`, así que la pertenencia de
+  // estos dos tipos a la lista NO protegía nada de lo que su comentario decía
+  // proteger: su único efecto real era tirar el IVA, en silencio.
+  const SIN_IVA_ACREDITABLE: TipoDiferencia[] = ['rfc_receptor', 'rfc_receptor_no_verificable', 'cfdi_cancelado', 'cfdi_efos', 'cfdi_efos_indeterminado', 'cfdi_no_encontrado', 'complemento_hidrocarburos', 'combustible_efectivo', 'efectivo_no_elegible', 'efectivo_sobre_tope', 'monto_invalido', 'cfdi_pendiente', 'consumo_bar', 'moneda_extranjera', 'gasto_otro_ejercicio', 'renglones_ajenos', 'medio_pago_no_admitido'];
+  // El estímulo (litros de diésel y peaje) SÍ lo niegan los dos tipos de la RFA
+  // 2.9: eso es exactamente lo que su `limite_importante` dice. Esta lista es
+  // la de arriba MÁS esos dos.
+  const SIN_ESTIMULO: TipoDiferencia[] = [...SIN_IVA_ACREDITABLE, 'combustible_efectivo_dentro15', 'efectivo_sobre_15'];
   // AUDITORÍA 12, ALTO (fiscal, reincidente de la 11): `cfdi_pendiente` entra
   // aquí y en POR_CONFIRMAR — con el SAT caído o en timeout, "no se pudo
   // verificar" es el MISMO tercer estado que el motor ya aplica a EFOS, al RFC
@@ -1323,7 +1347,14 @@ export function cuadrarViaje(input: CuadreInput): Omit<Liquidacion, 'id' | 'crea
   let litrosDieselAcreditables = 0;
   for (const g of input.gastos) {
     if (duplicados.has(g.id)) continue;
-    if (diferencias.some((d) => d.gastoId === g.id && SIN_ACREDITAMIENTO.includes(d.tipo))) continue;
+    // FIS-C2: dos preguntas separadas sobre el MISMO gasto. Un diésel en
+    // efectivo dentro del 15% acredita su IVA (es deducible) y NO acredita el
+    // estímulo (la RFA 2.9 lo niega). Antes un solo `continue` respondía las
+    // dos con «no».
+    const misDif = diferencias.filter((d) => d.gastoId === g.id);
+    const sinIva = misDif.some((d) => SIN_IVA_ACREDITABLE.includes(d.tipo));
+    const sinEstimulo = misDif.some((d) => SIN_ESTIMULO.includes(d.tipo));
+    if (sinIva && sinEstimulo) continue;
     // El acreditamiento exige un CFDI VERIFICADO (XML): un ticket de gasolinera
     // sin factura NO es deducible ni acreditable hasta timbrarse. Además, así el
     // IVA/IEPS son SIEMPRE los importes LEÍDOS del XML (nunca recomputados con una
@@ -1364,7 +1395,7 @@ export function cuadrarViaje(input: CuadreInput): Omit<Liquidacion, 'id' | 'crea
     // "pagado" no implica "pagado con un medio admitido".
     const pagadoConRep = g.formaPago === FORMA_PAGO_SIN_PAGAR && !!g.pagadoEn;
     const formaPagoEfectiva = pagadoConRep ? g.pagadoForma : g.formaPago;
-    if ((g.ivaTraslado ?? 0) > 0 && (g.formaPago !== '99' || pagadoConRep)) {
+    if (!sinIva && (g.ivaTraslado ?? 0) > 0 && (g.formaPago !== '99' || pagadoConRep)) {
       ivaAcreditable += (g.ivaTraslado as number) * proporcion;
       // La verdad fiscal completa, no solo la cifra: LIVA 5-III lo acredita
       // EN EL MES DEL PAGO. Si ese mes no es el del comprobante, el contralor
@@ -1400,7 +1431,7 @@ export function cuadrarViaje(input: CuadreInput): Omit<Liquidacion, 'id' | 'crea
     //      con descuento acreditaba sobre el SubTotal íntegro. Se acota a 0
     //      por si llega un CFDI mal formado: una base negativa no existe.
     const elegiblePeaje = input.elegiblePeaje === true;
-    if (g.concepto === 'caseta' && (g.subTotal ?? 0) > 0 && peajePagadoElectronicamente && elegiblePeaje) {
+    if (!sinEstimulo && g.concepto === 'caseta' && (g.subTotal ?? 0) > 0 && peajePagadoElectronicamente && elegiblePeaje) {
       const baseDelEstimulo = Math.max(0, (g.subTotal as number) - (g.descuento ?? 0));
       peajeAcreditable += baseDelEstimulo * peajeFactor;
     }
@@ -1408,7 +1439,9 @@ export function cuadrarViaje(input: CuadreInput): Omit<Liquidacion, 'id' | 'crea
     // gasolina. Se identifica por la clave de producto del SAT (15101505).
     const clavesDiesel = input.estimulos?.clavesDieselIeps ?? [];
     const esDieselIeps = clavesDiesel.includes(g.claveProdServ ?? '');
-    if (esDieselIeps) {
+    // `!sinEstimulo`: esto es lo que la RFA 2.9 SÍ niega al efectivo, con todas
+    // sus letras. Es la mitad que la lista única protegía de verdad (FIS-C2).
+    if (!sinEstimulo && esDieselIeps) {
       // EL ESTÍMULO NO ES EL IEPS TRASLADADO. `normas/lif-2026-20-A.yaml`
       // (verificado_fuente_primaria) dice literal: "cuota IEPS vigente al momento
       // de la compra × LITROS. No es el IEPS trasladado en el CFDI."

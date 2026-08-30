@@ -685,10 +685,24 @@ function ivaSostenible(g: GastoFiscal, o: OpcionesFiscales): boolean {
   // AUDITORÍA 22, FIS-C3: mismo hecho con otra forma de pago. Mientras el
   // contador no confirme, la proporción deducible es cero y LIVA 5-I no acredita.
   if (medioFueraDeLista27III(g, o)) return false;
-  // AUDITORÍA 14, ALTO: el combustible en EFECTIVO no acredita IVA — la
-  // facilidad del 15% (RFA 2.9) solo salva la deducción de ISR, y el motor ya
-  // lo niega (SIN_ACREDITAMIENTO). El panel afirmaba IVA sobre esos CFDIs.
-  if (medioNoAdmitidoCombustible(g.formaPago) && esCombustible(g, o)) return false;
+  // Combustible con un medio que la LISR 27-III no admite.
+  //
+  // AUDITORÍA 14, ALTO puso esta puerta cerrada del todo, razonando que «la
+  // facilidad del 15% solo salva la deducción de ISR». AUDITORÍA 22, FIS-C2
+  // (CRÍTICO) la corrige leyendo las dos fichas: `rfa-2026-2.9.yaml` →
+  // `limite_importante` dice «NO habilita el acreditamiento del IEPS» —dice
+  // IEPS, no dice IVA—, y `liva-5.yaml` art. 5 fr. I ata el acreditamiento a
+  // que la erogación sea DEDUCIBLE PARA ISR, que es justo lo que la facilidad
+  // conserva. Negar el IVA aquí le costaba a una flota con $5,000,000 de
+  // combustible al año unos $103,000 anuales que la ley le concede.
+  //
+  // La frontera queda en la elegibilidad, igual que en el motor:
+  //   · `elegible15 === true`  → hay deducción, luego hay IVA que sostener.
+  //   · `false` o sin declarar → no hay deducción (el motor emite
+  //     `efectivo_no_elegible` o `combustible_efectivo`), luego no hay IVA.
+  // Esta función es un booleano y no reparte proporciones; el motor sí lo hace
+  // con `proporcionDeducible`, y él es quien imprime la cifra del PDF.
+  if (medioNoAdmitidoCombustible(g.formaPago) && esCombustible(g, o) && o.elegible15 !== true) return false;
   // AUDITORÍA 18-c3, FISC-C3-2 (CRÍTICO): LIVA 5-III exige que el impuesto esté
   // "efectivamente pagado en el mes". `'99' Por definir` = la contraprestación
   // NO se ha pagado (RMF 2.7.1.29 fr. II), que es el caso normal de un CFDI PPD
