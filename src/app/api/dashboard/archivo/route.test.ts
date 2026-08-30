@@ -28,15 +28,23 @@ vi.mock('@/lib/logger', () => ({ logger: { info: vi.fn(), warn: vi.fn(), error: 
 const { POST } = await import('./route');
   const { MAX_BASE64, LECTURAS_POR_MINUTO } = await import('./limites');
 
-function postear(cuerpo: unknown) {
+function postear(cuerpo: unknown, cabeceras: Record<string, string> = {}) {
   return POST(new Request('https://app.likida.ai/api/dashboard/archivo', {
-    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(cuerpo),
+    method: 'POST', headers: { 'content-type': 'application/json', ...cabeceras }, body: JSON.stringify(cuerpo),
   }) as never);
 }
 
 beforeEach(() => {
   sesion = { userId: 'u-1', tenantId: 't-1', rol: 'contador', nombre: 'C' };
   leer.mockClear();
+});
+
+describe('la puerta de origen (auditoría 21, BAJO-MEDIO)', () => {
+  it('desde otro sitio: 403 y no se lee nada', async () => {
+    const r = await postear({ nombre: 'a.csv', contenido: 'x' }, { 'sec-fetch-site': 'cross-site', origin: 'https://evil.example' });
+    expect(r.status).toBe(403);
+    expect(leer).not.toHaveBeenCalled();
+  });
 });
 
 describe('la puerta', () => {
