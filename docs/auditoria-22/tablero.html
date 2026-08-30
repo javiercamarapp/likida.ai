@@ -88,10 +88,10 @@
 
   <div class="cinta">
     <div class="tile"><div class="k">Global</div><div class="v serious">6.1</div><div class="n">media de los 12 · sin delta</div></div>
-    <div class="tile"><div class="k">Compuerta</div><div class="v good">verde</div><div class="n">9,924 pruebas · tsc 0 · lint 0</div></div>
-    <div class="tile"><div class="k">Críticos</div><div class="v bad">10</div><div class="n">reportados · 5 verificados</div></div>
-    <div class="tile"><div class="k">Altos</div><div class="v serious">24</div><div class="n">reportados · 3 verificados y arreglados</div></div>
-    <div class="tile"><div class="k">Arreglados</div><div class="v good">3</div><div class="n">con prueba que los reproduce</div></div>
+    <div class="tile"><div class="k">Compuerta</div><div class="v good">verde</div><div class="n">9,995 pruebas · tsc 0 · lint 0</div></div>
+    <div class="tile"><div class="k">Críticos</div><div class="v bad">10</div><div class="n">reportados · TODOS arreglados</div></div>
+    <div class="tile"><div class="k">Altos</div><div class="v serious">24</div><div class="n">reportados · TODOS arreglados</div></div>
+    <div class="tile"><div class="k">Arreglados</div><div class="v good">34</div><div class="n">los 10 críticos y los 24 altos</div></div>
   </div>
 
   <div class="aviso rojo">
@@ -193,7 +193,7 @@
     <table>
       <thead><tr><th>Comando</th><th>Resultado</th><th>Al arrancar</th><th>Al cerrar</th></tr></thead>
       <tbody>
-        <tr><td class="rubro"><code>npm test</code></td><td style="color:var(--good);font-weight:600">VERDE</td><td class="num">9,918</td><td class="num">9,924</td></tr>
+        <tr><td class="rubro"><code>npm test</code></td><td style="color:var(--good);font-weight:600">VERDE</td><td class="num">9,918</td><td class="num">9,995</td></tr>
         <tr><td class="rubro"><code>npx tsc --noEmit -p .</code></td><td style="color:var(--good);font-weight:600">VERDE</td><td class="num">0 errores</td><td class="num">0 errores</td></tr>
         <tr><td class="rubro"><code>npm run lint</code></td><td style="color:var(--good);font-weight:600">VERDE</td><td class="num">0 err · 166 adv</td><td class="num">0 err · 166 adv</td></tr>
         <tr><td class="rubro"><code>npm run build</code></td><td class="pend">no corre aquí</td><td colspan="2" class="delta">pide Supabase, OpenRouter, Facturapi y Upstash; su fallo no diría nada del código</td></tr>
@@ -201,54 +201,48 @@
     </table>
   </div>
 
-  <h2>Arreglado en esta ronda</h2>
+  <h2>Los 34, cerrados</h2>
+  <div class="aviso verde">
+    <b>El tope de 3 vueltas de la skill se levantó a petición explícita del dueño</b>, y los 34 hallazgos
+    —los 10 CRÍTICOS y los 24 ALTOS— quedaron arreglados en 13 commits atómicos. Cada uno con prueba que
+    reproduce el fallo antes del arreglo y compuerta verde después.
+  </div>
   <ul class="lista">
-    <li class="ok"><span class="etq f">HECHO</span><b>Un gasto «por confirmar» ya no acredita su IVA.</b>
-      <code>engine.ts:1267</code> — <code>renglones_ajenos</code> estaba en <code>POR_CONFIRMAR</code> y en
-      <code>REVISAR</code>, pero no en <code>SIN_ACREDITAMIENTO</code>: deducible $0 y aun así $137.93 de IVA
-      acreditado. Tercera vez que este bloque cae en el mismo hueco. <code>694fd8b</code></li>
-    <li class="ok"><span class="etq f">HECHO</span><b>«No leí» deja de leerse como «no hay» en Facturación.</b>
-      <code>facturacion/page.tsx:85</code> — una flota con 40 clientes leía «no tienes clientes dados de
-      alta» cuando lo que falló fue la consulta. <code>a6493be</code></li>
-    <li class="ok"><span class="etq f">HECHO</span><b>El informe PDF del jefe deja de sumar una lectura recortada.</b>
-      <code>oficina_wa.ts:77</code> — con 1,500 viajes abiertos imprimía $100,000.00 donde la verdad son
-      $150,000.00. El mock del arnés emulaba mal a PostgREST y por eso la suite no lo veía. <code>078cc12</code></li>
-  </ul>
-
-  <h2>Los críticos que quedan pendientes</h2>
-  <ul class="lista">
-    <li class="crit"><span class="etq c">FISCAL</span><b>La póliza asienta como deducible lo que el motor declaró no deducible.</b>
-      <code>poliza.ts:101-115</code> — <code>LiquidacionParaPoliza</code> no tiene ningún campo de
-      deducibilidad. Cablearlo cruza la RPC de la 0178, el export y el catálogo: no es quirúrgico.</li>
-    <li class="crit"><span class="etq c">FISCAL</span><b>El tope de efectivo de LISR 27-III solo mira <code>'01'</code>.</b>
-      <code>engine.ts:571</code> — la lista de la norma es cerrada. Arreglarlo bien exige un tercer
-      estado nuevo (dación en pago, compensación y novación no son «no deducible», son «a confirmar»)
-      cableado en cinco listas, el PDF y el panel.</li>
-    <li class="crit"><span class="etq c">FISCAL</span><b>Diésel en efectivo dentro del 15%: deducible al 100% y $0 de IVA acreditable.</b>
-      <code>engine.ts:1267/1285</code> — decisión fiscal, no bug mecánico.</li>
-    <li class="crit"><span class="etq c">OPERAB</span><b>El watchdog de producción lleva ≥30 corridas seguidas en rojo.</b>
-      <code>salud-produccion.yml:34-42</code> — un hueco de configuración declarado tumba el health, así
-      que una muerte real de cron no cambiaría nada. Y arrastra el cotejo del sha desplegado, que nunca corre.</li>
-    <li class="crit"><span class="etq c">LEGAL</span><b>GPS y jornada derivada sin aviso puesto a disposición.</b>
-      <code>sincronizar_gps.ts:149</code>, <code>jornada/derivar.ts:159</code> — LFPDPPP 14 y 16-II.</li>
-    <li class="crit"><span class="etq c">LEGAL</span><b>El aviso jura que no se conservan datos de salud; el circuito de asistencia los guarda.</b>
-      <code>privacidad.ts:644</code> vs <code>0198:46</code> — dato sensible, sanción hasta el doble.</li>
-    <li class="crit"><span class="etq c">AGÉNT</span><b>Una <code>guardar_liquidacion</code> abortada commitea pero se registra como fallida.</b>
-      <code>tool-executor.ts:223</code> — la base dice cerrado, el chofer oye lo contrario.</li>
-    <li class="crit"><span class="etq c">RENDIM</span><b>El registro de jornada (LFT) pierde marcas en silencio.</b>
-      <code>jornada/repo.ts:324</code> — mismo recorte de 1,000 filas que el informe ya arreglado.</li>
-    <li class="crit"><span class="etq c">PRUEBAS</span><b>El export de póliza no tiene una sola prueba que ejecute su salida.</b>
-      <code>export/poliza/route.ts:182</code> y <code>:204</code> — su único archivo de prueba tiene
-      4 casos y los 4 son de rol: los dos frenos de dinero se pueden borrar con la suite en verde.
-      Es la misma ruta que carga FIS-1.</li>
+    <li class="ok"><span class="etq f">FISCAL</span><b>Los 3 críticos y el alto.</b> El tope de LISR 27-III se mide
+      contra la lista cerrada · la facilidad del 15% conserva el IVA (niega el IEPS, no el IVA — le
+      <b>devuelve</b> ~$103,000/año a una flota con $5M de combustible) · la póliza deja de asentar como
+      deducible lo que el motor negó · descuento y retención dejan de tirar el periodo entero con 409.
+      <code>61b45b3</code> <code>8c585ad</code> <code>75a5ac0</code> <code>89a6b60</code></li>
+    <li class="ok"><span class="etq f">LEGAL</span><b>Los 2 críticos y los 4 altos.</b> El aviso declara los cuatro
+      tratamientos que ocurrían sin decirse (salud, voz, RFC/licencia al PAC, jornada del GPS) · la
+      cancelación ARCO alcanza el texto libre que el titular escribió · no se deriva expediente laboral de
+      quien nunca recibió el aviso. <code>02d7837</code> <code>df7725b</code> <code>5b64259</code></li>
+    <li class="ok"><span class="etq f">OPERAB</span><b>El crítico y los 3 altos.</b> El watchdog vuelve a poder
+      cambiar de color (tercer estado <code>config_ausente</code>) · el cotejo del sha corre con
+      <code>if: always()</code> · el folio fiscal llega entero a la alerta · dos incidentes distintos son dos
+      alarmas. <code>75afd55</code></li>
+    <li class="ok"><span class="etq f">AGÉNT</span><b>El crítico y los 2 altos.</b> El cierre que sí ocurrió deja de
+      negarse (la base es la autoridad, no la cadena de error) · la alarma de margen deja de ser falsa por
+      identidad · la ráfaga cortada no se va muda. <code>e7fb20e</code></li>
+    <li class="ok"><span class="etq f">RENDIM</span><b>El crítico y los 2 altos.</b> El registro de jornada deja de
+      perder marcas y de morir de hambre (orden descendente) · la pregunta libre del jefe ya cuenta y se
+      frena. <code>936fad2</code></li>
+    <li class="ok"><span class="etq f">PRUEBAS</span><b>El crítico y los 3 altos.</b> El export de póliza se ejecuta
+      de verdad · dos pruebas tautológicas de formatos ahora cotejan el número · la cola de facturación pasa
+      de 0% · la perilla de estadías se prueba. <code>d3ce510</code></li>
+    <li class="ok"><span class="etq f">BACKEND</span><b>Los 3 altos.</b> Un byte C1 deja de cerrar sin papel · la
+      reimpresión deja de archivar el PDF viejo · el export corto deja de tener cara de completo.
+      <code>28b34da</code></li>
+    <li class="ok"><span class="etq f">DATOS+</span><b>Los 3 altos.</b> La conversación se identifica por teléfono
+      normalizado · «un costo no medido no es cero» en los tres agentes · el veto de emisión deja de ser
+      cuatro verbos. <code>ccb683c</code></li>
   </ul>
 
   <div class="aviso">
-    <b>Tope de presupuesto alcanzado:</b> 3 vueltas de arreglo, las tres retenidas (prueba que
-    reproduce → arreglo → prueba verde → suite completa → commit atómico). Lo demás queda
-    <b>propuesto</b>, con la razón escrita. Ninguno de los pendientes se dejó a medias: o exige una
-    decisión fiscal o legal que no se toma a ciegas de madrugada, o cruza más archivos de los que
-    un arreglo quirúrgico admite.
+    <b>Las notas NO se recalificaron tras los arreglos, a propósito.</b> La nota de un rubro se mide
+    sobre el código que el auditor LEYÓ; moverla con mis arreglos encima sería puntuar mi propio
+    trabajo sin que nadie lo haya auditado. Los 34 arreglos son insumo de la ronda 23, no de ésta —
+    y la 23 los va a mirar con ojos frescos, que es como se comprueba si de verdad cerraron.
   </div>
 
   <div class="aviso verde">
