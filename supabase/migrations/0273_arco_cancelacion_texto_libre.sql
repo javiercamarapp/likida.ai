@@ -6,30 +6,24 @@
 -- de ese perímetro, y ahí es donde su nombre sobrevive en texto libre.
 --
 -- Escenario: Juan pide cancelación, el contralor aprieta «Ejecutar
--- cancelación», y `/dashboard/arco` le confirma «el titular quedó anonimizado
--- en la base». Pero si Juan escribió por el chat de asistencia
---
---     «soy Juan Pérez de la unidad 12, choqué en el km 84 y me llevaron al
---      IMSS de Querétaro»
---
--- esa cadena sobrevive íntegra en `incidencia.descripcion` (hasta 500
--- caracteres, asistencia_wa.ts:524) y en `incidencia_evento.detalle->>'texto'`
--- (otros 500 por cada mensaje adicional, :670 y :832).
+-- cancelación», y /dashboard/arco le confirma «el titular quedó anonimizado en
+-- la base». Pero si Juan escribió por el chat de asistencia «soy Juan Pérez de
+-- la unidad 12, choqué en el km 84 y me llevaron al IMSS», esa cadena sobrevive
+-- íntegra en `incidencia.descripcion` (hasta 500 caracteres,
+-- asistencia_wa.ts:524) y en `incidencia_evento.detalle->>'texto'` (otros 500
+-- por cada mensaje adicional, :670 y :832).
 --
 -- Es la falla silenciosa más cara que existe en cumplimiento: la flota FIRMA
 -- que cumplió y no cumplió. Si la autoridad pide el expediente, el nombre del
 -- titular cancelado aparece en texto libre. Y rompe la regla de la casa: un
 -- rótulo tiene que ser verdad.
 --
--- ── QUÉ SE HACE CON EL TEXTO, Y POR QUÉ NO SE BORRA EL RENGLÓN ─────────────
--- La incidencia NO se borra: es un hecho operativo de la flota (hubo un
--- accidente, con lesionados o sin ellos, tal día en tal punto) y la empresa
--- tiene sus propias obligaciones sobre eso. Lo que se cancela es el vínculo
--- con la PERSONA, que es lo que el derecho de cancelación alcanza.
---
--- Así que se sustituye el texto libre por una marca explícita, se sueltan las
--- llaves al titular (`operador_id`) y se deja constancia de cuándo. Un texto
--- vaciado sin marca se leería como «no escribió nada», que es otra mentira.
+-- ── ESTA MIGRACIÓN PARTE DEL CUERPO DE LA 0262, VERBATIM ──────────────────
+-- El primer intento reescribió la función a mano y perdió guardas enteras por
+-- el camino (el rechazo de `oposicion`, el «ya estaba cerrada») y cambió el
+-- formato del seudónimo, que dos bloques de `verificaciones.sql` aseveran.
+-- La batería lo cazó. Aquí se conserva el cuerpo original tal cual y solo se
+-- INSERTAN los dos UPDATE nuevos.
 -- ═══════════════════════════════════════════════════════════════════════════
 
 alter table public.incidencia
@@ -44,24 +38,36 @@ create or replace function public.ejecutar_arco_cancelacion(
 ) returns jsonb
 language plpgsql
 security invoker
-set search_path = public, extensions, pg_catalog
+set search_path = public, pg_catalog
 as $$
 declare
   v_operador uuid;
-  seudonimo text;
+  v_tipo text;
+  v_estado text;
   ev jsonb := '{}'::jsonb;
   n int;
+  seudonimo text;
 begin
-  select s.operador_id into v_operador
-    from solicitud_arco s
-   where s.id = p_solicitud and s.tenant_id = p_tenant and s.tipo = 'cancelacion'
-   for update;
+  select operador_id, tipo, estado into v_operador, v_tipo, v_estado
+    from solicitud_arco where id = p_solicitud and tenant_id = p_tenant;
 
   if v_operador is null then
-    return jsonb_build_object('ok', false, 'motivo', 'solicitud_no_encontrada_o_sin_operador');
+    return jsonb_build_object('ok', false, 'motivo', 'solicitud sin operador o de otra flota');
+  end if;
+  if v_tipo <> 'cancelacion' then
+    return jsonb_build_object(
+      'ok', false,
+      'motivo', case when v_tipo = 'oposicion'
+        then 'la oposición no cancela ni anonimiza datos; conserva la revisión humana de decisiones automatizadas'
+        else 'esta función solo ejecuta solicitudes de cancelación'
+      end
+    );
+  end if;
+  if v_estado in ('resuelta', 'improcedente') then
+    return jsonb_build_object('ok', false, 'motivo', 'ya estaba cerrada');
   end if;
 
-  seudonimo := 'Titular cancelado ' || substr(encode(digest(v_operador::text, 'sha256'), 'hex'), 1, 8);
+  seudonimo := 'Operador ' || upper(substr(encode(digest(v_operador::text, 'sha256'), 'hex'), 1, 6));
 
   -- Las imágenes de gasto/CFDI se CONSERVAN: son evidencia fiscal. La antigua
   -- 0173 las ponía en una cola de borrado; 0178 no promete ese borrado.
@@ -75,9 +81,16 @@ begin
      and e.telefono = (select telefono from operador where id = v_operador);
   get diagnostics n = row_count; ev := ev || jsonb_build_object('envio_mensaje', n);
 
-  -- ── 0273 (LEG-A4): EL TEXTO QUE ESCRIBIÓ EL TITULAR ──────────────────────
-  -- Lo que la 0262 no alcanzó. El renglón sobrevive (es un hecho operativo de
-  -- la flota); lo que se cancela es el vínculo con la persona.
+  -- ── 0273 (AUDITORÍA 22, LEG-A4): EL TEXTO QUE ESCRIBIÓ EL TITULAR ────────
+  -- Lo que la 0262 no alcanzó: su alcance declarado fue «el esquema completo
+  -- de `operador`», y las tablas donde vive lo que el TITULAR ESCRIBIÓ
+  -- quedaron fuera. El renglón de la incidencia SOBREVIVE —que hubo un
+  -- siniestro, con lesionados o sin ellos, es un hecho operativo de la flota
+  -- con sus propias obligaciones—; lo que se cancela es el vínculo con la
+  -- PERSONA, que es lo que el derecho de cancelación alcanza.
+  --
+  -- Se sustituye por una marca explícita en vez de vaciar: un campo vacío se
+  -- leería como «no escribió nada», que es otra mentira.
   update incidencia
      set descripcion = '[texto retirado por cancelación ARCO del titular]',
          operador_id = null,
@@ -103,6 +116,9 @@ begin
      );
   get diagnostics n = row_count; ev := ev || jsonb_build_object('incidencia_evento_texto_anonimizado', n);
 
+  -- 0262: RFC y licencia entran al mismo UPDATE que nombre/telefono — ver el
+  -- razonamiento completo en el comentario de arriba y en `comment on
+  -- function` más abajo.
   update operador
      set nombre = seudonimo,
          telefono = 'anon:' || substr(encode(digest(v_operador::text || 'tel', 'sha256'), 'hex'), 1, 16),
@@ -129,4 +145,4 @@ end;
 $$;
 
 comment on function public.ejecutar_arco_cancelacion(uuid, uuid) is
-  'Ejecuta una solicitud ARCO de CANCELACIÓN (no oposición): anonimiza nombre, teléfono, RFC y licencia del operador, borra su conversación de WhatsApp y sus envíos, anonimiza su app_user, y —desde la 0273 (auditoría 22, LEG-A4)— retira el TEXTO LIBRE que el titular escribió en `incidencia.descripcion` e `incidencia_evento.detalle->>texto`, soltando `incidencia.operador_id`. El renglón de la incidencia sobrevive: es un hecho operativo de la flota; lo que se cancela es el vínculo con la persona. NO toca la documentación fiscal ya emitida (gasto.imagen_url, cfdi_uuid, ccp_timbre.xml): inmutable, retención de 5 años (CFF art. 30), desligada del titular. Regla para la próxima columna: identidad de la persona se anonimiza aquí; dato de la relación operativa que no identifica por sí solo se queda. Y regla para la próxima tabla: si guarda TEXTO QUE EL TITULAR ESCRIBIÓ, entra a esta función. SECURITY INVOKER.';
+  'Ejecuta una solicitud ARCO de CANCELACIÓN (no oposición): anonimiza nombre, teléfono, RFC y licencia del operador, borra su conversación de WhatsApp y sus envíos, anonimiza su app_user, y —desde la 0273 (auditoría 22, LEG-A4)— retira el TEXTO LIBRE que el titular escribió en `incidencia.descripcion` e `incidencia_evento.detalle->>texto`, soltando `incidencia.operador_id`. El renglón de la incidencia sobrevive: es un hecho operativo de la flota; lo que se cancela es el vínculo con la persona. NO toca la documentación fiscal ya emitida: inmutable, retención de 5 años (CFF art. 30), desligada del titular. Regla para la próxima columna: identidad de la persona se anonimiza aquí; dato de la relación operativa que no identifica por sí solo se queda. Y regla para la próxima TABLA: si guarda texto que el titular escribió, entra a esta función.';

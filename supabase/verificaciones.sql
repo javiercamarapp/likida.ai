@@ -15204,6 +15204,7 @@ do $$
 declare
   t uuid := gen_random_uuid(); v uuid := gen_random_uuid();
   l uuid := gen_random_uuid(); g uuid := gen_random_uuid();
+  op uuid := gen_random_uuid();
   fila jsonb;
   trae_gastos boolean := false;
   gasto_por_comprobante boolean := false;
@@ -15211,8 +15212,11 @@ declare
   conserva_por_concepto boolean := false;
 begin
   insert into public.tenant (id, nombre) values (t, '__verif_0272__');
-  insert into public.viaje (id, tenant_id, folio, anticipo, estatus)
-    values (v, t, 'VJ-0272', 10000, 'liquidado');
+  -- `viaje.operador_id` es NOT NULL: el fixture necesita un operador real.
+  insert into public.operador (id, tenant_id, nombre, telefono)
+    values (op, t, 'Operador 0272', '+5218100000272');
+  insert into public.viaje (id, tenant_id, operador_id, folio, anticipo, estatus)
+    values (v, t, op, 'VJ-0272', 10000, 'liquidado');
   insert into public.gasto (id, tenant_id, viaje_id, concepto, monto, sub_total, cfdi_uuid)
     values (g, t, v, 'hospedaje', 5800, 5000, null);
   insert into public.liquidacion
@@ -15265,13 +15269,16 @@ begin
   insert into public.operador (id, tenant_id, nombre, telefono)
     values (op, t, 'Juan Pérez', '+5218112345678');
   insert into public.incidencia (id, tenant_id, operador_id, tipo, prioridad, descripcion, hay_lesionados)
-    values (inc, t, op, 'accidente', 'critica',
+    values (inc, t, op, 'siniestro', 'critica',
             'soy Juan Pérez de la unidad 12, choqué en el km 84 y me llevaron al IMSS', true);
   insert into public.incidencia_evento (tenant_id, incidencia_id, tipo, detalle)
     values (t, inc, 'mensaje_adicional',
             jsonb_build_object('texto', 'aquí Juan Pérez otra vez, ya llegó la grúa'));
-  insert into public.solicitud_arco (id, tenant_id, operador_id, tipo, estado)
-    values (sol, t, op, 'cancelacion', 'pendiente');
+  -- Dos cosas que el esquema de la 0053 exige y el primer fixture no traía:
+  -- `vence_en` es NOT NULL (la LFPDPPP da plazo de respuesta y se guarda), y
+  -- el estado inicial del dominio es `recibida`, no `pendiente`.
+  insert into public.solicitud_arco (id, tenant_id, operador_id, tipo, estado, vence_en)
+    values (sol, t, op, 'cancelacion', 'recibida', now() + interval '20 days');
 
   perform public.ejecutar_arco_cancelacion(t, sol);
 

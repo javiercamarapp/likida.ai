@@ -51,7 +51,7 @@ import { violaIndice, llegoTarde } from '@/lib/likida/pg_errores';
 import { mxn, fechaMx } from '@/lib/formato';
 import { guardiaFundamento, normasDeToolCalls } from '@/lib/likida/normas/fundamento';
 import { guardiaEstado } from '@/lib/likida/cuadre/estado_afirmado';
-import { crearPresupuesto, PRESUPUESTO_WEBHOOK_MS, MARGEN_CIERRE_MS, MARGEN_CIERRE_CRITICO_MS, acotada, type Presupuesto } from '@/lib/likida/presupuesto';
+import { crearPresupuesto, PRESUPUESTO_WEBHOOK_MS, MARGEN_CIERRE_CRITICO_MS, acotada, type Presupuesto } from '@/lib/likida/presupuesto';
 import { conceptoDesdeClave } from '@/lib/likida/intake/concepto';
 import { getConfig } from '@/lib/likida/config';
 import { emparejarPendiente, emparejarXmlConTicket } from '@/lib/likida/intake/emparejar';
