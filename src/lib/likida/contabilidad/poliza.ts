@@ -39,6 +39,21 @@ export interface CatalogoContable {
    * descuadra por exactamente ese monto (AUDITORÍA 21 ALTO, reincidente c19).
    */
   ivaNoAcreditable?: string;
+  /**
+   * Gastos que el motor declaró NO DEDUCIBLES (AUDITORÍA 22, FIS-C1). Salieron
+   * del anticipo y tienen que aparecer en el asiento, pero NO en la cuenta de
+   * gasto deducible: el PDF los imprime como «No deducible» y el archivo del
+   * ERP tiene que decir lo mismo. Sin esta cuenta declarada, una liquidación
+   * con gasto no deducible se NIEGA — no se elige una cuenta plausible.
+   */
+  gastoNoDeducible?: string;
+  /**
+   * El tercer estado: ni deducible ni perdido, a confirmar por el contador
+   * (combustible en efectivo dentro del 15%, EFOS no concluyente, ticket sin
+   * timbrar…). Se separa de `gastoNoDeducible` a propósito: asentarlos juntos
+   * le diría al contador que ya se perdió algo que todavía se puede recuperar.
+   */
+  gastoPorConfirmar?: string;
   /** El anticipo entregado al operador: se cancela contra los comprobantes. */
   anticipoOperador?: string;
   /** Lo que el operador debe devolver (comprobó de menos). */
@@ -68,8 +83,20 @@ export interface LiquidacionParaPoliza {
   operador: string;
   fecha: string;
   anticipo: number;
-  /** Gastos ya cuadrados, agrupados por concepto, SIN IVA. */
-  porConcepto: Array<{ concepto: ConceptoGasto; subtotal: number }>;
+  /**
+   * Gastos ya cuadrados, agrupados por concepto, SIN IVA.
+   *
+   * `subtotal` es la base DEDUCIBLE. Las otras dos son las otras dos cubetas
+   * del motor (`cubetaDe`), y van a cuentas distintas (AUDITORÍA 22, FIS-C1).
+   * Opcionales para que un llamador que solo tiene deducible siga siendo
+   * válido; ausente = 0.
+   */
+  porConcepto: Array<{
+    concepto: ConceptoGasto;
+    subtotal: number;
+    subtotalNoDeducible?: number;
+    subtotalPorConfirmar?: number;
+  }>;
   ivaAcreditable: number;
   /** anticipo − comprobado. Positivo: el operador devuelve. Negativo: se le debe. */
   diferencia: number;
@@ -98,20 +125,41 @@ export function polizaDeLiquidacion(
   const movimientos: MovimientoPoliza[] = [];
   const ref = liq.folioViaje;
 
+  // ── AUDITORÍA 22, FIS-C1 (CRÍTICO): TRES CUBETAS, TRES CUENTAS ───────────
+  // Antes este bucle cargaba TODO a `catalogo.gastos[concepto]`, la cuenta de
+  // gasto DEDUCIBLE, porque `LiquidacionParaPoliza` no tenía un solo campo de
+  // deducibilidad. El PDF de la misma liquidación imprimía «No deducible
+  // $58,000» y el archivo que el contador importa lo asentaba como deducible:
+  // dos artefactos del mismo cálculo diciendo cosas contrarias.
   for (const g of liq.porConcepto) {
-    if (g.subtotal === 0) continue;
-    const cuenta = catalogo.gastos[g.concepto];
-    if (!cuenta) {
-      falta.push(`cuenta de gasto para «${g.concepto}»`);
-      continue;
+    const deducible = REDONDEO(g.subtotal);
+    const noDeducible = REDONDEO(g.subtotalNoDeducible ?? 0);
+    const porConfirmar = REDONDEO(g.subtotalPorConfirmar ?? 0);
+
+    if (deducible !== 0) {
+      const cuenta = catalogo.gastos[g.concepto];
+      if (!cuenta) falta.push(`cuenta de gasto para «${g.concepto}»`);
+      else movimientos.push({
+        cuenta, cargo: deducible, abono: 0,
+        concepto: `${g.concepto} — viaje ${liq.folioViaje}`, referencia: ref,
+      });
     }
-    movimientos.push({
-      cuenta,
-      cargo: REDONDEO(g.subtotal),
-      abono: 0,
-      concepto: `${g.concepto} — viaje ${liq.folioViaje}`,
-      referencia: ref,
-    });
+    // La regla del módulo, aplicada igual que arriba: sin cuenta declarada NO
+    // se elige una plausible. Se dice qué falta y el archivo no sale.
+    if (noDeducible !== 0) {
+      if (!catalogo.gastoNoDeducible) falta.push('cuenta de gastos no deducibles');
+      else movimientos.push({
+        cuenta: catalogo.gastoNoDeducible, cargo: noDeducible, abono: 0,
+        concepto: `${g.concepto} NO DEDUCIBLE — viaje ${liq.folioViaje}`, referencia: ref,
+      });
+    }
+    if (porConfirmar !== 0) {
+      if (!catalogo.gastoPorConfirmar) falta.push('cuenta de gastos por confirmar');
+      else movimientos.push({
+        cuenta: catalogo.gastoPorConfirmar, cargo: porConfirmar, abono: 0,
+        concepto: `${g.concepto} POR CONFIRMAR — viaje ${liq.folioViaje}`, referencia: ref,
+      });
+    }
   }
 
   if (liq.ivaAcreditable > 0) {
@@ -137,7 +185,13 @@ export function polizaDeLiquidacion(
   // los mismos datos que ya trae la liquidación (nunca se pide un campo
   // nuevo a la RPC: `anticipo − diferencia` es la misma identidad que usa
   // el motor) y el residuo contra base+IVA-acreditable es ese impuesto.
-  const subtotalDeclarado = REDONDEO(liq.porConcepto.reduce((s, g) => s + g.subtotal, 0));
+  // Las TRES cubetas cuentan como base (FIS-C1): todas salieron del anticipo y
+  // todas tienen ya su renglón arriba. Sumar solo la deducible haría que la
+  // base no deducible reapareciera aquí como «IVA/IEPS no acreditable» — un
+  // impuesto que no existe, y de paso el asiento cuadraría por la razón
+  // equivocada, que es peor que no cuadrar.
+  const subtotalDeclarado = REDONDEO(liq.porConcepto.reduce(
+    (s, g) => s + g.subtotal + (g.subtotalNoDeducible ?? 0) + (g.subtotalPorConfirmar ?? 0), 0));
   const comprobado = REDONDEO(liq.anticipo - liq.diferencia);
   const impuestoNoAcreditado = REDONDEO(comprobado - subtotalDeclarado - liq.ivaAcreditable);
   if (impuestoNoAcreditado > 0.01) {

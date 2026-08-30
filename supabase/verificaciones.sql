@@ -15179,3 +15179,60 @@ begin
     real_codigo, real_token, tenant_cruzado_codigo, tenant_cruzado_token,
     rol_no_vigente_codigo, rol_no_vigente_token, rol_fuera_dominio_codigo, rol_fuera_dominio_token;
 end $$;
+
+-- ── 220. `poliza_datos_tenant` entrega los insumos de deducibilidad, y no los clasifica (mig. 0272) ──
+--
+-- AUDITORÍA 22, FIS-C1 (CRÍTICO). La función devolvía UNA base por concepto y
+-- la ruta la cargaba entera a la cuenta de gasto DEDUCIBLE, aunque el motor
+-- hubiera marcado ese comprobante `cfdi_efos` o `efectivo_sobre_tope`: el PDF
+-- decía «No deducible $58,000» y el archivo del ERP lo asentaba como deducible.
+--
+-- Lo que este bloque asevera es la FORMA del contrato nuevo, que es lo que la
+-- base sí puede demostrar:
+--   (a) cada fila trae `gastos`, con un renglón POR COMPROBANTE — no agregado
+--       por concepto — con su `id`, su base y `tieneCfdi`;
+--   (b) cada fila trae `diferencias`, el jsonb que la liquidación ya guarda;
+--   (c) `porConcepto` y `baseDesconocida` SIGUEN ahí: los consumidores previos
+--       no se enteran de este cambio.
+--
+-- Lo que este bloque NO asevera, a propósito: en qué cubeta cae cada gasto. Esa
+-- pregunta tiene UNA definición (`cubetaDe`, cuadre/engine.ts) y vive en TS.
+-- Copiar `NO_DEDUCIBLE_ISR` aquí sería la segunda fuente de verdad que diverge
+-- en la primera auditoría que agregue un tipo. Se prueba en
+-- `poliza_deducibilidad.test.ts` y en el reparto de la ruta.
+do $$
+declare
+  t uuid := gen_random_uuid(); v uuid := gen_random_uuid();
+  l uuid := gen_random_uuid(); g uuid := gen_random_uuid();
+  fila jsonb;
+  trae_gastos boolean := false;
+  gasto_por_comprobante boolean := false;
+  trae_diferencias boolean := false;
+  conserva_por_concepto boolean := false;
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0272__');
+  insert into public.viaje (id, tenant_id, folio, anticipo, estatus)
+    values (v, t, 'VJ-0272', 10000, 'liquidado');
+  insert into public.gasto (id, tenant_id, viaje_id, concepto, monto, sub_total, cfdi_uuid)
+    values (g, t, v, 'hospedaje', 5800, 5000, null);
+  insert into public.liquidacion
+    (id, tenant_id, viaje_id, total_anticipo, total_comprobado, diferencia, iva_acreditable, diferencias)
+    values (l, t, v, 10000, 5800, 4200, 0,
+      jsonb_build_array(jsonb_build_object('tipo','efectivo_sobre_tope','gastoId',g::text,'concepto','hospedaje','monto',0)));
+
+  select x into fila
+    from jsonb_array_elements(public.poliza_datos_tenant(t, current_date - 1, current_date + 1)) x
+   limit 1;
+
+  trae_gastos           := jsonb_typeof(fila->'gastos') = 'array' and jsonb_array_length(fila->'gastos') = 1;
+  gasto_por_comprobante := (fila->'gastos'->0->>'id') = g::text
+                           and (fila->'gastos'->0->>'subtotal')::numeric = 5000
+                           and (fila->'gastos'->0->>'tieneCfdi') = 'false';
+  trae_diferencias      := jsonb_array_length(fila->'diferencias') = 1
+                           and (fila->'diferencias'->0->>'gastoId') = g::text;
+  conserva_por_concepto := jsonb_typeof(fila->'porConcepto') = 'array'
+                           and (fila->'baseDesconocida')::numeric = 0;
+
+  raise exception E'POLIZA_DEDUCIBILIDAD_0272  gastos=%  por-comprobante=%  diferencias=%  conserva-porConcepto=%   (esperado t / t / t / t)',
+    trae_gastos, gasto_por_comprobante, trae_diferencias, conserva_por_concepto;
+end $$;
