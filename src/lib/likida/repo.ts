@@ -1000,6 +1000,44 @@ export function conteoDeGastosCambio(e: unknown): boolean {
   return !!e && typeof e === 'object' && (e as { code?: string }).code === CIERRE_CONTEO_CAMBIO;
 }
 
+/**
+ * ¿ESTE viaje ya tiene liquidación en la base? (AUDITORÍA 22, AGEN-C1, CRÍTICO)
+ *
+ * La base es la autoridad sobre si un cierre ocurrió; el resultado de la tool,
+ * no. `guardar_liquidacion` no mira `ctx.signal`, así que cuando el reloj del
+ * agente vence a mitad de las subidas a Storage, `raceAbort` devuelve
+ * `{success:false, error:'Timeout'}` y el handler SIGUE VIVO: segundos después
+ * `guardar_liquidacion_tx` commitea, el viaje queda `liquidado` y los triggers
+ * 0036/0037 lo vuelven irreversible.
+ *
+ * El processor decidía si hubo cierre leyendo `!t.error` sobre esa cadena, así
+ * que el cierre existía y el chofer recibía lo contrario. Esto es lo que le
+ * permite preguntarle a quien sí sabe.
+ *
+ * Devuelve `undefined` si NO hay, y lanza si no se pudo leer: un error de red
+ * no puede leerse como «no se cerró», que es exactamente el bug que cierra.
+ */
+export async function getLiquidacionDeViaje(
+  tenantId: string,
+  viajeId: string,
+): Promise<{ id: string; pdfUrl: string | null } | undefined> {
+  const { data, error } = await acotada(
+    supabaseAdmin().from('liquidacion')
+      .select('id, pdf_url')
+      .eq('tenant_id', tenantId).eq('viaje_id', viajeId)
+      // Desempate determinista: dos liquidaciones del mismo viaje con el mismo
+      // `created_at` al milisegundo elegirían una al azar, y de esa elección
+      // depende qué PDF se le manda al chofer.
+      .order('created_at', { ascending: false }).order('id', { ascending: false })
+      .limit(1).maybeSingle(),
+    'getLiquidacionDeViaje',
+  );
+  if (error) throw new Error(`getLiquidacionDeViaje: ${error.message}`);
+  if (!data) return undefined;
+  const f = data as { id: unknown; pdf_url: unknown };
+  return { id: String(f.id), pdfUrl: f.pdf_url == null ? null : String(f.pdf_url) };
+}
+
 export async function saveLiquidacion(
   tenantId: string,
   liq: Omit<Liquidacion, 'id' | 'creadaEn'>,
