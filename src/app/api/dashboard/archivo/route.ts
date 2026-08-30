@@ -9,7 +9,8 @@
 // del contralor puede traer montos, y este endpoint es alcanzable por POST
 // directo (el proxy no cubre /api).
 import { NextResponse, type NextRequest } from 'next/server';
-import { MAX_BASE64 } from './limites';
+import { MAX_BASE64, LECTURAS_POR_MINUTO } from './limites';
+import { rateLimit } from '@/lib/ratelimit';
 import { getSessionTenant } from '@/lib/auth/session';
 import { puedeVerArea } from '@/lib/auth/visibilidad';
 import { leerArchivoUniversal, ArchivoNoSoportado } from '@/lib/likida/intake/archivo';
@@ -24,6 +25,12 @@ export async function POST(req: NextRequest) {
   if (!sesion) return NextResponse.json({ error: 'sin sesion' }, { status: 401 });
   if (!puedeVerArea(sesion.rol, 'dinero')) {
     return NextResponse.json({ error: 'sin acceso' }, { status: 403 });
+  }
+  // Mismo freno que la sonda de ingesta (auditoría 21): el cuerpo ya tiene
+  // tope de TAMAÑO, esto le pone el de FRECUENCIA — sin él, un bucle con un
+  // xlsx de expansión adversarial repetía el parseo sin techo.
+  if (!(await rateLimit(`archivo:${sesion.userId}`, LECTURAS_POR_MINUTO, 60_000))) {
+    return NextResponse.json({ error: 'demasiadas lecturas seguidas; espera un minuto' }, { status: 429 });
   }
 
   let cuerpo: { nombre?: unknown; contenido?: unknown };
