@@ -105,6 +105,7 @@ export type TipoDiferencia =
   | 'complemento_no_verificable' // factura de combustible sin XML → no se puede verificar el complemento (NIVEL 1, a bandeja)
   | 'combustible_efectivo' // combustible pagado en efectivo → NO deducible (LISR 27-III, sin importar monto)
   | 'efectivo_sobre_tope'  // gasto no-combustible en efectivo > $2,000 → NO deducible (LISR 27-III)
+  | 'medio_pago_no_admitido' // > $2,000 con una forma de pago FUERA de la lista cerrada de LISR 27-III (06, 08, 12, 17, 23, 99…) → por confirmar, sin IVA acreditable
   | 'ieps_no_desglosado'   // CFDI de diésel sin IEPS desglosado → no acreditable (se pierde el estímulo)
   | 'viatico_excede_fiscal' // viático de alimentación > tope fiscal $750/día (LISR 28-V) → porción no deducible
   | 'fecha_sospechosa'     // fecha futura o muy anterior al viaje → periodo/plazo/complemento en riesgo
