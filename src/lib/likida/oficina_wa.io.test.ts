@@ -59,6 +59,16 @@ vi.mock('@/lib/meta/client', () => ({
 }));
 const analista = vi.fn(async (_o: unknown) => ({ bloques: [{ tipo: 'texto', texto: 'Van bien.' }] }));
 vi.mock('@/lib/agents/analista', () => ({ ejecutarAnalista: (o: unknown) => analista(o) }));
+let gastoHoyUsd = 0;
+const costosRegistrados: unknown[] = [];
+vi.mock('@/app/api/dashboard/chat/tope', () => ({
+  gastoChatHoyUsd: async () => gastoHoyUsd,
+  topeDiaUsd: () => 5,
+}));
+vi.mock('@/lib/likida/costos', () => ({
+  registrarCosto: async (c: unknown) => { costosRegistrados.push(c); },
+  faseDeModelo: () => 'chat',
+}));
 vi.mock('@/lib/logger', () => ({ logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() } }));
 
 // El informe que se arma, capturado: es donde se puede leer la CIFRA que el
@@ -168,5 +178,46 @@ describe('atenderPreguntaLibre — el analista del panel, en el chat', () => {
   it('si el analista truena: null (cae al saludo que orienta), jamás un error pelón', async () => {
     analista.mockRejectedValueOnce(new Error('modelo caído'));
     expect(await atenderPreguntaLibre(DUENO, '¿cómo vamos?')).toBeNull();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUDITORÍA 22 · REN-A1 (ALTO) — el mismo analista, sin freno ni cuenta.
+//
+// `atenderPreguntaLibre` corre el analista COMPLETO (hasta nueve completions
+// con tools) y no registraba un centavo en `llm_costo` ni pasaba por el tope
+// diario. El chat del panel ejecuta EXACTAMENTE el mismo agente y hace las dos
+// cosas. O sea: el mismo gasto, por otro canal, invisible para el panel de
+// costo y para el freno — y WhatsApp es el canal que el producto empuja como
+// principal.
+// ═══════════════════════════════════════════════════════════════════════════
+describe('REN-A1: la pregunta libre por WhatsApp cuenta y se frena', () => {
+  const conCosto = { bloques: [{ tipo: 'texto', texto: 'Van bien.' }], costoPorModelo: { 'x-ai/grok': { tokensIn: 1200, tokensOut: 340, cost: 0.0042 } } };
+
+  it('registra el costo POR MODELO, como el chat del panel', async () => {
+    costosRegistrados.length = 0;
+    gastoHoyUsd = 0;
+    analista.mockResolvedValueOnce(conCosto as never);
+
+    await atenderPreguntaLibre(DUENO, '¿cuánto llevo gastado este mes?');
+
+    // Lo que rompía: cero filas de `llm_costo` por una corrida de hasta nueve
+    // completions.
+    expect(costosRegistrados).toHaveLength(1);
+    expect(costosRegistrados[0]).toMatchObject({
+      tenantId: 't-1', modelo: 'x-ai/grok', tokensIn: 1200, tokensOut: 340, costoUsd: 0.0042,
+    });
+  });
+
+  it('agotado el tope diario NO llama al analista, y lo dice sin tecnicismos', async () => {
+    costosRegistrados.length = 0;
+    analista.mockClear();
+    gastoHoyUsd = 99;
+
+    const r = await atenderPreguntaLibre(DUENO, '¿cómo vamos?');
+
+    expect(analista).not.toHaveBeenCalled();
+    expect(r).toMatch(/tope diario/i);
+    gastoHoyUsd = 0;
   });
 });

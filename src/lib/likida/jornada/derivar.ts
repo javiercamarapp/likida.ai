@@ -130,7 +130,20 @@ async function listaDeTrabajo(
       .not('aceptado_en', 'is', null)
       .gte('aceptado_en', inicioDiaMx(desde))
       .lte('aceptado_en', finDiaMx(hasta))
-      .order('aceptado_en', { ascending: true })
+      // ── AUDITORÍA 22, REN-A2 (ALTO): DESCENDENTE, NO ASCENDENTE ──────────
+      // Ordenaba ascendente y el bucle arranca siempre en el índice 0, así que
+      // cada corrida volvía a recorrer el mismo prefijo ya asentado — y
+      // recorrerlo cuesta MÁS que hacerlo (7 consultas contra 6, porque
+      // `asegurarDiaJornada` relee cuando el registro ya existe). En régimen,
+      // una ventana con más pares (operador, día) de los que caben en el reloj
+      // se consumía entera re-haciendo la cabeza de la lista, y los días
+      // RECIENTES salían de la ventana de 3 días sin derivarse jamás. El
+      // expediente laboral quedaba vacío de forma permanente, no transitoria.
+      //
+      // Descendente invierte exactamente eso: lo más nuevo se deriva siempre, y
+      // lo que el reloj corta es la cola vieja — que en su momento fue reciente
+      // y ya se derivó. Y cuando el TOPE recorta, recorta lo viejo, no lo nuevo.
+      .order('aceptado_en', { ascending: false })
       .limit(TOPE_VIAJES_POR_CORRIDA),
     'jornada.derivar.viajes',
   );
@@ -210,9 +223,15 @@ async function extremosGps(
     .eq('tenant_id', tenantId).eq('unidad_id', unidadId)
     .gte('medida_en', desde).lte('medida_en', hasta);
 
-  const pri = await acotada(base().order('medida_en', { ascending: true }).limit(1).maybeSingle(), 'jornada.gps.primera');
+  // REN-A2: las dos consultas son INDEPENDIENTES —la primera posición del día y
+  // la última— y se hacían en serie. En un bucle que ya es N+1 y con un reloj
+  // de 45 s encima, cada viaje de red de más sale de la cuota de trabajos que
+  // la corrida alcanza a derivar.
+  const [pri, ult] = await Promise.all([
+    acotada(base().order('medida_en', { ascending: true }).limit(1).maybeSingle(), 'jornada.gps.primera'),
+    acotada(base().order('medida_en', { ascending: false }).limit(1).maybeSingle(), 'jornada.gps.ultima'),
+  ]);
   if (pri.error) return { primera: null, ultima: null, error: pri.error.message };
-  const ult = await acotada(base().order('medida_en', { ascending: false }).limit(1).maybeSingle(), 'jornada.gps.ultima');
   if (ult.error) return { primera: null, ultima: null, error: ult.error.message };
 
   return {
