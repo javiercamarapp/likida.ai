@@ -72,6 +72,23 @@ export interface ResultadoDerivacion {
    *  «no hubo de dónde derivar» no es lo mismo que «no había jornada». */
   diasSinGps: number;
   /**
+   * AUDITORÍA 22, LEG-C1 (CRÍTICO). Pares (operador, día) que NO se derivaron
+   * porque el operador nunca recibió el aviso de privacidad.
+   *
+   * `ponerAvisoADisposicion` cuelga del camino del MENSAJE ENTRANTE, y un
+   * chofer que recibe sus viajes por radio puede no escribir nunca: su
+   * `operador.aviso_privacidad_en` se queda en NULL mientras el cron le
+   * construye un expediente laboral —horas, banderas del art. 61 y del 68—
+   * que él nunca supo que existía. El art. 16 de la LFPDPPP obliga a poner el
+   * aviso a disposición ANTES del tratamiento, y el propio `privacidad.ts`
+   * escribe ese principio: «esperar a que haya filas sería avisar después de
+   * tratar».
+   *
+   * Se cuenta para que el cron lo pinte y la flota pueda cerrarlo: sin la
+   * lista, el hueco es invisible.
+   */
+  sinAvisoPrevio: number;
+  /**
    * `true` si la ventana trajo tantos viajes como el tope y NO cupo entera.
    *
    * SE DICE PORQUE SI NO, EL CRON MIENTE EN VERDE. La lista sale ordenada por
@@ -147,6 +164,39 @@ async function listaDeTrabajo(
   return { trabajos, truncada, error: null };
 }
 
+/**
+ * ¿A este operador ya se le puso el aviso de privacidad a disposición?
+ *
+ * AUDITORÍA 22, LEG-C1 (CRÍTICO). Fallar cerrado en los dos bordes: si la
+ * lectura falla, la respuesta es NO. Un error de red no puede volverse permiso
+ * para construirle a alguien un expediente laboral sin haberle avisado.
+ *
+ * Memoiza por corrida: la lista de trabajo trae un renglón por (operador, día)
+ * y el mismo operador aparece muchas veces en la ventana.
+ */
+const avisoPorOperador = new Map<string, boolean>();
+
+async function tieneAvisoPrevio(tenantId: string, operadorId: string): Promise<boolean> {
+  const llave = `${tenantId}|${operadorId}`;
+  const cache = avisoPorOperador.get(llave);
+  if (cache !== undefined) return cache;
+
+  const { data, error } = await acotada(
+    supabaseAdmin().from('operador')
+      .select('aviso_privacidad_en')
+      .eq('tenant_id', tenantId).eq('id', operadorId)
+      .maybeSingle(),
+    'jornada.aviso_previo',
+  );
+  if (error) {
+    logger.error('jornada.aviso_previo_ilegible', { tenantId, operadorId, err: error.message });
+    return false;
+  }
+  const ok = (data as { aviso_privacidad_en: string | null } | null)?.aviso_privacidad_en != null;
+  avisoPorOperador.set(llave, ok);
+  return ok;
+}
+
 /** La primera y la última posición de una unidad en un día de México. */
 async function extremosGps(
   tenantId: string,
@@ -198,8 +248,11 @@ export async function derivarJornadas(args: {
 
   const r: ResultadoDerivacion = {
     revisados: 0, asentados: 0, yaEstaban: 0, fallos: [], cortadosPorReloj: 0,
-    diasSinGps: 0, listaTruncada: false,
+    diasSinGps: 0, listaTruncada: false, sinAvisoPrevio: 0,
   };
+
+  // La memo es por CORRIDA: entre una y otra el aviso pudo haberse puesto.
+  avisoPorOperador.clear();
 
   const { trabajos, truncada, error } = await listaDeTrabajo(desde, hasta);
   if (error) {
@@ -226,6 +279,18 @@ export async function derivarJornadas(args: {
       break;
     }
     intentados++;
+
+    // ── LEG-C1: NO SE TRATA ANTES DE AVISAR ───────────────────────────────
+    // Fallar cerrado. Derivar la jornada de alguien que nunca recibió el aviso
+    // es exactamente lo que el art. 16 prohíbe, y el expuesto es el operador
+    // mientras la sancionable es la flota (art. 14). No se deriva y se cuenta.
+    //
+    // Va ANTES de `asegurarDiaJornada` a propósito: crear el expediente ya es
+    // tratamiento, aunque no lleve marcas.
+    if (!(await tieneAvisoPrevio(t.tenantId, t.operadorId))) {
+      r.sinAvisoPrevio++;
+      continue;
+    }
 
     const expediente = await asegurarDiaJornada(t.tenantId, t.operadorId, t.dia);
     if ('error' in expediente) {
