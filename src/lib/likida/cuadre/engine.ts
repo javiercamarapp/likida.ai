@@ -1264,7 +1264,20 @@ export function cuadrarViaje(input: CuadreInput): Omit<Liquidacion, 'id' | 'crea
   // fiscal alguno", 4º párrafo, ficha verificada) y acreditar su IVA sería
   // afirmar en verde lo que la ley niega de plano. Ver el comentario largo en
   // POR_CONFIRMAR.
-  const SIN_ACREDITAMIENTO: TipoDiferencia[] = ['rfc_receptor', 'rfc_receptor_no_verificable', 'cfdi_cancelado', 'cfdi_efos', 'cfdi_efos_indeterminado', 'cfdi_no_encontrado', 'complemento_hidrocarburos', 'combustible_efectivo', 'combustible_efectivo_dentro15', 'efectivo_sobre_15', 'efectivo_no_elegible', 'efectivo_sobre_tope', 'monto_invalido', 'cfdi_pendiente', 'consumo_bar', 'moneda_extranjera', 'gasto_otro_ejercicio'];
+  // `renglones_ajenos` entra desde la AUDITORÍA 22 (ARQ-1): el arreglo de
+  // FISCAL-19C2-6 lo metió en POR_CONFIRMAR y en REVISAR y se detuvo ahí, así
+  // que un CFDI de canasta mixta salía con `totalDeducible 0` /
+  // `totalPorConfirmar 1000` y ACREDITABA su IVA completo — la misma
+  // contradicción que este bloque ya había corregido dos veces (`cfdi_pendiente`
+  // en la 12, `gasto_otro_ejercicio` en el ciclo Fable 1). La proporción
+  // deducible de un gasto por confirmar es cero, y cero es lo que LIVA 5-I
+  // permite acreditar hasta que una persona lo confirme.
+  //
+  // `ticket_monedero` es el otro miembro de POR_CONFIRMAR que no está en esta
+  // lista, y NO se agrega: es una foto de bomba, nunca trae CFDI, y el
+  // `if (!g.xmlVerificado) continue` de abajo ya lo ataja estructuralmente.
+  // Meterlo aquí sugeriría que sin esta línea acreditaría, y no es cierto.
+  const SIN_ACREDITAMIENTO: TipoDiferencia[] = ['rfc_receptor', 'rfc_receptor_no_verificable', 'cfdi_cancelado', 'cfdi_efos', 'cfdi_efos_indeterminado', 'cfdi_no_encontrado', 'complemento_hidrocarburos', 'combustible_efectivo', 'combustible_efectivo_dentro15', 'efectivo_sobre_15', 'efectivo_no_elegible', 'efectivo_sobre_tope', 'monto_invalido', 'cfdi_pendiente', 'consumo_bar', 'moneda_extranjera', 'gasto_otro_ejercicio', 'renglones_ajenos'];
   // AUDITORÍA 12, ALTO (fiscal, reincidente de la 11): `cfdi_pendiente` entra
   // aquí y en POR_CONFIRMAR — con el SAT caído o en timeout, "no se pudo
   // verificar" es el MISMO tercer estado que el motor ya aplica a EFOS, al RFC
