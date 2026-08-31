@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "description": "Agente de IA por WhatsApp que automatiza el cierre diario de operaciones logísticas en México.",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build --webpack",
@@ -38,7 +41,7 @@
     "leaflet.markercluster": "^1.5.3",
     "lucide-react": "^1.35.0",
     "next": "^16.3.3",
-    "openai": "^6.33.0",
+    "openai": "^7.8.0",
     "pdf-lib": "^1.17.1",
     "pdf-parse": "^2.4.5",
     "playwright-core": "^1.62.1",
@@ -63,7 +66,7 @@
     "@types/react-dom": "^19.2.5",
     "@vitest/coverage-v8": "4.1.11",
     "eslint": "^9.39.5",
-    "eslint-config-next": "^16.3.2",
+    "eslint-config-next": "^16.3.3",
     "eslint-plugin-security": "^4.0.1",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0",
