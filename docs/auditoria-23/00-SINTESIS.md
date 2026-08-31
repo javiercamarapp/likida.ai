@@ -137,21 +137,55 @@ Ninguno se dejó a medias: cada uno tiene escrito por qué no se tocó.
    que la 22 ya escribió y que no ha cambiado: **el texto jurídico no lo redacta
    una rutina desatendida.**
 
-## Advertencia sobre el rubro de Pruebas
+## El rubro de Pruebas, y su crítico
 
-`pruebas.md` **llegó incompleto**: su sección de hallazgos quedó en «(en
-construcción)» al cerrar la ronda. Lo que sí entregó está medido y es utilizable
-—las 6 mutaciones supervivientes de la 22 mueren hoy, y `verificaciones.sql`
-corrió por primera vez contra un Postgres real—, así que la nota **se queda en 7
-sin moverse**, que es lo que la skill manda cuando un rubro no queda cubierto.
+`pruebas.md` **entregó tarde** —después de que el resto de la ronda cerró y se
+abrió el PR— y se incorporó en una actualización de la rama. Es, otra vez, el
+rubro que **mide en vez de leer**: 27 mutaciones contra la suite completa y
+contra un Postgres real, **14 muertas y 13 sobrevivientes**. Nota **7, sin
+moverse**, y las dos razones se midieron:
 
-Su hallazgo de cabecera, que **no alcancé a verificar por mi cuenta** y por eso
-no está en la tabla de confirmados: `scripts/ci/correr-verificaciones.mjs` corre
-203 bloques y **19 salen «SIN CALIFICAR» sin contar como fallo**; el auditor dice
-haber quitado la guarda `ve_finanzas()` de la policy de `pago_recibido` y haber
-obtenido `pagos=1` impreso con **exit 0 y «La batería pasó»**. Si se sostiene, es
-una compuerta de CI que no puede reprobar, y es lo primero que debe reauditar la
-ronda 24.
+- *Se atacó y subió.* Las **6 mutaciones que sobrevivieron a la 22 mueren hoy**
+  (6/6). Los cuatro arreglos de `d3ce510` no son decoración. Y de 8 reversiones
+  de arreglos de la 22, **5 mueren** (FIS-C1, FIS-C2, FIS-C3, LEG-C1,
+  `traerTodo`): esas pruebas sí anclan lo que dicen anclar.
+- *Mirada más profunda.* De 9 mutaciones nuevas dirigidas, **8 sobreviven**. Los
+  arreglos de la 22 cerraron **el punto que nombraron, no la clase**.
+
+### CRÍTICO · PRU-1 — verificado, con el encuadre corregido
+
+`scripts/ci/correr-verificaciones.mjs:388-408` (`SIN_CALIFICAR_CONOCIDOS`)
+
+**Lo verifiqué abriendo el archivo, y el hallazgo se sostiene — pero no como el
+auditor lo enmarcó, y la diferencia importa.** No es que el runner ignore fallos
+por descuido: el 23-ago-2026 alguien hizo justamente lo contrario y convirtió
+`sin_calificar` en falla, con el comentario correcto escrito arriba («un verde
+que no distingue "verifiqué y está bien" de "no supe leer el resultado" no es una
+compuerta: es un adorno»). Lo que hizo fue un **trinquete nominal**: 19 bloques
+que el parser no sabe leer, cada uno con su razón, y **un bloque nuevo sin
+calificar sí falla**. La lista está pensada para bajar, no para crecer.
+
+El problema real es **cuáles** son esos 19. Entre ellos está **`FINANZAS_RLS`**
+—«A · "esperado 0 en las seis" es prosa, no una lista de seis ceros»—, que es
+precisamente el bloque que comprueba el aislamiento por rol sobre el dinero. Ese
+bloque **corre, ataca, imprime su resultado, y nadie lo lee**. El auditor lo
+demostró quitándole a la policy de `pago_recibido` su guarda `ve_finanzas()`: la
+batería imprimió `pagos=1` —la fuga, en su propia salida— y terminó en
+`182 ok · 0 fallos`, **exit 0, «La batería pasó»**.
+
+Así que la frase precisa no es «la compuerta no puede reprobar», sino: **para 19
+bloques —entre ellos el de RLS financiero, los RPC de cobranza y los agregados—
+la compuerta no puede reprobar, y la razón por la que están exentos es el formato
+del mensaje, no la ausencia de riesgo.** Una deuda de parseo terminó eximiendo al
+control de aislamiento del dinero.
+
+**PENDIENTE.** El arreglo es el que el propio archivo prescribe («arregla el
+mensaje del `raise` … esa lista se baja, no se sube»): volver el `raise` de
+`FINANZAS_RLS` una lista alineada y sacarlo de la lista. Es mecánico, pero
+**exige correr el bloque contra Postgres para confirmar que califica y pasa**, y
+el tope de 3 vueltas de la ronda ya estaba agotado cuando este reporte llegó.
+Empujarlo a ciegas sobre una compuerta de seguridad es exactamente lo que esta
+rutina no hace. **Es, con DATOS-C2, lo primero de la ronda 24.**
 
 ## Lo que esta ronda aprendió y conviene no perder
 

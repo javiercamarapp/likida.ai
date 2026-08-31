@@ -246,12 +246,11 @@
     </div>
 
     <div class="panel rubro v">
-      <div class="top"><span class="nom">Pruebas</span><span class="delta nada">parcial</span></div>
+      <div class="top"><span class="nom">Pruebas</span><span class="delta igual">= 0</span></div>
       <div class="nota">7<span style="font-size:14px;color:var(--tinta3);font-weight:500"> /10 · antes 7</span></div>
-      <p class="riesgo"><b>Reporte incompleto:</b> su sección de hallazgos quedó «en construcción» al
-        cerrar. Lo medido sí sirve: <b>las 6 mutaciones que sobrevivieron a la 22 mueren hoy</b>. Su
-        hallazgo de cabecera —19 de 203 bloques de CI salen «sin calificar» y no cuentan como
-        fallo— <b>no lo pude verificar</b>. La nota no se mueve.</p>
+      <p class="riesgo">El único rubro que <b>mide en vez de leer</b>: 27 mutaciones, 14 muertas y 13
+        vivas. Las 6 supervivientes de la 22 mueren hoy — pero 8 de 9 mutaciones nuevas sobreviven:
+        sus arreglos cerraron el punto que nombraron, no la clase.</p>
     </div>
 
   </div>
@@ -319,6 +318,18 @@
             <code>despacho_wa.ts:133</code> la excluyen a propósito). El arreglo exige recopiar el
             cuerpo de la función — la maniobra que ya produjo este bug dos veces — y se agotó el tope
             de 3 vueltas.</td>
+        </tr>
+        <tr>
+          <td class="id">PRU-1</td>
+          <td>19 de los 203 bloques de la batería de CI están exentos de calificar — y entre ellos
+            está <code>FINANZAS_RLS</code>, el que comprueba el aislamiento por rol sobre el dinero.</td>
+          <td><span class="et pen">PENDIENTE</span> <b>Verificado, con el encuadre corregido:</b> no es
+            descuido, es un trinquete nominal con razón escrita por cada bloque, y uno nuevo sí falla.
+            El problema es <b>cuáles</b> están exentos: el bloque corre, ataca, imprime <code>pagos=1</code>
+            al quitarle <code>ve_finanzas()</code> a la policy — y el runner termina en
+            <code>182 ok · 0 fallos</code>, exit 0. Una deuda de parseo eximió al control del dinero.
+            El arreglo exige Postgres para confirmar que el bloque califica; el tope de 3 vueltas ya
+            estaba agotado cuando llegó el reporte.</td>
         </tr>
         <tr>
           <td class="id">FIS-2</td>
@@ -426,8 +437,8 @@
   </div>
 
   <p class="nota-pie">
-    Los doce rubros tienen archivo; <b>el de pruebas llegó incompleto</b> (hallazgos «en construcción») y conserva su nota.
-    <b>11 CRÍTICOS y 24 ALTOS</b> reportados (el de la 0273 cuenta una vez, encontrado por tres
+    Los doce rubros auditados con archivo propio (<b>pruebas entregó tarde</b>, tras abrirse el PR, y se incorporó a la rama).
+    <b>12 CRÍTICOS y 28 ALTOS</b> reportados (el de la 0273 cuenta una vez, encontrado por tres
     auditores). <b>3 arreglados</b> en 3 commits atómicos, cada uno con prueba que lo reproduce y
     compuerta verde. Tope de 3 vueltas de la skill: alcanzado.
   </p>
