@@ -38,3 +38,8 @@ esto es lo único que dice desde dónde reanudar.
 | `d3ce510` | PRU-C1 + A1 + A2 + A3 | el export de póliza ejecutado, dos tautológicas cerradas, cola y estadías probadas |
 | — | Compuerta final | **9,995 pruebas en 708 archivos, verdes** · tsc 0 · lint 0 errores |
 | — | Recalificación | **NO se hizo, a propósito**: puntuar mis propios arreglos sin auditoría fresca sería la nota inventada que esta rutina existe para evitar. Insumo de la ronda 23 |
+| — | CI del PR #285 tras cerrar | **ROJA** — y mi compuerta no la vio: `npm run lint:ratchet` no estaba en ella (import muerto `MARGEN_CIERRE_MS`), y tres fixtures nuevos de `verificaciones.sql` (220, 221) chocaban con dominios y NOT NULL reales |
+| — | La 0273 rompió DOS bloques preexistentes | ARCO_0178 y ARCO_0262: reescribí `ejecutar_arco_cancelacion` a mano en vez de partir del cuerpo de la 0262. Se perdieron guardas enteras. Reconstruida verbatim + los dos UPDATE insertados |
+| — | Postgres 16 local (sin Docker) | réplica del job de CI: **255 migraciones limpias** · **203 bloques · 182 ok · 0 fallos** |
+| `7e67d94` | fix(ci) los tres fallos | compuerta ampliada: `npm test` 9,995 · tsc 0 · lint 0 errores · **`lint:ratchet` 165/166 heredadas, 0 nuevas** |
+| — | **CI verde, verificada por API** | los 8 checks del PR #285 sobre el head `7e67d94` en `success` (verificar ×2, migraciones+aislamiento ×2, Playwright ×2, GitGuardian, Vercel). `mergeable_state: clean` |
