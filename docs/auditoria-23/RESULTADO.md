@@ -1,4 +1,4 @@
-COMPLETA: los 12 rubros auditados, 3 CRÍTICOS arreglados, 9 pendientes con razón escrita.
+COMPLETA: los 12 rubros auditados, 3 CRÍTICOS arreglados, 8 pendientes con razón escrita.
 
 - **Tipo:** ronda COMPLETA (sin PR de auditoría abierto + 5 commits en `src/`/`supabase/`/`normas/` desde `86813f4`).
 - **Rama:** `claude/auditoria-23` sobre `master` = `c7c3d1c`. Árbol limpio al arrancar → autofix habilitado.
@@ -9,7 +9,7 @@ COMPLETA: los 12 rubros auditados, 3 CRÍTICOS arreglados, 9 pendientes con raz�
   - `8e8b17f` — SEG-1/LEG-C1/DATOS-C1: la mig. 0273 revirtió el `search_path` de la 0264 y dejó la cancelación ARCO inejecutable en producción. Mig. 0275 con `alter function … set`.
   - `c4787f7` — FIS-1: el arreglo FIS-C3 de la 22 trataba `'99 Por definir'` como medio de pago no admitido. Toda compra a crédito de más de $2,000 salía del deducible y perdía su IVA.
   - `fd80af1` — REN-1: el arreglo estrella de la 22 paginaba el PDF del jefe sin `ORDER BY`. Medido: $112,475,000.00 impreso contra $112,575,000.00 reales.
-- **Tope de 3 vueltas de la skill: alcanzado.** Los 7 CRÍTICOS restantes quedan PENDIENTES con su razón escrita en `00-SINTESIS.md`; dos de ellos (OP-C1, OP-C2) no son código.
+- **Tope de 3 vueltas de la skill: alcanzado.** Los **8** CRÍTICOS restantes quedan PENDIENTES con su razón escrita en `00-SINTESIS.md` (OP-C1, OP-C2, DATOS-C2, FIS-2, FIS-3, AGEN-1, LEG-C2, PRU-1); **OP-C1 no es código** —es un Redeploy— y OP-C2 redefine la señal de salud de producción, así que se propone.
 - **Lo más importante de la corrida no es una nota: producción lleva 5 commits atrás.** El PR #285 se mergeó sin `[deploy]` en el asunto, así que los 34 arreglos de la auditoría 22 nunca se publicaron y `app.likida.ai` sigue sirviendo `86813f4`. **Notificado al dueño durante la corrida**; el arreglo es un Redeploy en el panel de Vercel.
 - **Compuerta al cerrar:** `npm test` **10,002 pruebas en 711 archivos**, todas verdes · `npx tsc --noEmit` 0 errores · `npm run lint` 0 errores (165 avisos) · `npm run lint:ratchet` 0 nuevas. `npm run build` no corre aquí a propósito.
 - **`lint:ratchet` entró a la compuerta esta ronda** porque su ausencia fue lo que tumbó el CI de la 22. Cazó un warning nuevo en mi propia prueba **antes del primer commit** — el fallo exacto que la 22 sufrió, atrapado esta vez.
