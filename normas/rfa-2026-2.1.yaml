@@ -4,7 +4,7 @@ jerarquia: 3
 instrumento: "Resolución de Facilidades Administrativas para 2026"
 articulo_o_regla: "2.1"
 titulo: "Retención del ISR a operadores, macheteros y maniobristas (7.5%, sobre el SBC)"
-citas_en_codigo: []
+citas_en_codigo: ["RFA 2026 regla 2.1"]
 texto_vigente: >
   Los contribuyentes personas físicas y morales, dedicados exclusivamente al autotransporte
   terrestre de carga federal y que tributen en los términos del Título II, Capítulo VII o Título IV,
@@ -68,7 +68,7 @@ relacion_con_otras_reglas: >
 pendiente_en_producto: >
   Likida NO calcula ni retiene nómina de operadores hoy (el dominio del producto es la
   liquidación de viajes contra comprobantes y anticipo, no la relación laboral) — por eso
-  `citas_en_codigo` está vacío y no hay drift que reportar todavía. Esta ficha existe porque el
+  `usado_en_codigo` está vacío y no hay drift que reportar todavía. Esta ficha existe porque el
   corpus del agente contador (`normas/consulta.ts`, tema `nomina_imss_y_descuentos`) puede
   recibir la pregunta "¿cómo se retiene el ISR a mis operadores?" y hoy respondería sin fundamento
   fiscal — con esta ficha puede citar la regla 2.1 en vez de guardar silencio o improvisar.
