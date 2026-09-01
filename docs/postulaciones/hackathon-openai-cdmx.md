@@ -458,3 +458,39 @@ Meeting: fleet controllers and owners willing to be design partners. That's my r
 Hiring: not yet. First customer before first employee.
 ```
 
+### 6.6 Investing
+
+> ⚠️ **Campo condicional, y aquí NO hay dato.** El repo, las skills y la
+> conversación no contienen ninguna señal de que Javier invierta o asesore
+> startups. Este borrador contesta que **no**, y sólo afirma lo que sí está
+> sustentado (Kairotec). **Si en realidad pone cheques ángel, tiene rol de
+> asesor o asiento en algún consejo, hay que reescribirlo entero** — ese dato
+> sólo lo tiene él, y es de los que alguien verifica en una sala.
+
+La pregunta empieza con "si estás invirtiendo o asesorando", así que un "no"
+honesto es una respuesta completa, no un campo desperdiciado. Contestar que sí
+sin serlo es el peor riesgo del formulario: en un hackathon con inversionistas
+en el jurado, se cae en la primera pregunta de seguimiento.
+
+La última línea es **una intención, no un hecho** — bórrala si no es cierta.
+
+**Español (487/500):**
+
+```
+No invierto capital. Estoy del otro lado de la mesa: pre-ingresos, un fundador, construyendo.
+
+Lo más cercano es Kairotec, mi agencia de IA: construyo sistemas para otras empresas, así que me toca ver de cerca qué deciden automatizar, qué presupuestan y dónde se atoran al llevarlo a producción. Es ayuda técnica con las manos adentro del código, no un cheque ni un asiento en el consejo.
+
+Si en algún momento invierto, será en fundadores de LATAM construyendo para industrias aburridas.
+```
+
+**English (448/500):**
+
+```
+I don't invest capital. I'm on the other side of the table: pre-revenue, one founder, building.
+
+The closest thing is Kairotec, my AI agency: I build systems for other companies, so I get a close look at what they choose to automate, what they budget, and where they stall taking it to production. That's hands-in-the-code technical help, not a check or a board seat.
+
+If I ever do invest, it'll be in LATAM founders building for boring industries.
+```
+
