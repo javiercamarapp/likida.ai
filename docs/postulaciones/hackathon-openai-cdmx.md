@@ -345,15 +345,26 @@ Alongside it I run an ice factory and Kairotec, my AI agency — businesses with
 
 ### 6.2 Projects — 500 caracteres
 
+Sólo Likida. Moni AI y lo demás salen: dispersarse en un formulario de
+hackathon lee como falta de foco, y el campo rinde más gastado en profundidad
+sobre una cosa. Como la biografía ya cuenta QUÉ hace Likida, este campo cuenta
+CÓMO está hecho por dentro — no repite, baja una capa.
+
+**Español (496/500):**
+
 ```
-Likida se lleva casi todo: motor fiscal, cuadre determinista y una compañía de agentes que auditan el propio repo.
+Likida, y nada más. Debajo del WhatsApp hay un motor fiscal determinista, no un wrapper: el modelo extrae y redacta; cada peso y cada deducibilidad los decide código probado. La foto nunca es la fuente de verdad; el CFDI validado contra el SAT sí. Un ticket recibe varios veredictos —deducible para un impuesto y no para otro—, cada uno citando su norma.
 
-En paralelo, Moni AI —finanzas personales para LATAM con progresión tipo Duolingo (FastAPI, Supabase, Qdrant, React Native)—.
-
-Y lo que hago por gusto: agentes que operan portales web que nadie programó, cobranza automatizada por WhatsApp para mis propios negocios, y un radar que lee el internet buscando oportunidades.
+Alrededor, agentes con presupuesto y kill switch; uno opera portales que nadie programó. 257 migraciones, +9,000 pruebas, aislado por flota.
 ```
 
-**436 / 500.** Confirma que sigues activo en Moni AI; si no, sale y sobran 130 caracteres.
+**English (499/500):**
+
+```
+Likida, nothing else. Under the WhatsApp is a deterministic tax engine, not a wrapper: the model extracts and drafts; every peso and every deductibility call is decided by tested code. The photo is never the source of truth; the CFDI validated against the tax authority is. One receipt gets several verdicts — deductible for one tax, not another — each citing its law.
+
+Around it: agents with budgets and kill switches; one drives portals nobody coded. 257 migrations, 9,000+ tests, tenant-isolated.
+```
 
 ### 6.3 Skills — 500 caracteres
 
