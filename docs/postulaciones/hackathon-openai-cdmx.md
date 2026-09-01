@@ -306,8 +306,23 @@ el PDF ya generado en el escritorio.
 
 ## 6. El formulario real — respuestas listas para pegar
 
-Cuatro campos, todos sobre **la persona**, no sobre el producto. Cada uno viene
+Seis campos, todos sobre **la persona**, no sobre el producto. Cada uno viene
 medido contra su límite de caracteres.
+
+> ### 👉 Contesta en INGLÉS.
+> El formulario está en inglés —"Biography", "Please complete this question",
+> "800 characters remaining"—, y un formulario en inglés espera respuestas en
+> inglés. El riesgo es asimétrico: en español, quien revise y no lo lea pierde
+> la postulación completa; en inglés, un revisor mexicano la lee sin problema.
+> No hay escenario donde el español gane.
+>
+> El español queda abajo de todos modos: sirve para el pitch hablado del
+> sábado, que sí será en español.
+>
+> Ojo con lo que NO se traduce: **CFDI** y **Carta Porte** se quedan en
+> español incluso en la versión inglesa. Son nombres propios del derecho
+> fiscal mexicano; traducirlos pierde precisión y te hace sonar genérico
+> justo donde tienes ventaja.
 
 > ⚠️ **De dónde sale cada cosa.** Likida, la fábrica de hielo, Kairotec y
 > Moni AI salen de este repo y de este entorno. La trayectoria —más de dos años
@@ -407,6 +422,11 @@ se graba, y saber editarlo es una ventaja operativa de fin de semana.
 
 ### 6.4 Building a startup — 500 caracteres
 
+Cierra con «Un fundador» a propósito: en un hackathon, que una persona sola
+tenga esto corriendo es el argumento, no la disculpa.
+
+**Español (477/500):**
+
 ```
 Sí: Likida (likida.ai). Liquidación de viajes de carga por WhatsApp para flotas mexicanas.
 
@@ -415,8 +435,15 @@ Cerrar un viaje hoy son tickets en la guantera, captura manual y un contador que
 Pre-ingresos, en producción contra datos reales de una flota. Un fundador.
 ```
 
-**477 / 500.** Cierra con «Un fundador» a propósito: en un hackathon, que una
-persona sola tenga esto corriendo es el argumento, no la disculpa.
+**English (470/500):**
+
+```
+Yes: Likida (likida.ai). WhatsApp-based trip settlement for Mexican trucking fleets.
+
+Closing a trip today means receipts in the glovebox, manual data entry, and an accountant discovering weeks later what was deductible. I read 5,000+ live Mexican job postings: 828 companies hire for exactly that role, at a median salary of $11,129–$14,500 MXN/month. That's what a WhatsApp number replaces.
+
+Pre-revenue, running in production against a real fleet's data. One founder.
+```
 
 ### 6.5 Areas of Interest
 
