@@ -334,28 +334,30 @@ medido contra su límite de caracteres.
 
 ### 6.1 Biography — 800 caracteres
 
-El arco: dos años construyendo con IA, seis meses en San Francisco, the Network
-School en Asia, y el regreso a México a construir para México. Ese regreso es
-la tesis de la biografía, no un dato de viaje.
+El arco: tres años con IA, seis meses en San Francisco, the Network School en
+Asia, y el regreso a México a construir para México. Ese regreso es la tesis,
+no un dato de viaje. San Francisco carga su propia frase —"lo bastante cerca
+de la frontera para dejar de impresionarme"— porque explica de dónde sale el
+escepticismo con el que está construido el producto.
 
-**Español (751/800):**
-
-```
-Llevo más de dos años construyendo con IA. Pasé seis meses en San Francisco y después en the Network School, en Asia, y volví a México con una convicción concreta: lo que allá se usa para hacer demos, aquí puede cerrar la contabilidad de una empresa real.
-
-Eso construyo hoy. En Likida el chofer de un camión de carga manda por WhatsApp la foto de un ticket de diésel, y un motor determinista devuelve la liquidación del viaje cerrada, con el CFDI validado contra el SAT. Producto, motor fiscal y código: yo, en producción contra datos reales de una flota.
-
-En paralelo opero una fábrica de hielo y Kairotec, mi agencia de IA — negocios con clientes y con nómina. Por eso no me interesa la IA que impresiona en un demo, sino la que un contralor firma.
-```
-
-**English (757/800):**
+**English (755/800):**
 
 ```
-I've spent more than two years building with AI — six months in San Francisco, then the Network School in Asia. I came back to Mexico with one conviction: what gets used there to build demos can, here, close a real company's books.
+Three years building with AI. Six months of it in San Francisco — close enough to the frontier to stop being impressed by it — then the Network School in Asia. I came back to Mexico with one conviction: what gets used there to build demos can, here, close a real company's books.
 
-That's what I'm building. With Likida, a freight driver photographs a diesel receipt and sends it over WhatsApp; a deterministic engine returns the trip's settlement closed, with the CFDI validated against Mexico's tax authority. Product, tax engine and code — me, running in production against a real fleet's real data.
+That's Likida. A freight driver photographs a diesel receipt and sends it over WhatsApp; a deterministic engine returns the trip settled, with the CFDI validated against Mexico's tax authority. Product, tax engine and code — me, in production against a real fleet's data.
 
-Alongside it I run an ice factory and Kairotec, my AI agency — businesses with customers and payroll. Which is why I don't care about AI that impresses in a demo. I care about AI a controller will sign.
+Alongside it I run an ice factory and Kairotec, my AI agency: businesses with customers and payroll. Which is why I don't care about AI that impresses in a demo. I care about AI a controller will sign.
+```
+
+**Español (754/800):**
+
+```
+Tres años construyendo con IA. Seis meses de ellos en San Francisco —lo bastante cerca de la frontera para dejar de impresionarme— y después the Network School, en Asia. Volví a México con una convicción: lo que allá se usa para hacer demos, aquí puede cerrar la contabilidad de una empresa real.
+
+Eso es Likida. El chofer de un tráiler manda por WhatsApp la foto de un ticket de diésel y un motor determinista devuelve el viaje liquidado, con el CFDI validado contra el SAT. Producto, motor fiscal y código: yo, en producción contra datos reales de una flota.
+
+En paralelo opero una fábrica de hielo y Kairotec, mi agencia de IA: negocios con clientes y con nómina. Por eso no me interesa la IA que impresiona en un demo, sino la que un contralor firma.
 ```
 
 ### 6.2 Projects — 500 caracteres
@@ -383,42 +385,38 @@ Around it: agents with budgets and kill switches; one drives portals nobody code
 
 ### 6.3 Skills — 500 caracteres
 
-La pregunta pide credenciales, logros y años por área, así que van los cuatro
-frentes en orden de peso para un jurado de IA: años + credencial, la
-especialidad que distingue, prototipado, dominio fiscal, y video al final.
+Abre con los años y la trayectoria, que es lo que la pregunta pedía, y la
+certificación de Anthropic va antes que el curso de Platzi: son dos cosas
+distintas y la primera pesa más.
 
-**Lo de Lovable está verificado**, no declarado: consulta a su API el
-1-sep-2026 — **22 proyectos, 7 publicados**, el primero de sep-2025, cuenta
-con `max_mode` y propiedad de su workspace más colaboración en otros dos.
-Los cursos de Anthropic en Platzi los aportó Javier; si el certificado tiene
-nombre exacto, conviene usarlo.
+> ⚠️ **Usa el nombre exacto del certificado.** "Anthropic-certified" es lo que
+> Javier reportó el 1-sep-2026; si el documento tiene un nombre oficial,
+> conviene escribirlo tal cual — una credencial se verifica por su nombre.
+> Lo de Lovable sí está comprobado por API: 22 proyectos, 7 publicados.
 
-**Español (485/500):**
-
-```
-Más de dos años construyendo con IA; cursos de Anthropic en Platzi. Ingeniería de producto de punta a punta: diseño el sistema, escribo el código y lo opero — Likida son 257 migraciones y +9,000 pruebas.
-
-Especialidad: agentes que tocan dinero — tool-calling, presupuesto y kill switch por agente, y separar lo que el modelo redacta de lo que el código decide.
-
-Prototipado: 22 apps en Lovable, 7 publicadas.
-Fiscal mexicano: CFDI 4.0, Carta Porte.
-Video, +2 años: el demo lo edito yo.
-```
-
-**English (460/500):**
+**English (497/500):**
 
 ```
-2+ years building with AI; Anthropic courses via Platzi. End-to-end product engineering — I design the system, write the code and operate it. Likida is 257 migrations and 9,000+ tests.
+3+ years building with AI — six months in San Francisco, then the Network School in Asia. Anthropic-certified, plus Anthropic coursework on Platzi.
 
-Specialty: agents that touch money — tool-calling, per-agent budgets and kill switches, and separating what the model drafts from what code decides.
+Specialty: agents that touch money — tool-calling, per-agent budgets and kill switches, and separating what the model drafts from what code decides. Likida is 257 migrations and 9,000+ tests; I design, write and operate all of it.
 
 Prototyping: 22 Lovable apps, 7 shipped.
 Mexican tax: CFDI 4.0, Carta Porte.
-Video editing, 2+ years: I cut the demo myself.
+Video, 2+ years: I cut the demo myself.
 ```
 
-Video va al final y con una razón, no como relleno: en un hackathon el pitch
-se graba, y saber editarlo es una ventaja operativa de fin de semana.
+**Español (495/500):**
+
+```
+Más de 3 años construyendo con IA — seis meses en San Francisco y después the Network School, en Asia. Certificado por Anthropic, más sus cursos en Platzi.
+
+Especialidad: agentes que tocan dinero — tool-calling, presupuesto y kill switch por agente, y separar lo que redacta el modelo de lo que decide el código. Likida son 257 migraciones y +9,000 pruebas; yo lo diseño, escribo y opero.
+
+Prototipado: 22 apps en Lovable, 7 publicadas.
+Fiscal: CFDI 4.0, Carta Porte.
+Video: el demo lo edito yo.
+```
 
 ### 6.4 Building a startup — 500 caracteres
 
