@@ -325,12 +325,15 @@ medido contra su límite de caracteres.
 > justo donde tienes ventaja.
 
 > ⚠️ **De dónde sale cada cosa.** Likida, la fábrica de hielo, Kairotec y
-> Moni AI salen de este repo y de este entorno. La trayectoria —más de dos años
-> en IA, seis meses en San Francisco, the Network School en Asia— la dio Javier
-> el 1-sep-2026; no hay archivo de memoria en esta máquina, así que nada aquí
-> viene de sesiones anteriores. Sigue faltando lo único que él no ha dicho:
-> **formación y credenciales formales**. Si no las hay, la biografía funciona
-> sin ellas: el arco ya carga el peso.
+> Moni AI salen de este repo y de este entorno. Lovable está comprobado por su
+> API. La trayectoria —tres años en IA, seis meses en San Francisco, the
+> Network School en Asia— y las credenciales —certificación de Anthropic y
+> cursos de Anthropic en Platzi, más de dos años editando video— las dio
+> Javier el 1-sep-2026; no hay archivo de memoria en esta máquina, así que
+> nada aquí viene de sesiones anteriores.
+>
+> Ojo con los dos relojes: **IA son 3+ años, video son 2+**. No es una
+> inconsistencia, son cosas distintas — no las unifiques al editar.
 
 ### 6.1 Biography — 800 caracteres
 
