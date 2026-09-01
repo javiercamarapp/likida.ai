@@ -301,3 +301,77 @@ el PDF ya generado en el escritorio.
 - [ ] Confirmar cuántos portales de facturación corren de punta a punta hoy.
 - [ ] Escribir §1.10 (bio y equipo) y §1.11 (enlaces).
 - [ ] Decidir si el repo se abre al jurado.
+
+---
+
+## 6. El formulario real — respuestas listas para pegar
+
+Cuatro campos, todos sobre **la persona**, no sobre el producto. Cada uno viene
+medido contra su límite de caracteres.
+
+> ⚠️ **Lo que está sustentado y lo que no.** Likida, la fábrica de hielo,
+> Kairotec y Moni AI salen de este entorno y del repo. Lo que **no** tengo, y
+> por eso no lo escribí: tu formación, tus años de experiencia y tus
+> credenciales. El campo de Habilidades los pide explícitamente — hay una
+> versión corta abajo con espacio libre para que los metas tú.
+
+### 6.1 Biography — 800 caracteres
+
+```
+Fundador de Likida, la oficina administrativa con IA para el autotransporte mexicano: el chofer manda por WhatsApp la foto de un ticket de diésel o caseta, y un motor determinista devuelve la liquidación del viaje cerrada, con el CFDI validado contra el SAT. Lo construyo solo —producto, motor fiscal y código— y hoy corre en producción contra datos reales de una flota.
+
+En paralelo opero negocios que sí tienen clientes: una fábrica de hielo en México y Kairotec, una agencia de soluciones de IA. Esa mezcla es mi sesgo: no me interesa la IA que impresiona en un demo, me interesa la que un contralor puede firmar. Por eso Likida está construido para no inventar nunca una cifra —lo que no puede verificar, lo marca como pendiente en vez de rellenarlo.
+```
+
+**754 / 800.**
+
+### 6.2 Projects — 500 caracteres
+
+```
+Likida se lleva casi todo: motor fiscal, cuadre determinista y una compañía de agentes que auditan el propio repo.
+
+En paralelo, Moni AI —finanzas personales para LATAM con progresión tipo Duolingo (FastAPI, Supabase, Qdrant, React Native)—.
+
+Y lo que hago por gusto: agentes que operan portales web que nadie programó, cobranza automatizada por WhatsApp para mis propios negocios, y un radar que lee el internet buscando oportunidades.
+```
+
+**436 / 500.** Confirma que sigues activo en Moni AI; si no, sale y sobran 130 caracteres.
+
+### 6.3 Skills — 500 caracteres
+
+La pregunta pide credenciales, logros y **años de experiencia por área**. No los
+tengo, así que van dos versiones: la completa, y una corta que te deja ~100
+caracteres libres para añadirlos.
+
+**Versión completa (485/500):**
+
+```
+Ingeniería de producto con IA de punta a punta: diseño el sistema, escribo el código y lo opero. Likida son 257 migraciones versionadas, más de 9,000 pruebas y aislamiento por inquilino desde la primera migración.
+
+Especialidad: sistemas agénticos que tocan dinero — tool-calling, presupuesto y kill switch por agente, y la disciplina de separar lo que el modelo redacta de lo que el código decide.
+
+Fiscal mexicano aplicado: CFDI 4.0, Carta Porte, deducibilidad con fundamento citado.
+```
+
+**Versión corta (402/500) — mete tus años y credenciales al final:**
+
+```
+Ingeniería de producto con IA de punta a punta: diseño el sistema, escribo el código y lo opero. Likida son 257 migraciones y más de 9,000 pruebas.
+
+Especialidad: sistemas agénticos que tocan dinero — tool-calling, presupuesto y kill switch por agente, y separar lo que el modelo redacta de lo que el código decide.
+
+Fiscal mexicano aplicado: CFDI 4.0, Carta Porte, deducibilidad con fundamento citado.
+```
+
+### 6.4 Building a startup — 500 caracteres
+
+```
+Sí: Likida (likida.ai). Liquidación de viajes de carga por WhatsApp para flotas mexicanas.
+
+Cerrar un viaje hoy son tickets en la guantera, captura manual y un contador que descubre semanas después qué era deducible. Leí más de 5,000 vacantes mexicanas vivas: 828 empresas contratan exactamente ese puesto, con sueldo mediano de $11,129 a $14,500 al mes. Eso es lo que sustituye un número de WhatsApp.
+
+Pre-ingresos, en producción contra datos reales de una flota. Un fundador.
+```
+
+**477 / 500.** Cierra con «Un fundador» a propósito: en un hackathon, que una
+persona sola tenga esto corriendo es el argumento, no la disculpa.
