@@ -368,20 +368,42 @@ Around it: agents with budgets and kill switches; one drives portals nobody code
 
 ### 6.3 Skills — 500 caracteres
 
-Ahora sí abre con los años, que es lo que la pregunta pedía explícitamente.
+La pregunta pide credenciales, logros y años por área, así que van los cuatro
+frentes en orden de peso para un jurado de IA: años + credencial, la
+especialidad que distingue, prototipado, dominio fiscal, y video al final.
 
-**476/500:**
+**Lo de Lovable está verificado**, no declarado: consulta a su API el
+1-sep-2026 — **22 proyectos, 7 publicados**, el primero de sep-2025, cuenta
+con `max_mode` y propiedad de su workspace más colaboración en otros dos.
+Los cursos de Anthropic en Platzi los aportó Javier; si el certificado tiene
+nombre exacto, conviene usarlo.
+
+**Español (485/500):**
 
 ```
-Más de dos años construyendo con IA (San Francisco y the Network School, Asia). Ingeniería de producto de punta a punta: diseño el sistema, escribo el código y lo opero — Likida son 257 migraciones y más de 9,000 pruebas.
+Más de dos años construyendo con IA; cursos de Anthropic en Platzi. Ingeniería de producto de punta a punta: diseño el sistema, escribo el código y lo opero — Likida son 257 migraciones y +9,000 pruebas.
 
-Especialidad: sistemas agénticos que tocan dinero — tool-calling, presupuesto y kill switch por agente, y separar lo que el modelo redacta de lo que el código decide.
+Especialidad: agentes que tocan dinero — tool-calling, presupuesto y kill switch por agente, y separar lo que el modelo redacta de lo que el código decide.
 
-Fiscal mexicano aplicado: CFDI 4.0, Carta Porte, deducibilidad con fundamento citado.
+Prototipado: 22 apps en Lovable, 7 publicadas.
+Fiscal mexicano: CFDI 4.0, Carta Porte.
+Video, +2 años: el demo lo edito yo.
 ```
 
-Si tienes una credencial formal (título, certificación), cabe al final: sobran
-24 caracteres.
+**English (460/500):**
+
+```
+2+ years building with AI; Anthropic courses via Platzi. End-to-end product engineering — I design the system, write the code and operate it. Likida is 257 migrations and 9,000+ tests.
+
+Specialty: agents that touch money — tool-calling, per-agent budgets and kill switches, and separating what the model drafts from what code decides.
+
+Prototyping: 22 Lovable apps, 7 shipped.
+Mexican tax: CFDI 4.0, Carta Porte.
+Video editing, 2+ years: I cut the demo myself.
+```
+
+Video va al final y con una razón, no como relleno: en un hackathon el pitch
+se graba, y saber editarlo es una ventaja operativa de fin de semana.
 
 ### 6.4 Building a startup — 500 caracteres
 
