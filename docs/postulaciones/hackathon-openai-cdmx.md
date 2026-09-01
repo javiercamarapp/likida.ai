@@ -417,3 +417,44 @@ Pre-ingresos, en producción contra datos reales de una flota. Un fundador.
 
 **477 / 500.** Cierra con «Un fundador» a propósito: en un hackathon, que una
 persona sola tenga esto corriendo es el argumento, no la disculpa.
+
+### 6.5 Areas of Interest
+
+El formulario no declaró límite aquí; ambas versiones se ajustaron a 500 por
+consistencia con los otros cuatro campos. Si el campo admite más, hay espacio
+para nombrar una tercera cosa que quieras aprender.
+
+Este campo suele desperdiciarse en generalidades ("IA, startups, fintech"). El
+que sirve nombra **bloqueos reales**: da algo accionable a quien lo lee y te
+hace memorable entre cien postulaciones que dijeron lo mismo. Los tres de aquí
+salen del repo y de la conversación — el agente de voz es el hueco de §1.9,
+los socios de diseño son la razón de que la base esté en cero, y el número
+productivo de WhatsApp es el bloqueo que el README ya nombra.
+
+Lo de "contratar: todavía no" contesta la pregunta con honestidad en lugar de
+inventar vacantes que no existen — y de paso dice algo bueno de cómo operas.
+
+**Español (500/500):**
+
+```
+Tres cosas concretas.
+
+Aprender: agentes de voz en tiempo real —mi usuario va manejando un tráiler: la foto ya es fricción, el texto peor—, y evaluación de agentes que gastan dinero: cómo pones compuertas a algo autónomo con presupuesto sin volverlo inútil.
+
+Conocer: contralores y dueños de flota dispuestos a ser socios de diseño. Ése es mi bloqueo real, no el código. Y a quien haya sacado WhatsApp Business a producción en México.
+
+Contratar: todavía no. Primer cliente antes que primer empleado.
+```
+
+**English (494/500):**
+
+```
+Three concrete things.
+
+Learning: real-time voice agents — my user is driving a truck, so a photo is already friction and typing is worse — and evals for agents that spend money: how you gate something autonomous with a budget without making it useless.
+
+Meeting: fleet controllers and owners willing to be design partners. That's my real blocker, not the code. And anyone who has taken WhatsApp Business to a production number in Mexico.
+
+Hiring: not yet. First customer before first employee.
+```
+
