@@ -423,27 +423,36 @@ Video: el demo lo edito yo.
 
 ### 6.4 Building a startup — 500 caracteres
 
-Cierra con «Un fundador» a propósito: en un hackathon, que una persona sola
-tenga esto corriendo es el argumento, no la disculpa.
+El encuadre grande, que es el que vende: **no es una app de liquidaciones, es
+la oficina administrativa completa**. Liquidar el viaje es la cuña —el dolor
+más agudo, por donde se entra—, y el resto del back office es la empresa.
 
-**Español (477/500):**
+Los módulos que se enumeran existen como directorios en el repo, verificados
+el 1-sep-2026: `intake`, `cuadre`, `fiscal`, `liquidacion`, `facturacion`,
+`peajes`, `mantenimiento`, `cotizador`, `contabilidad`, `carta_porte`,
+`soporte` y `conectores`. No se promete nada que no esté escrito.
+
+Cierra con «Pre-revenue, live on a real fleet» para que el alcance grande no
+se lea como humo: enseguida de la ambición va el estado real.
+
+**English (499/500):**
 
 ```
-Sí: Likida (likida.ai). Liquidación de viajes de carga por WhatsApp para flotas mexicanas.
+Yes: Likida — the AI back office for Mexican trucking.
 
-Cerrar un viaje hoy son tickets en la guantera, captura manual y un contador que descubre semanas después qué era deducible. Leí más de 5,000 vacantes mexicanas vivas: 828 empresas contratan exactamente ese puesto, con sueldo mediano de $11,129 a $14,500 al mes. Eso es lo que sustituye un número de WhatsApp.
+Settling a trip is the wedge, not the product. A driver photographs a diesel receipt over WhatsApp; the trip closes itself. The same engine runs the rest of the back office: tolls, invoicing portals, collections, Carta Porte stamping, maintenance, quoting, accounting export. Agents with budgets and kill switches; deterministic code decides the pesos.
 
-Pre-ingresos, en producción contra datos reales de una flota. Un fundador.
+828 Mexican companies post jobs for exactly this work. Pre-revenue, live on a real fleet.
 ```
 
-**English (470/500):**
+**Español (496/500):**
 
 ```
-Yes: Likida (likida.ai). WhatsApp-based trip settlement for Mexican trucking fleets.
+Sí: Likida — la oficina administrativa con IA del autotransporte mexicano.
 
-Closing a trip today means receipts in the glovebox, manual data entry, and an accountant discovering weeks later what was deductible. I read 5,000+ live Mexican job postings: 828 companies hire for exactly that role, at a median salary of $11,129–$14,500 MXN/month. That's what a WhatsApp number replaces.
+Liquidar un viaje es la cuña, no el producto. El chofer manda por WhatsApp la foto de un ticket de diésel y el viaje se cierra solo. El mismo motor corre el resto del back office: casetas, portales de facturación, cobranza, timbrado de Carta Porte, mantenimiento, cotización, póliza contable. Agentes con presupuesto y kill switch; el peso lo decide código determinista.
 
-Pre-revenue, running in production against a real fleet's data. One founder.
+828 empresas mexicanas tienen vacante para esto.
 ```
 
 ### 6.5 Areas of Interest
