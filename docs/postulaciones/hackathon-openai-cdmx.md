@@ -309,21 +309,39 @@ el PDF ya generado en el escritorio.
 Cuatro campos, todos sobre **la persona**, no sobre el producto. Cada uno viene
 medido contra su límite de caracteres.
 
-> ⚠️ **Lo que está sustentado y lo que no.** Likida, la fábrica de hielo,
-> Kairotec y Moni AI salen de este entorno y del repo. Lo que **no** tengo, y
-> por eso no lo escribí: tu formación, tus años de experiencia y tus
-> credenciales. El campo de Habilidades los pide explícitamente — hay una
-> versión corta abajo con espacio libre para que los metas tú.
+> ⚠️ **De dónde sale cada cosa.** Likida, la fábrica de hielo, Kairotec y
+> Moni AI salen de este repo y de este entorno. La trayectoria —más de dos años
+> en IA, seis meses en San Francisco, the Network School en Asia— la dio Javier
+> el 1-sep-2026; no hay archivo de memoria en esta máquina, así que nada aquí
+> viene de sesiones anteriores. Sigue faltando lo único que él no ha dicho:
+> **formación y credenciales formales**. Si no las hay, la biografía funciona
+> sin ellas: el arco ya carga el peso.
 
 ### 6.1 Biography — 800 caracteres
 
-```
-Fundador de Likida, la oficina administrativa con IA para el autotransporte mexicano: el chofer manda por WhatsApp la foto de un ticket de diésel o caseta, y un motor determinista devuelve la liquidación del viaje cerrada, con el CFDI validado contra el SAT. Lo construyo solo —producto, motor fiscal y código— y hoy corre en producción contra datos reales de una flota.
+El arco: dos años construyendo con IA, seis meses en San Francisco, the Network
+School en Asia, y el regreso a México a construir para México. Ese regreso es
+la tesis de la biografía, no un dato de viaje.
 
-En paralelo opero negocios que sí tienen clientes: una fábrica de hielo en México y Kairotec, una agencia de soluciones de IA. Esa mezcla es mi sesgo: no me interesa la IA que impresiona en un demo, me interesa la que un contralor puede firmar. Por eso Likida está construido para no inventar nunca una cifra —lo que no puede verificar, lo marca como pendiente en vez de rellenarlo.
+**Español (751/800):**
+
+```
+Llevo más de dos años construyendo con IA. Pasé seis meses en San Francisco y después en the Network School, en Asia, y volví a México con una convicción concreta: lo que allá se usa para hacer demos, aquí puede cerrar la contabilidad de una empresa real.
+
+Eso construyo hoy. En Likida el chofer de un camión de carga manda por WhatsApp la foto de un ticket de diésel, y un motor determinista devuelve la liquidación del viaje cerrada, con el CFDI validado contra el SAT. Producto, motor fiscal y código: yo, en producción contra datos reales de una flota.
+
+En paralelo opero una fábrica de hielo y Kairotec, mi agencia de IA — negocios con clientes y con nómina. Por eso no me interesa la IA que impresiona en un demo, sino la que un contralor firma.
 ```
 
-**754 / 800.**
+**English (757/800):**
+
+```
+I've spent more than two years building with AI — six months in San Francisco, then the Network School in Asia. I came back to Mexico with one conviction: what gets used there to build demos can, here, close a real company's books.
+
+That's what I'm building. With Likida, a freight driver photographs a diesel receipt and sends it over WhatsApp; a deterministic engine returns the trip's settlement closed, with the CFDI validated against Mexico's tax authority. Product, tax engine and code — me, running in production against a real fleet's real data.
+
+Alongside it I run an ice factory and Kairotec, my AI agency — businesses with customers and payroll. Which is why I don't care about AI that impresses in a demo. I care about AI a controller will sign.
+```
 
 ### 6.2 Projects — 500 caracteres
 
@@ -339,29 +357,20 @@ Y lo que hago por gusto: agentes que operan portales web que nadie programó, co
 
 ### 6.3 Skills — 500 caracteres
 
-La pregunta pide credenciales, logros y **años de experiencia por área**. No los
-tengo, así que van dos versiones: la completa, y una corta que te deja ~100
-caracteres libres para añadirlos.
+Ahora sí abre con los años, que es lo que la pregunta pedía explícitamente.
 
-**Versión completa (485/500):**
+**476/500:**
 
 ```
-Ingeniería de producto con IA de punta a punta: diseño el sistema, escribo el código y lo opero. Likida son 257 migraciones versionadas, más de 9,000 pruebas y aislamiento por inquilino desde la primera migración.
-
-Especialidad: sistemas agénticos que tocan dinero — tool-calling, presupuesto y kill switch por agente, y la disciplina de separar lo que el modelo redacta de lo que el código decide.
-
-Fiscal mexicano aplicado: CFDI 4.0, Carta Porte, deducibilidad con fundamento citado.
-```
-
-**Versión corta (402/500) — mete tus años y credenciales al final:**
-
-```
-Ingeniería de producto con IA de punta a punta: diseño el sistema, escribo el código y lo opero. Likida son 257 migraciones y más de 9,000 pruebas.
+Más de dos años construyendo con IA (San Francisco y the Network School, Asia). Ingeniería de producto de punta a punta: diseño el sistema, escribo el código y lo opero — Likida son 257 migraciones y más de 9,000 pruebas.
 
 Especialidad: sistemas agénticos que tocan dinero — tool-calling, presupuesto y kill switch por agente, y separar lo que el modelo redacta de lo que el código decide.
 
 Fiscal mexicano aplicado: CFDI 4.0, Carta Porte, deducibilidad con fundamento citado.
 ```
+
+Si tienes una credencial formal (título, certificación), cabe al final: sobran
+24 caracteres.
 
 ### 6.4 Building a startup — 500 caracteres
 
