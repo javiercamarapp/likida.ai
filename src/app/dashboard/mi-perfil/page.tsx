@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { UserRound, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { supabaseServer } from '@/lib/supabase/server';
-import { estadoMfa } from '@/lib/auth/mfa';
+import { estadoMfa, MSG_MFA_SUPERADMIN, type VeredictoMfaSuperadmin } from '@/lib/auth/mfa';
 import { requireSessionTenant } from '@/lib/auth/guard';
 import { puedeVerRuta } from '@/lib/auth/visibilidad';
 import { supabaseAdmin } from '@/lib/supabase/admin';
@@ -64,7 +64,7 @@ function volverAMiPerfil(sufijo: string, estado: string): string {
 export default async function MiPerfilFlota({
   searchParams,
 }: {
-  searchParams: Promise<{ ok?: string; error?: string; tenant?: string; vista?: string; rol?: string; mfa?: string }>;
+  searchParams: Promise<{ ok?: string; error?: string; tenant?: string; vista?: string; rol?: string; mfa?: string; exige?: string }>;
 }) {
   const s = await requireSessionTenant('/dashboard/mi-perfil');
   // El gate que faltaba (16-ago-2026): era la ÚNICA página del panel sin
@@ -228,6 +228,12 @@ export default async function MiPerfilFlota({
     mcp: 'No se pudieron cortar los accesos MCP — recarga la pantalla y vuelve a intentar.',
   };
 
+  // El veredicto con el que `exigirMfaSuperadmin` rebotó hasta aquí, si es que
+  // rebotó. Se valida contra el catálogo: un `?exige=` inventado a mano no
+  // pinta una alarma que no corresponde a nada.
+  const exigencia: Exclude<VeredictoMfaSuperadmin, 'ok'> | null =
+    sp.exige === 'inscribir' || sp.exige === 'retar' || sp.exige === 'no_verificable' ? sp.exige : null;
+
   return (
     <main className="h-full">
       <div className="rounded-2xl min-h-full hairline flex flex-col" style={{ background: 'var(--g1)' }}>
@@ -243,6 +249,18 @@ export default async function MiPerfilFlota({
                 style={{ background: 'var(--okbg)', color: 'var(--ok)' }}>
                 <CheckCircle2 width={15} height={15} strokeWidth={1.75} />
                 {OK[sp.ok]}
+              </div>
+            )}
+            {/* ── SEG-3 (auditoría 24): por qué te rebotaron aquí ──────────
+                Con `LIKIDA_SUPERADMIN_MFA=obligatorio`, la puerta de /admin y
+                la de /dashboard mandan al superadmin sin segundo factor a esta
+                pantalla (guard.ts). Sin este aviso el rebote sería un misterio:
+                clic en la consola, aterrizas en tu perfil, sin explicación. */}
+            {exigencia && (
+              <div className="flex items-start gap-2 text-[13px] px-3.5 py-2.5 rounded-lg mb-5"
+                style={{ background: 'var(--badbg)', color: 'var(--bad)' }}>
+                <AlertTriangle width={15} height={15} strokeWidth={1.75} className="shrink-0 mt-0.5" />
+                <span>{MSG_MFA_SUPERADMIN[exigencia]}</span>
               </div>
             )}
             {sp.error && ERROR[sp.error] && (
