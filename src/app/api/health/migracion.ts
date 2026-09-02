@@ -1,6 +1,4 @@
 import { readdirSync } from 'node:fs';
-import { supabaseAdmin } from '@/lib/supabase/admin';
-import { acotada } from '@/lib/likida/presupuesto';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // AUDITORÍA 24, OP-P1 (BLOQUEANTE) · ¿LA BASE VA A LA PAR DEL CÓDIGO?
@@ -23,6 +21,12 @@ import { acotada } from '@/lib/likida/presupuesto';
 //
 // Si la base no se puede leer, se dice (`base: null` + `motivo`) y el health
 // se degrada: un cotejo que no pudo hacerse no es un cotejo verde.
+//
+// La llamada a Supabase NO vive aquí: `route.ts` la inyecta (`LectorAplicadas`).
+// Este módulo se queda con la aritmética de prefijos, que es lo que hay que
+// poder probar sin base — y el conteo de la frontera de datos
+// (`frontera_datos_guardiana.test.ts`) no crece por un archivo más que llame
+// a la base.
 // ═══════════════════════════════════════════════════════════════════════════
 
 export interface Migracion {
@@ -82,11 +86,15 @@ function siguiente(prefijo: string): string {
   return String(Number(prefijo) + 1).padStart(4, '0');
 }
 
+/** Lo que `route.ts` inyecta: una llamada a `migraciones_aplicadas()` que
+ *  reporta el error por valor, como todo supabase-js. */
+export type LectorAplicadas = () => Promise<{ data: unknown; error: { message: string } | null }>;
+
 /** Lee la base y coteja. NUNCA lanza: un fallo de lectura es `base: null` con motivo. */
-export async function cotejarMigracion(): Promise<Migracion> {
+export async function cotejarMigracion(leerAplicadas: LectorAplicadas): Promise<Migracion> {
   const codigo = migracionDelCodigo();
   try {
-    const { data, error } = await acotada(supabaseAdmin().rpc('migraciones_aplicadas'), 'health.migracion');
+    const { data, error } = await leerAplicadas();
     if (error) return cotejar(null, codigo, `migraciones_aplicadas() no contestó: ${error.message}`);
     const r = data as { disponible?: unknown; motivo?: unknown; filas?: unknown } | null;
     if (!r || r.disponible !== true || !Array.isArray(r.filas)) {

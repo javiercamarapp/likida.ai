@@ -164,8 +164,12 @@ export async function GET(req: NextRequest) {
   // Ver `./migracion.ts`. Una base atrás del código es `degraded` con motivo:
   // el export de póliza pide la forma 0272 de una RPC que la base 0271 no
   // tiene, y hasta hoy nada lo decía desde fuera. La compuerta de despliegue
-  // (`ci.yml`) lee este mismo campo y no deja pasar un `[deploy]` con `atras > 0`.
-  const migracion = db === 'ok' ? await cotejarMigracion() : { base: null, codigo: null, atras: null, motivo: 'base caída: no se cotejó' };
+  // (`scripts/ci/compuerta-deploy.mjs`, que corren el `ignoreCommand` de Vercel
+  // y `salud-produccion.yml`) lee este mismo campo y no deja pasar un `[deploy]`
+  // con `atras > 0`.
+  const migracion = db === 'ok'
+    ? await cotejarMigracion(() => acotada(supabaseAdmin().rpc('migraciones_aplicadas'), 'health.migracion'))
+    : { base: null, codigo: null, atras: null, motivo: 'base caída: no se cotejó' };
   if (migracion.atras !== 0) {
     logger.error('health.migracion', { base: migracion.base, codigo: migracion.codigo, atras: migracion.atras, motivo: migracion.motivo });
   }
