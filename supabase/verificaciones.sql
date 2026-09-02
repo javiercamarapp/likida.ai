@@ -15776,3 +15776,70 @@ begin
   raise exception E'POLICIES_SOLO_LECTURA_0292  contador-lee=%  update-liquidacion=%  insert-gasto=%  delete-operador=%  update-bitacora=%  delete-bitacora=%  por-service-role=%   (esperado 1 / 0 / rebota / 0 / 0 / 0 / entro)',
     leidas, tocadas, gasto_insert, borrados, bit_tocadas, bit_borradas, por_admin;
 end $$;
+
+-- ── 240. Los jsonb que el producto lee como objeto, y el expediente ARCO (mig. 0291) ──
+--
+-- AUDITORÍA 24, DAT-13 (BAJO). Se asevera:
+--   (a) `wa_conversacion.estado = '"hola"'` y `tenant.perfil = '[1,2]'`
+--       rebotan —el código hace `estado.turns` / `perfil.algo` sobre lo que
+--       salga— y el objeto de verdad entra;
+--   (b) una solicitud ARCO sin titular (ni `operador_id` ni `titular_ref`)
+--       rebota: un expediente que no dice de quién es no se puede resolver;
+--   (c) una solicitud que VENCE antes de recibirse rebota — el plazo del
+--       art. 32 LFPDPPP se cuenta desde que se recibe, y nacer vencida
+--       dispararía los relojes legales el primer día.
+--
+-- DAT-6 (`liquidado` ⇔ existe `liquidacion`) NO se asevera aquí: quedó
+-- diferido. La cabecera de la 0291 y el CIERRE de la auditoría 24 explican por
+-- qué —16 bloques de esta misma batería usan `estatus='liquidado'` como atajo
+-- de fixture, y `TARDE` (línea 779) asevera que el hueco existe a propósito.
+do $$
+declare
+  t uuid := gen_random_uuid(); op1 uuid := gen_random_uuid();
+  estado_malo text := 'no'; estado_bueno text := 'no'; perfil_malo text := 'no';
+  perfil_bueno text := 'no'; arco_sin_titular text := 'no'; arco_vencida text := 'no';
+  arco_buena text := 'no';
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0291__');
+  insert into public.operador (id, tenant_id, nombre, telefono) values (op1, t, 'Juan', '5299937007 94');
+
+  -- (a) los jsonb que el producto lee como objeto
+  begin
+    insert into public.wa_conversacion (tenant_id, telefono, estado)
+      values (t, '5299937007 96', '"hola"'::jsonb);
+    estado_malo := 'ENTRO';
+  exception when check_violation then estado_malo := 'rebota'; end;
+  begin
+    insert into public.wa_conversacion (tenant_id, telefono, estado)
+      values (t, '5299937007 97', '{"turns": []}'::jsonb);
+    estado_bueno := 'entro';
+  exception when others then estado_bueno := 'REBOTO: ' || sqlerrm; end;
+  begin
+    update public.tenant set perfil = '[1,2]'::jsonb where id = t;
+    perfil_malo := 'ENTRO';
+  exception when check_violation then perfil_malo := 'rebota'; end;
+  begin
+    update public.tenant set perfil = '{"giro": "carga"}'::jsonb where id = t;
+    perfil_bueno := 'entro';
+  exception when others then perfil_bueno := 'REBOTO: ' || sqlerrm; end;
+
+  -- (b) y (c) el expediente ARCO
+  begin
+    insert into public.solicitud_arco (tenant_id, tipo, canal, estado, recibida_en, vence_en)
+      values (t, 'cancelacion', 'whatsapp', 'recibida', now(), (now() + interval '20 days')::date);
+    arco_sin_titular := 'ENTRO';
+  exception when check_violation then arco_sin_titular := 'rebota'; end;
+  begin
+    insert into public.solicitud_arco (tenant_id, operador_id, tipo, canal, estado, recibida_en, vence_en)
+      values (t, op1, 'cancelacion', 'whatsapp', 'recibida', now(), (now() - interval '10 days')::date);
+    arco_vencida := 'ENTRO';
+  exception when check_violation then arco_vencida := 'rebota'; end;
+  begin
+    insert into public.solicitud_arco (tenant_id, operador_id, tipo, canal, estado, recibida_en, vence_en)
+      values (t, op1, 'cancelacion', 'whatsapp', 'recibida', now(), (now() + interval '20 days')::date);
+    arco_buena := 'entro';
+  exception when others then arco_buena := 'REBOTO: ' || sqlerrm; end;
+
+  raise exception E'FORMAS_JSONB_Y_ARCO_0291  estado-chatarra=%  estado-objeto=%  perfil-arreglo=%  perfil-objeto=%  arco-sin-titular=%  arco-nace-vencida=%  arco-buena=%   (esperado rebota / entro / rebota / entro / rebota / rebota / entro)',
+    estado_malo, estado_bueno, perfil_malo, perfil_bueno, arco_sin_titular, arco_vencida, arco_buena;
+end $$;
