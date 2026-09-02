@@ -279,7 +279,7 @@ export const LECTURA_RFA_29_PRORRATEO =
 
 export const NO_DEDUCIBLE_ISR: TipoDiferencia[] = ['rfc_receptor', 'cfdi_cancelado', 'cfdi_efos', 'cfdi_no_encontrado', 'complemento_hidrocarburos', 'efectivo_sobre_tope', 'efectivo_no_elegible', 'gasto_otro_ejercicio'];
 // AUDITORÍA 21, CRÍTICO (fiscal): `cfdi_efos_indeterminado` entra a
-// POR_CONFIRMAR (y a SIN_ACREDITAMIENTO, abajo) por el mismo camino que
+// POR_CONFIRMAR (y a SIN_IVA_ACREDITABLE, abajo) por el mismo camino que
 // `cfdi_pendiente`. Desde que la auditoría 9 quitó —con razón— el mapeo
 // `'100' → efos: true` (ConsultaCFDIService no distingue el listado presunto
 // del definitivo del CFF 69-B), NADA produce `efos: true`, así que la rama
@@ -866,7 +866,7 @@ export function cuadrarViaje(input: CuadreInput): Omit<Liquidacion, 'id' | 'crea
     // NO se convierte aquí. El motor no inventa cifras, y aplicar un tipo de
     // cambio produciría un número que ni el contralor ni el SAT podrían
     // reproducir sin saber qué fecha se usó. Se declara y se manda a revisar; y
-    // sobre todo NO se acredita como pesos (ver SIN_ACREDITAMIENTO).
+    // sobre todo NO se acredita como pesos (ver SIN_IVA_ACREDITABLE).
     const monedaGasto = typeof extraOcr?.moneda === 'string' ? extraOcr.moneda : undefined;
     if (monedaGasto && monedaGasto !== 'MXN') {
       const tc = typeof extraOcr?.tipoCambio === 'number' ? extraOcr.tipoCambio : undefined;
@@ -1085,7 +1085,7 @@ export function cuadrarViaje(input: CuadreInput): Omit<Liquidacion, 'id' | 'crea
             // El hecho es verificable (el XML no trae el nodo); lo que NO es
             // verificable es que ya se exija. Se reusa `complemento_no_verificable`
             // porque es el tipo que significa "no se puede concluir": queda en
-            // REVISAR, fuera de NO_DEDUCIBLE_ISR y fuera de SIN_ACREDITAMIENTO,
+            // REVISAR, fuera de NO_DEDUCIBLE_ISR y fuera de SIN_IVA_ACREDITABLE,
             // que es exactamente el veredicto que el motor puede sostener.
             diferencias.push({ tipo: 'complemento_no_verificable', concepto: g.concepto, monto: 0, nota: `El CFDI de ${etiquetaConcepto(g.concepto, g.ocrExtra as Record<string, unknown> | undefined)} es de combustible y no trae el complemento de hidrocarburos de la regla 2.7.1.48 RMF. Pídele a la gasolinera la factura con el complemento. NO se declara no deducible: la fecha desde la que el SAT lo hace exigible no está confirmada — confírmalo con tu contador.`, gastoId: g.id });
           }
