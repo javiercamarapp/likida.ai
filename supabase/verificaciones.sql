@@ -15349,3 +15349,76 @@ begin
   raise exception E'WA_CONVERSACION_TEL_NORM_0274  variante-choca=%  otro-numero=%  otra-flota=%   (esperado t / t / t)',
     choca_variante, otro_numero_ok, otra_flota_ok;
 end $$;
+
+-- ── 225. El techo diario de IA cabe en tenant.config y es un número > 0 (mig. 0278) ──
+-- Esperado: PRESUPUESTO_LLM_TENANT_0278  declara=t  texto-rebota=t  cero-rebota=t  negativo-rebota=t  null-ok=t  hermanas-ok=t  inventada-rebota=t
+--
+-- AUDITORÍA 24, TC-N1 / WA-1 / OP-P7 (CRÍTICO). El techo diario de IA era una
+-- env global; ahora `llm/budget.ts` lee primero `tenant.config.presupuestoLlmUsdDia`.
+-- Pero `config_tenant_valida` (regla 2, 0026) rechaza cualquier llave que no
+-- conozca: sin la 0278 la palanca del piloto NO SE PODÍA GUARDAR. Se asevera lo
+-- único que la base puede demostrar:
+--   (a) la llave con un número > 0 entra;
+--   (b) texto, cero y negativo rebotan (una llave mal puesta no se guarda en
+--       silencio para que nadie la lea);
+--   (c) `null` = sin declarar, entra;
+--   (d) las hermanas siguen vivas: `agentes` (0159) y `politica` conviven con
+--       la llave nueva, y una llave inventada sigue rebotando — o sea, el CHECK
+--       recreado conserva el `- 'agentes'` y la función de siempre.
+do $$
+declare
+  t uuid := gen_random_uuid();
+  declara boolean := false;
+  texto_rebota boolean := false;
+  cero_rebota boolean := false;
+  negativo_rebota boolean := false;
+  null_ok boolean := false;
+  hermanas_ok boolean := false;
+  inventada_rebota boolean := false;
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0278__');
+
+  -- (a) la palanca del piloto se guarda.
+  begin
+    update public.tenant set config = '{"presupuestoLlmUsdDia": 40}'::jsonb where id = t;
+    declara := true;
+  exception when others then declara := false;
+  end;
+
+  -- (b) texto, cero y negativo rebotan.
+  begin
+    update public.tenant set config = '{"presupuestoLlmUsdDia": "40"}'::jsonb where id = t;
+  exception when others then texto_rebota := true;
+  end;
+  begin
+    update public.tenant set config = '{"presupuestoLlmUsdDia": 0}'::jsonb where id = t;
+  exception when others then cero_rebota := true;
+  end;
+  begin
+    update public.tenant set config = '{"presupuestoLlmUsdDia": -3}'::jsonb where id = t;
+  exception when others then negativo_rebota := true;
+  end;
+
+  -- (c) null = sin declarar.
+  begin
+    update public.tenant set config = '{"presupuestoLlmUsdDia": null}'::jsonb where id = t;
+    null_ok := true;
+  exception when others then null_ok := false;
+  end;
+
+  -- (d) convive con `agentes` (0159) y `politica`; la regla 2 sigue viva.
+  begin
+    update public.tenant set config =
+      '{"presupuestoLlmUsdDia": 27.5, "agentes": {"conductores": {"horasEscalacion": 5}}, "politica": [{"concepto": "diesel", "topeMonto": 8000}]}'::jsonb
+      where id = t;
+    hermanas_ok := true;
+  exception when others then hermanas_ok := false;
+  end;
+  begin
+    update public.tenant set config = '{"presupuestoLlmUsdDia": 40, "presupuestoLlmUsdDIa": 40}'::jsonb where id = t;
+  exception when others then inventada_rebota := true;
+  end;
+
+  raise exception E'PRESUPUESTO_LLM_TENANT_0278  declara=%  texto-rebota=%  cero-rebota=%  negativo-rebota=%  null-ok=%  hermanas-ok=%  inventada-rebota=%   (esperado t / t / t / t / t / t / t)',
+    declara, texto_rebota, cero_rebota, negativo_rebota, null_ok, hermanas_ok, inventada_rebota;
+end $$;
