@@ -585,7 +585,15 @@ export function armarParteIncidente(inc: Incidente, telefonos: Telefono[], dia: 
     'LO QUE SE SABE (y lo que NO se preguntó):',
     `  · Operador: ${inc.operadorNombre ?? 'NO CONSTA en el expediente'}`,
     `  · Unidad: ${inc.unidadEconomico ?? 'NO CONSTA en el expediente'}`,
-    `  · Descripción: ${inc.descripcion?.trim() || 'SIN DESCRIPCIÓN CAPTURADA'}`,
+    // AUDITORÍA 24, LEG-5: este parte se encola en `cola_aprobacion` — la
+    // bandeja INTERNA de Likida, no un canal en tiempo real hacia quien
+    // responde la emergencia. Reproducir aquí la descripción cruda del
+    // incidente (que puede llevar datos de salud) y los teléfonos de
+    // contactos de emergencia (que pueden ser familiares) sacaba ese dato
+    // sensible de la base del tenant hacia la bandeja de Likida, sin
+    // purga ni alcance de la cancelación ARCO — remite al expediente en
+    // vez de repetirlo.
+    `  · Descripción: revísala en el panel de tu flota (expediente ${inc.id}) — este parte no la reproduce.`,
   ];
   l.push(inc.hayLesionados === null
     ? '  · ¿Hay lesionados? NO SE PREGUNTÓ. La columna está en NULL, y NULL aquí significa exactamente eso — no significa «no hay». Es la PRIMERA pregunta de la llamada, y hasta que se conteste este parte no propone avisarle a ninguna familia.'
@@ -605,12 +613,10 @@ export function armarParteIncidente(inc: Incidente, telefonos: Telefono[], dia: 
     l.push('  Esto NO es «no hay a quién llamar»: es que esta flota no tiene póliza registrada en `flota_poliza` ni proveedores en `proveedor_emergencia`, o el tipo de emergencia no tiene proveedor asociado. Un número inventado aquí sería peor que no tener ninguno — mandaría a alguien a marcar a un desconocido en el peor momento.');
     l.push('  EL SIGUIENTE PASO ES DE UNA PERSONA: capturar el 800 de siniestros de la aseguradora y al menos una grúa de la zona, y volver a mirar este expediente.');
   } else {
-    for (let i = 0; i < telefonos.length; i++) {
-      const t = telefonos[i];
-      l.push(`  ${numero(i + 1)}. ${t.quien}`);
-      l.push(`     tel: ${t.numero}`);
-      l.push(`     respaldo: ${t.respaldo}`);
-    }
+    // LEG-5: mismo criterio que la descripción de arriba — el teléfono de
+    // un contacto de emergencia (a veces un familiar) no se repite en la
+    // bandeja interna de Likida.
+    l.push(`  ${telefonos.length} contacto(s) de emergencia disponibles en el panel de tu flota — este parte no los reproduce; ábrelo con el expediente ${inc.id}.`);
   }
 
   l.push('');
