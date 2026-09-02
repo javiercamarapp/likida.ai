@@ -436,6 +436,19 @@ describe('un fallo técnico de OCR ya no pierde el comprobante', () => {
     expect(dicho).toMatch(/no se pierde/i);
   });
 
+  it('AUDITORÍA 24 · AGEN-12: NO le promete que se lo ofreceremos en el siguiente viaje', async () => {
+    // Un huérfano de `fallo_ocr` nace con `monto: 0` y la oferta solo saca los
+    // que tienen monto: «te lo ofrezco en el siguiente» era una promesa que el
+    // código no podía cumplir. Lo que de verdad lo recupera es el reenvío, y
+    // eso es lo único que ahora se le pide.
+    extraerComprobante.mockResolvedValue(FALLO_TECNICO);
+    await processInbound({ from: '5219993700779', type: 'image', mediaId: 'm1', waMessageId: 'wa1' });
+
+    const dicho = salientes.join('\n');
+    expect(dicho).not.toMatch(/ofrezco en el siguiente|en el siguiente viaje/i);
+    expect(dicho, 'lo que sí depende de él').toMatch(/reenv/i);
+  });
+
   it('si tampoco se puede guardar, se le dice la verdad', async () => {
     extraerComprobante.mockResolvedValue(FALLO_TECNICO);
     guardarHuerfano.mockResolvedValueOnce(false);

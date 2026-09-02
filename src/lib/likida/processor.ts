@@ -1772,9 +1772,37 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
             }
             return;
           }
+          // ── AUDITORÍA 24 · WA-2 (ALTO): EL VOUCHER SIN VIAJE NO ES UN GASTO ──
+          // Con viaje, `decidirFoto` ya sabe que el voucher de la terminal (o el
+          // acercamiento al código) se PEGA al ticket y no se da de alta. Esta
+          // rama reutilizaba el `gasto` crudo de la extracción: el voucher
+          // entraba a la sala de espera CON monto, se ofrecía junto al ticket
+          // («Tengo 2 comprobantes tuyos, $5,780») y un «sí» cobraba la misma
+          // carga dos veces. Se guarda para la oficina —la foto es evidencia—
+          // pero con `monto: 0`, marcado como lo que es, y por eso nunca se
+          // ofrece (solo se ofrece lo que tiene monto).
+          if (!ex.legible && (ex.motivo === 'solo_codigo' || ex.motivo === 'solo_pago')) {
+            const esVoucher = ex.motivo === 'solo_pago';
+            const guardado = await guardarHuerfano(op.tenantId, op.operadorId, {
+              gasto: {
+                ...ex.gasto, monto: 0, imgHash, ...(ruta ? { imagenUrl: ruta } : {}),
+                ocrExtra: { ...(ex.gasto.ocrExtra ?? {}), documento: esVoucher ? 'voucher_pago' : 'acercamiento_codigo', montoDelPapel: ex.gasto.monto },
+              },
+              motivo: 'sin_viaje', rutaImagen: ruta,
+            });
+            logger.info('huerfano.voucher_sin_viaje', { tenant: op.tenantId, operador: op.operadorId, motivo: ex.motivo, montoDelPapel: ex.gasto.monto, ok: guardado });
+            if (!guardado) {
+              await sendText(msg.from, 'No pude guardar ese comprobante ⚙️. Guarda el papel y vuelve a mandarlo en un rato, por favor.');
+              return;
+            }
+            await sendText(msg.from, esVoucher
+              ? 'Ese es el voucher de la terminal 💳, no el ticket. Lo guardé para tu oficina, pero lo que cuenta en tu liquidación es el ticket de la gasolinera: mándamelo cuando tengas viaje abierto. 🧾'
+              : 'Ese es el acercamiento al código 🔍, no el ticket completo. Lo guardé para tu oficina, pero lo que cuenta es el ticket entero: mándamelo cuando tengas viaje abierto. 🧾');
+            return;
+          }
           // Ilegible: se le pide otra ANTES de guardar algo que no se puede usar.
           // Aquí sí es la foto (borrosa, cortada, oscura) y reenviarla SIRVE.
-          if (!ex.legible && ex.motivo !== 'solo_codigo' && ex.motivo !== 'solo_pago') {
+          if (!ex.legible) {
             await sendText(msg.from, 'Esa foto salió difícil de leer 🔍. ¿Me la reenvías con buena luz y completo el ticket?');
             return;
           }
@@ -2227,7 +2255,10 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
           anotarIncidencia(viajeId, {
             tipo: 'fallo_tecnico',
             mensajeSolo: guardado
-              ? 'Se me trabó a mí al leer ese comprobante ⚙️ — no es tu foto. Ya lo guardé, así que *no se pierde*. ¿Me lo reenvías en un momento? Si no alcanza a entrar en este viaje, te lo ofrezco en el siguiente. 📸'
+              // AGEN-12 (BAJO): NO se promete «te lo ofrezco en el siguiente» —
+              // un huérfano sin monto nunca se ofrece; lo que lo recupera es
+              // el reenvío, y eso es lo que se pide.
+              ? 'Se me trabó a mí al leer ese comprobante ⚙️ — no es tu foto. Guardé la imagen para tu oficina, así que el papel *no se pierde*, pero no alcancé a leer el monto: reenvíamela en un momento para poder contarla. 📸'
               : 'Se me trabó a mí al leer ese comprobante ⚙️ y tampoco lo pude guardar. Conserva el ticket y reenvíamelo en un rato, por favor. 🙏',
           });
           return;
@@ -3309,7 +3340,9 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
     // ofrecimiento le enseñaría al operador "• Otro · $0.00", que no le dice
     // nada. Se conservan (la foto y la fila son la evidencia de que existió) y
     // se recuperan reenviando la foto, que es lo que su propio mensaje le pide.
-    const enEspera = (await getHuerfanos(op.tenantId, op.operadorId))
+    // WA-7: el filtro de monto va en la base (antes del tope de 50); el
+    // `.filter` de aquí se queda como cinturón para el `gasto` mal formado.
+    const enEspera = (await getHuerfanos(op.tenantId, op.operadorId, { soloConMonto: true }))
       .filter((h) => h.gasto.monto > 0);
     if (enEspera.length) {
       const ofrecidos = enEspera.filter((h) => h.ofrecidoEn);
@@ -3330,11 +3363,18 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
           } catch (e) {
             // Un duplicado benigno también cuenta como resuelto: el comprobante
             // YA está en el viaje, que es lo que el operador pidió.
-            if (violaIndice(e, 'uq_gasto_img_hash') || violaIndice(e, 'uq_gasto_cfdi_uuid')) { puestos.push(h.id); continue; }
-            logger.error('huerfano.adjuntar_error', { err: e instanceof Error ? e.message : String(e) });
+            // AUDITORÍA 24 · BE-12: `gasto_pkey` también. El huérfano guarda el
+            // `gasto` con su id ya fijado (`ocr.ts` lo asigna al extraer); si un
+            // «sí» anterior insertó y `resolverHuerfanos` falló, el segundo «sí»
+            // choca contra la llave primaria (el índice de menor OID se evalúa
+            // primero), no contra `uq_gasto_img_hash` — y sin esto el
+            // comprobante se reofrecía para siempre con un error sin fila.
+            if (violaIndice(e, 'uq_gasto_img_hash') || violaIndice(e, 'uq_gasto_cfdi_uuid') || violaIndice(e, 'gasto_pkey')) { puestos.push(h.id); continue; }
+            logger.error('huerfano.adjuntar_error', { huerfanoId: h.id, gastoId: h.gasto.id, viaje: viajeId, tenant: op.tenantId, err: e instanceof Error ? e.message : String(e) });
           }
         }
-        await resolverHuerfanos(op.tenantId, puestos, 'adjuntado', viajeId);
+        const resueltos = await resolverHuerfanos(op.tenantId, puestos, 'adjuntado', viajeId);
+        if (!resueltos) logger.error('huerfano.sin_sellar', { viaje: viajeId, tenant: op.tenantId, huerfanos: puestos, nota: 'los gastos SÍ quedaron en el viaje; el siguiente «sí» los reconoce por gasto_pkey' });
         const ok = ofrecidos.filter((h) => puestos.includes(h.id));
         logger.info('huerfano.adjuntados', { viaje: viajeId, cuantos: ok.length, de: ofrecidos.length });
         // EL NETO, con el MISMO `copiasDeComprobante` que usan el motor y el PDF.
