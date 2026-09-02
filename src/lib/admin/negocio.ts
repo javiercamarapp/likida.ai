@@ -1004,3 +1004,51 @@ export async function contarLiquidacionesEnRevisar(): Promise<number> {
   }
   return count;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EL MRR (ADM-5, auditoría 24) — antes una constante `0` en `consola.tsx` y
+// `ejecutivo/page.tsx`, aunque `saas/suscripcion.ts` (0052) ya trae
+// `suscripcion.estado` y `plan.precio_mensual` reales. El día 1 del piloto
+// (Innovativos con una suscripción activa) la consola habría seguido
+// diciendo "$0 MRR" — una cifra que el código nunca calculó, justo lo que la
+// regla #1 del producto prohíbe.
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface ResumenMrr {
+  /**
+   * Suma de `plan.precio_mensual` de las suscripciones en estado 'activa'.
+   * `null` = NO SE PUDO MEDIR — o falló la lectura, o alguna suscripción
+   * activa cuelga de un plan sin precio configurado (`precio_mensual` NULL,
+   * ver `plan.ts` — "un precio de ejemplo termina en una propuesta
+   * comercial"). Nunca se resta esa suscripción en silencio: un MRR
+   * incompleto sin decirlo es peor que decir "sin medir".
+   */
+  totalMxn: number | null;
+  /** Cuántas suscripciones activas hay — se pinta aunque `totalMxn` sea
+   *  `null`, para distinguir "cero clientes" de "clientes sin precio". */
+  suscripcionesActivas: number;
+}
+
+/** El MRR de TODA la plataforma, cruzando tenants (mismo permiso que el resto
+ *  de este archivo). `traerTodo` + `count` real: mismo contrato que `tenant`
+ *  arriba, para que 800 flotas no se recorten en silencio. */
+export async function getMrr(): Promise<ResumenMrr> {
+  const admin = supabaseAdmin();
+  const filas = await traerTodo<{ id: string; plan: { precio_mensual: number | null } | Array<{ precio_mensual: number | null }> | null }>(
+    (d, h) => acotada(
+      admin.from('suscripcion').select('id, plan:plan_clave(precio_mensual)', conteo(d))
+        .eq('estado', 'activa').order('id').range(d, h),
+      'getMrr',
+    ),
+    'getMrr',
+  );
+  let total = 0;
+  let medible = true;
+  for (const f of filas) {
+    const planRel = f.plan;
+    const p = Array.isArray(planRel) ? planRel[0] : planRel;
+    if (!p || p.precio_mensual === null) { medible = false; continue; }
+    total += Number(p.precio_mensual);
+  }
+  return { totalMxn: medible ? round2(total) : null, suscripcionesActivas: filas.length };
+}

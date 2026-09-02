@@ -169,7 +169,7 @@ const {
   buscarConversaciones, getConversacion, CONVERSACIONES_POR_PAGINA,
   getConteosPlataforma, getCorridasRecientes, getUltimaCorridaPorAgente, AGENTES_BITACORA,
   getCorridasFallidas, getLiquidacionesEnRevisar, contarLiquidacionesEnRevisar, LIMITE_LIQUIDACIONES_REVISAR,
-  costoIaMesActual, costoIaDeTenant, SEGUNDOS_CACHE_CONSOLA,
+  costoIaMesActual, costoIaDeTenant, SEGUNDOS_CACHE_CONSOLA, getMrr,
 } = await import('./negocio');
 
 describe('getResumenNegocio', () => {
@@ -935,5 +935,47 @@ describe('costoIaDeTenant — la ficha 360', () => {
     expect(r).toEqual({ historicoUsd: 0.12, d30Usd: 0.12 });
     const otro = await costoIaDeTenant('t-sin-uso');
     expect(otro).toEqual({ historicoUsd: 0, d30Usd: 0 });
+  });
+});
+
+// ADM-5 (auditoría 24): MRR real — antes una constante `0` en la consola.
+describe('getMrr', () => {
+  beforeEach(() => { respuestas.clear(); rangos.clear(); });
+
+  it('suma precio_mensual de las suscripciones activas', async () => {
+    respuestas.set('suscripcion', {
+      data: [
+        { id: 's1', estado: 'activa', plan: { precio_mensual: 1500 } },
+        { id: 's2', estado: 'activa', plan: { precio_mensual: 2500.5 } },
+      ],
+      error: null,
+    });
+    const r = await getMrr();
+    expect(r).toEqual({ totalMxn: 4000.5, suscripcionesActivas: 2 });
+  });
+
+  it('sin suscripciones activas: $0 REAL (la lectura corrió, no hay nada que sumar)', async () => {
+    respuestas.set('suscripcion', { data: [], error: null });
+    const r = await getMrr();
+    expect(r).toEqual({ totalMxn: 0, suscripcionesActivas: 0 });
+  });
+
+  it('una suscripción activa sin precio configurado: totalMxn null — nunca se descuenta en silencio', async () => {
+    respuestas.set('suscripcion', {
+      data: [
+        { id: 's1', estado: 'activa', plan: { precio_mensual: 1500 } },
+        { id: 's2', estado: 'activa', plan: { precio_mensual: null } },
+      ],
+      error: null,
+    });
+    const r = await getMrr();
+    expect(r.totalMxn).toBeNull();
+    // El conteo de suscripciones SÍ se sabe, aunque el total no se pueda sumar.
+    expect(r.suscripcionesActivas).toBe(2);
+  });
+
+  it('con la base caída LANZA — nunca un $0 fabricado', async () => {
+    respuestas.set('suscripcion', { data: null, error: { message: 'db down' } });
+    await expect(getMrr()).rejects.toThrow();
   });
 });
