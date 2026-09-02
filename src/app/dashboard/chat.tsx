@@ -335,7 +335,14 @@ export default function ChatFlota({
         fr.onerror = () => rej(fr.error);
         fr.readAsDataURL(archivo);
       });
-      const resp = await fetch('/api/dashboard/ingesta', {
+      // H14 (auditoría 24): a diferencia de /chat y /conversaciones*, esta
+      // llamada NO mandaba `?tenant=` — un superadmin previsualizando una
+      // flota (`?tenant=X&vista=…`) que probara "Leer comprobante" aquí
+      // corría el OCR contra SU PROPIA sesión (sin flota real, o la
+      // equivocada), nunca contra la flota que está viendo. `tenantEfectivoChat`
+      // (chat/tenant.ts) es la misma regla que ya usan sus hermanas.
+      const tenantIngesta = spChat.get('tenant');
+      const resp = await fetch(`/api/dashboard/ingesta${tenantIngesta ? `?tenant=${encodeURIComponent(tenantIngesta)}` : ''}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imagen: dataUrl }),
       });
