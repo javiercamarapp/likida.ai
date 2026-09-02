@@ -11,7 +11,7 @@ import {
 import { reasignarOperador, buscarCatalogo, contarCatalogo, type OpcionCatalogo, type TipoCatalogo } from '@/lib/likida/repo';
 import { crearOperador } from '@/lib/likida/administracion';
 import { DatoInvalido } from '@/lib/likida/errores';
-import { getViajes } from '@/lib/likida/analytics';
+import { viajesEnCursoPaginados } from '@/lib/likida/repo_paginado';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
 import { VistaDespacho } from './vista';
@@ -70,7 +70,7 @@ function safe<T>(fn: () => Promise<T>): Promise<T | null> {
 export default async function PaginaDespacho({
   searchParams,
 }: {
-  searchParams: Promise<{ vista?: string; tenant?: string; rol?: string }>;
+  searchParams: Promise<{ vista?: string; tenant?: string; rol?: string; p?: string; q?: string }>;
 }) {
   const sp = await searchParams;
   const { tenantId, rol } = await resolverTenantEfectivo('/dashboard/despacho', sp);
@@ -78,6 +78,8 @@ export default async function PaginaDespacho({
 
   const sufijo = sufijoTenant(sp);
   const destino = `/dashboard/despacho${sufijo}`;
+  const paginaPedida = Math.max(1, Number.parseInt(sp.p ?? '1', 10) || 1);
+  const folioPedido = (sp.q ?? '').trim();
 
   // ── FE-2: LOS CATÁLOGOS YA NO SE CARGAN ─────────────────────────────────
   // Aquí se traían los tres ENTEROS (operadores, clientes, unidades) para
@@ -91,10 +93,14 @@ export default async function PaginaDespacho({
   //
   // `contarCatalogo` no lanza (devuelve `null` y loguea): un conteo caído no
   // puede tumbar el despacho, igual que antes un catálogo caído no lo hacía.
-  const [tablero, sinAsignar, viajes, carga, totalOperadores, totalClientes, totalUnidades] = await Promise.all([
+  // FE-2: "En curso" ya no es un recorte de "los últimos 100 viajes creados"
+  // filtrado en memoria — es su propia consulta, ordenada por urgencia
+  // (primero lo no aceptado, y entre eso lo avisado hace más tiempo), con
+  // `count: 'exact'` y un buscador por folio (`?q=`).
+  const [tablero, sinAsignar, activos, carga, totalOperadores, totalClientes, totalUnidades] = await Promise.all([
     safe(() => getTableroOperacion(tenantId)),
     getViajesSinAsignar(tenantId),
-    getViajes(tenantId, 100),
+    viajesEnCursoPaginados(tenantId, { pagina: paginaPedida, folio: folioPedido }),
     safe(() => getCargaOperadores(tenantId)),
     contarCatalogo(tenantId, 'operador'),
     contarCatalogo(tenantId, 'cliente'),
@@ -291,7 +297,9 @@ export default async function PaginaDespacho({
     <VistaDespacho
       tablero={tablero}
       sinAsignar={sinAsignar}
-      activos={viajes.filter((v) => v.estatus === 'abierto' || v.estatus === 'en_cuadre')}
+      activos={activos}
+      sufijo={sufijo}
+      folioPedido={folioPedido}
       buscarCatalogo={buscarCatalogoAccion}
       totalOperadores={totalOperadores}
       totalClientes={totalClientes}
