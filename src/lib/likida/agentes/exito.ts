@@ -252,12 +252,23 @@ export interface Flota {
   politicaPropia: boolean;
 }
 
+/** AGB-10 (auditoría 24, 1-sep-2026): los tenants de QA se siembran con el
+ *  prefijo `ZZZ QA ` a propósito (para ordenar al final en listas por
+ *  nombre) — pero ningún agente los excluía. Medido en producción: de 24
+ *  `tenant`, 2 son "ZZZ QA …" y el parte de onboarding decía "Flotas en
+ *  seguimiento: 3" contándolas como reales. Vive aquí (no una columna
+ *  `es_qa`, que exigiría migración) porque es el mismo criterio que ya
+ *  siembra los datos de prueba: el nombre lo dice. */
+const PREFIJO_TENANT_QA = 'ZZZ QA %';
+
 /** Las flotas del sistema. LANZA ante un error de lectura. `truncado` avisa
- *  de que hay más de las que caben — el parte lo dice, no lo esconde. */
+ *  de que hay más de las que caben — el parte lo dice, no lo esconde.
+ *  AGB-10: excluye los tenants "ZZZ QA …" — no son flotas reales. */
 export async function leerFlotas(): Promise<{ flotas: Flota[]; truncado: boolean }> {
   const { data, error } = await acotada(supabaseAdmin()
     .from('tenant')
     .select('id, nombre, created_at, config')
+    .not('nombre', 'ilike', PREFIJO_TENANT_QA)
     .order('created_at', { ascending: true })
     .limit(TOPE_FLOTAS + 1), 'exito.flotas');
   if (error) throw new Error(`leerFlotas: ${error.message}`);

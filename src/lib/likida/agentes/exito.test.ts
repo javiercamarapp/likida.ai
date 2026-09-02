@@ -22,10 +22,15 @@ function responderDe(tabla: string) {
   const cola = respuestas.get(tabla);
   return cola && cola.length > 0 ? cola.shift()! : { data: [], count: 0, error: null };
 }
+// AGB-10: registro de `.not(...)` por tabla — para poder afirmar QUÉ filtro
+// se mandó (la exclusión de tenants "ZZZ QA …" es del servidor, no del mock).
+const llamadasNot: Array<{ tabla: string; args: unknown[] }> = [];
 function builder(tabla: string) {
   const b: Record<string, unknown> = {};
   Object.assign(b, {
-    select: () => b, eq: () => b, is: () => b, not: () => b, gte: () => b, lt: () => b,
+    select: () => b, eq: () => b, is: () => b,
+    not: (...args: unknown[]) => { llamadasNot.push({ tabla, args }); return b; },
+    gte: () => b, lt: () => b,
     in: () => b, limit: () => b, maybeSingle: () => b, order: () => b, range: () => b,
     then: (res: (x: unknown) => unknown, rej: (e: unknown) => unknown) =>
       Promise.resolve().then(() => responderDe(tabla)).then(res, rej),
@@ -59,7 +64,7 @@ const {
   evaluarGatillos, armarParteRetencion,
   toquesDeHoy, esToqueAtrasado, tituloToque, textoDelToque, armarPropuestaCobranza, armarParteCobranzaSaas,
   semaforoTicket, armarParteSoporte,
-  esAgenteExito, correrAgenteExito, AGENTES_EXITO,
+  esAgenteExito, correrAgenteExito, AGENTES_EXITO, leerFlotas,
 } = await import('./exito');
 
 const FLOTA = { id: 'aaaaaaaa-1111-2222-3333-444444444444', nombre: 'Transportes GAL', creadaEn: '2026-08-01T10:00:00Z', politicaPropia: false };
@@ -67,6 +72,7 @@ const CASILLAS_VACIAS = { telefono: false, conectoresProbados: 0, avisos: 0, pol
 
 beforeEach(() => {
   respuestas.clear();
+  llamadasNot.length = 0;
   vi.clearAllMocks();
   telefonosJefe.mockResolvedValue({});
   getOnboardingFlotas.mockResolvedValue(new Map());
@@ -211,6 +217,15 @@ describe('onboarding — el checklist medible, con null distinto de pendiente', 
     await correrAgenteExito('onboarding_cliente', 'cron', '2026-08-27');
     const cuerpo = (encolarPieza.mock.calls[0][0] as { cuerpo: string }).cuerpo;
     expect(cuerpo).not.toContain('Sin política propia');
+  });
+});
+
+describe('AGB-10 (auditoría 24) — leerFlotas excluye los tenants "ZZZ QA …"', () => {
+  it('la consulta manda el filtro not-ilike sobre nombre', async () => {
+    respuestas.set('tenant', [{ data: [], error: null }]);
+    await leerFlotas();
+    const filtro = llamadasNot.find((l) => l.tabla === 'tenant');
+    expect(filtro?.args).toEqual(['nombre', 'ilike', 'ZZZ QA %']);
   });
 });
 
