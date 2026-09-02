@@ -8,6 +8,10 @@ import { logger } from '@/lib/logger';
 import { LecturaIncompleta } from '@/lib/likida/pg';
 
 export const runtime = 'nodejs';
+// BE-19 (auditoría 24): sin esto el tope lo pone el default de la plataforma
+// (15 s en Node sin Fluid Compute) y un export de 92 días sobre 45,000
+// liquidaciones muere en 504 mudo. Literal a propósito: Next lo lee en build.
+export const maxDuration = 120;
 
 /**
  * La bitácora RMF 2026 regla 9.1.8, fr. II, de UN desglose de peaje (F5) —

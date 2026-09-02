@@ -107,6 +107,11 @@ que no urgían.
   normal en GitHub y el sitio se queda con la versión anterior sin avisar.
   Antes de enseñarle algo a alguien, confirma que el último deployment
   corresponda a tu último commit.
+- **Migraciones ANTES que `[deploy]`:** el `ignoreCommand` corre
+  `scripts/ci/compuerta-deploy.mjs`, que lee `migracion.base` de `/api/health`
+  y NO construye si la base va atrás de la última `supabase/migrations`
+  (`[deploy:forzar]` la salta a la vista; `salud-produccion.yml` pinta el
+  mismo veredicto en rojo).
 
 `NEXT_PUBLIC_APP_URL` debe ser `https://app.likida.ai`; si no coincide con el
 Site URL de Supabase (Auth → URL Configuration), el login deja la cookie en otro

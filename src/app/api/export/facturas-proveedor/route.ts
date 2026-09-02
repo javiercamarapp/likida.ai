@@ -10,6 +10,10 @@ import { logger } from '@/lib/logger';
 import { LecturaIncompleta } from '@/lib/likida/pg';
 
 export const runtime = 'nodejs';
+// BE-19 (auditoría 24): sin esto el tope lo pone el default de la plataforma
+// (15 s en Node sin Fluid Compute) y un export de 92 días sobre 45,000
+// liquidaciones muere en 504 mudo. Literal a propósito: Next lo lee en build.
+export const maxDuration = 120;
 
 /** `?formato=` → layout. Sin parámetro sigue saliendo el genérico de la 0091
  *  (hay quien ya lo descarga); un valor inventado es 400, no un default

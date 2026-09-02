@@ -11,6 +11,10 @@ import { acotada } from '@/lib/likida/presupuesto';
 import { leerPeriodo, leerFiltroRevision, LEYENDA_REVISION, FILTRO_REVISION_DEFECTO } from './periodo';
 
 export const runtime = 'nodejs';
+// BE-19 (auditoría 24): sin esto el tope lo pone el default de la plataforma
+// (15 s en Node sin Fluid Compute) y un export de 92 días sobre 45,000
+// liquidaciones muere en 504 mudo. Literal a propósito: Next lo lee en build.
+export const maxDuration = 120;
 
 // Export de liquidaciones a CSV (ERP/Excel). Gate por la sesión real del
 // contralor (Supabase Auth) — ya no por el passcode compartido. El
