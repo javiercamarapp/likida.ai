@@ -626,6 +626,24 @@ export function avisoIntegral(r: DatosIntegral): SeccionAviso[] {
           : gps === 'sin_conector'
             ? `La **ubicación que tú decidas compartir** por el chat, que se guarda y se le muestra a tu empresa. Tu empresa **no tiene conectado un rastreo satelital** con Likida, así que por ese medio no se recibe ninguna posición; si algún día lo conecta, este aviso cambia y el nuevo te llega por WhatsApp. **Tu teléfono no se rastrea:** de él solo sale lo que tú decidas mandar. Las ubicaciones que compartas se conservan **90 días** y después se borran solas.`
             : `La **posición GPS de la unidad que traes asignada**, cuando tu empresa tiene contratado un rastreo satelital para sus camiones: la posición del camión se recibe cada pocos minutos, también mientras tú lo manejas. Y la **ubicación que tú decidas compartir** por el chat, que se guarda y se le muestra a tu empresa. **Tu teléfono no se rastrea:** el dispositivo de rastreo es del camión, y de tu teléfono solo sale lo que tú mandes. Las posiciones se conservan **90 días** y después se borran solas.`,
+        // AUDITORÍA 24 (LEG-3, ALTO): ningún aviso enumeraba los eventos que
+        // la cámara/telemetría del camión reporta — `sincronizar_eventos.ts`
+        // los guarda TODOS (no solo los graves) desde la misma credencial y
+        // cadencia del GPS (`conector_credencial`; ver el comentario de
+        // cabecera de ese archivo: "Eventos y posiciones comparten
+        // proveedor, credencial y cadencia"). Se reutiliza la señal `gps`
+        // por eso — no es un tratamiento con su propio conector, es el mismo
+        // con otro tipo de dato. NO se promete un plazo de borrado fijo para
+        // estos eventos: hoy no existe una purga automática que lo ejecute, y
+        // este archivo ya tiene un hallazgo (LEG-6) por prometer un "90 días"
+        // que ningún código cumplía — no se repite el error aquí. Mismo
+        // criterio que la categoría de salud, dos párrafos abajo: se declara
+        // la finalidad y el límite reales, no una cifra que nadie ejecuta.
+        gps === 'conectado'
+          ? `La **conducta al volante que reporta la cámara o el sistema de telemetría de tu camión**, cuando tu empresa tiene ese servicio conectado con Likida: frenadas bruscas, uso del celular al manejar, distracción, colisión, impacto o volcadura, con la hora y la posición del camión en ese momento, y una liga al video en el sistema del proveedor cuando él la entrega. **Se usan para atender un accidente o incidente grave de tu unidad** —abrir el expediente de asistencia y avisar a tu empresa— y, mientras tanto, quedan disponibles para que tu empresa revise cómo conduces. Hoy no tienen una fecha de borrado automático.`
+          : gps === 'sin_conector'
+            ? `Tu empresa **no tiene conectado un sistema de cámara o telemetría** con Likida, así que por ese medio no se recibe ningún evento sobre cómo conduces; si algún día lo conecta, este aviso cambia y el nuevo te llega por WhatsApp.`
+            : `La **conducta al volante que reporta la cámara o el sistema de telemetría de tu camión**, cuando tu empresa tiene ese servicio conectado con Likida: frenadas bruscas, uso del celular al manejar, distracción, colisión, impacto o volcadura, con la hora y la posición del camión en ese momento, y una liga al video en el sistema del proveedor cuando él la entrega. **Se usan para atender un accidente o incidente grave de tu unidad** —abrir el expediente de asistencia y avisar a tu empresa— y, mientras tanto, quedan disponibles para que tu empresa revise cómo conduces. Hoy no tienen una fecha de borrado automático.`,
         // AUDITORÍA EXTERNA 16-AGO-2026 (P2): la versión anterior decía "no
         // se usa para nada", y el flujo real es más matizado — la foto viaja
         // COMPLETA al motor de lectura (no se puede enmascarar una imagen
@@ -664,12 +682,22 @@ export function avisoIntegral(r: DatosIntegral): SeccionAviso[] {
         // Se declara lo que sí ocurre, con su finalidad y su límite, y se
         // conserva la promesa que sí es cierta para las demás categorías.
         `**Un dato de salud, y solo uno:** si avisas por el chat de un accidente o una emergencia, se guarda **si hay personas lesionadas** y el texto con el que lo describes, para poder escalarlo a tu empresa y atenderlo. No se usa para tu liquidación ni para evaluarte. **Fuera de ese caso no se piden ni se conservan datos sensibles:** ni origen racial o étnico, ni creencias, ni afiliación sindical, ni preferencias sexuales, ni datos biométricos. Cada foto se procesa completa por el motor de lectura para extraer los campos del comprobante; si en ella aparece por accidente algo sensible (un ticket de farmacia, por ejemplo), un filtro lo detecta y lo excluye: **no se guarda como dato, no participa en tu liquidación**, y la imagen que no respalda ningún gasto se elimina sola del almacenamiento. **Lo que no se puede borrar ni pidiéndolo:** la foto que ya es comprobante de un gasto — esa se conserva por obligación fiscal (CFF art. 30). Lo que sí puedes pedir es que se **desligue de tu persona**, y eso es lo que la cancelación ejecuta.`,
+        // AUDITORÍA 24 (LEG-8, MEDIO, reincidente ×3): `grep 'familiar|contacto
+        // de emergencia'` en los dos avisos daba 0 — el nombre 24, teléfono y
+        // parentesco del contacto de emergencia (`contacto_emergencia`, 0198)
+        // no estaban enumerados en ningún lado. No es tu dato: es el de un
+        // tercero que tu empresa captura sobre ti, y se declara aquí porque
+        // es la única sección donde el operador puede leer qué existe.
+        `**El contacto de emergencia que tu empresa capture sobre ti:** si tu empresa registra a alguien —nombre, teléfono y parentesco— para que se le avise en caso de que tengas un accidente, ese dato se guarda con esa sola finalidad. Se le avisa únicamente si tu empresa activa ese aviso para ese contacto, y Likida no le llama por su cuenta.`,
       ],
     },
     {
       titulo: 'Para qué se usan',
       fundamento: 'LFPDPPP art. 15 fr. III',
-      parrafos: [
+      // AUDITORÍA 24 (LEG-3): el filtro final quita el `null` de la
+      // finalidad de cámara cuando la flota no tiene una conectada — no hay
+      // nada que declarar en ese caso, y un párrafo vacío no es honesto.
+      parrafos: ([
         `**Finalidades necesarias — sin ellas no puede haber liquidación:**`,
         `· Liquidar tus viajes: cuadrar lo que gastaste contra el anticipo que recibiste y emitir el documento de liquidación.`,
         `· Comprobar los gastos ante el SAT y conservar los comprobantes fiscales el tiempo que la ley obliga (Código Fiscal de la Federación art. 30: al menos cinco años).`,
@@ -705,9 +733,19 @@ export function avisoIntegral(r: DatosIntegral): SeccionAviso[] {
         // más abajo que toda finalidad no escrita exige pedir permiso otra vez.
         // Va entre las NO necesarias: la liquidación cierra igual sin ella.
         `· Derivar tu **registro de jornada** —a qué hora empezaste a manejar, cuánto condujiste, cuánto descansaste— a partir de esas mismas posiciones, para que tu empresa cumpla su obligación de llevarlo (Ley Federal del Trabajo art. 132 fr. XXXIV). Puedes oponerte a que se derive ligado a tu persona.`,
+        // AUDITORÍA 24 (LEG-3, ALTO): la finalidad de los eventos de cámara.
+        // "Atender un accidente" (abrir el expediente de asistencia) es la
+        // parte que no admite oposición —es la misma ayuda que se activa
+        // cuando ocurre—; revisar la conducta fuera de un accidente sí es
+        // oponible, igual que el resto de lo derivado de las posiciones.
+        gps === 'conectado'
+          ? `· **Atender un accidente o incidente grave de tu unidad** (choque, impacto, volcadura) que la cámara o telemetría reporte, abriendo el expediente de asistencia y avisando a tu empresa. Esta finalidad no admite oposición: es la misma ayuda que se activa cuando ocurre. Fuera de un accidente, tu empresa también puede usar esos eventos para revisar cómo conduces; puedes oponerte a que ese uso quede ligado a tu persona.`
+          : gps === 'sin_conector'
+            ? null
+            : `· Si tu empresa conecta un sistema de cámara o telemetría, **atender un accidente o incidente grave de tu unidad** (choque, impacto, volcadura) que reporte, abriendo el expediente de asistencia y avisando a tu empresa —esta finalidad no admite oposición—, y revisar cómo conduces fuera de un accidente, a lo que sí puedes oponerte.`,
         `· Medir cómo funciona el servicio para mejorarlo (estadísticas de uso, sin identificarte en los reportes).`,
         `Cualquier finalidad que no esté escrita aquí requiere que te vuelvan a pedir permiso. La ley vigente ya no permite ampararse en usos "compatibles o análogos".`,
-      ],
+      ] as Array<string | null>).filter((p): p is string => p !== null),
     },
     {
       titulo: 'Un programa revisa tus comprobantes, y puedes oponerte',
@@ -893,16 +931,25 @@ export interface DatosAvisoProspectos {
  * I a IV están en las cuatro primeras secciones.
  */
 export function avisoProspectos(d: DatosAvisoProspectos): SeccionAviso[] {
-  const razonSocial = d.razonSocial?.trim() || '🔴 razón social pendiente 🔴';
-  const domicilio = d.domicilio?.trim() || '🔴 domicilio pendiente 🔴';
+  const razonSocial = d.razonSocial?.trim() || null;
+  const domicilio = d.domicilio?.trim() || null;
   const meses = Math.round(DIAS_RETENCION_PROSPECTO_PERSONA / 30.4);
   return [
     {
       titulo: 'Quién es responsable, y por qué tienes este aviso',
       fundamento: 'LFPDPPP art. 15 fr. I · art. 14',
-      pendiente: !d.razonSocial || !d.domicilio,
+      pendiente: !razonSocial || !domicilio,
       parrafos: [
-        `**${razonSocial}** (Likida), con domicilio en ${domicilio}, es la responsable de tus datos personales.`,
+        // AUDITORÍA 24 (LEG-4, ALTO): esta sección sustituía el dato ausente
+        // por un marcador rojo (🔴 razón social pendiente 🔴) DENTRO de la
+        // misma frase donde iría el nombre real — un documento público, con
+        // 33,298 prospectos detrás, que se leía como roto en vez de "en
+        // actualización". Mismo criterio que `avisoIntegral`: si falta el
+        // dato, se dice en una frase aparte y completa, no se rellena el
+        // hueco con un emoji.
+        razonSocial && domicilio
+          ? `**${razonSocial}** (Likida), con domicilio en ${domicilio}, es la responsable de tus datos personales.`
+          : `**Likida** es la responsable de tus datos personales. Este aviso está en actualización: la razón social inscrita y el domicilio de la entidad operadora siguen pendientes de captura — la fr. I del art. 15 los exige y se señalan aquí en vez de quedar en blanco o inventarse.`,
         // AUDITORÍA 19 (legal, reincidente #14): decía "ni nos diste tus
         // datos" a TODO lector — y el lead de /getdemo (api/lead) sí los dio,
         // con su nombre, correo y teléfono en el formulario. Un aviso que le
