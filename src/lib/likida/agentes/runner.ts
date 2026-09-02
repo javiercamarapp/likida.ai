@@ -33,6 +33,8 @@ import { acotada } from '../presupuesto';
 import { estaApagado, INTERRUPTORES, type NombreInterruptor } from '../interruptores';
 import { hoyMx } from '@/lib/formato';
 import { LlmBudgetExceededError, createLlmBudget, type LlmBudget } from '@/lib/llm/budget';
+import { alertarOperador } from '@/lib/observability/alerta';
+import { DatoInvalido } from '../errores';
 import { redactarCorreoFrio } from './redactor';
 import { AGENTES_FINANCIEROS, correrAgenteFinanciero, esAgenteFinanciero } from './finanzas';
 import { candidatosSinDossier, investigarProspecto } from './investigador';
@@ -440,11 +442,19 @@ export async function corridasSinCostoMedidoHoy(agente: string): Promise<number>
  *  (los más viejos primero — los del SLA), cortando por la reserva/run central.
  *  Las guardas por prospecto (cadencia 48h, pieza pendiente, estado) viven
  *  DENTRO de redactarCorreoFrio — aquí solo se seleccionan candidatos. */
+/** AGB-11 (auditoría 24): el tope de fallos SEGUIDOS del modelo (no de
+ *  guardas — una guarda que rebota es la máquina funcionando, no rota) antes
+ *  de cortar el lote. Medido en producción: 21 de 48 corridas en fallo, el
+ *  mismo error ("sin variante A legible"), y el runner seguía pagando el
+ *  modelo cuatro veces más aunque las tres primeras ya hubieran reventado
+ *  igual — 100 s de reloj por 0 piezas. */
+const TOPE_FALLOS_MODELO_SEGUIDOS = 3;
+
 async function loteRedactor(
   budget: LlmBudget | null,
   /** EL RELOJ DE LA VUELTA, adentro del motor (c7-1). Ver la nota del `for`. */
   venceEn: number,
-): Promise<{ piezas: number; saltados: number; costoUsd: number | null; sinTurno: number }> {
+): Promise<{ piezas: number; saltados: number; costoUsd: number | null; sinTurno: number; motivoCorte: string | null }> {
   const tope = topePiezasPorCorrida();
   // ── EL OVERFETCH: era ×4 (20 candidatos para 5 piezas), ahora ×2 (10) ──────
   //
@@ -495,6 +505,12 @@ async function loteRedactor(
   // cero y el agregado salía con cara de medido.
   let piezas = 0, saltados = 0, sinTurno = 0;
   let costoUsd: number | null = 0;
+  // AGB-11: fallos SEGUIDOS del modelo — se resetea con cualquier resultado
+  // que no sea uno (éxito o rebote de guarda), así que solo cuenta una racha
+  // real de "el modelo no está contestando", no fallos intercalados con
+  // guardas rebotando con normalidad.
+  let fallosModeloSeguidos = 0;
+  let motivoCorte: string | null = null;
   for (let i = 0; i < candidatos.length; i++) {
     const c = candidatos[i];
     // ── EL RELOJ, ADENTRO DEL MOTOR (auditoría ciclo 7, c7-1) ───────────────
@@ -535,6 +551,7 @@ async function loteRedactor(
       } : { plataforma: true });
       piezas += 1;
       costoUsd = (costoUsd === null || r.costoUsd === null) ? null : costoUsd + r.costoUsd;
+      fallosModeloSeguidos = 0;
     } catch (e) {
       // La RPC central ya hizo la decisión atómica. No se trata como un
       // prospecto inválido ni se sigue fabricando: el techo es de la corrida.
@@ -543,10 +560,31 @@ async function loteRedactor(
       // atorado no puede parar el lote entero. El detalle ya quedó en la
       // corrida/log del redactor.
       saltados += 1;
-      logger.info('runner.redactor.saltado', { prospecto: c.id, motivo: e instanceof Error ? e.message.slice(0, 160) : String(e) });
+      const motivo = e instanceof Error ? e.message.slice(0, 160) : String(e);
+      logger.info('runner.redactor.saltado', { prospecto: c.id, motivo });
+      // AGB-11: solo las llamadas que de verdad tocaron el modelo y
+      // reventaron cuentan para la racha — `redactarCorreoFrio` envuelve
+      // ESE fallo, y solo ESE, en este mensaje exacto (redactor.ts:437); una
+      // guarda (cadencia, ICP, pieza pendiente) tiene su propio texto y no
+      // cuenta como "el modelo no está contestando".
+      const esFalloDeModelo = e instanceof DatoInvalido && e.message.includes('no pudo escribir en este momento');
+      if (esFalloDeModelo) {
+        fallosModeloSeguidos += 1;
+        if (fallosModeloSeguidos >= TOPE_FALLOS_MODELO_SEGUIDOS) {
+          motivoCorte = `el lote se cortó tras ${fallosModeloSeguidos} fallos del modelo SEGUIDOS — pagar más llamadas contra un modelo que no está contestando no produce piezas, y sí gasta`;
+          logger.error('runner.redactor.fallos_seguidos', { fallosModeloSeguidos, prospecto: c.id });
+          await alertarOperador('redactor.fallos_seguidos', {
+            error: `El Redactor falló ${fallosModeloSeguidos} veces seguidas contra el modelo ("${motivo.slice(0, 200)}") — el lote se cortó antes de seguir pagando llamadas que no producen nada.`,
+            codigo: 'redactor_fallos_modelo_seguidos',
+          });
+          break;
+        }
+      } else {
+        fallosModeloSeguidos = 0;
+      }
     }
   }
-  return { piezas, saltados, costoUsd, sinTurno };
+  return { piezas, saltados, costoUsd, sinTurno, motivoCorte };
 }
 
 /** El motivo que lleva un agente cuyo LOTE se cortó a la mitad por el reloj.
@@ -701,10 +739,15 @@ export async function correrRunner(
         const budget = budgetTenantId
           ? createLlmBudget(budgetTenantId, randomUUID(), 'fondo', { maxTenantDailyUsd: a.presupuesto_dia_usd })
           : null;
-        const { sinTurno, ...cifras } = await loteRedactor(budget, venceEn);
+        const { sinTurno, motivoCorte, ...cifras } = await loteRedactor(budget, venceEn);
         agentes.push({
           agente: a.id, resultado: 'corrio', ...cifras,
-          ...(sinTurno > 0 ? { motivo: motivoLoteCortado(sinTurno) } : {}),
+          // AGB-11: el corte por fallos seguidos manda sobre el de reloj —
+          // son mutuamente excluyentes en la práctica (el corte de fallos
+          // sale de un `break` propio, antes de que el reloj lo alcance),
+          // pero si algún día coincidieran, la RAZÓN real (el modelo no
+          // contesta) es más útil que "sin turno".
+          ...(motivoCorte ? { motivo: motivoCorte } : sinTurno > 0 ? { motivo: motivoLoteCortado(sinTurno) } : {}),
         });
         // Un lote cortado a la mitad ES trabajo que el reloj le quitó a este
         // agente, y tiene que hacer que el latido diga `'parcial'` igual que un

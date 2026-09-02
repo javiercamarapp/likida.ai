@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { readFileSync } from 'node:fs';
+import { DatoInvalido } from '../errores';
+
+const alertarOperador = vi.fn(async (..._a: unknown[]) => undefined);
+vi.mock('@/lib/observability/alerta', () => ({ alertarOperador: (...a: unknown[]) => alertarOperador(...a) }));
 
 // ═══════════════════════════════════════════════════════════════════════════
 // EL RUNNER NIVEL 2 (0123) — los cuatro candados, todos fail-closed:
@@ -167,6 +171,7 @@ beforeEach(() => {
   apagados = new Set();
   interruptorFalla = false;
   redactar.mockClear();
+  alertarOperador.mockClear();
   redactar.mockResolvedValue({ piezaId: 'p', asunto: 'x', aviso: null, costoUsd: 0.001 });
   correrDireccion.mockClear();
   correrDireccion.mockResolvedValue({ resultado: 'corrio', piezas: 1, costoUsd: 0 });
@@ -283,6 +288,46 @@ describe('el lote', () => {
     expect(r.agentes[0].motivo).toBeUndefined();
     expect(r.agentes[0].piezas).toBe(5);
     expect(redactar.mock.calls.every((call) => (call[3] as { tenantId?: string }).tenantId === TENANT)).toBe(true);
+  });
+
+  // AGB-11 (auditoría 24, 1-sep-2026) — 21 de 48 corridas del redactor
+  // fallaron con el MISMO error contra el modelo, y el runner las pagaba
+  // todas sin cortar: 100 s de reloj por 0 piezas.
+  it('AGB-11: tres fallos del modelo SEGUIDOS cortan el lote, con el motivo dicho, y alertan al operador', async () => {
+    respuestas.set('agente_definicion', [{ data: [REDACTOR], error: null }]);
+    respuestas.set('cola_aprobacion', [{ data: null, error: null, count: 0 }]);
+    respuestas.set('prospecto', [{
+      data: Array.from({ length: 8 }, (_, i) => ({ id: `pr-${i}`, vendedor: null })), error: null,
+    }]);
+    redactar.mockRejectedValue(new DatoInvalido('El Redactor no pudo escribir en este momento — inténtalo de nuevo.'));
+    const r = await correrRunner(undefined, TENANT);
+    expect(redactar).toHaveBeenCalledTimes(3);
+    expect(r.agentes[0]).toMatchObject({ resultado: 'corrio', piezas: 0, saltados: 3 });
+    expect(r.agentes[0].motivo).toMatch(/3 fallos del modelo SEGUIDOS/);
+    expect(alertarOperador).toHaveBeenCalledWith('redactor.fallos_seguidos', expect.objectContaining({ codigo: 'redactor_fallos_modelo_seguidos' }));
+  });
+
+  it('AGB-11: un rebote de GUARDA (no del modelo) intercalado no cuenta para la racha — no corta el lote', async () => {
+    respuestas.set('agente_definicion', [{ data: [REDACTOR], error: null }]);
+    respuestas.set('cola_aprobacion', [{ data: null, error: null, count: 0 }]);
+    respuestas.set('prospecto', [{
+      data: Array.from({ length: 8 }, (_, i) => ({ id: `pr-${i}`, vendedor: null })), error: null,
+    }]);
+    let llamada = 0;
+    redactar.mockImplementation(async () => {
+      llamada += 1;
+      // modelo, modelo, GUARDA (rompe la racha), modelo, modelo, GUARDA,
+      // modelo, modelo — nunca hay TRES fallos de modelo seguidos.
+      if (llamada === 3 || llamada === 6) throw new DatoInvalido('A este prospecto se le escribió hace menos de 48 horas — la cadencia lo protege.');
+      throw new DatoInvalido('El Redactor no pudo escribir en este momento — inténtalo de nuevo.');
+    });
+    const r = await correrRunner(undefined, TENANT);
+    // Nadie produjo pieza (piezas nunca llega al tope), así que sin el corte
+    // de AGB-11 el lote recorre los 8 candidatos enteros.
+    expect(redactar).toHaveBeenCalledTimes(8);
+    expect(alertarOperador).not.toHaveBeenCalled();
+    expect(r.agentes[0].motivo).toBeUndefined();
+    expect(r.agentes[0]).toMatchObject({ piezas: 0, saltados: 8 });
   });
 });
 
