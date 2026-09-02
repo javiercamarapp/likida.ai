@@ -15444,3 +15444,62 @@ begin
     rebota_sin_motivo, rebota_motivo_blanco, acepta_con_motivo, rebota_pipeline_fuera_dominio,
     convive_dos_pipelines_misma_flota, convive_mismo_pipeline_otra_flota, choca_mismo_par, cascade_al_borrar_tenant;
 end $$;
+
+-- ── 248. Los nueve agentes TEATRO quedan `experimental`, el resto del catálogo no se toca (mig. 0301) ──
+--
+-- Lo que solo la base puede demostrar de la 0301:
+--
+--  (a) la columna `experimental` existe en `agente_definicion` (el ALTER
+--      corrió).
+--  (b) los NUEVE ids del hallazgo (cazador, seo_distribucion, guiones,
+--      noticias_mercado, promos_diarias, visuales, video_demo,
+--      video_marketing, pruebas) quedan `experimental = true` — uno por
+--      uno, porque un UPDATE con un `where id in (...)` mal escrito deja
+--      alguno fuera en silencio.
+--  (c) un agente REAL del catálogo (`redactor`, que sí manda correo) NO
+--      quedó marcado — la migración no pudo haber puesto `true` a TODOS
+--      por accidente (p. ej. un UPDATE sin WHERE).
+--  (d) el DEFAULT de la columna es `false`: un agente nuevo que se dé de
+--      alta sin tocar esta columna nace NO experimental — la marca es
+--      opt-in explícito para los nueve de este hallazgo, no el estado de
+--      reposo de un agente cualquiera.
+do $$
+declare
+  col_existe boolean;
+  faltantes text;
+  ids text[] := array[
+    'cazador','seo_distribucion','guiones','noticias_mercado',
+    'promos_diarias','visuales','video_demo','video_marketing','pruebas'
+  ];
+  k text;
+  no_marcados text[] := '{}';
+  redactor_intacto boolean;
+  default_es_false boolean;
+begin
+  select exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'agente_definicion' and column_name = 'experimental'
+  ) into col_existe;
+
+  -- (b) los nueve, uno por uno.
+  foreach k in array ids loop
+    if not exists (select 1 from public.agente_definicion where id = k and experimental = true) then
+      no_marcados := no_marcados || k;
+    end if;
+  end loop;
+  faltantes := coalesce(array_to_string(no_marcados, ','), '');
+  if faltantes = '' then faltantes := 'ninguno'; end if;
+
+  -- (c) redactor (agente REAL, manda correo) sigue sin la marca.
+  select (experimental = false) into redactor_intacto
+    from public.agente_definicion where id = 'redactor';
+
+  -- (d) el default de la columna, sobre una fila nueva que no la toca.
+  insert into public.agente_definicion (id, nombre, departamento)
+    values ('__verif_0301_default__', 'Verificación 0301', 'ingenieria');
+  select (experimental = false) into default_es_false
+    from public.agente_definicion where id = '__verif_0301_default__';
+
+  raise exception E'AGENTES_EXPERIMENTALES_0301  col_existe=%  faltantes=%  redactor_intacto=%  default_es_false=%   (esperado t / ninguno / t / t)',
+    col_existe, faltantes, redactor_intacto, default_es_false;
+end $$;

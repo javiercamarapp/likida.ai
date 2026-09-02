@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "total": 213,
+  "total": 211,
   "porArchivo": {
     "src/app/admin/agentes/contenido.tsx": 2,
     "src/app/admin/evals/page.tsx": 1,
@@ -33,12 +33,11 @@
     "src/lib/likida/agentes/crecimiento.ts": 2,
     "src/lib/likida/agentes/direccion.ts": 10,
     "src/lib/likida/agentes/enviador.ts": 2,
-    "src/lib/likida/agentes/exito.ts": 4,
+    "src/lib/likida/agentes/exito.ts": 3,
     "src/lib/likida/agentes/faq.ts": 2,
     "src/lib/likida/agentes/finanzas.ts": 2,
     "src/lib/likida/agentes/ingenieria_producto.ts": 6,
     "src/lib/likida/agentes/ingenieria.ts": 4,
-    "src/lib/likida/agentes/investigador.ts": 1,
     "src/lib/likida/agentes/leads.ts": 14,
     "src/lib/likida/agentes/notificaciones.ts": 1,
     "src/lib/likida/agentes/redactor.ts": 2,
