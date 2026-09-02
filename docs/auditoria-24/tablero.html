@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="es" data-palette="#2563eb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auditoría 24 — Likida</title>
+<style>
+  /* Paleta de ESTADO (reservada, nunca reusada como "serie 4"): el color
+     codifica LA NOTA, jamás el delta. Un rubro que sube de 4 a 5 sigue en
+     ámbar; pintarlo verde por haber subido es la mentira que esta rutina
+     existe para evitar. */
+  :root{
+    --fondo:#f6f7f9; --sup:#fff; --borde:#e3e6ea;
+    --tinta:#12161c; --tinta2:#454d59; --tinta3:#6b7480;
+    --malo:#b42318; --malo-bg:#fef3f2;
+    --medio:#b54708; --medio-bg:#fffaeb;
+    --bien:#067647; --bien-bg:#ecfdf3;
+    --linea:#2563eb;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --fondo:#0d1117; --sup:#161b22; --borde:#2a313a;
+      --tinta:#e8edf3; --tinta2:#aeb8c4; --tinta3:#7d8896;
+      --malo:#ff8a7a; --malo-bg:#2a1512;
+      --medio:#f5b544; --medio-bg:#2a1f0d;
+      --bien:#5fd39b; --bien-bg:#0e2a1c;
+      --linea:#7aa7ff;
+    }
+  }
+  :root[data-theme="dark"]{
+    --fondo:#0d1117; --sup:#161b22; --borde:#2a313a;
+    --tinta:#e8edf3; --tinta2:#aeb8c4; --tinta3:#7d8896;
+    --malo:#ff8a7a; --malo-bg:#2a1512;
+    --medio:#f5b544; --medio-bg:#2a1f0d;
+    --bien:#5fd39b; --bien-bg:#0e2a1c;
+    --linea:#7aa7ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--fondo); color:var(--tinta);
+    font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; padding:28px 22px 40px; overflow-x:hidden}
+  .envoltura{max-width:1180px; margin:0 auto}
+  h1{font-size:21px; margin:0 0 2px; letter-spacing:-.2px}
+  .sub{color:var(--tinta3); font-size:13px; margin-bottom:18px}
+  .panel{background:var(--sup); border:1px solid var(--borde); border-radius:12px}
+
+  /* ── 0 · barra de compuerta: si algo está rojo, encabeza el tablero ── */
+  .compuerta{display:flex; flex-wrap:wrap; gap:1px; overflow:hidden; margin-bottom:14px}
+  .compuerta .c{flex:1 1 150px; padding:11px 14px; background:var(--sup)}
+  .compuerta .k{font-size:11px; color:var(--tinta3); text-transform:uppercase; letter-spacing:.5px}
+  .compuerta .v{font-size:15px; font-weight:650; margin-top:3px}
+  .ok{color:var(--bien)} .mal{color:var(--malo)} .adv{color:var(--medio)}
+  .compuerta .n{font-size:12px; color:var(--tinta2); font-weight:400; margin-top:1px}
+
+  .fila{display:grid; grid-template-columns:1fr 340px; gap:14px; margin-bottom:14px}
+  @media (max-width:900px){ .fila{grid-template-columns:1fr} }
+
+  /* ── 1 · qué se rompió ── */
+  .rompio{padding:15px 17px; background:var(--malo-bg); border-color:var(--malo)}
+  .rompio .t{font-size:12px; text-transform:uppercase; letter-spacing:.5px; color:var(--malo); font-weight:700; margin-bottom:8px}
+  .rompio ul{margin:0; padding-left:17px} .rompio li{margin:5px 0; color:var(--tinta)}
+
+  .global{padding:15px 17px; text-align:center}
+  .global .t{font-size:12px; color:var(--tinta3); text-transform:uppercase; letter-spacing:.5px}
+  .global .n{font-size:46px; font-weight:700; line-height:1.05; margin:4px 0 2px; letter-spacing:-1px}
+  .global .d{font-size:13px; color:var(--tinta2)}
+
+  /* ── 2 · rejilla de rubros ── */
+  .rejilla{display:grid; grid-template-columns:repeat(auto-fill,minmax(272px,1fr)); gap:10px; margin-bottom:14px}
+  .rubro{padding:12px 14px; display:flex; gap:12px; align-items:flex-start}
+  .nota{min-width:46px; height:46px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+    font-size:21px; font-weight:700; border:1px solid}
+  .n-malo{background:var(--malo-bg); color:var(--malo); border-color:var(--malo)}
+  .n-medio{background:var(--medio-bg); color:var(--medio); border-color:var(--medio)}
+  .n-bien{background:var(--bien-bg); color:var(--bien); border-color:var(--bien)}
+  .rubro .cuerpo{min-width:0}
+  .rubro .nom{font-weight:640; font-size:13.5px; display:flex; align-items:center; gap:7px; flex-wrap:wrap}
+  .delta{font-size:11.5px; font-weight:650; padding:1px 6px; border-radius:20px; border:1px solid var(--borde); color:var(--tinta2)}
+  .rubro .riesgo{font-size:12.2px; color:var(--tinta2); margin-top:3px}
+  .sinauditar{font-size:11px; color:var(--tinta3); font-style:italic}
+
+  /* ── 3 · serie histórica ── */
+  .serie{padding:15px 17px}
+  .serie .t{font-size:12px; color:var(--tinta3); text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px}
+
+  /* ── 4 · hallazgos ── */
+  .hall{padding:15px 17px; margin-bottom:14px}
+  .hall .t{font-size:12px; color:var(--tinta3); text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px}
+  .tabla-env{overflow-x:auto; margin-top:8px}
+  table{border-collapse:collapse; width:100%; min-width:660px; font-size:12.8px}
+  th{text-align:left; font-weight:640; color:var(--tinta3); font-size:11px; text-transform:uppercase;
+     letter-spacing:.4px; padding:6px 9px 6px 0; border-bottom:1px solid var(--borde); white-space:nowrap}
+  td{padding:8px 9px 8px 0; border-bottom:1px solid var(--borde); vertical-align:top; color:var(--tinta2)}
+  td.q{color:var(--tinta)}
+  .sev{font-weight:700; font-size:11px; letter-spacing:.3px; white-space:nowrap}
+  .s-crit{color:var(--malo)} .s-alto{color:var(--medio)}
+  .est{font-size:11px; font-weight:650; padding:2px 7px; border-radius:20px; white-space:nowrap; border:1px solid}
+  .e-arr{background:var(--bien-bg); color:var(--bien); border-color:var(--bien)}
+  .e-pen{background:var(--medio-bg); color:var(--medio); border-color:var(--medio)}
+  .e-pro{background:var(--sup); color:var(--tinta2); border-color:var(--borde)}
+  .rein{font-size:10.5px; font-weight:700; color:var(--malo); border:1px solid var(--malo);
+    border-radius:20px; padding:1px 6px; margin-left:5px; white-space:nowrap}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:11.8px;
+    background:var(--fondo); padding:1px 4px; border-radius:4px; border:1px solid var(--borde)}
+  .pie{color:var(--tinta3); font-size:12px; margin-top:16px; line-height:1.6}
+</style>
+</head>
+<body>
+<div class="envoltura">
+  <h1>Auditoría 24 — Likida</h1>
+  <div class="sub" id="sub"></div>
+
+  <div class="panel compuerta" id="compuerta"></div>
+
+  <div class="fila">
+    <div class="panel rompio" id="rompio"></div>
+    <div class="panel global" id="global"></div>
+  </div>
+
+  <div class="rejilla" id="rejilla"></div>
+
+  <div class="fila">
+    <div class="panel serie" id="serie"></div>
+    <div class="panel serie" id="reincidentes"></div>
+  </div>
+
+  <div class="panel hall" id="hall"></div>
+
+  <div class="pie" id="pie"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// UNA SOLA FUENTE DE DATOS. La síntesis se corrige a mano y el tablero se
+// desincroniza: aquí los números viven en un solo sitio y se pintan de él.
+// ═══════════════════════════════════════════════════════════════════════════
+const D = {
+  fecha: '2 de septiembre de 2026',
+  tipo: 'Ronda de CONTINUACIÓN sobre el PR #303 · rama <code>aud24/integracion</code> · base <code>master</code> = 615496d',
+  global: null,        // se calcula
+  globalAnterior: 5.4,
+  serie: [
+    { r: 22, f: '30 ago', g: 6.1 },
+    { r: 23, f: '31 ago', g: 5.4 },
+  ],
+  compuerta: [
+    { k: 'npm test', v: '10,946 verdes', n: '819 archivos · 1 saltada · 118 s', ok: true },
+    { k: 'tsc --noEmit', v: '0 errores', n: 'en frío, con el techo nuevo', ok: true },
+    { k: 'eslint', v: '0 errores', n: '173 avisos · trinquete 173/173', ok: true },
+    { k: 'npm run build', v: 'no corre aquí', n: 'pide Supabase/OpenRouter — a propósito', ok: null },
+    { k: 'CI del PR #303', v: 'estaba ROJA', n: 'Typecheck OOM · arreglada en 22dc127', ok: false },
+  ],
+  rubros: [
+    { n:'Frontend',        h:6, a:7, r:'En el tema por omisión con el SO en oscuro, el chip de estado del Cotizador mide 1.24:1: la pantalla del precio, ilegible.' },
+    { n:'Backend y API',   h:7, a:7, r:'El ajuste del contralor mueve el total en la base y deja el PDF con la cifra vieja.' },
+    { n:'Sistema agéntico',h:5, a:4, r:'La cuenta dada de baja seguía mandando la flota por WhatsApp. Arreglado esta ronda.' },
+    { n:'Tool calling',    h:7, a:5, r:'generateResponse entrega una respuesta cortada a media frase como si estuviera completa.' },
+    { n:'Seguridad',       h:7, a:6, r:'El MFA obligatorio de superadmin vive solo en la capa que redirige páginas; /api/admin/* nunca pregunta.' },
+    { n:'Cumplimiento fiscal', h:5, a:4, r:'El panel del contador acredita el IVA completo del combustible en efectivo; el motor, solo la proporción del 15%.' },
+    { n:'Cumplimiento legal',  h:7, a:5, r:'El chat del panel manda el nombre del operador y su anticipo al modelo externo sin cobertura en el aviso.' },
+    { n:'Arquitectura',    h:6, a:5, r:'cubetaDe ganó un tercer criterio que el panel no ve: el renglón sale en verde mientras la hoja lo declara no deducible.' },
+    { n:'Pruebas',         h:7, a:7, r:'24 mutaciones dirigidas, 18 muertas: 0 de 14 sobreviven en el motor del dinero. Las 6 vivas están en las compuertas.' },
+    { n:'Operabilidad y DX', h:5, a:4, r:'Producción lleva 15 commits sobre el último [deploy]: las auditorías 22 y 23 enteras sin publicar.' },
+    { n:'Rendimiento y costo', h:6, a:6, r:'La nota de voz reserva presupuesto por byte: a partir de 1.24 MB el chofer en carretera recibe «no pude escucharte».' },
+    { n:'Modelo de datos', h:6, a:5, r:'«ajustar» mueve gasto.monto sin mover su desglose fiscal, y ninguna restricción ata esas cifras.' },
+  ],
+  rompio: [
+    'La CI del PR #303 estaba <b>roja en las dos corridas</b> mientras su cuerpo afirmaba «tsc limpio»: el Typecheck moría en OOM. <b>Arreglado</b> — el modo de falla solo aparece en frío, y en local siempre corre caliente.',
+    '<b>Frontend baja de 7 a 6</b>, el único rubro que baja: el arreglo FE-13b de esta misma rama añadió las dos clases <code>dark:</code> que dejan el Cotizador ilegible.',
+    'Producción sigue <b>15 commits atrás</b> del último <code>[deploy]</code> — reincidente de la 23, y no se arregla con código.',
+  ],
+  reincidentes: [
+    'OP-C1 · producción atrás del último <code>[deploy]</code> (2ª ronda)',
+    'ARQ · <code>cubetaDe</code> reconstruida en vez de llamada (3ª reconstrucción)',
+    'FIS · dos motores de IVA acreditable que no coinciden, en la otra mitad de la regla',
+    'TC-3 · abierto sin tocarse, 3ª ronda',
+    'REN · <code>PASOS_CIERRE</code> corta otra vez (el A24 de la 18)',
+  ],
+  hallazgos: [
+    { s:'CRÍTICO', q:'La baja de un usuario cierra el panel y deja abierto WhatsApp', d:'contactos.ts:59', e:'arreglado', nota:'70dd5c6 — 4 pruebas, roja sin el arreglo' },
+    { s:'CRÍTICO', q:'El Typecheck de CI corre sin techo de heap y muere en OOM — y con él quedan «skipped» los 6 pasos siguientes, pruebas incluidas', d:'ci.yml:95', e:'arreglado', nota:'22dc127 — pico en frío 2,672 MiB contra ~2,048. Lo hallaron operabilidad y pruebas por caminos independientes' },
+    { s:'CRÍTICO', q:'El mismo agujero en el camino sancionado a producción', d:'deploy-preview-promote.yml:82', e:'arreglado', nota:'cubierto por 22dc127: entra por el mismo script' },
+    { s:'CRÍTICO', q:'«ajustar» cambia el total y NO regenera el PDF ni el desglose fiscal', d:'revision.ts · 0299', e:'pendiente', nota:'lo hallaron backend y datos por caminos independientes; regenerar el PDF es decisión de producto', rein:false },
+    { s:'CRÍTICO', q:'El panel del contador acredita el IVA completo del combustible en efectivo', d:'fiscal.ts:814,850', e:'pendiente', nota:'exige meterle al panel las diferencias del motor: no es quirúrgico', rein:true },
+    { s:'CRÍTICO', q:'El contador del 15% del ejercicio es ciego al complemento de pago', d:'0190.sql:36 · desde_db.ts:121', e:'pendiente', nota:'misma familia que el anterior; se arreglan juntos o se contradicen' },
+    { s:'CRÍTICO', q:'Producción lleva 15 commits sobre el último [deploy]', d:'vercel.json:3', e:'pendiente', nota:'NO ES CÓDIGO — es un Redeploy en el panel de Vercel', rein:true },
+  ],
+  descartados: [
+    { q:'El «24:00» de jornada por hour12:false', r:'FALSO en Node 22 / ICU actual — el auditor lo ejecutó y resuelve a h23. Retirado de reincidentes.' },
+    { q:'«La 0300 recopió mal el cuerpo de la 0283»', r:'FALSO. Verificado línea por línea: es la unión real de ambas mitades y hasta agrega el search_path que la 0283 no tenía.' },
+    { q:'«El patrón 0283/0299 se repitió en 0288/0289»', r:'FALSO. La 0289 partió de la definición correcta.' },
+  ],
+};
+
+const clase = (n) => n <= 4 ? 'malo' : n <= 6 ? 'medio' : 'bien';
+const flecha = (h, a) => h === null ? '<span class="sinauditar">no auditado esta ronda</span>'
+  : h > a ? `<span class="delta" style="color:var(--bien)">▲ ${h-a}</span>`
+  : h < a ? `<span class="delta" style="color:var(--malo)">▼ ${a-h}</span>`
+  : '<span class="delta">= sin cambio</span>';
+
+// La global es la media de los 12; un rubro sin auditar conserva su nota.
+const notas = D.rubros.map(r => r.h === null ? r.a : r.h);
+D.global = Math.round(notas.reduce((a,b)=>a+b,0) / notas.length * 10) / 10;
+
+document.getElementById('sub').innerHTML = D.fecha + ' · ' + D.tipo;
+
+document.getElementById('compuerta').innerHTML = D.compuerta.map(c => `
+  <div class="c"><div class="k">${c.k}</div>
+    <div class="v ${c.ok === true ? 'ok' : c.ok === false ? 'mal' : 'adv'}">${c.v}</div>
+    <div class="n">${c.n}</div></div>`).join('');
+
+document.getElementById('rompio').innerHTML =
+  '<div class="t">Qué se rompió que ayer estaba bien</div><ul>' +
+  D.rompio.map(x => `<li>${x}</li>`).join('') + '</ul>';
+
+const dg = D.global - D.globalAnterior;
+document.getElementById('global').innerHTML = `
+  <div class="t">Global</div>
+  <div class="n" style="color:var(--${clase(D.global)})">${D.global.toFixed(1)}</div>
+  <div class="d">${dg > 0 ? '▲' : dg < 0 ? '▼' : '='} ${Math.abs(dg).toFixed(1)} contra la ronda 23 (${D.globalAnterior.toFixed(1)})</div>
+  <div class="d" style="margin-top:6px; font-size:12px; color:var(--tinta3)">media de los 12 rubros</div>`;
+
+document.getElementById('rejilla').innerHTML = D.rubros.map(r => {
+  const n = r.h === null ? r.a : r.h;
+  return `<div class="panel rubro">
+    <div class="nota n-${clase(n)}">${n}</div>
+    <div class="cuerpo">
+      <div class="nom">${r.n} ${flecha(r.h, r.a)}</div>
+      <div class="riesgo">${r.r || '—'}</div>
+    </div></div>`;
+}).join('');
+
+// Serie histórica: una sola serie, sin leyenda — el título la nombra.
+(() => {
+  const pts = [...D.serie, { r: 24, f: '2 sep', g: D.global }];
+  const W = 300, H = 110, PX = 34, PY = 16;
+  const min = 4.5, max = 7;
+  const x = i => PX + i * ((W - PX - 14) / (pts.length - 1));
+  const y = g => PY + (max - g) / (max - min) * (H - PY - 26);
+  const linea = pts.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.g).toFixed(1)}`).join(' ');
+  document.getElementById('serie').innerHTML = `
+    <div class="t">Serie histórica de la global</div>
+    <svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img"
+         aria-label="Global: ${pts.map(p => `${p.g.toFixed(1)} el ${p.f}`).join(', ')}.">
+      ${[5, 6, 7].map(g => `<line x1="${PX}" y1="${y(g)}" x2="${W - 14}" y2="${y(g)}"
+          stroke="var(--borde)" stroke-width="1"/>
+        <text x="${PX - 7}" y="${y(g) + 4}" font-size="10" text-anchor="end" fill="var(--tinta3)">${g}</text>`).join('')}
+      <path d="${linea}" fill="none" stroke="var(--linea)" stroke-width="2"
+            stroke-linejoin="round" stroke-linecap="round"/>
+      ${pts.map((p, i) => `
+        <circle cx="${x(i)}" cy="${y(p.g)}" r="4.5" fill="var(--linea)"
+                stroke="var(--sup)" stroke-width="2"/>
+        <text x="${x(i)}" y="${y(p.g) - 11}" font-size="11" font-weight="650"
+              text-anchor="middle" fill="var(--tinta)">${p.g.toFixed(1)}</text>
+        <text x="${x(i)}" y="${H - 6}" font-size="10" text-anchor="middle"
+              fill="var(--tinta3)">${p.f}</text>`).join('')}
+    </svg>`;
+})();
+
+document.getElementById('reincidentes').innerHTML =
+  '<div class="t">Reincidentes — peor noticia que uno nuevo</div><ul style="margin:0; padding-left:17px">' +
+  D.reincidentes.map(x => `<li style="margin:5px 0; color:var(--tinta2); font-size:12.5px">${x}</li>`).join('') + '</ul>';
+
+document.getElementById('hall').innerHTML = `
+  <div class="t">Críticos — qué impide llegar al demo</div>
+  <div class="tabla-env"><table>
+    <thead><tr><th>Sev</th><th>Hallazgo</th><th>Dónde</th><th>Estado</th><th>Nota</th></tr></thead>
+    <tbody>${D.hallazgos.map(h => `<tr>
+      <td><span class="sev s-${h.s === 'CRÍTICO' ? 'crit' : 'alto'}">${h.s}</span></td>
+      <td class="q">${h.q}${h.rein ? '<span class="rein">REINCIDENTE</span>' : ''}</td>
+      <td><code>${h.d}</code></td>
+      <td><span class="est e-${h.e === 'arreglado' ? 'arr' : h.e === 'pendiente' ? 'pen' : 'pro'}">${h.e}</span></td>
+      <td>${h.nota}</td></tr>`).join('')}</tbody>
+  </table></div>
+  <div class="t" style="margin-top:18px">Descartados por falsos — la prueba de que la verificación ocurrió</div>
+  <div class="tabla-env"><table>
+    <thead><tr><th>Hallazgo</th><th>Por qué se descartó</th></tr></thead>
+    <tbody>${D.descartados.map(d => `<tr><td class="q">${d.q}</td><td>${d.r}</td></tr>`).join('')}</tbody>
+  </table></div>`;
+
+document.getElementById('pie').innerHTML =
+  `${D.hallazgos.filter(h=>h.e==='arreglado').length} críticos arreglados con prueba que los reproduce · ` +
+  `${D.hallazgos.filter(h=>h.e==='pendiente').length} pendientes con la razón escrita. ` +
+  'Los ALTOS, MEDIOS y BAJOS quedan propuestos en el archivo de cada rubro. ' +
+  '<code>npm run build</code> no corre en la nube a propósito: pide credenciales que aquí no existen ' +
+  'y su fallo no diría nada del código.';
+</script>
+</body>
+</html>
