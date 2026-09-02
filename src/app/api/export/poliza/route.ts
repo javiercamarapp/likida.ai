@@ -32,6 +32,9 @@ import { archivoContpaqi, archivoSapB1 } from '@/lib/likida/contabilidad/formato
 import { perfilExportacionDeclarado } from '@/lib/likida/contabilidad/perfiles';
 import { cubetaDe, copiasDeComprobante, proporcionesDeducibles } from '@/lib/likida/cuadre/engine';
 import type { ConceptoGasto, Diferencia, Gasto } from '@/types/likida';
+// El redondeo a centavos vive SOLO en formato.ts — `formato.test.ts` enrojece
+// con una quinta copia, y esta ruta escribe pesos que se importan a un ERP.
+import { round2 } from '@/lib/formato';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -124,8 +127,6 @@ function aGasto(g: GastoRpc): Gasto {
     isrRetenido: num(g.isrRetenido ?? undefined),
   };
 }
-
-const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /**
  * AUDITORÍA 22, FIS-C1 (CRÍTICO) — reparte la base de cada concepto en las TRES

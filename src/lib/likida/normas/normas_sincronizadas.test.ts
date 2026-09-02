@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { NORMAS, IDS_NORMA, esVinculante, type Jerarquia } from './indice';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -214,7 +215,9 @@ describe('usado_en_codigo apunta a código que existe', () => {
   // Se cotejan solo los símbolos INEQUÍVOCOS —MAYÚSCULAS con guion bajo y
   // `nombre()` con paréntesis—: la prosa de una ficha es española y un
   // heurístico más ancho ("CFDI", "SAT") daría falsos positivos.
-  const SIMBOLOS = /\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b|\b[A-Za-z_$][\w$]*(?=\(\))/g;
+  // Sin cuantificadores anidados (`security/detect-unsafe-regex`): MAYÚSCULAS
+  // con al menos un guion bajo, o un identificador seguido de `()`.
+  const SIMBOLOS = /\b[A-Z][A-Z0-9_]*_[A-Z0-9_]*\b|\b[A-Za-z_$][\w$]*(?=\(\))/g;
 
   // Los COMENTARIOS no cuentan. Justo lo que pasó: `SIN_ACREDITAMIENTO` seguía
   // nombrado en tres comentarios de engine.ts años después de partirse en dos,
@@ -228,11 +231,13 @@ describe('usado_en_codigo apunta a código que existe', () => {
       for (const entrada of usadoEnCodigo(f.txt)) {
         const ruta = rutaCitada(entrada);
         if (!ruta) continue;
-        const base = BASES.find((b) => existsSync(new URL(b + ruta, RAIZ)));
+        // eslint-disable-next-line security/detect-non-literal-fs-filename -- `ruta` sale de las fichas YAML del propio repo, en tiempo de prueba; no hay entrada de usuario en el camino.
+        const base = BASES.find((b) => existsSync(fileURLToPath(new URL(b + ruta, RAIZ))));
         if (base === undefined) continue; // lo reporta el `it` de arriba
-        const url = new URL(base + ruta, RAIZ);
+        const archivo = fileURLToPath(new URL(base + ruta, RAIZ));
         let fuente: string;
-        try { fuente = sinComentarios(readFileSync(url, 'utf8')); } catch { continue; } // carpeta
+        // eslint-disable-next-line security/detect-non-literal-fs-filename -- misma razón que arriba: fuente del propio repo, ruta de una ficha YAML versionada.
+        try { fuente = sinComentarios(readFileSync(archivo, 'utf8')); } catch { continue; } // carpeta
         for (const simbolo of entrada.replace(ruta, '').match(SIMBOLOS) ?? []) {
           cotejados++;
           expect(

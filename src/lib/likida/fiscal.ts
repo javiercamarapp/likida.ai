@@ -274,6 +274,47 @@ export function resolverPeriodo(crudo: string | undefined, hoy: string): Periodo
 }
 
 /**
+ * LA VENTANA DE «LITROS ELEGIBLES PARA EL ESTÍMULO» (LIF 2026, 20-A), EN UN
+ * SOLO SITIO — con su rótulo.
+ *
+ * AUDITORÍA 24, FE-8 (ALTO): la MISMA cifra fiscal se medía con dos ventanas
+ * distintas en dos pantallas. `contador/inicio-contador.tsx` la pedía con
+ * `diasEjercicio` (el ejercicio en curso) y lo rotulaba;
+ * `combustible-casetas/page.tsx` y `chat/page.tsx` la pedían SIN ventana
+ * —`corteVentana(undefined) = null`, o sea el histórico completo— y la
+ * rotulaban «Litros elegibles para el estímulo · LIF 2026, Art. 20-A», sin
+ * periodo. El contralor ve dos litrajes bajo la misma cita legal: «una cifra
+ * fiscal que se lee distinto en dos pantallas se lee como dos cálculos».
+ *
+ * El estímulo del 20-A se acredita CONTRA EL EJERCICIO, así que la ventana
+ * correcta es la del ejercicio en curso; el histórico completo suma litros de
+ * años ya declarados. Aquí va el cálculo Y el rótulo juntos, por la misma
+ * razón que en `resolverPeriodo`: cuando eran dos cosas separadas, una
+ * pantalla decía un periodo y consultaba otro.
+ *
+ * `dias` es lo que `getAcreditables(tenantId, dias)` espera (`corteVentana`
+ * cuenta el día de hoy dentro, de ahí el `+ 1`).
+ */
+export function ventanaLitrosElegibles(hoy: string): {
+  periodo: Periodo;
+  dias: number;
+  rotulo: string;
+  nota: string;
+} {
+  const periodo = resolverPeriodo('ejercicio', hoy);
+  const desde = periodo.desde ?? `${hoy.slice(0, 4)}-01-01`;
+  const dias = Math.floor((Date.parse(`${hoy}T00:00:00Z`) - Date.parse(`${desde}T00:00:00Z`)) / 86_400_000) + 1;
+  return {
+    periodo,
+    dias,
+    rotulo: 'Litros elegibles para el estímulo',
+    // La ventana VA EN EL RÓTULO, no en un comentario del código: es la regla
+    // «toda ventana declarada en el rótulo».
+    nota: `LIF 2026, Art. 20-A — ${periodo.etiqueta.toLowerCase()}, del ${desde} a hoy`,
+  };
+}
+
+/**
  * El periodo INMEDIATAMENTE anterior al dado, para el comparativo.
  *
  * `null` cuando la comparación no tiene sentido ('todo' no tiene un "antes").

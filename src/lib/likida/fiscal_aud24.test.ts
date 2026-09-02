@@ -90,3 +90,35 @@ describe('FIS-7: el panel ve el complemento de pago', () => {
     expect(formaPagoEfectiva({ formaPago: '04' })).toBe('04');
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUDITORÍA 24 · FE-8 (ALTO) — «Litros elegibles para el estímulo» se medía
+// con dos ventanas distintas en dos pantallas bajo la misma cita legal.
+// ═══════════════════════════════════════════════════════════════════════════
+import { ventanaLitrosElegibles } from './fiscal';
+
+describe('FE-8: la ventana de los litros elegibles es UNA, y va en el rótulo', () => {
+  it('es el EJERCICIO en curso, no el histórico', () => {
+    const v = ventanaLitrosElegibles('2026-08-24');
+    expect(v.periodo.clave).toBe('ejercicio');
+    expect(v.periodo.desde).toBe('2026-01-01');
+    // 31+28+31+30+31+30+31+24 = 236 días, con hoy dentro (lo que `corteVentana`
+    // cuenta): del 1-ene al 24-ago inclusive.
+    expect(v.dias).toBe(236);
+  });
+
+  it('el primer día del ejercicio la ventana es de UN día, nunca de cero', () => {
+    // Con `dias = 0`, `corteVentana` devuelve null y la cifra saltaría al
+    // histórico completo justo el 1 de enero — el modo de falla del hallazgo.
+    const v = ventanaLitrosElegibles('2026-01-01');
+    expect(v.dias).toBe(1);
+  });
+
+  it('el rótulo dice el periodo: sin eso son dos cifras bajo la misma cita', () => {
+    const v = ventanaLitrosElegibles('2026-08-24');
+    expect(v.rotulo).toBe('Litros elegibles para el estímulo');
+    expect(v.nota).toContain('LIF 2026, Art. 20-A');
+    expect(v.nota).toContain('ejercicio 2026');
+    expect(v.nota).toContain('2026-01-01');
+  });
+});
