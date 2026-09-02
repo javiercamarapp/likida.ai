@@ -156,10 +156,20 @@ export default async function ArcoPage({ searchParams }: { searchParams: Promise
         </div>
       </header>
 
+      {/* H7 (auditoría 24): las tres cifras salían de `solicitudes`, que es
+          `[]` TANTO si de verdad no hay solicitudes COMO si la lectura de
+          arriba falló (`errorCarga`, catch → `solicitudes = []`). Antes de
+          este arreglo las tres KPI pintaban "0" en los dos casos: con la
+          base caída, "0 vencidas sin responder" es exactamente la mentira
+          que un responsable obligado por el art. 31 no se puede permitir —
+          puede haber solicitudes vencidas de verdad y la pantalla las
+          esconde bajo un cero con cara de medición. `null` es NO MEDIBLE
+          (KpiTile lo pinta "—", no "0"); la caja roja de `errorCarga` de
+          abajo ya explica por qué. */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <KpiTile icono={<CircleAlert width={15} height={15} strokeWidth={1.75} />} etiqueta="Por responder" valor={pendientes.length} />
-        <KpiTile icono={<CheckCircle2 width={15} height={15} strokeWidth={1.75} />} etiqueta={`Vencen pronto (≤ ${DIAS_VENCE_PRONTO} días)`} valor={vencenPronto.length} />
-        <KpiTile icono={<CircleAlert width={15} height={15} strokeWidth={1.75} />} etiqueta="Vencidas sin responder" valor={vencidas.length} />
+        <KpiTile icono={<CircleAlert width={15} height={15} strokeWidth={1.75} />} etiqueta="Por responder" valor={errorCarga ? null : pendientes.length} />
+        <KpiTile icono={<CheckCircle2 width={15} height={15} strokeWidth={1.75} />} etiqueta={`Vencen pronto (≤ ${DIAS_VENCE_PRONTO} días)`} valor={errorCarga ? null : vencenPronto.length} />
+        <KpiTile icono={<CircleAlert width={15} height={15} strokeWidth={1.75} />} etiqueta="Vencidas sin responder" valor={errorCarga ? null : vencidas.length} />
       </div>
 
       <div className="glass-panel overflow-hidden">
