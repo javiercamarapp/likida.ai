@@ -194,17 +194,23 @@ export async function avisarRelojesLegales(ahora: Date = new Date(), opts: Opcio
   // El anti-join con los sellos: una lectura por tanda, no una por incidencia.
   // El sello vive en la bitácora de la incidencia — el mismo expediente que
   // lee el panel, no un estado paralelo.
-  const sellos = todas.length === 0 ? [] : await traerPorIds<{ incidencia_id: unknown }>(
+  //
+  // El barrido es CROSS-TENANT a propósito (un cron sobre todas las flotas),
+  // igual que la lectura de `incidencia` de arriba: no hay un `tenant_id`
+  // único que filtrar. Lo que sí se hace —y por eso `tenant_id` viaja en el
+  // select— es casar el sello con el PAR (flota, incidencia): un sello solo
+  // descuenta a la incidencia de SU flota, nunca a una homónima de otra.
+  const sellos = todas.length === 0 ? [] : await traerPorIds<{ incidencia_id: unknown; tenant_id: unknown }>(
     todas.map((i) => i.id),
     (tanda) => acotada(admin
       .from('incidencia_evento')
-      .select('incidencia_id')
+      .select('incidencia_id, tenant_id')
       .eq('tipo', EVENTO_RELOJ)
       .in('incidencia_id', tanda), 'relojes.sellos'),
     'relojes.sellos',
   );
-  const selladas = new Set(sellos.map((s) => String(s.incidencia_id)));
-  const filas = todas.filter((i) => !selladas.has(i.id));
+  const selladas = new Set(sellos.map((s) => `${String(s.tenant_id)}:${String(s.incidencia_id)}`));
+  const filas = todas.filter((i) => !selladas.has(`${i.tenantId}:${i.id}`));
 
   const r: ResultadoRelojes = { revisadas: filas.length, avisadas: 0, fallos: 0, cortadasPorReloj: 0 };
   for (const [n, inc] of filas.entries()) {

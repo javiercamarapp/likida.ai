@@ -392,7 +392,7 @@ describe('avisarRelojesLegales — los relojes colgados de una incidencia', () =
 
   it('una incidencia ya sellada no vuelve a avisar', async () => {
     tablas.respuestas.set('incidencia', [inc('bloqueo')]);
-    tablas.respuestas.set('incidencia_evento', [{ id: 'e1', incidencia_id: 'i1' }]); // el sello existe
+    tablas.respuestas.set('incidencia_evento', [{ id: 'e1', incidencia_id: 'i1', tenant_id: 't1' }]); // el sello existe
 
     const r = await avisarRelojesLegales(new Date('2026-08-26T18:00:00Z'));
     expect(r.avisadas).toBe(0);
@@ -419,7 +419,8 @@ describe('avisarRelojesLegales — los relojes colgados de una incidencia', () =
     const selladas = Array.from({ length: 100 }, (_, i) => inc('bloqueo', { id: `s-${i}` }));
     const nuevas = Array.from({ length: 30 }, (_, i) => inc('bloqueo', { id: `n-${i}` }));
     tablas.respuestas.set('incidencia', [...selladas, ...nuevas]);
-    tablas.respuestas.set('incidencia_evento', selladas.map((s) => ({ id: `e-${s.id}`, incidencia_id: s.id })));
+    // El sello trae SU flota: el anti-join casa por el par (flota, incidencia).
+    tablas.respuestas.set('incidencia_evento', selladas.map((s) => ({ id: `e-${s.id}`, incidencia_id: s.id, tenant_id: s.tenant_id })));
     tablas.respuestas.set('viaje', [{ folio: 'V-9' }]);
 
     const r = await avisarRelojesLegales(new Date('2026-08-26T18:00:00Z'));
@@ -429,6 +430,17 @@ describe('avisarRelojesLegales — los relojes colgados de una incidencia', () =
     // La lectura va paginada con orden único, no topada a 100.
     expect(tablas.llamadas.some((l) => l.tabla === 'incidencia' && l.metodo === 'limit')).toBe(false);
     expect(tablas.llamadas.some((l) => l.tabla === 'incidencia' && l.metodo === 'order' && l.args[0] === 'abierta_en')).toBe(true);
+  });
+
+  it('BE-31: el sello de OTRA flota no descuenta a la incidencia homónima de la mía', async () => {
+    tablas.respuestas.set('incidencia', [inc('bloqueo', { id: 'i-9', tenant_id: 't1' })]);
+    tablas.respuestas.set('incidencia_evento', [{ id: 'e-1', incidencia_id: 'i-9', tenant_id: 't-otra' }]);
+    tablas.respuestas.set('viaje', [{ folio: 'V-9' }]);
+
+    const r = await avisarRelojesLegales(new Date('2026-08-26T18:00:00Z'));
+
+    expect(r.revisadas).toBe(1);
+    expect(r.avisadas).toBe(1);
   });
 
   it('BE-7: con el reloj vencido ninguna incidencia se avisa ni se sella, y se cuentan las cortadas', async () => {
