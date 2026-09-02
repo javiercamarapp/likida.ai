@@ -15460,3 +15460,94 @@ begin
   raise exception E'FISCAL_AGREGADO_PAGADO_0282  dos-celdas=%  trae-pagado=%  forma-del-rep=%   (esperado t / t / t)',
     dos_celdas, trae_pagado, forma_del_rep;
 end $$;
+
+-- ── 230. Lo liquidado no se mueve, y el REP tiene piso y forma (mig. 0283) ──
+--
+-- AUDITORÍA 24, DAT-4 (ALTO) + DAT-12 (MEDIO). Con la liquidación emitida, el
+-- escenario S21 movía el gasto a otro viaje y reescribía retenciones y
+-- descuento sin que el trigger de la 0037/0158 se enterara (solo miraba 10
+-- columnas y solo `new.viaje_id`). S13/S27: `cfdi_pago` aceptaba importes
+-- negativos y UUID en MAYÚSCULAS —el mismo REP dos veces para
+-- `uq_cfdi_pago_docto`, IVA liberado dos veces—, y `codigo_pendiente.monto`
+-- tampoco tenía piso.
+-- Esperado: INMUTABLE_TRAS_LIQUIDAR_0283 mover=t reten=t descuento=t viaje=t
+--           unidad-libre=t rep-negativo=t rep-mayusculas=t codigo-negativo=t
+do $$
+declare
+  t uuid := gen_random_uuid(); v1 uuid := gen_random_uuid(); v2 uuid := gen_random_uuid();
+  op uuid := gen_random_uuid(); op2 uuid := gen_random_uuid();
+  g uuid := gen_random_uuid(); u uuid := gen_random_uuid();
+  mover boolean := false; reten boolean := false; descuento boolean := false;
+  viaje_enc boolean := false; unidad_libre boolean := false;
+  rep_negativo boolean := false; rep_mayusculas boolean := false; codigo_negativo boolean := false;
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0283__');
+  -- Dos operadores: `uq_viaje_abierto_por_operador` (0029) solo deja UN viaje
+  -- abierto por operador, y aquí hacen falta dos viajes.
+  insert into public.operador (id, tenant_id, nombre, telefono)
+    values (op,  t, 'Operador 0283 A', '+5218100000283'),
+           (op2, t, 'Operador 0283 B', '+5218100000284');
+  insert into public.unidad (id, tenant_id, numero_economico, placas) values (u, t, 'U-0283', 'V283ABC');
+  insert into public.viaje (id, tenant_id, operador_id, folio, anticipo, estatus, origen, destino, fecha_inicio)
+    values (v1, t, op,  'VJ-0283-A', 10000, 'abierto', 'Monterrey', 'Saltillo', current_date),
+           (v2, t, op2, 'VJ-0283-B', 10000, 'abierto', 'Monterrey', 'Saltillo', current_date);
+  insert into public.gasto (id, tenant_id, viaje_id, concepto, monto, sub_total, iva_traslado, fecha)
+    values (g, t, v1, 'diesel', 5800, 5000, 800, current_date);
+
+  -- El papel: a partir de aquí v1 está firmado.
+  insert into public.liquidacion (tenant_id, viaje_id, total_comprobado, total_anticipo, diferencia)
+    values (t, v1, 5800, 10000, 4200);
+
+  -- (1) Mover el gasto a OTRO viaje — la punta que la 0036 no miraba.
+  begin
+    update public.gasto set viaje_id = v2 where id = g;
+  exception when sqlstate 'CU001' then mover := true;
+  end;
+
+  -- (2) Reescribir las retenciones que la póliza asienta como cuenta por pagar.
+  begin
+    update public.gasto set iva_retenido = 99999, isr_retenido = 99999 where id = g;
+  exception when sqlstate 'CU001' then reten := true;
+  end;
+
+  -- (3) Y el descuento (0171), base del estímulo de peaje.
+  begin
+    update public.gasto set descuento = 4000 where id = g;
+  exception when sqlstate 'CU001' then descuento := true;
+  end;
+
+  -- (4) El encabezado del PDF: origen/destino/fechas/cliente.
+  begin
+    update public.viaje set fecha_inicio = current_date - 30, origen = 'Otra' where id = v1;
+  exception when sqlstate 'CU004' then viaje_enc := true;
+  end;
+
+  -- (5) `unidad_id` sigue LIBRE a propósito (se captura tarde de rutina):
+  --     si esto fallara, el tablero del encargado quedaría trabado.
+  update public.viaje set unidad_id = u where id = v1;
+  unidad_libre := true;
+
+  -- (6) DAT-12: piso del complemento de pago.
+  begin
+    insert into public.cfdi_pago (tenant_id, cfdi_uuid, fecha_pago, docto_relacionado_uuid, imp_pagado)
+      values (t, 'bbbbbbbb-0283-0283-0283-000000000001', current_date, 'bbbbbbbb-0283-0283-0283-000000000002', -500);
+  exception when check_violation then rep_negativo := true;
+  end;
+
+  -- (7) …y su forma: 'AAAA…' y 'aaaa…' no pueden ser dos complementos.
+  begin
+    insert into public.cfdi_pago (tenant_id, cfdi_uuid, fecha_pago, docto_relacionado_uuid, imp_pagado)
+      values (t, 'BBBBBBBB-0283-0283-0283-000000000003', current_date, 'bbbbbbbb-0283-0283-0283-000000000004', 500);
+  exception when check_violation then rep_mayusculas := true;
+  end;
+
+  -- (8) La cola de códigos, misma familia.
+  begin
+    insert into public.codigo_pendiente (tenant_id, viaje_id, codigo_barras, monto)
+      values (t, v2, 'ABC283', -100);
+  exception when check_violation then codigo_negativo := true;
+  end;
+
+  raise exception E'INMUTABLE_TRAS_LIQUIDAR_0283  mover=%  reten=%  descuento=%  viaje=%  unidad-libre=%  rep-negativo=%  rep-mayusculas=%  codigo-negativo=%   (esperado t / t / t / t / t / t / t / t)',
+    mover, reten, descuento, viaje_enc, unidad_libre, rep_negativo, rep_mayusculas, codigo_negativo;
+end $$;
