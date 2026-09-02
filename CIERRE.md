@@ -4,7 +4,7 @@ Rama `aud24/datos` sobre `origin/master` (`615496da`).
 
 | ID | Estado | Archivos | Pruebas nuevas | Commit |
 |---|---|---|---|---|
-| DAT-2 / LEG-2 (CRÍTICO) | CERRADO | `0286_arco_por_telefono_normalizado.sql` | bloque 234 `ARCO_TEL_NORM_0286` | `825e681e` |
+| DAT-2 / LEG-2 (CRÍTICO) | CERRADO | `0286_arco_por_telefono_normalizado.sql` | bloque 234 `ARCO_TELEFONO_NORM_0286` | `825e681e` |
 | DAT-8 / REN-3 (ALTO) | CERRADO | `0287_ultimas_posiciones_lateral.sql` | bloque 235 | `af67e2b8` |
 | DAT-9 / REN-4 (MEDIO) | CERRADO | `0288_purga_outbox_eventos_e_indices_posicion.sql` | bloque 236 | `b1fc77c4` |
 | LEG-6 (ALTO) | CERRADO | `0289_purga_geolocalizacion_incidencia.sql` | bloque 237 | `123b3717` |
