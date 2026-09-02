@@ -5,7 +5,7 @@ import { resolverTenantEfectivo } from '@/lib/auth/tenant-efectivo';
 import { puedeVerRuta } from '@/lib/auth/visibilidad';
 import { logger } from '@/lib/logger';
 import { mensajeParaPantalla } from '@/lib/likida/errores';
-import { mxn, porcentaje, fechaHoraMx } from '@/lib/formato';
+import { mxn, porcentaje, fechaHoraMx, fechaMx, numero } from '@/lib/formato';
 import { gananciaReal } from '@/lib/likida/cotizador/motor';
 import {
   getPanelCotizador, guardarConfigCotizador, crearCotizacion, marcarEnviada, marcarPerdida,
@@ -242,7 +242,7 @@ function Fila({
           <span className="font-medium">{q.origen} → {q.destino}</span>
           {q.folio && <span className="ml-2 text-neutral-500">({q.folio})</span>}
           <span className="ml-2 text-neutral-500">{q.clienteNombre ?? 'sin cliente'}</span>
-          {q.km !== null && <span className="ml-2 text-neutral-500">{q.km} km</span>}
+          {q.km !== null && <span className="ml-2 text-neutral-500">{numero(q.km)} km</span>}
         </div>
         <div className="text-sm">
           <span className="mr-3">costo: {q.costoEstimado !== null ? mxn(q.costoEstimado) : 'incompleto'}</span>
@@ -302,7 +302,7 @@ function Fila({
 
       <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
         <span>creada {fechaHoraMx(q.creadaEn)}</span>
-        {q.vigenteHasta && <span>· vigente hasta {q.vigenteHasta}</span>}
+        {q.vigenteHasta && <span>· vigente hasta {fechaMx(q.vigenteHasta)}</span>}
         {q.viajeId && <span>· viaje creado</span>}
         {viva && (
           <span className="ml-auto flex gap-2">
