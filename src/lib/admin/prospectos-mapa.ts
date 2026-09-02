@@ -697,3 +697,44 @@ export async function getDetalleProspecto(id: string): Promise<DetalleProspecto 
     })),
   };
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ADM-8 (auditoría 24, MEDIO) — el rastro de una exportación.
+//
+// Un clic en "Exportar CSV (N)" de `cerebro.tsx` descarga la cartera
+// filtrada COMPLETA (hasta 33k filas, con teléfono y correo de decisores) y
+// no dejaba NINGUNA huella: ni el listado GET ni el fetch de textos llaman
+// `anotarBitacora`. Con una sola sesión de superadmin comprometida, la fuga
+// es masiva y sin evidencia para LFPDPPP.
+//
+// INSERT DIRECTO, no vía `anotarBitacora` (lib/likida/bitacora_escritura.ts):
+// su unión `EntidadBitacora` no incluye 'prospecto' y ese archivo no es
+// propio de esta ronda — el domino de `entidad` en la base es texto libre
+// SIN CHECK (0053), así que no hace falta migración para escribir aquí.
+// `detalle` lleva SOLO el conteo y los filtros elegidos (giro, estado, texto
+// de búsqueda) — nunca una fila de prospecto: la bitácora no puede volverse
+// ella misma una segunda copia de los datos que audita.
+//
+// BEST-EFFORT, nunca lanza: una bitácora que tumbara la descarga sería peor
+// que una descarga sin rastro (mismo criterio que `anotarBitacora`).
+// ═══════════════════════════════════════════════════════════════════════════
+
+export async function registrarExportacionProspectos(
+  actorId: string | null,
+  n: number,
+  filtros: Record<string, unknown>,
+): Promise<void> {
+  try {
+    const { error } = await supabaseAdmin().from('bitacora_auditoria').insert({
+      tenant_id: null,
+      actor_id: actorId,
+      accion: 'prospectos.exportados',
+      entidad: 'prospecto',
+      entidad_id: 'csv',
+      detalle: { n, filtros },
+    });
+    if (error) logger.warn('prospectos.exportacion_no_bitacorada', { err: error.message });
+  } catch (e) {
+    logger.warn('prospectos.exportacion_no_bitacorada', { err: e instanceof Error ? e.message : String(e) });
+  }
+}
