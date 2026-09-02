@@ -30,8 +30,10 @@ export const dynamic = 'force-dynamic';
 //     rechazado se responde error —nunca 200 en falso—, para que Supabase le
 //     diga a la persona que el correo no salió en vez de dejarla mirando una
 //     bandeja vacía. El log lleva el motivo real.
-//   · No hay estado, ni base, ni cola. Menos piezas que se puedan caer entre
-//     el clic y el correo.
+//   · No hay base ni cola. Menos piezas que se puedan caer entre el clic y el
+//     correo. El ÚNICO estado es el candado anti-replay de abajo: un Map
+//     acotado, en memoria, que no hace falta que exista para que el login
+//     funcione (ver `yaSeMando`).
 //   · La firma se verifica SIEMPRE (`verificarFirma`, el mismo verificador
 //     Standard Webhooks del correo entrante). Sin ella, este endpoint sería
 //     una máquina pública de mandar correos con nuestro remitente y nuestro
@@ -73,6 +75,45 @@ function fallo(codigo: number, mensaje: string) {
   return NextResponse.json({ error: { http_code: codigo, message: mensaje } }, { status: codigo });
 }
 
+// ── Candado anti-replay por `webhook-id` (AUDITORÍA 24, BE-30) ─────────────
+//
+// La firma se verifica y el timestamp se acota a ±5 min, pero NADA impedía
+// reenviar el MISMO cuerpo firmado dentro de esa ventana: quien capturara una
+// entrega (un proxy, un log de red) podía disparar 50 correos de acceso
+// idénticos a una dirección legítima. No entrega credenciales de más —el
+// enlace es el mismo de siempre— pero es nuestro remitente inundando a un
+// cliente, y con eso se quema la reputación del dominio.
+//
+// LO QUE ESTE CANDADO ES Y LO QUE NO: es un Map POR INSTANCIA, no un candado
+// distribuido. Una réplica fría no sabe lo que vio otra. No se promete
+// "exactamente una vez": se promete que la ráfaga —que es lo que hace daño—
+// se corta. Se sella DESPUÉS de que el correo salió de verdad, para que un
+// reintento legítimo de Supabase tras un 500 nuestro sí vuelva a mandarlo:
+// entre "un correo de más" y "nadie entra", este endpoint elige lo primero.
+const VENTANA_REPLAY_MS = 10 * 60_000;
+/** Techo del Map: por encima se limpia entero. Una entrega son ~40 B de id y
+ *  este endpoint no ve más que logins; 5,000 es holgura de sobra. */
+const MAX_IDS = 5_000;
+const idsMandados = new Map<string, number>();
+
+/** ¿Ya salió el correo de ESTA entrega? Limpia lo vencido de paso. */
+function yaSeMando(id: string): boolean {
+  const visto = idsMandados.get(id);
+  if (visto === undefined) return false;
+  if (Date.now() - visto > VENTANA_REPLAY_MS) { idsMandados.delete(id); return false; }
+  return true;
+}
+
+function sellarMandado(id: string): void {
+  if (idsMandados.size >= MAX_IDS) idsMandados.clear();
+  idsMandados.set(id, Date.now());
+}
+
+/** Solo para pruebas: el Map es de módulo y se comparte entre casos. */
+export function reiniciarAntiReplay(): void {
+  idsMandados.clear();
+}
+
 export async function POST(req: Request) {
   // El secreto lo genera Supabase al crear el hook y viene como
   // `v1,whsec_<base64>`. El verificador espera `whsec_<base64>`: el prefijo de
@@ -90,10 +131,11 @@ export async function POST(req: Request) {
   // corta de tajo el intento de hacernos gastar CPU en un HMAC gigante.
   if (cuerpo.length > 32 * 1024) return fallo(413, 'Payload demasiado grande.');
 
+  const idEntrega = req.headers.get('webhook-id');
   const firma = verificarFirma(
     cuerpo,
     {
-      id: req.headers.get('webhook-id'),
+      id: idEntrega,
       timestamp: req.headers.get('webhook-timestamp'),
       signature: req.headers.get('webhook-signature'),
     },
@@ -105,6 +147,14 @@ export async function POST(req: Request) {
     // inválida" desde fuera le enseña a quien prueba cómo ajustar su intento.
     logger.warn('auth.correo.firma_rechazada', { motivo: firma.motivo });
     return fallo(401, 'Firma no válida.');
+  }
+
+  // BE-30: la misma entrega, ya mandada, se acusa sin volver a mandarla. Va
+  // DESPUÉS de la firma —un id sin firma válida no ensucia el Map— y antes de
+  // armar nada.
+  if (idEntrega && yaSeMando(idEntrega)) {
+    logger.warn('auth.correo.entrega_repetida', { id: idEntrega });
+    return NextResponse.json({});
   }
 
   let payload: PayloadHook;
@@ -199,6 +249,10 @@ export async function POST(req: Request) {
         : 'No se pudo enviar el correo de acceso.',
     );
   }
+
+  // El sello va AQUÍ, con el correo ya fuera: un envío que falló no gasta la
+  // entrega, y el reintento de Supabase sí vuelve a mandarlo (BE-30).
+  if (idEntrega) sellarMandado(idEntrega);
 
   // Sin la dirección en el log: este endpoint ve el correo de TODO el que
   // intenta entrar, y un log no es lugar para un dato personal (LFPDPPP).
