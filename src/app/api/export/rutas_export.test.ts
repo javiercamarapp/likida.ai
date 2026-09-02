@@ -37,6 +37,11 @@ function builderLiquidacion() {
   Object.assign(b, {
     select: (_cols: string, opt?: { count?: string }) => { c.conteo = opt?.count === 'exact'; return b; },
     eq: (col: string, v: unknown) => { filtros.push([col, v]); return b; },
+    // BLOQ-6 (0299): la ruta acota por `revision` — por omisión deja fuera las
+    // rechazadas (`neq`), y con `?revision=firmadas` usa `in`. La "base" de
+    // esta prueba tiene que conocer los dos verbos o la cadena se rompe.
+    neq: (col: string, v: unknown) => { filtros.push([`${col}<>`, v]); return b; },
+    in: (col: string, v: unknown) => { filtros.push([`${col} in`, v]); return b; },
     gte: (col: string, v: unknown) => { filtros.push([`${col}>=`, v]); return b; },
     lt: (col: string, v: unknown) => { filtros.push([`${col}<`, v]); return b; },
     or: (f: string) => { c.or = f; return b; },
