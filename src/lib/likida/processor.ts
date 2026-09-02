@@ -104,6 +104,14 @@ export interface InboundMessage {
    *  y la nota de talacha de un comprobante cualquiera). */
   text?: string;
   mediaId?: string;           // para image/document
+  /**
+   * Qué era en realidad un mensaje `other` (`sticker`, `video`, `contacts`,
+   * `unsupported`, `list_reply`…). AUDITORÍA 24 · WA-9: sin esto, el chofer
+   * que manda un video de la llanta ponchada recibe una lista de formatos que
+   * no dice ni una palabra de lo que él mandó. Las reacciones no llegan
+   * hasta aquí: el webhook las descarta.
+   */
+  subtipo?: string;
   /** El pin de WhatsApp (type 'location') — ambas o ninguna (webhook). */
   lat?: number;
   lng?: number;
@@ -966,6 +974,32 @@ function esErrorDePresupuesto(e: unknown): boolean {
     actual = (actual as { cause?: unknown }).cause;
   }
   return false;
+}
+
+/**
+ * Lo que se le contesta a un mensaje que no sabemos leer (AUDITORÍA 24 · WA-9).
+ *
+ * La lista de formatos era la misma para todo, y por eso no servía para nada:
+ * el chofer que manda un video de la llanta ponchada leía «solo proceso texto,
+ * fotos de comprobantes, el XML del CFDI y tu ubicación» sin una palabra sobre
+ * el video. Se nombra lo que mandó y se le dice qué hacer con ESO.
+ *
+ * Las reacciones (👍) no llegan aquí: el webhook las descarta antes del inbox.
+ *
+ * PURA: es texto y se prueba como texto.
+ */
+export function mensajeTipoNoSoportado(subtipo?: string): string {
+  const cola = 'Mándame la foto de tu ticket o el XML. 📸';
+  switch (subtipo) {
+    case 'sticker':
+      return `Ese sticker no me dice nada 🙂. Si necesitas algo, escríbemelo. ${cola}`;
+    case 'video':
+      return `Los videos no los leo 🎥 — una *foto* sí. Si es un ticket, tómale foto; si es un problema del camión, cuéntamelo por escrito. ${cola}`;
+    case 'contacts':
+      return `Los contactos compartidos no los uso 📇. Si necesitas que tu jefe se entere de algo, dímelo por escrito y yo le aviso. ${cola}`;
+    default:
+      return `Por ahora solo proceso texto, fotos de comprobantes, el XML del CFDI y tu ubicación 📍. ${cola}`;
+  }
 }
 
 /** El error de fondo, sin el envoltorio del ciclo de tools (ver arriba). */
@@ -3104,7 +3138,7 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
 
     // ── TEXTO: corre el agente UNA vez → respuesta consolidada ───────────────
     if (!(msg.type === 'text' && msg.text)) {
-      await say('Por ahora solo proceso texto, fotos de comprobantes, el XML del CFDI y tu ubicación 📍. Mándame la foto de tu ticket o el XML. 📸');
+      await say(mensajeTipoNoSoportado(msg.subtipo));
       return;
     }
 

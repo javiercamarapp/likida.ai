@@ -625,9 +625,25 @@ function extractMessages(p: WaWebhook): InboundMessage[] {
         else if (m.type === 'interactive' && m.interactive?.type === 'button_reply' && m.interactive.button_reply?.id) {
           out.push({ ...base, type: 'text', text: m.interactive.button_reply.id });
         }
+        // ── AUDITORÍA 24 · WA-9 (MEDIO): UN 👍 NO ES UN TURNO ──────────────
+        //
+        // Meta manda `type: 'reaction'` cuando el chofer reacciona a un
+        // mensaje nuestro — y reaccionar al «Anotado ✅» es lo que hace medio
+        // México en vez de contestar. Cada una entraba a `wa_evento_pendiente`,
+        // gastaba cupo de rate limit, corría un turno completo y recibía «Por
+        // ahora solo proceso texto, fotos…». Con 22 acuses son 22 sermones,
+        // 22 mensajes salientes pagados, y el chofer aprendiendo que el bot no
+        // entiende. No hay nada que contestarle a un pulgar: se descarta aquí,
+        // antes del inbox.
+        else if (m.type === 'reaction') {
+          logger.info('wa.reaccion_ignorada', { de: m.from });
+        }
         // Cualquier otro interactivo (`list_reply`, `nfm_reply`…) NO se traga
         // como si fuera un botón: su forma es distinta y hoy no se manda ninguno.
-        else out.push({ ...base, type: 'other' });
+        // El `subtipo` viaja para que el processor conteste lo que de verdad
+        // pasó («los videos no los leo; una foto sí») en vez de una lista de
+        // formatos que no menciona lo que él mandó (WA-9).
+        else out.push({ ...base, type: 'other', subtipo: m.type });
       }
     }
   }
