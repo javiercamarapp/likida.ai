@@ -47,6 +47,9 @@ export default function AvisoProspectos() {
     <PaginaLegal
       etiqueta="Aviso de privacidad · contactos comerciales"
       bajada="Ley Federal de Protección de Datos Personales en Posesión de los Particulares"
+      // LEG-12: fecha del último cambio SUSTANTIVO del texto de este aviso
+      // (LEG-4, auditoría 24), no la fecha en que alguien lo abre.
+      vigenteDesde="2026-09-01"
       secciones={secciones}
       aviso={faltan ? (
         <FaltaDato>

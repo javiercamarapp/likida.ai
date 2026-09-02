@@ -182,6 +182,10 @@ export default function Privacidad() {
     <PaginaLegal
       etiqueta="Política de privacidad"
       bajada="Ley Federal de Protección de Datos Personales en Posesión de los Particulares"
+      // LEG-12: fecha del último cambio SUSTANTIVO del texto (LEG-10,
+      // auditoría 24: se agregó Stripe a la lista de encargadas), no la
+      // fecha en que alguien abre la página.
+      vigenteDesde="2026-09-01"
       secciones={SECCIONES}
       aviso={estado.faltantesEntidad.length > 0 ? (
         // AUDITORÍA 19-c2 (A6): el rótulo era una instrucción interna al
