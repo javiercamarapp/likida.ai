@@ -11,6 +11,10 @@ const respuestas = new Map<string, Resp>();
 /** Los `range(desde, hasta)` que pidió cada tabla — para comprobar que se
  *  pagina UNA vez cuando el `count` ya dijo que no falta nada. */
 const rangos = new Map<string, Array<[number, number]>>();
+// ADM-6: los `.upsert(...)` que cada tabla recibió — para las pruebas de
+// `apagarPipelineDeTenant`/`encenderPipelineDeTenant`, que escriben en vez
+// de leer.
+const escrituras = new Map<string, Array<Record<string, unknown>>>();
 
 // El mock pagina COMO POSTGREST: `range` rebana, y `count` solo viene si la
 // consulta lo pidió con `.select(cols, { count: 'exact' })`. Un mock que
@@ -37,6 +41,15 @@ function crearBuilder(tabla: string) {
   // ADM-3: `.not(col, 'ilike', patron)` — getResumenNegocio excluye los
   // tenants sintéticos 'ZZZ %' que una corrida de QA abortada conserva.
   const filtrosNot: Array<[string, RegExp]> = [];
+  // ADM-6: `.in(col, vals)` — la resolución del nombre de quién movió la
+  // palanca (`getInterruptoresPipelineDeTenant`) lo necesita de verdad.
+  const filtrosIn: Array<[string, unknown[]]> = [];
+  // ADM-6: `.upsert(payload)` — `apagarPipelineDeTenant`/
+  // `encenderPipelineDeTenant` escriben en vez de leer; `esEscritura` desvía
+  // `.then()` a registrar en `escrituras` en vez de correr el camino de
+  // lectura (que ningún test de escritura toca).
+  let esEscritura = false;
+  let payloadEscritura: Array<Record<string, unknown>> = [];
   const filtradas = (): Array<Record<string, unknown>> => {
     let todas = (raw().data ?? []) as Array<Record<string, unknown>>;
     for (const [col, val] of filtros) todas = todas.filter((f) => f[col] === val);
@@ -45,12 +58,27 @@ function crearBuilder(tabla: string) {
       todas = todas.filter((f) => re.test(String(f[col] ?? '')));
     }
     for (const [col, re] of filtrosNot) todas = todas.filter((f) => !re.test(String(f[col] ?? '')));
+    for (const [col, vals] of filtrosIn) todas = todas.filter((f) => vals.includes(f[col]));
     return todas;
   };
   const b: Record<string, unknown> = {};
   b.order = () => b; // el orden lo simula el fixture: se declara ya ordenado
   b.eq = (col: string, val: unknown) => { filtros.push([col, val]); return b; };
+  b.in = (col: string, vals: unknown[]) => { filtrosIn.push([col, vals]); return b; };
   b.limit = (n: number) => { tope = n; return b; };
+  b.upsert = (payload: Record<string, unknown> | Array<Record<string, unknown>>) => {
+    esEscritura = true;
+    payloadEscritura = Array.isArray(payload) ? payload : [payload];
+    return b;
+  };
+  // `anotarBitacora` (lib/likida/bitacora_escritura.ts, importado tal cual
+  // por `apagarPipelineDeTenant`/`encenderPipelineDeTenant`) hace un INSERT
+  // liso a `bitacora_auditoria` — mismo camino de escritura que `.upsert`.
+  b.insert = (payload: Record<string, unknown> | Array<Record<string, unknown>>) => {
+    esEscritura = true;
+    payloadEscritura = Array.isArray(payload) ? payload : [payload];
+    return b;
+  };
   // `%texto%` → regex que exige contener "texto" (mismo comodín que LIKE).
   b.ilike = (col: string, patron: string) => {
     const cuerpo = patron.split('%').map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*');
@@ -89,6 +117,16 @@ function crearBuilder(tabla: string) {
   };
   b.then = (ok: (v: Resp) => unknown, fail?: (e: unknown) => unknown) => {
     const r = raw();
+    if (esEscritura) {
+      // El fixture puede sembrar un error para simular la escritura caída
+      // (`respuestas.set(tabla, { data: null, error: {...} })`); sin error
+      // sembrado, la escritura "tuvo éxito" — solo queda registrada.
+      if (!r.error) {
+        if (!escrituras.has(tabla)) escrituras.set(tabla, []);
+        escrituras.get(tabla)!.push(...payloadEscritura);
+      }
+      return Promise.resolve({ data: null, error: r.error ?? null }).then(ok, fail);
+    }
     if (r.error) return Promise.resolve(r).then(ok, fail);
     const todas = filtradas();
     const count = 'count' in r ? (r.count ?? null) : pidioConteo ? todas.length : null;
@@ -170,6 +208,7 @@ const {
   getConteosPlataforma, getCorridasRecientes, getUltimaCorridaPorAgente, AGENTES_BITACORA,
   getCorridasFallidas, getLiquidacionesEnRevisar, contarLiquidacionesEnRevisar, LIMITE_LIQUIDACIONES_REVISAR,
   costoIaMesActual, costoIaDeTenant, SEGUNDOS_CACHE_CONSOLA, getMrr,
+  getInterruptoresPipelineDeTenant, apagarPipelineDeTenant, encenderPipelineDeTenant,
 } = await import('./negocio');
 
 describe('getResumenNegocio', () => {
@@ -977,5 +1016,81 @@ describe('getMrr', () => {
   it('con la base caída LANZA — nunca un $0 fabricado', async () => {
     respuestas.set('suscripcion', { data: null, error: { message: 'db down' } });
     await expect(getMrr()).rejects.toThrow();
+  });
+});
+
+// ADM-6 (auditoría 24): interruptores del pipeline del chofer, POR FLOTA
+// (tabla `interruptor_tenant`, mig. 0297) — mismo contrato que el
+// interruptor global (0110): sin fila = encendido, apagar exige motivo,
+// lanza si la escritura falla.
+describe('getInterruptoresPipelineDeTenant', () => {
+  beforeEach(() => { respuestas.clear(); rangos.clear(); escrituras.clear(); });
+
+  it('sin filas: los tres pipelines salen ENCENDIDOS por default', async () => {
+    respuestas.set('interruptor_tenant', { data: [], error: null });
+    const r = await getInterruptoresPipelineDeTenant('t1');
+    expect(r).toEqual([
+      { pipeline: 'whatsapp', apagado: false, motivo: null, cambiadoPorNombre: null, cambiadoEn: null },
+      { pipeline: 'ocr', apagado: false, motivo: null, cambiadoPorNombre: null, cambiadoEn: null },
+      { pipeline: 'cuadre', apagado: false, motivo: null, cambiadoPorNombre: null, cambiadoEn: null },
+    ]);
+  });
+
+  it('con una fila apagada, resuelve el nombre de quién movió la palanca', async () => {
+    respuestas.set('interruptor_tenant', {
+      data: [
+        { tenant_id: 't1', pipeline: 'ocr', apagado: true, motivo: 'gasto disparado', cambiado_por: 'u1', cambiado_en: '2026-08-30T10:00:00Z' },
+      ],
+      error: null,
+    });
+    respuestas.set('app_user', { data: [{ id: 'u1', nombre: 'Javier', email: 'javier@likida.mx' }], error: null });
+    const r = await getInterruptoresPipelineDeTenant('t1');
+    const ocr = r.find((p) => p.pipeline === 'ocr');
+    expect(ocr).toEqual({
+      pipeline: 'ocr', apagado: true, motivo: 'gasto disparado',
+      cambiadoPorNombre: 'Javier', cambiadoEn: '2026-08-30T10:00:00Z',
+    });
+    // Los otros dos siguen en su default.
+    expect(r.find((p) => p.pipeline === 'whatsapp')?.apagado).toBe(false);
+  });
+
+  it('con la base caída LANZA — "todo encendido" no se puede afirmar sin haber podido mirar', async () => {
+    respuestas.set('interruptor_tenant', { data: null, error: { message: 'db down' } });
+    await expect(getInterruptoresPipelineDeTenant('t1')).rejects.toThrow();
+  });
+});
+
+describe('apagarPipelineDeTenant / encenderPipelineDeTenant', () => {
+  beforeEach(() => { respuestas.clear(); rangos.clear(); escrituras.clear(); });
+
+  it('apagar escribe apagado=true con el motivo, tenant y pipeline correctos', async () => {
+    await apagarPipelineDeTenant('t1', 'ocr', 'gasto disparado', 'u1');
+    const filas = escrituras.get('interruptor_tenant') ?? [];
+    expect(filas).toHaveLength(1);
+    expect(filas[0]).toMatchObject({
+      tenant_id: 't1', pipeline: 'ocr', apagado: true, motivo: 'gasto disparado', cambiado_por: 'u1',
+    });
+  });
+
+  it('apagar sin motivo (o solo espacios) rechaza SIN escribir', async () => {
+    await expect(apagarPipelineDeTenant('t1', 'ocr', '   ', 'u1')).rejects.toThrow(/motivo/);
+    expect(escrituras.get('interruptor_tenant') ?? []).toHaveLength(0);
+  });
+
+  it('un pipeline fuera del catálogo (whatsapp/ocr/cuadre) rechaza SIN escribir', async () => {
+    await expect(apagarPipelineDeTenant('t1', 'facturacion', 'motivo', 'u1')).rejects.toThrow(/catálogo/);
+    expect(escrituras.get('interruptor_tenant') ?? []).toHaveLength(0);
+  });
+
+  it('encender escribe apagado=false con motivo null', async () => {
+    await encenderPipelineDeTenant('t1', 'cuadre', 'u1');
+    const filas = escrituras.get('interruptor_tenant') ?? [];
+    expect(filas).toHaveLength(1);
+    expect(filas[0]).toMatchObject({ tenant_id: 't1', pipeline: 'cuadre', apagado: false, motivo: null, cambiado_por: 'u1' });
+  });
+
+  it('con la escritura caída LANZA — "apagué" que no apagó es el peor resultado', async () => {
+    respuestas.set('interruptor_tenant', { data: null, error: { message: 'db down' } });
+    await expect(apagarPipelineDeTenant('t1', 'ocr', 'motivo', 'u1')).rejects.toThrow();
   });
 });

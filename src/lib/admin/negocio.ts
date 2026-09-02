@@ -64,6 +64,8 @@ import { logger } from '@/lib/logger';
 import { conteo, traerTodo } from '@/lib/likida/pg';
 import { acotada } from '@/lib/likida/presupuesto';
 import { round2, TZ_MX, hoyMx } from '@/lib/formato';
+import { anotarBitacora } from '@/lib/likida/bitacora_escritura';
+import { DatoInvalido } from '@/lib/likida/errores';
 // Solo TIPOS: `import type` se borra al compilar, así que esto no arrastra el
 // módulo de corridas (que carga supabaseAdmin/logger al importarse) — aquí
 // nada más se quiere el dominio del CHECK de la 0102 escrito una vez.
@@ -1051,4 +1053,122 @@ export async function getMrr(): Promise<ResumenMrr> {
     total += Number(p.precio_mensual);
   }
   return { totalMxn: medible ? round2(total) : null, suscripcionesActivas: filas.length };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INTERRUPTORES DEL PIPELINE DEL CHOFER, POR FLOTA (ADM-6, auditoría 24;
+// tabla `interruptor_tenant`, mig. 0297).
+//
+// `lib/likida/interruptores.ts` (0110) es GLOBAL por agente — las 58
+// palancas + `global` son de agentes de back office, y apagar 'global'
+// apagaría TODAS las flotas de golpe. El pipeline que un chofer ejercita por
+// WhatsApp (recepción, OCR, cuadre) corre por WEBHOOK, una flota a la vez, y
+// hasta esta migración no tenía NINGUNA palanca propia.
+//
+// MISMO CONTRATO que el interruptor global: SIN FILA = ENCENDIDO, apagar
+// exige motivo, LANZA si la escritura falla ("apagué" que no apagó es el
+// peor resultado posible). Vive aquí (lib/admin) y no en lib/likida porque
+// hoy solo lo toca /admin/flotas/[id] — si algún día el webhook necesita
+// LEERLO (ver la nota de la migración: falta que `processor.ts` lo
+// consulte), esa lectura puede mudarse a lib/likida sin tocar la tabla.
+// ═══════════════════════════════════════════════════════════════════════════
+
+export type PipelineChofer = 'whatsapp' | 'ocr' | 'cuadre';
+export const PIPELINES_CHOFER: readonly PipelineChofer[] = ['whatsapp', 'ocr', 'cuadre'];
+
+export interface InterruptorPipelineTenant {
+  pipeline: PipelineChofer;
+  apagado: boolean;
+  motivo: string | null;
+  cambiadoPorNombre: string | null;
+  cambiadoEn: string | null;
+}
+
+function esPipelineValido(p: string): p is PipelineChofer {
+  return (PIPELINES_CHOFER as readonly string[]).includes(p);
+}
+
+/** Los tres pipelines de UNA flota, con los que no tienen fila en su estado
+ *  default (encendidos) — mismo patrón que `listarInterruptores` (0110).
+ *  LANZA ante un error de lectura: es de panel, y "todo encendido" sobre
+ *  una base caída afirmaría que nada está apagado sin haber podido mirar. */
+export async function getInterruptoresPipelineDeTenant(tenantId: string): Promise<InterruptorPipelineTenant[]> {
+  const admin = supabaseAdmin();
+  const { data, error } = await acotada(admin
+    .from('interruptor_tenant')
+    .select('pipeline, apagado, motivo, cambiado_por, cambiado_en')
+    .eq('tenant_id', tenantId), 'getInterruptoresPipelineDeTenant');
+  if (error) throw new Error(`getInterruptoresPipelineDeTenant: ${error.message}`);
+
+  const filas = new Map<string, Record<string, unknown>>();
+  for (const f of (data ?? []) as Array<Record<string, unknown>>) filas.set(String(f.pipeline), f);
+
+  const actorIds = [...new Set(
+    [...filas.values()].map((f) => f.cambiado_por as string | null).filter((v): v is string => v !== null),
+  )];
+  const nombresPorId = new Map<string, string>();
+  if (actorIds.length > 0) {
+    const { data: actores } = await acotada(
+      admin.from('app_user').select('id, nombre, email').in('id', actorIds),
+      'getInterruptoresPipelineDeTenant/actores',
+    );
+    for (const a of (actores ?? []) as Array<{ id: string; nombre: string | null; email: string }>) {
+      nombresPorId.set(a.id, a.nombre ?? a.email);
+    }
+  }
+
+  return PIPELINES_CHOFER.map((pipeline) => {
+    const f = filas.get(pipeline);
+    if (!f) return { pipeline, apagado: false, motivo: null, cambiadoPorNombre: null, cambiadoEn: null };
+    const cambiadoPor = f.cambiado_por as string | null;
+    return {
+      pipeline,
+      apagado: Boolean(f.apagado),
+      motivo: (f.motivo as string | null) ?? null,
+      cambiadoPorNombre: cambiadoPor ? (nombresPorId.get(cambiadoPor) ?? 'cuenta borrada') : null,
+      cambiadoEn: (f.cambiado_en as string | null) ?? null,
+    };
+  });
+}
+
+/** Apaga UN pipeline de UNA flota. Motivo obligatorio (mismo CHECK que la
+ *  0297 en base). LANZA si la escritura falla. */
+export async function apagarPipelineDeTenant(tenantId: string, pipeline: string, motivo: string, userId: string): Promise<void> {
+  if (!esPipelineValido(pipeline)) {
+    throw new DatoInvalido(`"${pipeline}" no es un pipeline del catálogo (whatsapp/ocr/cuadre).`);
+  }
+  const m = motivo.trim();
+  if (!m) {
+    throw new DatoInvalido('Apagar exige un motivo: sin nota, en tres semanas nadie sabe si ya se puede encender.');
+  }
+  const { error } = await acotada(supabaseAdmin()
+    .from('interruptor_tenant')
+    .upsert(
+      { tenant_id: tenantId, pipeline, apagado: true, motivo: m, cambiado_por: userId, cambiado_en: new Date().toISOString() },
+      { onConflict: 'tenant_id,pipeline' },
+    ), 'apagarPipelineDeTenant');
+  if (error) throw new Error(`apagarPipelineDeTenant(${tenantId}, ${pipeline}): ${error.message}`);
+  await anotarBitacora(
+    { tenantId, actor: { id: userId }, accion: 'interruptor.pipeline_apagado', entidad: 'interruptor', entidadId: `${tenantId}:${pipeline}`, detalle: { pipeline, motivo: m } },
+    { evento: 'admin.interruptor_pipeline_no_bitacorado', contexto: { tenantId, pipeline } },
+  );
+}
+
+/** Enciende UN pipeline de UNA flota (vuelve al default). LANZA si la
+ *  escritura falla. */
+export async function encenderPipelineDeTenant(tenantId: string, pipeline: string, userId: string): Promise<void> {
+  if (!esPipelineValido(pipeline)) {
+    throw new DatoInvalido(`"${pipeline}" no es un pipeline del catálogo (whatsapp/ocr/cuadre).`);
+  }
+  const { error } = await acotada(supabaseAdmin()
+    .from('interruptor_tenant')
+    .upsert(
+      { tenant_id: tenantId, pipeline, apagado: false, motivo: null, cambiado_por: userId, cambiado_en: new Date().toISOString() },
+      { onConflict: 'tenant_id,pipeline' },
+    ), 'encenderPipelineDeTenant');
+  if (error) throw new Error(`encenderPipelineDeTenant(${tenantId}, ${pipeline}): ${error.message}`);
+  await anotarBitacora(
+    { tenantId, actor: { id: userId }, accion: 'interruptor.pipeline_encendido', entidad: 'interruptor', entidadId: `${tenantId}:${pipeline}`, detalle: { pipeline } },
+    { evento: 'admin.interruptor_pipeline_no_bitacorado', contexto: { tenantId, pipeline } },
+  );
 }

@@ -95,6 +95,12 @@ export const ETIQUETA_INTERRUPTOR: Record<string, string> = {
   // Las 2 del 0250 — los agentes vivos que corrían sin poderse apagar.
   'agente:carta_porte': 'Agente de Carta Porte',
   'agente:copiloto': 'Copiloto del fundador',
+  // Pipeline del chofer, POR FLOTA (0297, ADM-6 auditoría 24) — tabla
+  // `interruptor_tenant`, distinta de `interruptor`: estos ids solo se usan
+  // en /admin/flotas/[id], nunca en el catálogo global de arriba.
+  'pipeline:whatsapp': 'Recepción de WhatsApp (router)',
+  'pipeline:ocr': 'OCR de la foto del ticket',
+  'pipeline:cuadre': 'Cuadre de la liquidación',
 };
 
 export function etiquetaInterruptor(id: string): string {
