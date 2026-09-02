@@ -15936,3 +15936,497 @@ begin
   raise exception E'LLAVE_API_EXPIRA_0294  pasado-rebota=%  futuro-ok=%  nulo-ok=%   (esperado t / t / t)',
     pasado_rebota, futuro_ok, nulo_ok;
 end $$;
+
+-- ── 234. La cancelación ARCO borra la conversación por teléfono NORMALIZADO y su search_path vive en la base (mig. 0286) ──
+--
+-- AUDITORÍA 24, DAT-2 / LEG-2 (CRÍTICO, reincidente de DATOS-23-2). El bloque
+-- 210 pasaba en verde con `"wa_conversacion": 0` porque su fixture no insertaba
+-- conversación; la app la crea por TELÉFONO (`loadConversation`) y nunca llena
+-- `operador_id`, así que el `delete … where operador_id = v_operador` borraba
+-- cero filas mientras el panel decía «el titular quedó anonimizado».
+--
+-- Aquí la conversación se inserta COMO LA CREA LA APP (sin `operador_id`) y
+-- además con OTRA variante del mismo celular (`529…` contra el `521…` del
+-- operador): la 0274 ya declaró que son el mismo número.
+--
+--   (a) la conversación del titular desaparece;
+--   (b) la evidencia lo cuenta (wa_conversacion = 1, envio_mensaje = 1);
+--   (c) DATOS-23-5: el evento de OTRO titular ya anonimizado NO se reescribe;
+--   (d) DAT-1: `pg_proc.proconfig` de la función —EN LA BASE, no en el
+--       archivo— trae `extensions` (sin él, digest() truena en gestionado).
+do $$
+declare
+  t uuid := gen_random_uuid(); op uuid := gen_random_uuid(); otro uuid := gen_random_uuid();
+  inc_otro uuid := gen_random_uuid(); sol uuid := gen_random_uuid();
+  ev jsonb; n_conv int; n_envio int; txt_otro text; cfg text;
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0286__');
+  insert into public.operador (id, tenant_id, nombre, telefono)
+    values (op, t, 'Juan Pérez', '5219993700779');
+  -- La conversación tal cual la escribe conv.ts: por teléfono, sin operador_id,
+  -- y en la variante SIN el "1" de Telmex.
+  insert into public.wa_conversacion (tenant_id, telefono, estado)
+    values (t, '529993700779', '{"turns": []}'::jsonb);
+  insert into public.envio_mensaje (tenant_id, telefono, canal, estado)
+    values (t, '+5219993700779', 'whatsapp', 'enviado');
+
+  -- Otro titular, YA anonimizado por una cancelación anterior: su evento no
+  -- debe volver a tocarse (DATOS-23-5).
+  insert into public.operador (id, tenant_id, nombre, telefono, anonimizado_en)
+    values (otro, t, 'Operador AAAAAA', 'anon:0000000000000000', now());
+  insert into public.incidencia (id, tenant_id, operador_id, tipo, prioridad, descripcion, texto_anonimizado_en)
+    values (inc_otro, t, null, 'siniestro', 'critica', '[texto retirado por cancelación ARCO del titular]', now() - interval '1 day');
+  insert into public.incidencia_evento (tenant_id, incidencia_id, tipo, detalle)
+    values (t, inc_otro, 'mensaje_adicional', jsonb_build_object('texto', 'marca intacta del otro titular'));
+
+  insert into public.solicitud_arco (id, tenant_id, operador_id, tipo, canal, vence_en)
+    values (sol, t, op, 'cancelacion', 'whatsapp', current_date + 15);
+
+  perform public.ejecutar_arco_cancelacion(t, sol);
+
+  select count(*) into n_conv from public.wa_conversacion
+    where tenant_id = t and public.telefono_normalizado(telefono) = public.telefono_normalizado('5219993700779');
+  select count(*) into n_envio from public.envio_mensaje
+    where tenant_id = t and public.telefono_normalizado(telefono) = public.telefono_normalizado('5219993700779');
+  select s.evidencia into ev from public.solicitud_arco s where s.id = sol;
+  select e.detalle->>'texto' into txt_otro from public.incidencia_evento e where e.incidencia_id = inc_otro;
+  select array_to_string(p.proconfig, ' ') into cfg
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public' and p.proname = 'ejecutar_arco_cancelacion';
+
+  raise exception E'ARCO_TELEFONO_NORM_0286  conv-vivas=%  envios-vivos=%  evidencia-conv=%  evidencia-envio=%  otro-intacto=%  proconfig-extensions=%   (esperado 0 / 0 / 1 / 1 / t / t)',
+    n_conv, n_envio, ev->>'wa_conversacion', ev->>'envio_mensaje',
+    txt_otro = 'marca intacta del otro titular', cfg like '%extensions%';
+end $$;
+
+-- ── 235. `ultimas_posiciones_tenant` y `estado_rastreo_tenant` sondean por unidad, no barren el tenant (mig. 0287) ──
+--
+-- AUDITORÍA 24, DAT-8 / REN-3 (ALTO). El `distinct on` de la 0269 leía TODAS
+-- las posiciones de la flota para quedarse con 800 (4.5 s con 6.9 M filas).
+-- Se asevera lo que la base puede demostrar:
+--   (a) el RESULTADO es el mismo que el `distinct on`: una fila por unidad
+--       activa, la más reciente, sin la unidad inactiva ni la de otra flota;
+--   (b) el PLAN del cuerpo vigente no tiene nodo `Unique` (no hay distinct
+--       on) y sondea `posicion` con un Index Scan Backward sobre
+--       `uq_posicion_lectura` — con `enable_seqscan` apagado para que la
+--       tabla diminuta de la prueba no esconda la forma;
+--   (c) `estado_rastreo_tenant` conserva su contrato: 2 unidades con
+--       posición (una inactiva cuenta, como en la 0162) y la última fecha;
+--   (d) una lectura fechada en el futuro (reloj del GPS mal) rebota (23514).
+do $$
+declare
+  ta uuid := gen_random_uuid(); tb uuid := gen_random_uuid();
+  u1 uuid := gen_random_uuid(); u2 uuid := gen_random_uuid(); u3 uuid := gen_random_uuid(); ux uuid := gen_random_uuid();
+  n_filas int; lat_u1 double precision; con_unique boolean; con_indice boolean;
+  plan text := ''; linea text; cuerpo text; rastreo jsonb; futura_rebota boolean := false;
+begin
+  insert into public.tenant (id, nombre) values (ta, '__verif_0287_a__'), (tb, '__verif_0287_b__');
+  insert into public.unidad (id, tenant_id, numero_economico, activo) values
+    (u1, ta, 'U1', true), (u2, ta, 'U2', true), (u3, ta, 'U3-baja', false), (ux, tb, 'UX', true);
+  insert into public.posicion (tenant_id, unidad_id, lat, lng, medida_en, proveedor) values
+    (ta, u1, 19.0, -99.0, now() - interval '2 hours', 'samsara'),
+    (ta, u1, 19.5, -99.5, now() - interval '1 hour',  'samsara'),   -- la más reciente de U1
+    (ta, u2, 20.0, -100.0, now() - interval '3 days', 'samsara'),
+    (ta, u3, 21.0, -101.0, now() - interval '1 hour', 'samsara'),   -- inactiva: fuera del mapa
+    (tb, ux, 22.0, -102.0, now() - interval '1 hour', 'samsara');   -- otra flota
+
+  select count(*) into n_filas from public.ultimas_posiciones_tenant(ta);
+  select r.lat into lat_u1 from public.ultimas_posiciones_tenant(ta) r where r.unidad_id = u1;
+
+  -- La función lleva `set search_path`, así que el planificador NO la inlinea
+  -- y `explain select * from f()` solo enseña «Function Scan». Se explica el
+  -- CUERPO vigente leído de pg_proc — lo que de verdad corre en esta base.
+  select prosrc into cuerpo from pg_proc where proname = 'ultimas_posiciones_tenant'
+    and pronamespace = 'public'::regnamespace;
+  -- Con las 2 filas del fixture un Seq Scan es LEGÍTIMAMENTE más barato, así
+  -- que sin esto el plan variaría con el volumen y la prueba sería una moneda
+  -- al aire. Lo que se asevera es la FORMA, no el costo.
+  set local enable_seqscan = off;
+  for linea in execute 'explain (costs off) ' || replace(cuerpo, 'p_tenant', '$1') using ta loop
+    plan := plan || linea || E'\n';
+  end loop;
+  reset enable_seqscan;
+
+  -- `Unique` es la firma del `distinct on` de la 0269: barrer TODAS las
+  -- posiciones del tenant y desduplicar. Es la regresión que esto vigila.
+  con_unique := plan like '%Unique%';
+  -- La forma `lateral`: un sondeo POR UNIDAD (`Nested Loop` + `Limit`) que
+  -- entra por índice a `posicion`. Se comprueba la forma y NO el nombre del
+  -- índice: `uq_posicion_lectura (tenant, unidad, medida_en)` y
+  -- `posicion_unidad_medida_idx (… medida_en desc)` sirven las dos, y cuál
+  -- elige el planificador depende de cuáles existan el día que corra.
+  con_indice := plan like '%Nested Loop%'
+            and plan like '%Limit%'
+            and plan like '%Index Scan%on posicion p%';
+
+  rastreo := public.estado_rastreo_tenant(ta);
+
+  begin
+    insert into public.posicion (tenant_id, unidad_id, lat, lng, medida_en, proveedor)
+      values (ta, u1, 19.0, -99.0, now() + interval '2 hours', 'samsara');
+  exception when check_violation then futura_rebota := true;
+  end;
+
+  raise exception E'POSICIONES_LATERAL_0287  filas=%  u1-mas-reciente=%  plan-sin-unique=%  plan-por-indice=%  rastreo-unidades=%  rastreo-ultima-hoy=%  futura-rebota=%   (esperado 2 / t / t / t / 3 / t / t)',
+    n_filas, lat_u1 = 19.5, not con_unique, con_indice,
+    rastreo->>'unidadesConPosicion', (rastreo->>'ultimaPosicion')::timestamptz > now() - interval '2 hours', futura_rebota;
+end $$;
+
+-- ── 236. `wa_outbox` y `evento_seguridad_flota` tienen plazo, y `posicion` ya no paga índices repetidos (mig. 0288) ──
+--
+-- AUDITORÍA 24, DAT-9 / REN-4 (MEDIO). Dos tablas que crecían sin purga —la
+-- bandeja de salida con su payload y la telemetría de cámara con lat/lng— y
+-- una tabla de 230k filas/día con dos índices repetidos y ninguno que
+-- sirviera al `delete … where medida_en < X` nocturno.
+--
+--   (a) el outbox: lo `sent` viejo se va, lo `sent` reciente y lo `pending`
+--       viejo (trabajo por hacer) se quedan;
+--   (b) los eventos: el leve viejo se va, el grave de 200 días se queda
+--       (dura 365), el grave de 400 se va, el leve reciente se queda;
+--   (c) `mantenimiento_de_datos` los reporta con nombre;
+--   (d) el catálogo de `posicion`: sin `posicion_unidad_medida_idx` ni
+--       `posicion_sin_duplicado`, con `posicion_medida_idx`, y ninguna
+--       pareja de índices con la misma definición.
+do $$
+declare
+  t uuid := gen_random_uuid();
+  o_sent_viejo uuid := gen_random_uuid(); o_sent_nuevo uuid := gen_random_uuid(); o_pending_viejo uuid := gen_random_uuid();
+  r jsonb; m jsonb;
+  outbox_quedan int; leve_viejo int; grave_200 int; grave_400 int; leve_nuevo int;
+  sin_dup boolean; con_medida boolean; repetidos int;
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0288__');
+  insert into public.wa_outbox (id, payload, estado, creada_en, enviada_en) values
+    (o_sent_viejo,    '{}'::jsonb, 'sent',    now() - interval '91 days', now() - interval '91 days'),
+    (o_sent_nuevo,    '{}'::jsonb, 'sent',    now() - interval '10 days', now() - interval '10 days'),
+    (o_pending_viejo, '{}'::jsonb, 'pending', now() - interval '200 days', null);
+  insert into public.evento_seguridad_flota (tenant_id, proveedor, evento_id_externo, etiquetas, grave, lat, lng, ocurrido_en) values
+    (t, 'samsara', 'leve-viejo',  '{harsh_brake}', false, 19.0, -99.0, now() - interval '181 days'),
+    (t, 'samsara', 'grave-200',   '{crash}',       true,  19.0, -99.0, now() - interval '200 days'),
+    (t, 'samsara', 'grave-400',   '{crash}',       true,  19.0, -99.0, now() - interval '400 days'),
+    (t, 'samsara', 'leve-nuevo',  '{harsh_brake}', false, 19.0, -99.0, now() - interval '10 days');
+
+  r := public.purgar_wa_outbox(90, now(), null);
+  m := public.mantenimiento_de_datos(30, now());
+
+  select count(*) into outbox_quedan from public.wa_outbox where id in (o_sent_viejo, o_sent_nuevo, o_pending_viejo);
+  select count(*) into leve_viejo from public.evento_seguridad_flota where tenant_id = t and evento_id_externo = 'leve-viejo';
+  select count(*) into grave_200  from public.evento_seguridad_flota where tenant_id = t and evento_id_externo = 'grave-200';
+  select count(*) into grave_400  from public.evento_seguridad_flota where tenant_id = t and evento_id_externo = 'grave-400';
+  select count(*) into leve_nuevo from public.evento_seguridad_flota where tenant_id = t and evento_id_externo = 'leve-nuevo';
+
+  -- Sólo `posicion_sin_duplicado` se retira (un único MÁS LAXO que
+  -- `uq_posicion_lectura`, que ningún `on conflict` de src/ nombra).
+  -- `posicion_unidad_medida_idx` SE QUEDA aunque repita la clave de
+  -- `uq_posicion_lectura`: el bloque GPS_0176 lo asevera por nombre desde
+  -- mucho antes de esta ronda, y retirarlo exige cambiar ese bloque en el
+  -- mismo movimiento. Queda anotado en el CIERRE de la auditoría 24.
+  sin_dup := not exists (select 1 from pg_indexes where schemaname = 'public' and tablename = 'posicion'
+                           and indexname = 'posicion_sin_duplicado');
+  con_medida := exists (select 1 from pg_indexes where schemaname = 'public' and tablename = 'posicion'
+                          and indexname = 'posicion_medida_idx');
+  select count(*) into repetidos from (
+    select regexp_replace(indexdef, '^CREATE (UNIQUE )?INDEX \S+ ON', '') as def
+      from pg_indexes where schemaname = 'public' and tablename = 'posicion'
+     group by 1 having count(*) > 1) d;
+
+  raise exception E'PURGAS_0288  outbox-quedan=%  outbox-borrado-directo=%  leve-viejo=%  grave-200=%  grave-400=%  leve-nuevo=%  mant-outbox=%  mant-eventos=%  sin-indices-repetidos=%  con-indice-purga=%  definiciones-repetidas=%   (esperado 2 / 1 / 0 / 1 / 0 / 1 / t / t / t / t / 0)',
+    outbox_quedan, r->>'borradas', leve_viejo, grave_200, grave_400, leve_nuevo,
+    m ? 'waOutboxPurgado', (m->>'eventosSeguridadPurgados')::int >= 2, sin_dup, con_medida, repetidos;
+end $$;
+
+-- ── 237. La geolocalización del pin de asistencia se retira a los 90 días de resuelta la incidencia (mig. 0289) ──
+--
+-- AUDITORÍA 24, LEG-6 (ALTO). El aviso dice «se borra a los 90 días» y
+-- `incidencia.lat/lng` e `incidencia_evento.detalle->lat/lng` vivían para
+-- siempre. Se asevera:
+--   (a) resuelta hace 91 días: lat/lng en NULL y el evento sin lat/lng pero
+--       CON la marca `geolocalizacion_purgada_en` (el hueco no se lee como
+--       «nunca hubo pin») y con el renglón vivo;
+--   (b) resuelta hace 30 días: intacta;
+--   (c) ABIERTA hace 200 días: intacta — el pin es la herramienta de la mesa
+--       mientras el expediente sigue abierto;
+--   (d) `mantenimiento_de_datos` lo reporta con nombre.
+do $$
+declare
+  t uuid := gen_random_uuid(); op uuid := gen_random_uuid();
+  i91 uuid := gen_random_uuid(); i30 uuid := gen_random_uuid(); iab uuid := gen_random_uuid();
+  r jsonb; m jsonb;
+  lat91 double precision; lat30 double precision; latab double precision;
+  det91 jsonb; det30 jsonb; eventos_91 int;
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0289__');
+  insert into public.operador (id, tenant_id, nombre, telefono) values (op, t, 'Chofer', '+520000028901');
+  insert into public.incidencia (id, tenant_id, operador_id, tipo, prioridad, estado, descripcion, lat, lng, resuelta_en) values
+    (i91, t, op, 'siniestro', 'critica', 'resuelta', 'choque km 84', 19.1, -99.1, now() - interval '91 days'),
+    (i30, t, op, 'varado',    'alta',    'resuelta', 'varado',       19.2, -99.2, now() - interval '30 days'),
+    (iab, t, op, 'robo',      'critica', 'abierta',  'robo',         19.3, -99.3, null);
+  insert into public.incidencia_evento (tenant_id, incidencia_id, tipo, detalle) values
+    (t, i91, 'ubicacion_anclada', jsonb_build_object('lat', 19.1, 'lng', -99.1)),
+    (t, i91, 'mensaje_adicional', jsonb_build_object('texto', 'ya llegó la grúa')),
+    (t, i30, 'ubicacion_anclada', jsonb_build_object('lat', 19.2, 'lng', -99.2));
+
+  r := public.purgar_geolocalizacion_incidencia(90, now());
+  m := public.mantenimiento_de_datos(30, now());
+
+  select lat into lat91 from public.incidencia where id = i91;
+  select lat into lat30 from public.incidencia where id = i30;
+  select lat into latab from public.incidencia where id = iab;
+  select detalle into det91 from public.incidencia_evento where incidencia_id = i91 and tipo = 'ubicacion_anclada';
+  select detalle into det30 from public.incidencia_evento where incidencia_id = i30 and tipo = 'ubicacion_anclada';
+  select count(*) into eventos_91 from public.incidencia_evento where incidencia_id = i91;
+
+  raise exception E'GEO_INCIDENCIA_0289  lat-91-nula=%  evento-91-sin-lat=%  evento-91-marcado=%  eventos-91-vivos=%  lat-30=%  evento-30-con-lat=%  lat-abierta=%  purgadas=%  mant-reporta=%   (esperado t / t / t / 2 / 19.2 / t / 19.3 / 1 / t)',
+    lat91 is null, not (det91 ? 'lat'), det91 ? 'geolocalizacion_purgada_en', eventos_91, lat30, det30 ? 'lat', latab,
+    r->>'incidencias', m ? 'incidenciaGeoPurgada';
+end $$;
+
+-- ── 238. Teléfono, RFC y placas tienen forma; el operador ligado es de la flota (mig. 0290) ──
+--
+-- AUDITORÍA 24, DAT-10 y DAT-11 (MEDIO). Lo que se asevera:
+--   (a) `telefono = 'abc'` ya NO entra (23514) — y con eso desaparece el
+--       choque entre flotas: dos operadores sin celular en tenants distintos
+--       reventaban con `uq_operador_telefono_activo Key ()=()`;
+--   (b) un teléfono de verdad sigue entrando, en cualquiera de sus formas;
+--   (c) `rfc` chatarra rebota, `rfc` con molde del SAT pasa, NULL pasa;
+--   (d) `anio = 3000`, `km_actual = -5` y `numero_economico = ' 12'` rebotan;
+--   (e) las mismas placas con otra caja/espacios rebotan DENTRO de la flota
+--       (23505) y sí entran en OTRA flota;
+--   (f) `app_user.operador_id` de otra flota rebota (23503) y el de la propia
+--       entra.
+do $$
+declare
+  ta uuid := gen_random_uuid(); tb uuid := gen_random_uuid();
+  opa uuid := gen_random_uuid(); opb uuid := gen_random_uuid();
+  tel_chatarra text := 'no'; tel_bueno text := 'no'; rfc_malo text := 'no'; rfc_bueno text := 'no';
+  anio_malo text := 'no'; km_malo text := 'no'; eco_malo text := 'no';
+  placa_dup text := 'no'; placa_otra_flota text := 'no';
+  fk_ajena text := 'no'; fk_propia text := 'no';
+begin
+  insert into public.tenant (id, nombre) values (ta, '__verif_0290_a__'), (tb, '__verif_0290_b__');
+
+  -- (a) el teléfono que no es un teléfono
+  begin
+    insert into public.operador (tenant_id, nombre, telefono) values (ta, 'Sin celular', 'abc');
+    tel_chatarra := 'ENTRO';
+  exception when check_violation then tel_chatarra := 'rebota'; end;
+
+  -- (b) el teléfono de verdad, con el 1 de móvil que Meta a veces manda
+  begin
+    insert into public.operador (id, tenant_id, nombre, telefono) values (opa, ta, 'Juan', '+52 1 999 370 0779');
+    tel_bueno := 'entro';
+  exception when others then tel_bueno := 'REBOTO: ' || sqlerrm; end;
+
+  -- (c) RFC
+  begin
+    insert into public.operador (tenant_id, nombre, telefono, rfc) values (ta, 'Malo', '5299937007 80', 'xx');
+    rfc_malo := 'ENTRO';
+  exception when check_violation then rfc_malo := 'rebota'; end;
+  begin
+    insert into public.operador (tenant_id, nombre, telefono, rfc) values (ta, 'Bueno', '5299937007 81', 'PECJ850101H23');
+    rfc_bueno := 'entro';
+  exception when others then rfc_bueno := 'REBOTO: ' || sqlerrm; end;
+
+  -- (d) unidad: año, km y económico
+  begin
+    insert into public.unidad (tenant_id, numero_economico, anio) values (ta, 'U-anio', 3000);
+    anio_malo := 'ENTRO';
+  exception when check_violation then anio_malo := 'rebota'; end;
+  begin
+    insert into public.unidad (tenant_id, numero_economico, km_actual) values (ta, 'U-km', -5);
+    km_malo := 'ENTRO';
+  exception when check_violation then km_malo := 'rebota'; end;
+  begin
+    insert into public.unidad (tenant_id, numero_economico) values (ta, ' 12');
+    eco_malo := 'ENTRO';
+  exception when check_violation then eco_malo := 'rebota'; end;
+
+  -- (e) placas: la misma placa con otra caja, dentro y fuera de la flota
+  insert into public.unidad (tenant_id, numero_economico, placas) values (ta, '12', 'ABC-123-A');
+  begin
+    insert into public.unidad (tenant_id, numero_economico, placas) values (ta, '13', ' abc-123-a ');
+    placa_dup := 'ENTRO';
+  exception when unique_violation then placa_dup := 'rebota'; end;
+  begin
+    insert into public.unidad (tenant_id, numero_economico, placas) values (tb, '12', 'ABC-123-A');
+    placa_otra_flota := 'entro';
+  exception when others then placa_otra_flota := 'REBOTO: ' || sqlerrm; end;
+
+  -- (f) DAT-11: el operador ligado a un usuario es de su flota
+  insert into public.operador (id, tenant_id, nombre, telefono) values (opb, tb, 'Chofer B', '5299937007 82');
+  begin
+    insert into public.app_user (id, tenant_id, email, rol, operador_id)
+      values (gen_random_uuid(), ta, '__verif_0290_a__@likida.test', 'flota_admin', opb);
+    fk_ajena := 'ENTRO';
+  exception when foreign_key_violation then fk_ajena := 'rebota'; end;
+  begin
+    insert into public.app_user (id, tenant_id, email, rol, operador_id)
+      values (gen_random_uuid(), ta, '__verif_0290_b__@likida.test', 'flota_admin', opa);
+    fk_propia := 'entro';
+  exception when others then fk_propia := 'REBOTO: ' || sqlerrm; end;
+
+  raise exception E'OPERADOR_UNIDAD_FORMA_0290  tel-chatarra=%  tel-bueno=%  rfc-malo=%  rfc-bueno=%  anio=%  km=%  eco=%  placa-dup=%  placa-otra-flota=%  fk-ajena=%  fk-propia=%   (esperado rebota / entro / rebota / entro / rebota / rebota / rebota / rebota / entro / rebota / entro)',
+    tel_chatarra, tel_bueno, rfc_malo, rfc_bueno, anio_malo, km_malo, eco_malo,
+    placa_dup, placa_otra_flota, fk_ajena, fk_propia;
+end $$;
+
+-- ── 239. La sesión del contador ya no puede REESCRIBIR la liquidación (mig. 0292) ──
+--
+-- AUDITORÍA 24, SEG-2 (MEDIO). El contador tiene cookie de sesión legítima y
+-- la anon key viaja en el bundle: con `curl` hacía
+-- `PATCH /rest/v1/liquidacion` y `tenant_finanzas_update` lo dejaba pasar —204,
+-- la fila cambiaba, el PDF archivado decía otra cifra y `bitacora_auditoria`
+-- no tenía entrada. Se asevera, actuando DE VERDAD como `authenticated` con
+-- su `sub` en el JWT:
+--   (a) SIGUE LEYENDO su liquidación (no se rompió el panel);
+--   (b) el UPDATE afecta 0 filas;
+--   (c) el INSERT de un gasto rebota;
+--   (d) el DELETE de un operador afecta 0 filas;
+--   (e) no puede borrar ni reescribir la bitácora (0 filas: RLS sin policy);
+--   (f) `service_role` —el rol con el que la app escribe— sí puede.
+do $$
+declare
+  t uuid := gen_random_uuid(); conta uuid := gen_random_uuid();
+  op uuid := gen_random_uuid(); vj uuid := gen_random_uuid(); liq uuid := gen_random_uuid();
+  -- Un viaje ABIERTO aparte: el gasto se prueba contra éste para que lo que
+  -- rebote sea la RLS y no `trg_gasto_no_tras_liquidar` (que ya lo frenaría
+  -- por llegar tarde, y entonces la prueba no mediría nada).
+  vj2 uuid := gen_random_uuid(); op2 uuid := gen_random_uuid();
+  -- Un chofer SIN viajes: si se borrara el de `vj`, lo que rebota es el FK
+  -- `restrict` de `viaje`, no la RLS — y otra vez la prueba no mediría nada.
+  op3 uuid := gen_random_uuid();
+  leidas int; tocadas int; borrados int; bit_tocadas int;
+  gasto_insert text := 'no'; bit_borradas int := -1; por_admin text := 'no';
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0292__');
+  insert into public.app_user (id, tenant_id, email, rol)
+    values (conta, t, '__verif_0292@likida.test', 'contador');
+  insert into public.operador (id, tenant_id, nombre, telefono) values (op, t, 'Juan', '5299937007 91');
+  insert into public.viaje (id, tenant_id, operador_id, folio, estatus, anticipo)
+    values (vj, t, op, 'VJ-0292-0001', 'liquidado', 10000);
+  insert into public.liquidacion (id, tenant_id, viaje_id, estatus, total_anticipo, total_comprobado, diferencia)
+    values (liq, t, vj, 'cuadrada', 10000, 10000, 0);
+  insert into public.operador (id, tenant_id, nombre, telefono) values (op2, t, 'Pedro', '5299937007 92');
+  insert into public.viaje (id, tenant_id, operador_id, folio, estatus, anticipo)
+    values (vj2, t, op2, 'VJ-0292-0002', 'abierto', 0);
+  insert into public.operador (id, tenant_id, nombre, telefono) values (op3, t, 'Sin viajes', '5299937007 93');
+  insert into public.bitacora_auditoria (tenant_id, actor_id, accion, entidad, entidad_id)
+    values (t, conta, 'liquidacion.emitida', 'liquidacion', liq::text);
+
+  set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', conta)::text, true);
+
+  -- (a) el panel sigue leyendo
+  -- Por `viaje_id` y no por `id`: `liquidacion_id_del_viaje` deriva la llave
+  -- del viaje (md5), así que el id que se insertó arriba no es el que quedó.
+  select count(*) into leidas from public.liquidacion where viaje_id = vj;
+
+  -- (b) el PATCH que inventaba la cifra
+  -- La cifra inventada CUADRA con `liquidacion_diferencia_cuadra`
+  -- (diferencia = anticipo - comprobado): así lo único que puede frenarla es
+  -- la RLS, que es justo lo que se está midiendo. El PDF firmado decía 10,000
+  -- comprobados; esto dice 18,500.
+  update public.liquidacion set total_comprobado = 18500, diferencia = -8500 where viaje_id = vj;
+  get diagnostics tocadas = row_count;
+
+  -- (c) meter un gasto por la puerta de atrás
+  begin
+    insert into public.gasto (tenant_id, viaje_id, concepto, monto, fecha)
+      values (t, vj2, 'diesel', 5800, current_date);
+    gasto_insert := 'ENTRO';
+  exception when insufficient_privilege then gasto_insert := 'rebota'; end;
+
+  -- (d) borrar al chofer
+  delete from public.operador where id = op3;
+  get diagnostics borrados = row_count;
+
+  -- (e) la bitácora es constancia: ni se reescribe ni se borra
+  -- RLS niega por AUSENCIA de policy de escritura: afecta 0 filas, no truena.
+  -- (Revocar además los grants de tabla es el candado pendiente del CIERRE.)
+  begin
+    update public.bitacora_auditoria set accion = 'nada que ver' where tenant_id = t;
+    get diagnostics bit_tocadas = row_count;
+  exception when insufficient_privilege then bit_tocadas := 0; end;
+  begin
+    delete from public.bitacora_auditoria where tenant_id = t;
+    get diagnostics bit_borradas = row_count;
+  exception when insufficient_privilege then bit_borradas := 0; end;
+
+  reset role;
+
+  -- (f) el rol con el que la app SÍ escribe no se tocó
+  begin
+    update public.liquidacion set total_comprobado = 12000, diferencia = -2000 where viaje_id = vj;
+    por_admin := 'entro';
+  exception when others then por_admin := 'REBOTO: ' || sqlerrm; end;
+
+  raise exception E'POLICIES_SOLO_LECTURA_0292  contador-lee=%  update-liquidacion=%  insert-gasto=%  delete-operador=%  update-bitacora=%  delete-bitacora=%  por-service-role=%   (esperado 1 / 0 / rebota / 0 / 0 / 0 / entro)',
+    leidas, tocadas, gasto_insert, borrados, bit_tocadas, bit_borradas, por_admin;
+end $$;
+
+-- ── 240. Los jsonb que el producto lee como objeto, y el expediente ARCO (mig. 0291) ──
+--
+-- AUDITORÍA 24, DAT-13 (BAJO). Se asevera:
+--   (a) `wa_conversacion.estado = '"hola"'` y `tenant.perfil = '[1,2]'`
+--       rebotan —el código hace `estado.turns` / `perfil.algo` sobre lo que
+--       salga— y el objeto de verdad entra;
+--   (b) una solicitud ARCO sin titular (ni `operador_id` ni `titular_ref`)
+--       rebota: un expediente que no dice de quién es no se puede resolver;
+--   (c) una solicitud que VENCE antes de recibirse rebota — el plazo del
+--       art. 32 LFPDPPP se cuenta desde que se recibe, y nacer vencida
+--       dispararía los relojes legales el primer día.
+--
+-- DAT-6 (`liquidado` ⇔ existe `liquidacion`) NO se asevera aquí: quedó
+-- diferido. La cabecera de la 0291 y el CIERRE de la auditoría 24 explican por
+-- qué —16 bloques de esta misma batería usan `estatus='liquidado'` como atajo
+-- de fixture, y `TARDE` (línea 779) asevera que el hueco existe a propósito.
+do $$
+declare
+  t uuid := gen_random_uuid(); op1 uuid := gen_random_uuid();
+  estado_malo text := 'no'; estado_bueno text := 'no'; perfil_malo text := 'no';
+  perfil_bueno text := 'no'; arco_sin_titular text := 'no'; arco_vencida text := 'no';
+  arco_buena text := 'no';
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0291__');
+  insert into public.operador (id, tenant_id, nombre, telefono) values (op1, t, 'Juan', '5299937007 94');
+
+  -- (a) los jsonb que el producto lee como objeto
+  begin
+    insert into public.wa_conversacion (tenant_id, telefono, estado)
+      values (t, '5299937007 96', '"hola"'::jsonb);
+    estado_malo := 'ENTRO';
+  exception when check_violation then estado_malo := 'rebota'; end;
+  begin
+    insert into public.wa_conversacion (tenant_id, telefono, estado)
+      values (t, '5299937007 97', '{"turns": []}'::jsonb);
+    estado_bueno := 'entro';
+  exception when others then estado_bueno := 'REBOTO: ' || sqlerrm; end;
+  begin
+    update public.tenant set perfil = '[1,2]'::jsonb where id = t;
+    perfil_malo := 'ENTRO';
+  exception when check_violation then perfil_malo := 'rebota'; end;
+  begin
+    update public.tenant set perfil = '{"giro": "carga"}'::jsonb where id = t;
+    perfil_bueno := 'entro';
+  exception when others then perfil_bueno := 'REBOTO: ' || sqlerrm; end;
+
+  -- (b) y (c) el expediente ARCO
+  begin
+    insert into public.solicitud_arco (tenant_id, tipo, canal, estado, recibida_en, vence_en)
+      values (t, 'cancelacion', 'whatsapp', 'recibida', now(), (now() + interval '20 days')::date);
+    arco_sin_titular := 'ENTRO';
+  exception when check_violation then arco_sin_titular := 'rebota'; end;
+  begin
+    insert into public.solicitud_arco (tenant_id, operador_id, tipo, canal, estado, recibida_en, vence_en)
+      values (t, op1, 'cancelacion', 'whatsapp', 'recibida', now(), (now() - interval '10 days')::date);
+    arco_vencida := 'ENTRO';
+  exception when check_violation then arco_vencida := 'rebota'; end;
+  begin
+    insert into public.solicitud_arco (tenant_id, operador_id, tipo, canal, estado, recibida_en, vence_en)
+      values (t, op1, 'cancelacion', 'whatsapp', 'recibida', now(), (now() + interval '20 days')::date);
+    arco_buena := 'entro';
+  exception when others then arco_buena := 'REBOTO: ' || sqlerrm; end;
+
+  raise exception E'FORMAS_JSONB_Y_ARCO_0291  estado-chatarra=%  estado-objeto=%  perfil-arreglo=%  perfil-objeto=%  arco-sin-titular=%  arco-nace-vencida=%  arco-buena=%   (esperado rebota / entro / rebota / entro / rebota / rebota / entro)',
+    estado_malo, estado_bueno, perfil_malo, perfil_bueno, arco_sin_titular, arco_vencida, arco_buena;
+end $$;

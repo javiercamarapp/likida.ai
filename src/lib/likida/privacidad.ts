@@ -1,4 +1,7 @@
 import { appUrl } from '@/lib/env';
+import { supabaseAdmin } from '@/lib/supabase/admin';
+import { logger } from '@/lib/logger';
+import { acotada } from './presupuesto';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // AVISO DE PRIVACIDAD EN EL CANAL — modalidad simplificada.
@@ -1017,4 +1020,114 @@ export function avisoProspectos(d: DatosAvisoProspectos): SeccionAviso[] {
       ],
     },
   ];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LA COMPUERTA: NO SE TRATA ANTES DE AVISAR.
+//
+// AUDITORÍA 22 (LEG-C1) la puso en la jornada; AUDITORÍA 24 (LEG-1, CRÍTICO)
+// encontró que el TRATAMIENTO PRINCIPAL del piloto —800 tractos × 288
+// posiciones/día y los eventos de cámara— corría sin ella: el poller escribe
+// contra `unidad_id` y nunca tenía al operador a la mano. Se extrae aquí para
+// que jornada, GPS y cámara pasen por la MISMA pregunta con la MISMA
+// respuesta: «¿este titular ya recibió el aviso?». El principio está escrito
+// arriba (`SenalGps`): el consentimiento tiene que ser PREVIO a la primera.
+//
+// Fallar cerrado: si la base no contesta, la respuesta es «no» — construir
+// un expediente o guardar un pin a ciegas es exactamente lo que el art. 16
+// prohíbe, y el expuesto es el operador mientras la sancionable es la flota.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** `.in()` de PostgREST viaja en la URL: 200 UUID son ~7.5 KB, debajo del
+ *  techo típico de un proxy (misma cifra que `IDS_POR_TANDA` en pg.ts). */
+const IDS_POR_CONSULTA = 200;
+
+/**
+ * `true` si el operador ya tiene `aviso_privacidad_en`. El `cache` es por
+ * corrida (la lista de trabajo de la jornada trae el mismo operador muchas
+ * veces); quien no lo pasa consulta cada vez.
+ */
+export async function tieneAvisoPrevio(
+  tenantId: string,
+  operadorId: string,
+  cache?: Map<string, boolean>,
+): Promise<boolean> {
+  const llave = `${tenantId}|${operadorId}`;
+  const memo = cache?.get(llave);
+  if (memo !== undefined) return memo;
+
+  const { data, error } = await acotada(
+    supabaseAdmin().from('operador')
+      .select('aviso_privacidad_en')
+      .eq('tenant_id', tenantId).eq('id', operadorId)
+      .maybeSingle(),
+    'privacidad.aviso_previo',
+  );
+  if (error) {
+    logger.error('privacidad.aviso_previo_ilegible', { tenantId, operadorId, err: error.message });
+    return false;
+  }
+  const ok = (data as { aviso_privacidad_en: string | null } | null)?.aviso_privacidad_en != null;
+  cache?.set(llave, ok);
+  return ok;
+}
+
+/**
+ * Las unidades cuyo operador ACTUAL no ha recibido el aviso.
+ *
+ * «Actual» = el del viaje vivo (`abierto`/`en_cuadre`) que lleva esa unidad.
+ * Una unidad sin viaje vivo no está ligada a ninguna persona: su posición es
+ * la de un camión, no la de un titular, y se guarda. Una unidad con viaje
+ * vivo cuyo operador tiene `aviso_privacidad_en` NULL es tratamiento sin
+ * aviso, y NO se persiste nada suyo — ni posición ni evento de cámara.
+ *
+ * Devuelve `error` cuando la base no contestó: el llamador debe tratar la
+ * corrida entera como no autorizada (fallar cerrado), no como «sin aviso: 0».
+ */
+export async function unidadesSinAvisoPrevio(
+  tenantId: string,
+  unidadIds: readonly string[],
+): Promise<{ sinAviso: Set<string>; error?: string }> {
+  const sinAviso = new Set<string>();
+  if (unidadIds.length === 0) return { sinAviso };
+
+  const operadorPorUnidad = new Map<string, string>();
+  for (let i = 0; i < unidadIds.length; i += IDS_POR_CONSULTA) {
+    const tanda = unidadIds.slice(i, i + IDS_POR_CONSULTA);
+    const { data, error } = await acotada(
+      supabaseAdmin().from('viaje')
+        .select('unidad_id, operador_id')
+        .eq('tenant_id', tenantId)
+        .in('estatus', ['abierto', 'en_cuadre'])
+        .in('unidad_id', tanda),
+      'privacidad.viajes_vivos_por_unidad',
+    );
+    if (error) return { sinAviso, error: `no se pudo saber qué operador lleva cada unidad: ${error.message}` };
+    for (const v of (data ?? []) as Array<{ unidad_id: unknown; operador_id: unknown }>) {
+      if (v.unidad_id && v.operador_id) operadorPorUnidad.set(String(v.unidad_id), String(v.operador_id));
+    }
+  }
+  if (operadorPorUnidad.size === 0) return { sinAviso };
+
+  const operadores = [...new Set(operadorPorUnidad.values())];
+  const conAviso = new Set<string>();
+  for (let i = 0; i < operadores.length; i += IDS_POR_CONSULTA) {
+    const tanda = operadores.slice(i, i + IDS_POR_CONSULTA);
+    const { data, error } = await acotada(
+      supabaseAdmin().from('operador')
+        .select('id, aviso_privacidad_en')
+        .eq('tenant_id', tenantId)
+        .in('id', tanda),
+      'privacidad.aviso_previo_por_operador',
+    );
+    if (error) return { sinAviso, error: `no se pudo leer el aviso de privacidad de los operadores: ${error.message}` };
+    for (const o of (data ?? []) as Array<{ id: unknown; aviso_privacidad_en: unknown }>) {
+      if (o.aviso_privacidad_en != null) conAviso.add(String(o.id));
+    }
+  }
+
+  for (const [unidadId, operadorId] of operadorPorUnidad) {
+    if (!conAviso.has(operadorId)) sinAviso.add(unidadId);
+  }
+  return { sinAviso };
 }
