@@ -116,6 +116,12 @@ const SECCIONES: SeccionLegal[] = [
       // El detalle del porqué —y de lo que el piloto NUNCA hace: emitir,
       // teclear contraseñas, rodear captchas— vive en ese archivo.
       `Pasan por proveedores que trabajan por instrucción de Likida y no pueden usarlos para otra cosa —lo que la ley llama personas encargadas, y que **no es una transferencia**—: alojamiento de aplicación y base de datos, mensajería de WhatsApp, **envío de correo** —tanto los avisos del panel como **el correo con el que entras**: por ese proveedor pasa tu dirección y el enlace de un solo uso que abre tu sesión—, monitoreo de errores, y los modelos de lenguaje: les llegan **los comprobantes para leerlos**, **el texto de tus mensajes y consultas** para poder contestarte, y —si tu flota factura tickets en los portales de los comercios— **los datos fiscales de tu empresa (RFC, razón social, código postal, régimen fiscal, uso CFDI y el correo de recepción) junto con capturas de pantalla del portal de facturación del comercio**, porque es un modelo el que llena ese formulario campo por campo y necesita ver la pantalla y saber qué escribir; ese modelo nunca aprieta el botón que emite la factura ni recibe contraseñas. A esos modelos en cada llamada se les pide explícitamente que no retengan lo que procesan.`,
+      // AUDITORÍA 24 (LEG-10, MEDIO, reincidente): esta lista taxativa de
+      // encargadas omitía al procesador de pagos. Si tu flota paga la
+      // mensualidad con tarjeta, sus datos de cobro SÍ pasan por un tercero
+      // y esta cláusula (art. 35) tiene que nombrarlo, como nombra a los
+      // demás.
+      `Y si tu empresa paga la mensualidad de Likida con tarjeta, el cobro lo procesa **Stripe**: le llegan los datos fiscales de facturación de tu empresa (razón social, RFC, código postal, régimen fiscal, correo) y los datos de la tarjeta, que Likida nunca ve completos. También es persona encargada, no alguien que use tus datos por su cuenta.`,
       `El detalle de esos subencargados está en la documentación del producto y se actualiza cuando cambia.`,
       `**Si algún día quisiéramos transferir tus datos para algo distinto, te lo pediríamos antes.** No hacer nada al leer esto no cuenta como haber aceptado.`,
     ],
