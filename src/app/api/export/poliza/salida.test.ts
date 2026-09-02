@@ -52,12 +52,28 @@ vi.mock('@/lib/likida/contabilidad/catalogo', async (orig) => ({
 // Un perfil CONTPAQi CONFIRMADO: sin él la ruta contesta 409
 // `perfil_erp_sin_confirmar` y nunca llega a armar el archivo — que es
 // justamente lo que esta suite viene a ejercitar.
+const PERFIL_CONTPAQI = {
+  sistema: 'contpaqi' as const,
+  confirmadoEn: '2026-08-01T00:00:00.000Z',
+  opciones: { tipo: 'Dr', numero: 1, separador: ',', encabezado: undefined },
+};
+// AUDITORÍA 24, PRU-A1: la rama `sap_b1` de la ruta (route.ts:405-424) nunca
+// se pedía en una prueba — cobertura 81.72% con esas líneas SIN ejecutar—, así
+// que intercambiar los dos archivos del DTW pasaba la suite entera en verde.
+// El perfil se vuelve mutable para poder pedirla.
+const PERFIL_SAP = {
+  sistema: 'sap_b1' as const,
+  confirmadoEn: '2026-08-01T00:00:00.000Z',
+  plantilla: {
+    cabeceraTecnica: ['JdtNum', 'RefDate', 'DueDate', 'TaxDate', 'Memo'],
+    cabeceraVisible: ['Número', 'Fecha', 'Vencimiento', 'Fecha fiscal', 'Concepto'],
+    lineasTecnica: ['JdtNum', 'Line_ID', 'Account', 'Debit', 'Credit', 'LineMemo', 'Ref1'],
+    lineasVisible: ['Número', 'Renglón', 'Cuenta', 'Cargo', 'Abono', 'Concepto', 'Referencia'],
+  },
+};
+let perfil: unknown = PERFIL_CONTPAQI;
 vi.mock('@/lib/likida/contabilidad/perfiles', () => ({
-  perfilExportacionDeclarado: async () => ({
-    sistema: 'contpaqi' as const,
-    confirmadoEn: '2026-08-01T00:00:00.000Z',
-    opciones: { tipo: 'Dr', numero: 1, separador: ',', encabezado: undefined },
-  }),
+  perfilExportacionDeclarado: async () => perfil,
 }));
 
 /** Lo que la RPC `poliza_datos_tenant` devuelve. */
@@ -87,6 +103,7 @@ const SANA = {
 
 beforeEach(() => {
   catalogo = { ok: true, catalogo: CATALOGO_COMPLETO };
+  perfil = PERFIL_CONTPAQI;
   filas = [SANA];
   resolverTenantApi.mockResolvedValue({ ok: true as const, tenantId: 'tenant-1', rol: 'contador' });
 });
@@ -279,5 +296,104 @@ describe('FIS-3: una deducción por comprobante, no por fotografía', () => {
     const c = cargosDe(await r.text());
     expect(c['5010-001']).toBeUndefined();
     expect(c['5990-002']).toBeCloseTo(3000, 2);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUDITORÍA 24 · PRU-A1 + PRU-A2 (ALTOS, reincidentes 23) — el arnés del
+// export contable: el formato que el contador de Innovativos importa a SAP.
+//
+// Las dos mutaciones de la 23 siguen VIVAS y se re-corrieron hoy:
+//   · M16 (`route.ts:315-316`): intercambiar `oJournalEntries.txt` con
+//     `JournalEntries_Lines.txt`. Suite completa VERDE — la rama `sap_b1`
+//     nunca se pedía (cobertura 81.72%, esas líneas sin ejecutar).
+//   · M14 (`formatos.ts:167`): `Line_ID` fijo en 0 en todos los renglones.
+//     Suite completa VERDE con `formatos.ts` al 100.00% de LÍNEAS — la
+//     cobertura mide que la línea corrió, no que alguien mirara su salida.
+//     El DTW rechaza (o peor, colapsa) un asiento con `Line_ID` repetido
+//     dentro del mismo `JdtNum`.
+//
+// Se descubre DENTRO del ERP del cliente, que es el peor sitio posible.
+// ═══════════════════════════════════════════════════════════════════════════
+const URL_SAP = 'https://app.likida.ai/api/export/poliza?desde=2026-08-01&hasta=2026-08-24&formato=sap_b1';
+const pedirSap = () => GET(new Request(URL_SAP));
+
+/** Los renglones de datos de un archivo DTW: sin las dos filas de encabezado. */
+const renglones = (archivo: string) =>
+  archivo.split('\n').slice(2).filter((l) => l.trim() !== '').map((l) => l.split('\t'));
+
+describe('PRU-A1: los DOS archivos del DTW de SAP, cada uno con su encabezado', () => {
+  beforeEach(() => { perfil = PERFIL_SAP; });
+
+  it('oJournalEntries lleva la CABECERA y JournalEntries_Lines los RENGLONES', async () => {
+    const r = await pedirSap();
+    expect(r.status).toBe(200);
+    const j = await r.json();
+    expect(j.formato).toBe('sap_b1_dtw');
+
+    const cab = j.archivos['oJournalEntries.txt'] as string;
+    const lin = j.archivos['JournalEntries_Lines.txt'] as string;
+
+    // La aserción que mata M16: cada archivo empieza por SU encabezado técnico.
+    expect(cab.split('\n')[0]).toBe('JdtNum\tRefDate\tDueDate\tTaxDate\tMemo');
+    expect(lin.split('\n')[0]).toBe('JdtNum\tLine_ID\tAccount\tDebit\tCredit\tLineMemo\tRef1');
+    // Y la SEGUNDA fila es la descriptiva de la plantilla confirmada: omitirla
+    // es el error más común del DTW, y también se puede intercambiar.
+    expect(cab.split('\n')[1]).toBe('Número\tFecha\tVencimiento\tFecha fiscal\tConcepto');
+    expect(lin.split('\n')[1]).toBe('Número\tRenglón\tCuenta\tCargo\tAbono\tConcepto\tReferencia');
+
+    // La cabecera es UNA fila por póliza; las líneas son varias. Si estuvieran
+    // cambiados, la de 5 columnas traería los movimientos.
+    expect(renglones(cab)).toHaveLength(1);
+    expect(renglones(lin).length).toBeGreaterThan(1);
+    expect(renglones(cab)[0]).toHaveLength(5);
+    // Y las cuentas declaradas están en el archivo de LÍNEAS, no en el otro.
+    expect(lin).toContain('5010-001');
+    expect(cab).not.toContain('5010-001');
+  });
+
+  it('un formato desconocido no se exporta «por si acaso»', async () => {
+    const r = await GET(new Request('https://app.likida.ai/api/export/poliza?desde=2026-08-01&hasta=2026-08-24&formato=quickbooks'));
+    expect(r.status).toBe(400);
+  });
+});
+
+describe('PRU-A2: `Line_ID` numera los renglones dentro de cada JdtNum', () => {
+  beforeEach(() => { perfil = PERFIL_SAP; });
+
+  it('con DOS pólizas, cada JdtNum lleva Line_ID 0..n-1 sin repetir', async () => {
+    // Dos liquidaciones = dos asientos = dos JdtNum. Es donde M14 (Line_ID
+    // fijo en 0) y una numeración global (0..n sin reiniciar) se distinguen.
+    filas = [
+      { ...SANA, liquidacionId: 'l-1', folioViaje: 'VJ-1' },
+      {
+        ...SANA, liquidacionId: 'l-2', folioViaje: 'VJ-2',
+        anticipo: 8000, comprobado: 5800, diferencia: 2200, ivaAcreditable: 800,
+        porConcepto: [{ concepto: 'hospedaje', subtotal: 5000, baseConocida: true }],
+        gastos: [{ id: 'g2', concepto: 'hospedaje', monto: 5800, subtotal: 5000, descuento: null, tieneCfdi: true, cfdiUuid: 'u-g2', formaPago: '03' }],
+      },
+    ];
+    const r = await pedirSap();
+    expect(r.status).toBe(200);
+    const j = await r.json();
+
+    const porAsiento = new Map<string, string[]>();
+    for (const fila of renglones(j.archivos['JournalEntries_Lines.txt'] as string)) {
+      const [jdtNum, lineId] = fila;
+      porAsiento.set(jdtNum, [...(porAsiento.get(jdtNum) ?? []), lineId]);
+    }
+
+    expect([...porAsiento.keys()].sort()).toEqual(['1', '2']);
+    for (const [jdtNum, ids] of porAsiento) {
+      // 0..n-1, en orden y SIN repetir. `new Set` mata M14 por sí solo; la
+      // igualdad contra la secuencia mata también la numeración global.
+      expect(new Set(ids).size, `JdtNum ${jdtNum} repite Line_ID`).toBe(ids.length);
+      expect(ids).toEqual(ids.map((_, i) => String(i)));
+      expect(ids.length).toBeGreaterThan(1);
+    }
+
+    // El JdtNum de la cabecera es el mismo que liga las líneas: sin esto los
+    // dos archivos no se importan juntos.
+    expect(renglones(j.archivos['oJournalEntries.txt'] as string).map((f) => f[0])).toEqual(['1', '2']);
   });
 });
