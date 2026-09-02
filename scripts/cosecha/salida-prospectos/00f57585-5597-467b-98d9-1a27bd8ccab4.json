@@ -1,0 +1,19 @@
+{
+ "id": "00f57585-5597-467b-98d9-1a27bd8ccab4",
+ "empresa": "UTOPIA TRANSPORTATIONS",
+ "sitio": "mhcompany.com",
+ "vivo": true,
+ "dominio": "mhcompany.com",
+ "cosechado": "2026-08-26T07:05:35.817Z",
+ "paginas": [
+  "https://mhcompany.com"
+ ],
+ "titulo": "Meyer Handelman Co. | Private Wealth Management",
+ "texto_muestra": "Meyer Handelman Co. | Private Wealth Management The MHCo Difference Services Services Overview Private Wealth Family Office Foundations & Endowments Our Team Contact Client Login Search Contact Client Login Search { this.loaded = true }); const ignore = (t) => t && t.closest('.hero_home__control, .hero_home__scroll-cta, a, button, input, textarea, select'); this._onWheel = (e) => { if (ignore(e.target)) return; if (!this.expanded && !this.animating && e.deltaY > 0) { e.preventDefault(); this.expandViaInteraction(); } }; this._touchStartX = null; this._touchStartY = null; this._onTouchStart = (e) => { if (this.expanded || this.animating || ignore(e.target)) return; const t = e.touches?.[0]; if (!t) return; this._touchStartX = t.clientX; this._touchStartY = t.clientY; }; this._onTouchMove = (e) => { if (this.expanded || this.animating || this._touchStartY === null) return; const t = e.touches?.[0]; if (!t) return; const dx = t.clientX - this._touchStartX; const dy = t.clientY - this._touchStartY; // negative = swipe up if (dy Math.abs(dx)) { e.preventDefault(); // only block scroll when triggering expand this._touchStartX = this._touchStartY = null; this.expandViaInteraction(); } }; this._onTouchEnd = () => { this._touchStartX = this._touchStartY = null; }; window.addEventListener('wheel', this._onWheel, { passive:false }); window.addEventListener('touchstart', this._onTouchStart, { passive:true }); window.addEventListener('touchmove', this._onTouchMove, { passive:false }); window.addEventListener('touchend', this._onTouchEnd, { passive:true }); }, destroy(){ window.removeEventListener('wheel', this._onWheel); window.removeEventListener('touchstart', this._onTouchStart); window.removeEventListener('touchmove', this._onTouchMove); window.removeEventListener('touchend', this._onTouchEnd); }, lockScroll(){ this.scrollY = window.scrollY; document.body.style.position = 'fixed'; document.body.style.top = `-${this.scrollY}px`; document.body.style.width = '100%'; }, unlockScroll(){ document.body.style.position = ''; document.body.style.top = ''; document.body.style.width = ''; window.scrollTo(0, this.scrollY); }, expandViaInteraction(){ if (this.expanded || this.animating) return; this.lockScroll(); this.startExpand(); }, startExpand(){ this.animating = true; const media = this.$root.querySelector('.hero_home__media'); if (media) media.classList.add('expanded'); document.body.classList.add('hero-expanded'); setTimeout(() => { this.phase = 'expanded'; }, 250); setTimeout(() => { this.expanded = true; this.animating = false; this.unlockScroll(); }, 1600); }, playPauseVideo(){ const v = this.$refs.video; if (!v) return; if (v.paused) { v.play(); this.state = 'playing'; } else { v.pause(); this.state = 'pause'; } } }\" > MEYER HANDELMAN COMPANY Financial clarity and confidence across generations Trusted advisors helping families protect wealth, navigate complexity, and plan ahead Discover the MHCo Difference Private Wealth Personal guidance for life’s financial",
+ "correos": [
+  "mhco@mhcompany.com"
+ ],
+ "telefonos": [],
+ "candidatos_decisor": [],
+ "hallazgo_cargo": []
+}
