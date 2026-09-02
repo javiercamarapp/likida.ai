@@ -175,13 +175,14 @@ export default async function PaginaDespacho({
         kmRecorridos: String(fd.get('kmRecorridos') ?? ''),
       });
 
+      const operadorId = texto('operadorId', 64);
       await crearViaje(tenantId, {
         folio: texto('folio', 40),
         origen: texto('origen', 120),
         destino: texto('destino', 120),
         fechaInicio: fecha,
         anticipo,
-        operadorId: texto('operadorId', 64),
+        operadorId,
         // '' → null (sin unidad, que la base admite). Que el id sea de ESTA
         // flota lo re-verifica `crearViaje` (`unidadPropia`), igual que hace
         // con el operador — el `<select>` es UI, no servidor.
@@ -191,7 +192,30 @@ export default async function PaginaDespacho({
         kmRecorridos: ing.kmRecorridos,
       });
     } catch (err) {
-      logger.error('despacho.crear.fallo', { err: err instanceof Error ? err.message : String(err) });
+      // FE-13: `crearViaje` ya distingue "operador/unidad dado de baja" con
+      // `DatoInvalido` (mensaje escrito para pantalla) — antes ese catch lo
+      // aplastaba igual que cualquier otro fallo ("Revisa los datos…"), el
+      // mensaje MENOS útil posible para el error que a 500 viajes/día va a
+      // ser el más común: "ese operador ya trae un viaje abierto"
+      // (`uq_viaje_abierto_por_operador`, 0029) llega como un 23505 genérico
+      // envuelto por operacion.ts, sin `.code` — el nombre del índice sigue
+      // en el texto del mensaje de Postgres, así que se detecta ahí.
+      if (err instanceof DatoInvalido) return { error: err.message };
+      const detalle = err instanceof Error ? err.message : String(err);
+      if (detalle.includes('uq_viaje_abierto_por_operador')) {
+        const operadorId = texto('operadorId', 64);
+        const { data: abierto } = await supabaseAdmin()
+          .from('viaje').select('folio')
+          .eq('tenant_id', tenantId).eq('operador_id', operadorId)
+          .in('estatus', ['abierto', 'en_cuadre']).limit(1).maybeSingle();
+        const folio = (abierto?.folio as string | undefined) || null;
+        return {
+          error: folio
+            ? `Ese operador ya trae el viaje ${folio} abierto — ciérralo o asígnale otro chofer.`
+            : 'Ese operador ya trae un viaje abierto — ciérralo o asígnale otro chofer.',
+        };
+      }
+      logger.error('despacho.crear.fallo', { err: detalle });
       return { error: 'No se pudo crear el viaje. Revisa los datos e inténtalo de nuevo.' };
     }
     redirect(destino);
