@@ -15529,3 +15529,48 @@ begin
     m ? 'waOutboxPurgado', (m->>'eventosSeguridadPurgados')::int >= 2, sin_dup, con_medida, repetidos;
 end $$;
 
+-- ── 237. La geolocalización del pin de asistencia se retira a los 90 días de resuelta la incidencia (mig. 0289) ──
+--
+-- AUDITORÍA 24, LEG-6 (ALTO). El aviso dice «se borra a los 90 días» y
+-- `incidencia.lat/lng` e `incidencia_evento.detalle->lat/lng` vivían para
+-- siempre. Se asevera:
+--   (a) resuelta hace 91 días: lat/lng en NULL y el evento sin lat/lng pero
+--       CON la marca `geolocalizacion_purgada_en` (el hueco no se lee como
+--       «nunca hubo pin») y con el renglón vivo;
+--   (b) resuelta hace 30 días: intacta;
+--   (c) ABIERTA hace 200 días: intacta — el pin es la herramienta de la mesa
+--       mientras el expediente sigue abierto;
+--   (d) `mantenimiento_de_datos` lo reporta con nombre.
+do $$
+declare
+  t uuid := gen_random_uuid(); op uuid := gen_random_uuid();
+  i91 uuid := gen_random_uuid(); i30 uuid := gen_random_uuid(); iab uuid := gen_random_uuid();
+  r jsonb; m jsonb;
+  lat91 double precision; lat30 double precision; latab double precision;
+  det91 jsonb; det30 jsonb; eventos_91 int;
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0289__');
+  insert into public.operador (id, tenant_id, nombre, telefono) values (op, t, 'Chofer', '+520000028901');
+  insert into public.incidencia (id, tenant_id, operador_id, tipo, prioridad, estado, descripcion, lat, lng, resuelta_en) values
+    (i91, t, op, 'siniestro', 'critica', 'resuelta', 'choque km 84', 19.1, -99.1, now() - interval '91 days'),
+    (i30, t, op, 'varado',    'alta',    'resuelta', 'varado',       19.2, -99.2, now() - interval '30 days'),
+    (iab, t, op, 'robo',      'critica', 'abierta',  'robo',         19.3, -99.3, null);
+  insert into public.incidencia_evento (tenant_id, incidencia_id, tipo, detalle) values
+    (t, i91, 'ubicacion_anclada', jsonb_build_object('lat', 19.1, 'lng', -99.1)),
+    (t, i91, 'mensaje_adicional', jsonb_build_object('texto', 'ya llegó la grúa')),
+    (t, i30, 'ubicacion_anclada', jsonb_build_object('lat', 19.2, 'lng', -99.2));
+
+  r := public.purgar_geolocalizacion_incidencia(90, now());
+  m := public.mantenimiento_de_datos(30, now());
+
+  select lat into lat91 from public.incidencia where id = i91;
+  select lat into lat30 from public.incidencia where id = i30;
+  select lat into latab from public.incidencia where id = iab;
+  select detalle into det91 from public.incidencia_evento where incidencia_id = i91 and tipo = 'ubicacion_anclada';
+  select detalle into det30 from public.incidencia_evento where incidencia_id = i30 and tipo = 'ubicacion_anclada';
+  select count(*) into eventos_91 from public.incidencia_evento where incidencia_id = i91;
+
+  raise exception E'GEO_INCIDENCIA_0289  lat-91-nula=%  evento-91-sin-lat=%  evento-91-marcado=%  eventos-91-vivos=%  lat-30=%  evento-30-con-lat=%  lat-abierta=%  purgadas=%  mant-reporta=%   (esperado t / t / t / 2 / 19.2 / t / 19.3 / 1 / t)',
+    lat91 is null, not (det91 ? 'lat'), det91 ? 'geolocalizacion_purgada_en', eventos_91, lat30, det30 ? 'lat', latab,
+    r->>'incidencias', m ? 'incidenciaGeoPurgada';
+end $$;
