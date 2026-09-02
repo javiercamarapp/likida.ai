@@ -40,7 +40,13 @@ export const CATALOGO_ACCIONES: readonly AccionCatalogo[] = [
   {
     id: 'apagar_agente', gateo: 'confirma', implementada: true,
     efecto: 'Corta la corrida siguiente de ese agente en TODAS las flotas (la palanca es global por agente, no por tenant). Los crons responden 200 con "saltado".',
-    revertir: 'Encender desde /admin/observabilidad o el ⌘K (encender exige doble confirmación).',
+    // ADM-13 (auditoría 24, nota menor): esto decía "encender exige doble
+    // confirmación" — falso. Ni /admin/observabilidad (accionInterruptor)
+    // ni el ⌘K (command-palette.tsx, Enter ejecuta directo) piden una
+    // segunda confirmación para encender: solo APAGAR pide motivo, que
+    // funciona como el único candado hoy. Corregido para no prometer una
+    // puerta que no existe.
+    revertir: 'Encender desde /admin/observabilidad o el ⌘K (un clic — el motivo es la única puerta que hoy tiene apagar/encender).',
   },
   {
     id: 'encender_agente', gateo: 'doble', implementada: false,
@@ -83,7 +89,16 @@ export const CATALOGO_ACCIONES: readonly AccionCatalogo[] = [
     revertir: 'Volver a cerrar el viaje.',
   },
   {
-    id: 'correr_runner', gateo: 'confirma', implementada: true,
+    id: 'correr_runner', gateo: 'doble', implementada: true,
+    // AUDITORÍA 24, ADM-13 (MEDIO) — `encender_agente` (que solo MUEVE UNA
+    // PALANCA) ya exigía 'doble'; esta acción, que puede terminar en un
+    // correo real mandado por su cuenta sin que nadie lo revise, exigía
+    // apenas 'confirma' — la MISMA confirmación de un clic que apagar un
+    // interruptor. `LIKIDA_ENVIADOR_ENCENDIDO` sigue apagado por default
+    // (enviador.ts) y es el mitigante real hoy, pero el gateo del copiloto
+    // tiene que reflejar lo que la acción PUEDE hacer, no lo que hoy está
+    // apagado en otra parte: el día que Javier encienda el envío autónomo,
+    // un clic en el copiloto no puede ser la única puerta.
     // AUDITORÍA E.28, H4 — esta tarjeta decía "jamás envía nada", y era falso:
     // `enviador` está en `AGENTES_DESPACHABLES` (runner.ts) y, a diferencia de
     // TODO el resto de la lista, no fabrica un borrador para que un humano lo

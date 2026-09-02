@@ -15349,3 +15349,98 @@ begin
   raise exception E'WA_CONVERSACION_TEL_NORM_0274  variante-choca=%  otro-numero=%  otra-flota=%   (esperado t / t / t)',
     choca_variante, otro_numero_ok, otra_flota_ok;
 end $$;
+
+-- ── 244. `interruptor_tenant`: el CHECK de motivo, el dominio de pipeline, la PK compuesta y el cascade (mig. 0297) ──
+--
+-- AUDITORÍA 24, ADM-6 (MEDIO). Antes de la 0297 no había NINGUNA palanca para
+-- cortar el pipeline del chofer (whatsapp/ocr/cuadre) de UNA sola flota: las
+-- 58 de `interruptor` (0110) son de agentes de back office, y `global`
+-- apagaría TODAS las flotas de golpe. Esta migración añade una tabla
+-- hermana, deliberadamente SEPARADA (no una columna `tenant_id` nullable en
+-- `interruptor`) para que la ausencia de filtro nunca pueda mezclar los dos
+-- dominios (ver el comentario de la migración).
+--
+-- Se aseveran las CUATRO garantías que solo la base puede demostrar: (1) el
+-- mismo CHECK de motivo obligatorio que ya tiene `interruptor` — apagado sin
+-- motivo, o con motivo en blanco, rebota; (2) el dominio de `pipeline` es
+-- CERRADO a los tres pasos del camino del chofer; (3) la PK es COMPUESTA
+-- (tenant_id, pipeline) — el mismo pipeline convive en dos flotas distintas,
+-- y dos pipelines conviven en la misma flota, pero repetir el MISMO par
+-- choca; (4) borrar el tenant borra en cascada su fila — un tenant demo
+-- purgado en `verificaciones` no deja basura huérfana.
+do $$
+declare
+  ta uuid := gen_random_uuid(); tb uuid := gen_random_uuid();
+  rebota_sin_motivo boolean := false;
+  rebota_motivo_blanco boolean := false;
+  acepta_con_motivo boolean := false;
+  rebota_pipeline_fuera_dominio boolean := false;
+  convive_dos_pipelines_misma_flota boolean := false;
+  convive_mismo_pipeline_otra_flota boolean := false;
+  choca_mismo_par boolean := false;
+  cascade_al_borrar_tenant boolean := false;
+begin
+  insert into public.tenant (id, nombre) values (ta, '__verif_0297_a__');
+  insert into public.tenant (id, nombre) values (tb, '__verif_0297_b__');
+
+  -- (1) apagado=true sin motivo (NULL) rebota.
+  begin
+    insert into public.interruptor_tenant (tenant_id, pipeline, apagado)
+      values (ta, 'ocr', true);
+  exception when check_violation then rebota_sin_motivo := true;
+  end;
+
+  -- (1b) apagado=true con motivo en blanco rebota igual (mismo criterio
+  -- que `interruptor_apagado_con_motivo`, 0110: espacios no son un porqué).
+  begin
+    insert into public.interruptor_tenant (tenant_id, pipeline, apagado, motivo)
+      values (ta, 'ocr', true, '   ');
+  exception when check_violation then rebota_motivo_blanco := true;
+  end;
+
+  -- (2) el dominio de pipeline es cerrado — 'facturacion' no es de los tres.
+  begin
+    insert into public.interruptor_tenant (tenant_id, pipeline, apagado, motivo)
+      values (ta, 'facturacion', true, 'motivo real');
+  exception when check_violation then rebota_pipeline_fuera_dominio := true;
+  end;
+
+  -- La forma buena SÍ entra.
+  begin
+    insert into public.interruptor_tenant (tenant_id, pipeline, apagado, motivo)
+      values (ta, 'ocr', true, 'gasto disparado en Innovativos');
+    acepta_con_motivo := true;
+  exception when others then acepta_con_motivo := false;
+  end;
+
+  -- (3a) otro pipeline de LA MISMA flota convive.
+  begin
+    insert into public.interruptor_tenant (tenant_id, pipeline, apagado, motivo)
+      values (ta, 'cuadre', true, 'otro motivo');
+    convive_dos_pipelines_misma_flota := true;
+  exception when others then convive_dos_pipelines_misma_flota := false;
+  end;
+
+  -- (3b) el MISMO pipeline en OTRA flota convive (la PK es por tenant).
+  begin
+    insert into public.interruptor_tenant (tenant_id, pipeline, apagado, motivo)
+      values (tb, 'ocr', true, 'motivo de la otra flota');
+    convive_mismo_pipeline_otra_flota := true;
+  exception when others then convive_mismo_pipeline_otra_flota := false;
+  end;
+
+  -- (3c) repetir el MISMO (tenant, pipeline) choca contra la PK.
+  begin
+    insert into public.interruptor_tenant (tenant_id, pipeline, apagado, motivo)
+      values (ta, 'ocr', true, 'segundo intento');
+  exception when unique_violation then choca_mismo_par := true;
+  end;
+
+  -- (4) borrar el tenant borra en cascada sus interruptores.
+  delete from public.tenant where id = ta;
+  cascade_al_borrar_tenant := not exists (select 1 from public.interruptor_tenant where tenant_id = ta);
+
+  raise exception E'INTERRUPTOR_TENANT_0297  sin-motivo=%  motivo-blanco=%  ok-con-motivo=%  pipeline-fuera-dominio=%  convive-pipelines=%  convive-flotas=%  choca-mismo-par=%  cascade-tenant=%   (esperado t / t / t / t / t / t / t / t)',
+    rebota_sin_motivo, rebota_motivo_blanco, acepta_con_motivo, rebota_pipeline_fuera_dominio,
+    convive_dos_pipelines_misma_flota, convive_mismo_pipeline_otra_flota, choca_mismo_par, cascade_al_borrar_tenant;
+end $$;
