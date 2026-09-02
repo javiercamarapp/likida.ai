@@ -64,7 +64,7 @@ const {
   evaluarGatillos, armarParteRetencion,
   toquesDeHoy, esToqueAtrasado, tituloToque, textoDelToque, armarPropuestaCobranza, armarParteCobranzaSaas,
   semaforoTicket, armarParteSoporte,
-  esAgenteExito, correrAgenteExito, AGENTES_EXITO, leerFlotas,
+  esAgenteExito, correrAgenteExito, AGENTES_EXITO, leerFlotas, leerValorDelMes,
 } = await import('./exito');
 
 const FLOTA = { id: 'aaaaaaaa-1111-2222-3333-444444444444', nombre: 'Transportes GAL', creadaEn: '2026-08-01T10:00:00Z', politicaPropia: false };
@@ -288,6 +288,20 @@ describe('éxito del cliente — el silencio y el reporte de valor', () => {
     expect(cuerpo).toContain('no se afirman');
   });
 
+  it('AGB-8: leerValorDelMes ya NO tope a 2,000 — un mes con 2,500 liquidaciones (3 páginas) suma completo y no sale incompleto', async () => {
+    const fila = { estatus: 'cuadrada', total_comprobado: '10', diferencia: '0', iva_acreditable: '0', peaje_acreditable: '0', litros_diesel_acreditables: '0' };
+    respuestas.set('liquidacion', [
+      { data: Array.from({ length: 1_000 }, () => fila), count: 2_500, error: null }, // página 1 (con el total)
+      { data: Array.from({ length: 1_000 }, () => fila), error: null },               // página 2
+      { data: Array.from({ length: 500 }, () => fila), error: null },                 // página 3 (corta: fin)
+    ]);
+    respuestas.set('gasto', [{ data: null, count: 0, error: null }, { data: null, count: 0, error: null }]);
+    const v = await leerValorDelMes(FLOTA.id, '2026-08');
+    expect(v.liquidaciones).toBe(2_500);
+    expect(v.incompleto).toBe(false);
+    expect(v.totalComprobado).toBe(25_000);
+  });
+
   it('sin flotas en silencio NO se encola nada: un parte que dice «nada» enseña a no leerlo', async () => {
     respuestas.set('tenant', [{ data: [], error: null }]);
     respuestas.set('cola_aprobacion', [{ data: null, count: 0, error: null }]);
@@ -313,9 +327,10 @@ describe('éxito del cliente — el silencio y el reporte de valor', () => {
       { data: null, count: 6, error: null },  // con cfdi válido
     ]);
     respuestas.set('wa_conversacion', [{ data: null, count: 0, error: null }]);
+    // AGB-8: una sola lectura paginada (`traerTodo`) trae las filas Y el
+    // conteo exacto a la vez — antes eran dos consultas separadas.
     respuestas.set('liquidacion', [
       { data: [{ estatus: 'cuadrada', total_comprobado: '100.50', diferencia: '0', iva_acreditable: '16', peaje_acreditable: '5', litros_diesel_acreditables: '30' }], error: null },
-      { data: null, count: 1, error: null },  // el conteo del mes
     ]);
     const r = await correrAgenteExito('exito_cliente', 'cron', '2026-08-05');
     expect(r.piezas).toBe(2);
