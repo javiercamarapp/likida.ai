@@ -176,8 +176,8 @@ export async function GET(req: Request) {
   // corre bajo `conRelojDuro` —la ruta espera a la carrera entre la vuelta y
   // el reloj, como `runner`— con margen para latir y responder; (3) el latido
   // va en un `finally`, así que se escribe aunque un motor reviente o el
-  // reloj gane. El vigilante de reglas no recibe reloj (su firma es
-  // `vigilarReglas(ahora)`, archivo de otro dueño): lo cubre el techo duro.
+  // reloj gane. (4, AUDITORÍA 24 BE-7) El vigilante de reglas también
+  // recibe `venceEn` y corta su bucle antes de cada regla.
   const venceBarridos = venceCobranza;
   /** El corte duro: 10 s antes del `maxDuration`, que es lo que cuestan la
    *  racha (`leerLatido`), el latido y la respuesta con margen. */
@@ -311,7 +311,7 @@ export async function GET(req: Request) {
     enVuelo = 'reglas';
     try {
       const { vigilarReglas } = await import('@/lib/likida/reglas/vigilante');
-      const reglas = await vigilarReglas(new Date());
+      const reglas = await vigilarReglas(new Date(), { venceEn: venceBarridos });
       logger.info('cron.reglas.ok', { ...reglas });
       resultado.reglas = reglas;
       if (reglas.fallos > 0) huboFallo = true;
