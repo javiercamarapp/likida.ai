@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { after } from 'next/server';
 import { randomUUID } from 'crypto';
-// `sendText` ya no se importa aquí: el único envío que salía de esta ruta era
-// el aviso de rate limit, y ese aviso desapareció con el 429 (los mensajes
-// vuelven solos). Esta ruta solo recibe; quien contesta es el processor.
-import { verifyWebhookChallenge, verifySignature } from '@/lib/meta/client';
+// Esta ruta solo recibe; quien contesta es el processor. La ÚNICA excepción
+// es el aviso de mantenimiento (AUDITORÍA 24 · AGEN-7): con la palanca abajo
+// el processor no llega a correr, así que si no habla esta ruta no habla
+// nadie — y el chofer se queda tres horas sin una sola línea.
+import { verifyWebhookChallenge, verifySignature, sendText } from '@/lib/meta/client';
 import { processInbound, type InboundMessage, type ResultadoInbound } from '@/lib/likida/processor';
 import { rateLimit, bodyExcede } from '@/lib/ratelimit';
 import { logger } from '@/lib/logger';
 import { registrarEventoSeguridad } from '@/lib/seguridad/eventos';
 import { flushObservabilidad, codigoDeError } from '@/lib/observability/sentry';
-import { estaApagado } from '@/lib/likida/interruptores';
+import { leerInterruptor } from '@/lib/likida/interruptores';
 import {
   guardarEventosPendientes, pendientesYaConocidos, reclamarPendiente,
   marcarPendienteProcesado, anotarFalloPendiente, devolverIntentoPendiente,
@@ -296,11 +297,33 @@ export async function POST(req: NextRequest) {
       // ocurrió ANTES del código de salida (el inbox general): con la
       // palanca abajo aquí no se procesa nada — las filas durables esperan
       // al cron `wa-pendientes`, que las drena cuando la palanca suba.
-      if (await estaApagado('global')) {
+      const palanca = await leerInterruptor('global');
+      if (palanca !== 'encendido') {
         logger.warn('wa.entrante_apagado', {
           mensajes: permitidos.length,
+          palanca,
           ids: permitidos.map((m) => m.waMessageId),
         });
+        // ── AUDITORÍA 24 · AGEN-7 (MEDIO): APAGADO NO PUEDE SER MUDO ──────
+        //
+        // El interruptor SÍ corta y SÍ conserva: todo queda en
+        // `wa_evento_pendiente` y el cron lo drena cuando la palanca sube.
+        // Lo que no hacía era hablar. Escenario medido: se apaga a las 11:00
+        // por un incidente; a las 11:20 un chofer manda cinco fotos y un
+        // «listo», recibe la palomita de WhatsApp y NADA durante tres horas.
+        // Para él el sistema no está apagado: está roto, y llama a la
+        // oficina — que tampoco sabe.
+        //
+        // Solo con 'apagado', nunca con 'ilegible': ése es el fail-closed de
+        // un blip de cinco segundos de la base, y anunciar mantenimiento por
+        // un parpadeo sería decir algo que no es.
+        //
+        // UNA VEZ POR NÚMERO, en memoria del módulo — el mismo trato que la
+        // libreta de la ráfaga, y por el mismo motivo: no se puede escribir
+        // en la base durante un incidente cuya causa puede ser la base. El
+        // peor caso es un aviso por instancia de lambda, nunca uno por
+        // mensaje, y jamás el silencio.
+        if (palanca === 'apagado') await avisarMantenimiento(permitidos);
         await flushObservabilidad();
         return;
       }
@@ -557,6 +580,43 @@ interface WaWebhook {
 }
 
 /** Los acuses de entrega, que viven en `value.statuses` y no en `value.messages`. */
+/**
+ * A quién ya se le dijo que estamos en mantenimiento, y cuándo (AGEN-7).
+ * En memoria del módulo a propósito: ver el comentario del llamador.
+ */
+const avisadosDeApagado = new Map<string, number>();
+/** Media hora: un apagado más largo que eso merece que se lo recuerden. */
+const VENTANA_AVISO_APAGADO_MS = 30 * 60 * 1000;
+
+/**
+ * Le dice UNA vez a cada número que estamos en mantenimiento y que lo suyo
+ * quedó guardado. Best-effort puro: si Meta no lo acepta, el mensaje del
+ * chofer sigue en el inbox igual — esto es información, no el dinero.
+ */
+async function avisarMantenimiento(mensajes: InboundMessage[]): Promise<void> {
+  const ahora = Date.now();
+  // Se limpia lo viejo aquí y no con un timer: este Map vive lo que viva la
+  // instancia, y sin la poda un apagado largo lo dejaría creciendo.
+  for (const [tel, cuando] of avisadosDeApagado) {
+    if (ahora - cuando > VENTANA_AVISO_APAGADO_MS) avisadosDeApagado.delete(tel);
+  }
+  const numeros = [...new Set(mensajes.map((m) => m.from).filter(Boolean))];
+  for (const numero of numeros) {
+    if (avisadosDeApagado.has(numero)) continue;
+    avisadosDeApagado.set(numero, ahora);
+    try {
+      await sendText(numero, 'Estamos en *mantenimiento* ahorita 🛠️. Lo que me mandes queda guardado y lo proceso en cuanto vuelva — no lo mandes otra vez. Si es una emergencia, márcale directo a tu oficina. 🙏');
+    } catch (e) {
+      logger.warn('wa.aviso_apagado_falló', { err: e instanceof Error ? e.message : String(e) });
+    }
+  }
+}
+
+/** Solo para pruebas: el Map es de módulo y se comparte entre casos. */
+export function olvidarAvisosDeApagado(): void {
+  avisadosDeApagado.clear();
+}
+
 function extractStatuses(p: WaWebhook): WaEstado[] {
   const out: WaEstado[] = [];
   for (const entry of p.entry ?? []) {

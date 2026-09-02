@@ -34,7 +34,12 @@ vi.mock('@/lib/observability/sentry', () => ({ flushObservabilidad: vi.fn(async 
 // cableado el 15-ago-2026). Sin este mock corre el real, que falla CERRADO
 // —una base ilegible cuenta como apagado— y estas pruebas verían cero
 // mensajes procesados por una razón que no es la que están midiendo.
-vi.mock('@/lib/likida/interruptores', () => ({ estaApagado: vi.fn(async () => false) }));
+// AUDITORÍA 24 · AGEN-7: la ruta lee `leerInterruptor` (distingue «apagado»
+// de «no pude leer la palanca»); `estaApagado` se conserva para el resto.
+vi.mock('@/lib/likida/interruptores', () => ({
+  estaApagado: vi.fn(async () => false),
+  leerInterruptor: vi.fn(async () => 'encendido' as const),
+}));
 
 // `after()` fuera de una petición de Next lanza. Se recogen las tareas y se
 // corren a mano para poder AFIRMAR qué llegó al procesador.
