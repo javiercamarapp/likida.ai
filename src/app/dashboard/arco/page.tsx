@@ -3,6 +3,8 @@ import { EstadoVacio, KpiTile } from '../../admin/ui/kit';
 import { FormaConAviso, type ResultadoAccion } from '../../admin/ui/forma';
 import { requireSessionTenant } from '@/lib/auth/guard';
 import { resolverTenantEfectivo } from '@/lib/auth/tenant-efectivo';
+import { puedeVerRuta } from '@/lib/auth/visibilidad';
+import { puedeAdministrar } from '@/lib/auth/permisos';
 import { revalidatePath } from 'next/cache';
 import {
   listarSolicitudesArco, resolverSolicitudArco, ejecutarCancelacionArco, ejecutarOposicionArco,
@@ -20,6 +22,21 @@ const ETIQUETA_TIPO: Record<string, string> = {
 
 type Params = { tenant?: string; vista?: string; rol?: string };
 const RUTA = '/dashboard/arco';
+
+/**
+ * AUDITORÍA 24 — las tres acciones de esta pantalla se gateaban con
+ * `requireSessionTenant` a secas: solo «hay sesión y tiene flota». La PÁGINA
+ * sí gatea (`resolverTenantEfectivo` corre `puedeVerRuta`), pero una server
+ * action es un endpoint POST que no hereda esa puerta, y un encargado —que ve
+ * el área `operacion`, y por tanto esta ruta— podía resolver una solicitud
+ * ARCO, anonimizar al titular en la base y borrar sus conversaciones con un
+ * POST a mano. Contestarle a un titular en nombre del responsable obligado
+ * (LFPDPPP art. 31) es CONTROL de la cuenta: `puedeAdministrar`.
+ */
+const NO_AUTORIZADO = 'Tu rol no puede responder solicitudes ARCO: es una respuesta legal que firma el dueño de la flota.';
+function puedeResponderArco(rol: string): boolean {
+  return puedeVerRuta(rol, RUTA) && puedeAdministrar(rol);
+}
 
 /**
  * Solicitudes ARCO de ESTA flota — la responsable obligada a contestar en 20
@@ -44,6 +61,7 @@ export default async function ArcoPage({ searchParams }: { searchParams: Promise
     // AUDITORÍA 16, MEDIO: el superadmin que previsualiza una flota real
     // (?tenant=t-otra) no podía resolver — el action usaba el tenant de sesión.
     const s = await requireSessionTenant(RUTA);
+    if (!puedeResponderArco(s.rol)) return { error: NO_AUTORIZADO };
     const sp = await searchParams;
     let tenantEfectivo = s.tenantId;
     if (s.rol === 'superadmin' && sp?.tenant) {
@@ -74,6 +92,7 @@ export default async function ArcoPage({ searchParams }: { searchParams: Promise
   async function accionEjecutarCancelacion(_previo: ResultadoAccion, fd: FormData): Promise<ResultadoAccion> {
     'use server';
     const s = await requireSessionTenant(RUTA);
+    if (!puedeResponderArco(s.rol)) return { error: NO_AUTORIZADO };
     const sp = await searchParams;
     let tenantEfectivo = s.tenantId;
     if (s.rol === 'superadmin' && sp?.tenant) {
@@ -106,6 +125,7 @@ export default async function ArcoPage({ searchParams }: { searchParams: Promise
   async function accionRegistrarOposicion(_previo: ResultadoAccion, fd: FormData): Promise<ResultadoAccion> {
     'use server';
     const s = await requireSessionTenant(RUTA);
+    if (!puedeResponderArco(s.rol)) return { error: NO_AUTORIZADO };
     const sp = await searchParams;
     let tenantEfectivo = s.tenantId;
     if (s.rol === 'superadmin' && sp?.tenant) {
