@@ -59,7 +59,11 @@ export async function POST(req: NextRequest) {
   // Tenant efectivo + nombre de flota: regla COMPARTIDA con /conversaciones
   // (tenant.ts) — dos copias de una regla de autorización se desincronizan.
   const efectivo = await tenantEfectivoChat(sesion, req.nextUrl.searchParams.get('tenant'));
-  if (!efectivo) return NextResponse.json({ error: 'sin acceso' }, { status: 403 });
+  // AUDITORÍA 24 (auth): `null` con `?tenant=` presente es "no se pudo
+  // verificar la flota" (lectura caída), no "sin permiso" — 503, como
+  // `resolverTenantApi`. Sin `?tenant=` sigue siendo 403 real.
+  if (!efectivo) return NextResponse.json({ error: 'sin acceso' },
+    { status: req.nextUrl.searchParams.get('tenant') ? 503 : 403 });
   const { tenantId, nombreFlota } = efectivo;
 
   let cuerpo: unknown;
