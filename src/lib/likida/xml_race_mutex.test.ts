@@ -151,6 +151,10 @@ describe('processInbound — el brazo del XML respeta el mutex del viaje', () =>
 
     await processInbound(xmlDoc);
 
-    expect(releaseViajeLock, 'un lock que no se suelta bloquea el próximo XML del mismo viaje').toHaveBeenCalledWith('v1');
+    // AUDITORÍA 24 · BE-11: se suelta CON LA FIRMA del lease que tomó este
+    // turno. Sin ella, este `finally` le borraba el lock a un cierre que ya
+    // había entrado sobre el lease vencido.
+    expect(releaseViajeLock, 'un lock que no se suelta bloquea el próximo XML del mismo viaje')
+      .toHaveBeenCalledWith('v1', expect.any(String));
   });
 });

@@ -630,8 +630,13 @@ begin
     from pg_class where oid = 'public.wa_mensaje_procesado'::regclass;
 
   anon_intake := has_function_privilege('anon', 'public.intake_delta(uuid,integer)', 'execute');
-  anon_lock   := has_function_privilege('anon', 'public.try_lock_viaje(uuid,integer)', 'execute');
-  anon_unlock := has_function_privilege('anon', 'public.unlock_viaje(uuid)', 'execute');
+  -- AUDITORÍA 24 · BE-11 (mig. 0280): las dos funciones del mutex cambiaron de
+  -- firma para llevar el token del dueño. Se actualizan aquí porque el bloque
+  -- dejaría de compilar contra la firma vieja —`has_function_privilege` lanza
+  -- si la función no existe— y lo que este bloque asevera (que un anónimo no
+  -- puede soltar el mutex de un viaje ajeno) es exactamente lo mismo.
+  anon_lock   := has_function_privilege('anon', 'public.try_lock_viaje(uuid,integer,uuid)', 'execute');
+  anon_unlock := has_function_privilege('anon', 'public.unlock_viaje(uuid,uuid)', 'execute');
   -- Y el pipeline SÍ tiene que poder: una revocación de más rompe la barrera
   -- entera, que es un fallo tan caro como el hueco que cierra.
   svc_intake  := has_function_privilege('service_role', 'public.intake_delta(uuid,integer)', 'execute');
@@ -15383,4 +15388,48 @@ begin
 
   raise exception E'LIQUIDACION_SELLOS_ENTREGA_0279  col-operador=%  col-oficina=%  nulables=%  sin-default=%  idx-parcial=%   (esperado t / t / t / t / t)',
     col_operador, col_oficina, nulables, sin_default, idx_parcial;
+end $$;
+
+-- ── 227. El mutex del viaje tiene dueño y el inbox ordena por la hora del mensaje (mig. 0280) ──
+--
+-- AUDITORÍA 24, BE-11 (MEDIO) y AGEN-6 (MEDIO). `unlock_viaje` borraba el lease
+-- de quien fuera —el XML que se pasaba de su TTL le quitaba el lock al cierre y
+-- entraba un segundo «listo» completo— y el orden causal del inbox lo daba
+-- `recibido_en`, la hora de NUESTRO servidor, no la del mensaje: un «listo» que
+-- Meta entregaba antes que la última foto cerraba sin ella, irreversible.
+-- Se asevera lo que la base puede demostrar: la columna del dueño existe, las
+-- dos funciones del lock llevan el parámetro del token, `wa_orden_evento` existe
+-- y es IMMUTABLE (si no, no se puede indexar ni razonar sobre ella), y las dos
+-- RPC del inbox la USAN en su cuerpo.
+-- Esperado: MUTEX_Y_ORDEN_0280 col-token=t unlock-token=t trylock-token=t orden-fn=t orden-inmutable=t listar-usa=t reclamar-usa=t
+do $$
+declare
+  col_token boolean; unlock_token boolean; trylock_token boolean;
+  orden_fn boolean; orden_inmutable boolean; listar_usa boolean; reclamar_usa boolean;
+begin
+  select exists(select 1 from information_schema.columns
+                where table_schema = 'public' and table_name = 'viaje_lock'
+                  and column_name = 'token' and data_type = 'uuid') into col_token;
+
+  select exists(select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                where n.nspname = 'public' and p.proname = 'unlock_viaje'
+                  and pg_get_function_identity_arguments(p.oid) like '%p_token uuid%') into unlock_token;
+  select exists(select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                where n.nspname = 'public' and p.proname = 'try_lock_viaje'
+                  and pg_get_function_identity_arguments(p.oid) like '%p_token uuid%') into trylock_token;
+
+  select exists(select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                where n.nspname = 'public' and p.proname = 'wa_orden_evento') into orden_fn;
+  select coalesce((select p.provolatile = 'i' from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                   where n.nspname = 'public' and p.proname = 'wa_orden_evento' limit 1), false) into orden_inmutable;
+
+  select coalesce((select pg_get_functiondef(p.oid) ilike '%wa_orden_evento%'
+                   from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                   where n.nspname = 'public' and p.proname = 'listar_wa_pendientes' limit 1), false) into listar_usa;
+  select coalesce((select pg_get_functiondef(p.oid) ilike '%wa_orden_evento%'
+                   from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                   where n.nspname = 'public' and p.proname = 'reclamar_wa_pendiente' limit 1), false) into reclamar_usa;
+
+  raise exception E'MUTEX_Y_ORDEN_0280  col-token=%  unlock-token=%  trylock-token=%  orden-fn=%  orden-inmutable=%  listar-usa=%  reclamar-usa=%   (esperado t / t / t / t / t / t / t)',
+    col_token, unlock_token, trylock_token, orden_fn, orden_inmutable, listar_usa, reclamar_usa;
 end $$;

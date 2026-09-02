@@ -71,9 +71,9 @@ import {
   resolveOperador, getOpenViaje, viajeAbiertoDesdeMs, liquidacionRecienteDe, getTenantContext, type ResolvedOperador,
   sellarEntregaLiquidacion, type LiquidacionReciente,
   loadConversation, saveConversation, claimMessage,
-  acquireViajeLock, intentarLockViaje, TTL_LOCK_CIERRE_MS,
+  acquireViajeLock, intentarLockViaje, TTL_LOCK_CIERRE_MS, nuevoTokenDeLock,
   releaseViajeLock, releaseMessageClaim, completarMessageClaim,
-  intakeDelta, esperarIntake, ConsultaFallida, OperadorAmbiguo, type ConvTurn,
+  intakeDelta, esperarIntake, fotoAnteriorSinProcesar, ConsultaFallida, OperadorAmbiguo, type ConvTurn,
   buscarTenantPorTelefono,
   iniciarRenovacionMessageClaim,
 } from '@/lib/likida/conv';
@@ -1333,6 +1333,8 @@ export async function processInbound(msg: InboundMessage, opts: OpcionesInbound 
  *  claim y el reloj. Nunca lanza (el `catch` general vive aquí). */
 async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClaim: () => Promise<void>, opts: OpcionesInbound): Promise<void> {
   let lockedViaje: string | null = null;
+  /** BE-11: la firma del lease que TOMÓ este turno; solo con ella se suelta. */
+  let tokenViaje: string | undefined;
   // Contexto para el `catch` general. Vive FUERA del `try` a propósito: sin esto
   // el log de un fallo salía como `{ id, de, err }` — sin tenant, sin viaje y sin
   // saber si la liquidación había cerrado—, así que era imposible reconstruir
@@ -3060,7 +3062,12 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
         // emparejamiento contra la carrera. Si sigue ocupado tras esperar, se le
         // pide al operador que reenvíe en vez de proceder sin exclusividad —
         // proceder es exactamente la carrera que esto existe para cerrar.
-        const xmlLock = await acquireViajeLock(viajeId, { maxWaitMs: reloj.acotar(12_000) });
+        // BE-11: el lease se FIRMA, y el TTL es el mismo que el del cierre
+        // (por omisión). Con 60 s contra 120 s, este lease vencía a media
+        // escritura, el «listo» entraba encima, y el `finally` de aquí le
+        // borraba el lock al cierre.
+        const xmlToken = nuevoTokenDeLock();
+        const xmlLock = await acquireViajeLock(viajeId, { maxWaitMs: reloj.acotar(12_000), token: xmlToken });
         if (!xmlLock) {
           logger.warn('xml.lock_ocupado', { viaje: viajeId, tenant: op.tenantId });
           await sendText(msg.from, 'Estoy terminando de procesar otro XML de tu viaje 🙏. Reenvía este en un momento.');
@@ -3192,7 +3199,7 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
           // 1.8: conservar el XML crudo (CFF 30). Best-effort.
           await saveCfdiXmlRaw(op.tenantId, xml.uuid, gastoId, xmlText!);
         } finally {
-          await releaseViajeLock(viajeId);
+          await releaseViajeLock(viajeId, xmlToken);
         }
       } finally {
         await intakeDelta(viajeId, -1); // libera el contador pase lo que pase
@@ -3609,6 +3616,25 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
     const intakeOk = await esperarIntake(viajeId, reloj.acotar(20_000));
     if (!intakeOk) logger.warn('intake.barrera_timeout', { viaje: viajeId, restanteMs: reloj.restante() });
 
+    // ── AUDITORÍA 24 · AGEN-6 (MEDIO): EL «LISTO» ADELANTADO ────────────────
+    //
+    // La barrera de arriba solo ve las fotos que YA hicieron `+1`. Meta no
+    // garantiza el orden entre POSTs: la foto que el chofer mandó ANTES puede
+    // aterrizar en el inbox DESPUÉS de este «listo», y entonces el contador
+    // está en cero porque nadie lo tocó — se cierra sin el último ticket, y la
+    // liquidación es irreversible (0036/0037). La 0280 pone el orden de la
+    // cola por la hora del MENSAJE; esto cubre al turno que ya está corriendo.
+    //
+    // Se pregunta aquí y no antes a propósito: después de la barrera la foto
+    // ya tuvo su ventana para llegar a la tabla. Y solo para un «listo» con
+    // hora de Meta — sin ella no se adivina, igual que la guardia de arriba.
+    if (msg.timestampMs && pareceCierre(msg.text) && await fotoAnteriorSinProcesar(msg.from, msg.timestampMs)) {
+      logger.warn('cierre.foto_anterior_pendiente', { viaje: viajeId, tenant: op.tenantId, mensajeMs: msg.timestampMs });
+      await say('Todavía me falta leer una foto que mandaste *antes* de este *listo* 📸. Dame un momento y cierro tu liquidación con ella adentro — no la vuelvas a mandar.');
+      await soltarClaim();
+      return;
+    }
+
     // Mutex para serializar cierres concurrentes (dos "listo" a la vez).
     //
     // Si NO se consigue, se ABANDONA el turno. Antes solo se dejaba un warn y se
@@ -3651,11 +3677,13 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
     // se libera el claim para que el mensaje no quede atascado. No resuelve
     // "el segundo mensaje se contesta", pero sí "el operador sabe que no se
     // perdió, y puede volver a mandarlo".
+    const tokenCierre = nuevoTokenDeLock();
     const lock = await intentarLockViaje(viajeId, {
-      ttlMs: TTL_LOCK_CIERRE_MS, maxWaitMs: reloj.acotar(12_000),
+      ttlMs: TTL_LOCK_CIERRE_MS, maxWaitMs: reloj.acotar(12_000), token: tokenCierre,
     });
     if (lock === 'obtenido') {
       lockedViaje = viajeId;
+      tokenViaje = tokenCierre;
     } else {
       // Los dos motivos se cuentan por separado: 'ocupado' es el sistema
       // funcionando (otro turno en vuelo) y 'indeterminado' es la base sin
@@ -4382,6 +4410,6 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
         : 'Perdón, se me trabó tantito. ¿Me reenvías tu último mensaje? 🙏';
     try { await sendText(msg.from, aviso); } catch { /* best-effort */ }
   } finally {
-    if (lockedViaje) await releaseViajeLock(lockedViaje);
+    if (lockedViaje) await releaseViajeLock(lockedViaje, tokenViaje);
   }
 }
