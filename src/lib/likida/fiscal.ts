@@ -29,7 +29,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { traerTodo, conteo, exigir } from './pg';
+import { exigir } from './pg';
 import { acotada } from './presupuesto';
 import { round2, hoyMx, inicioDiaMx, finDiaMx } from '@/lib/formato';
 import { identificarComercio } from './facturacion/identificar';
