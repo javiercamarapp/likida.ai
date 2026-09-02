@@ -910,14 +910,110 @@ async function atenderJornadaSiAplica(args: {
 }
 
 /**
- * Cierra las ráfagas que quedaron abiertas y le dice a cada chofer lo suyo.
+ * ¿Este error —o alguno de sus envoltorios— es el tope de $/día de IA?
+ *
+ * AUDITORÍA 24, TC-N1 (CRÍTICO, 3ª vez que el tope apaga el producto en
+ * silencio): `generateWithTools` envuelve CUALQUIER excepción del ciclo en
+ * `PartialExecutionError` (`openrouter.ts`), así que `e instanceof
+ * LlmBudgetExceededError` sobre lo que llega al processor es `false` SIEMPRE
+ * en producción — la rama de degradado a cuadre determinístico era código
+ * muerto, y la prueba que la "cubría" rechazaba con el error DESNUDO. Se
+ * recorre la cadena de `cause` (tope de 6 niveles: no hay envoltorio legítimo
+ * más hondo, y un `cause` circular no puede colgar el turno). Se acepta
+ * también por `name`: en pruebas y con dos copias del módulo `instanceof`
+ * puede fallar por identidad de clase, y el nombre es lo que `budget.ts` fija.
+ *
+ * Nota: el constructor `llm` puede exportar `esErrorDePresupuesto` desde
+ * `src/lib/llm/`; cuando exista, este helper local se sustituye por aquél.
+ */
+function esErrorDePresupuesto(e: unknown): boolean {
+  let actual: unknown = e;
+  for (let nivel = 0; nivel < 6 && actual != null; nivel++) {
+    if (actual instanceof LlmBudgetExceededError) return true;
+    if (actual instanceof Error && actual.name === 'LlmBudgetExceededError') return true;
+    actual = (actual as { cause?: unknown }).cause;
+  }
+  return false;
+}
+
+/** El error de fondo, sin el envoltorio del ciclo de tools (ver arriba). */
+function causaDeFondo(e: unknown): unknown {
+  return e instanceof PartialExecutionError ? e.cause : e;
+}
+
+/** Colofón que todo cuadre DEGRADADO lleva: dice sin rodeos que el viaje sigue
+ *  abierto (AUDITORÍA 24, AGEN-10, reincidente desde la 22). El texto se
+ *  añade DESPUÉS de las guardias, porque `guardiaCifras` sustituye el `reply`
+ *  entero por `resumenCuadre` y se lo comería. */
+const COLOFON_NO_CERRE = 'Todavía *NO* cerré tu liquidación: tu viaje sigue abierto. En un momento vuelve a escribirme *listo* y la cierro.';
+const COLOFON_SIN_PRESUPUESTO = 'Hoy tu flota ya agotó su cupo de IA, así que todavía *NO* cerré tu liquidación: tu viaje sigue abierto y tus comprobantes quedan guardados. Mañana escríbeme *listo* otra vez, o pídele a tu contralor que suba el tope hoy.';
+
+/**
+ * LA BASE ES LA AUTORIDAD sobre si un viaje cerró.
+ *
+ * AUDITORÍA 24, AGEN-1 (CRÍTICO, 3ª ronda) + AGEN-A1/BE-1 (ALTO, 2ª ronda).
+ * `guardar_liquidacion_tx` puede COMMITEAR y aun así la tool reportar fallo:
+ * `acotada` se rinde a los 8 s y el RPC termina del lado del servidor; o el
+ * reloj del agente vence con la tool en vuelo. En los dos casos el viaje
+ * queda `liquidado`, los PDF en el bucket, y el `ToolCallRecord` dice
+ * `error`. Por eso, tras CUALQUIER resultado no-OK de `guardar_liquidacion`,
+ * se relee la liquidación y se narra lo que la base dice — en el camino feliz
+ * y en el de excepción, con UN SOLO registro sintético.
+ *
+ * El registro sintético habla el VOCABULARIO DE LA TOOL (`pdf_generado`,
+ * `pdf_contralor_generado`), que es lo que leen los consumidores de abajo
+ * (`agentTools.find(...).result.pdf_generado`, `guardia.ts`). El anterior
+ * traía `pdf_url` —vocabulario de la tabla— y nadie lo leía: al chofer se le
+ * negaba un PDF que sí existía. Los dos ejemplares se suben ANTES del RPC
+ * (`tools.ts`), así que `pdf_url != null` implica que existen ambos.
+ *
+ * Tres respuestas, nunca dos: si la lectura truena, `no_verificable` — un
+ * error de red no puede leerse como «no se cerró».
+ */
+async function confirmarCierreEnBase(tenantId: string, viajeId: string): Promise<
+  | { estado: 'cerrado'; liqId: string; registro: ToolCallRecord }
+  | { estado: 'abierto' }
+  | { estado: 'no_verificable'; err: string }
+> {
+  try {
+    const liq = await getLiquidacionDeViaje(tenantId, viajeId);
+    if (!liq) return { estado: 'abierto' };
+    const hayPdf = liq.pdfUrl != null;
+    return {
+      estado: 'cerrado',
+      liqId: liq.id,
+      registro: {
+        toolName: 'guardar_liquidacion',
+        args: {},
+        result: { liquidacion_id: liq.id, pdf_generado: hayPdf, pdf_contralor_generado: hayPdf },
+        durationMs: 0,
+      } as ToolCallRecord,
+    };
+  } catch (e) {
+    return { estado: 'no_verificable', err: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+/**
+ * Cierra la ráfaga del chofer que se quedó sin reloj y le dice lo suyo.
  *
  * AUDITORÍA 22, AGEN-A2. Solo habla si hay algo que decir: una libreta sin
  * incidencias y sin acuses no genera un mensaje — el módulo de ráfaga existe
  * precisamente para no mandar siete.
+ *
+ * AUDITORÍA 24, AGEN-A2/BE-2 (ALTO, 2ª ronda): cerraba y BORRABA las libretas
+ * de TODOS los choferes del proceso. Con pool de 5 cadenas y reloj compartido,
+ * `sin_tiempo` es el final NORMAL de cada vuelta del cron: la cadena que se
+ * quedaba sin reloj le mandaba al chofer A «de tus 4 fotos, 2 no las leí»
+ * mientras su 4ª foto seguía en vuelo, y el cierre real le mandaba después
+ * «de tus 2 fotos…» sobre una libreta recreada en cero. Dos cifras, ninguna
+ * verdadera. Ahora recibe el teléfono del mensaje que se quedó sin presupuesto
+ * y cierra SOLO esa libreta; las de los demás siguen vivas para su propio
+ * cierre.
  */
-async function cerrarRafagasPorCorte(): Promise<void> {
-  for (const { viajeId, telefono } of bandejasAbiertas()) {
+async function cerrarRafagasPorCorte(telefono: string): Promise<void> {
+  for (const { viajeId, telefono: tel } of bandejasAbiertas()) {
+    if (tel !== telefono) continue;
     const b = cerrarRafaga(viajeId);
     if (!telefono || b.vistas === 0) continue;
     const linea = lineaIncidencias(b.vistas, b.incidencias);
@@ -958,7 +1054,7 @@ export async function processInbound(msg: InboundMessage, opts: OpcionesInbound 
     //
     // Se cierra lo que haya y se dice. Cuesta un envío; el silencio costaba
     // que el chofer no supiera que tres de sus fotos no se leyeron.
-    await cerrarRafagasPorCorte();
+    await cerrarRafagasPorCorte(msg.from);
     return 'sin_tiempo';
   }
 
@@ -3342,6 +3438,9 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
     let reply = '';
     let closed = false;
     let agentTools: ToolCallRecord[] = [];
+    // Texto que se PEGA al final del `reply` después de las guardias (AGEN-10):
+    // «no cerré» explícito en los degradados. Ver `COLOFON_NO_CERRE`.
+    let colofon = '';
 
     // ── ¿ALCANZA PARA EL AGENTE? ─────────────────────────────────────────────
     // El agente es lo caro y lo último: si la barrera y el mutex se comieron el
@@ -3356,10 +3455,11 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
       logger.error('agente.sin_presupuesto', { viaje: viajeId, gastadoMs: reloj.gastado(), restanteMs: reloj.restante() });
       try {
         const liq = await cuadrarDesdeDB(op.tenantId, viajeId);
-        await say(resumenCuadre(liq, false, 'operador'));
+        // AGEN-10: el degradado dice sin rodeos que el viaje sigue abierto.
+        await say(`${resumenCuadre(liq, false, 'operador')}\n\n${COLOFON_NO_CERRE}`);
       } catch (e) {
         logger.error('agente.sin_presupuesto_fallback', { err: e instanceof Error ? e.message : String(e) });
-        await say('Ya tengo tus comprobantes 👍. Dame un momento y te paso el cuadre.');
+        await say(`Ya tengo tus comprobantes 👍. ${COLOFON_NO_CERRE}`);
       }
       return;
     }
@@ -3392,6 +3492,37 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
         : 'Perdón, no alcancé a procesar eso. ¿Me lo repites?');
       agentTools = res.toolCalls;
       closed = res.toolCalls.some((t) => t.toolName === 'guardar_liquidacion' && !t.error);
+      // ── AUDITORÍA 24, AGEN-1 (CRÍTICO, 3ª ronda): LA BASE ES LA AUTORIDAD
+      // TAMBIÉN EN EL CAMINO FELIZ. La tool puede reportar `error` con el
+      // RPC ya commiteado (`acotada` a 8 s; el servidor termina a los 8.4).
+      // El modelo lee `{error}` y escribe «no pude cerrar»; el viaje está
+      // `liquidado`; `guardiaEstado(cerro:false)` lo refuerza; y el segundo
+      // «listo» del chofer choca con «ya quedó liquidado, pídele el PDF a tu
+      // contralor». Hasta aquí la relectura vivía SOLO en el `catch`.
+      if (!closed && res.toolCalls.some((t) => t.toolName === 'guardar_liquidacion')) {
+        const enBase = await confirmarCierreEnBase(op.tenantId, viajeId);
+        if (enBase.estado === 'cerrado') {
+          // `error`, no `warn`: un cierre que la tool narró como fallo es un
+          // estado que hay que mirar (Sentry), aunque aquí se repare.
+          logger.error('agent.cierre_commiteado_tras_fallo_tool', { tenant: op.tenantId, viaje: viajeId, liquidacion: enBase.liqId });
+          closed = true;
+          agentTools = [...res.toolCalls.filter((t) => t.toolName !== 'guardar_liquidacion'), enBase.registro];
+          try {
+            reply = resumenCuadre(await cuadrarDesdeDB(op.tenantId, viajeId), true, 'operador');
+          } catch {
+            reply = 'Ya cerré tu liquidación ✅. Te mando el PDF.';
+          }
+        } else if (enBase.estado === 'no_verificable') {
+          // Fail-closed y DICHO: no se afirma ni «cerré» ni «no cerré».
+          logger.error('agent.cierre_no_verificable', { tenant: op.tenantId, viaje: viajeId, err: enBase.err });
+          // Redactado para que `guardiaEstado` no lo lea como afirmación de
+          // cierre: no dice ni «quedó cerrada» ni «no cerré».
+          reply = 'No pude confirmar cómo va tu liquidación. En un minuto escríbeme *listo* otra vez y te lo digo. 🙏';
+        } else {
+          logger.warn('agent.cierre_fallido_viaje_sigue_abierto', { tenant: op.tenantId, viaje: viajeId });
+          colofon = 'Tu viaje sigue abierto (todavía *NO* cerré tu liquidación).';
+        }
+      }
       ctxCerro = closed;
       // AUDITORÍA 10, MEDIO REINCIDENTE: si el ciclo cruzó de proveedor a medio
       // camino (primario en 3 rondas + fallback en la 4ª), `res.model` es solo
@@ -3471,21 +3602,22 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
       let cierreParcial: ToolCallRecord | undefined =
         recuperar ? parcial?.find((t) => t.toolName === 'guardar_liquidacion' && !t.error) : undefined;
       if (recuperar && !cierreParcial && parcial?.some((t) => t.toolName === 'guardar_liquidacion')) {
-        try {
-          const liq = await getLiquidacionDeViaje(op.tenantId, viajeId);
-          if (liq) {
-            logger.warn('agent.cierre_commiteado_tras_abortar', { viaje: viajeId, liquidacion: liq.id });
-            cierreParcial = {
-              toolName: 'guardar_liquidacion',
-              result: { liquidacion_id: liq.id, pdf_url: liq.pdfUrl },
-            } as ToolCallRecord;
-          }
-        } catch (errLiq) {
-          logger.error('agent.cierre_no_verificable', { viaje: viajeId, err: errLiq instanceof Error ? errLiq.message : String(errLiq) });
+        // AGEN-A1/BE-1: el MISMO registro sintético que el camino feliz, con
+        // el vocabulario de la tool (`pdf_generado`), que es lo que leen los
+        // consumidores de abajo. El anterior traía `pdf_url` y nadie lo leía.
+        const enBase = await confirmarCierreEnBase(op.tenantId, viajeId);
+        if (enBase.estado === 'cerrado') {
+          logger.warn('agent.cierre_commiteado_tras_abortar', { viaje: viajeId, liquidacion: enBase.liqId });
+          cierreParcial = enBase.registro;
+        } else if (enBase.estado === 'no_verificable') {
+          logger.error('agent.cierre_no_verificable', { viaje: viajeId, err: enBase.err });
         }
       }
       if (cierreParcial) {
-        agentTools = parcial!;
+        // Sin el registro con `error:'Timeout'`: la guardia y el bloque del
+        // PDF buscan `guardar_liquidacion && !t.error`, y con los dos en la
+        // lista el `find` podía caer en el fallido según el orden.
+        agentTools = [...parcial!.filter((t) => t.toolName !== 'guardar_liquidacion'), cierreParcial];
         closed = true;
         // AUDITORÍA 7, ALTO REINCIDENTE de ronda 6: `ctxCerro` es el Único campo
         // que el log del catch general trae para distinguir "no pasó nada" de
@@ -3520,10 +3652,17 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
         // No es lo mismo agotar el presupuesto (el motor SÍ puede cuadrar
         // solo, con las cifras reales de la base) que un error de código (ahí
         // sí hay que decir "se me trabó" y no inventar que se resolvió).
-        const agotoPresupuesto = e instanceof LlmBudgetExceededError;
-        const transitorio = isTransientError(e) || agotoPresupuesto;
+        //
+        // AUDITORÍA 24, TC-N1 (CRÍTICO): ese `instanceof` se hacía sobre el
+        // ENVOLTORIO (`PartialExecutionError`), así que en producción daba
+        // `false` siempre y esta rama seguía muerta. Se decide sobre la causa
+        // de fondo, atravesando envoltorios (`esErrorDePresupuesto`).
+        const agotoPresupuesto = esErrorDePresupuesto(e);
+        const transitorio = isTransientError(causaDeFondo(e)) || agotoPresupuesto;
         logger.error('agent.fail', { tenant: op.tenantId, viaje: viajeId, operador: op.operadorId, transitorio, agotoPresupuesto, err: e instanceof Error ? e.message : String(e) });
-        reply = 'Perdón, se me trabó el sistema tantito. ¿Me reenvías tu último mensaje?';
+        reply = agotoPresupuesto
+          ? COLOFON_SIN_PRESUPUESTO
+          : 'Perdón, se me trabó el sistema tantito. ¿Me reenvías tu último mensaje?';
 
         // ── EL MOTOR NO NECESITA AL LLM PARA CUADRAR (RES-15) ─────────────
         //
@@ -3546,7 +3685,10 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
         if (transitorio) {
           try {
             reply = resumenCuadre(await cuadrarDesdeDB(op.tenantId, viajeId), false, 'operador');
-            logger.warn('agent.degradado_a_cuadre', { tenant: op.tenantId, viaje: viajeId });
+            // AGEN-10: el cuadre degradado dice que NO cerró; con el tope de
+            // IA, además, por qué y qué hacer (TC-N1). Se pega tras las guardias.
+            colofon = agotoPresupuesto ? COLOFON_SIN_PRESUPUESTO : COLOFON_NO_CERRE;
+            logger.warn('agent.degradado_a_cuadre', { tenant: op.tenantId, viaje: viajeId, agotoPresupuesto });
           } catch (eDeg) {
             // Si NI ESO se puede, se queda el mensaje de arriba: es la verdad.
             logger.error('agent.degradado_fallo', { viaje: viajeId, err: eDeg instanceof Error ? eDeg.message : String(eDeg) });
@@ -3677,6 +3819,10 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
         reply = est.reply;
       }
     }
+    // El colofón «no cerré» va DESPUÉS de las guardias (AGEN-10): la de cifras
+    // sustituye el texto entero y lo perdía. Solo se pone si de verdad no
+    // cerró — un cierre recuperado por la base lo deja sin efecto.
+    if (colofon && !closed && !reply.includes(colofon)) reply = `${reply}\n\n${colofon}`;
 
     const entregado = await say(reply);
 
