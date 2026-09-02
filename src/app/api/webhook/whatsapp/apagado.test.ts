@@ -76,7 +76,8 @@ vi.mock('next/server', async (orig) => {
   return { ...real, after: (fn: () => unknown) => { pendientes.push(fn); } };
 });
 
-const { POST, olvidarAvisosDeApagado } = await import('./route');
+const { POST } = await import('./route');
+const { olvidarAvisosDeApagado } = await import('./avisos_apagado');
 
 const firmar = (body: string) =>
   'sha256=' + crypto.createHmac('sha256', SECRETO).update(body).digest('hex');

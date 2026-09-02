@@ -12,6 +12,7 @@ import { logger } from '@/lib/logger';
 import { registrarEventoSeguridad } from '@/lib/seguridad/eventos';
 import { flushObservabilidad, codigoDeError } from '@/lib/observability/sentry';
 import { leerInterruptor } from '@/lib/likida/interruptores';
+import { avisadosDeApagado, VENTANA_AVISO_APAGADO_MS } from './avisos_apagado';
 import {
   guardarEventosPendientes, pendientesYaConocidos, reclamarPendiente,
   marcarPendienteProcesado, anotarFalloPendiente, devolverIntentoPendiente,
@@ -581,14 +582,6 @@ interface WaWebhook {
 
 /** Los acuses de entrega, que viven en `value.statuses` y no en `value.messages`. */
 /**
- * A quién ya se le dijo que estamos en mantenimiento, y cuándo (AGEN-7).
- * En memoria del módulo a propósito: ver el comentario del llamador.
- */
-const avisadosDeApagado = new Map<string, number>();
-/** Media hora: un apagado más largo que eso merece que se lo recuerden. */
-const VENTANA_AVISO_APAGADO_MS = 30 * 60 * 1000;
-
-/**
  * Le dice UNA vez a cada número que estamos en mantenimiento y que lo suyo
  * quedó guardado. Best-effort puro: si Meta no lo acepta, el mensaje del
  * chofer sigue en el inbox igual — esto es información, no el dinero.
@@ -610,11 +603,6 @@ async function avisarMantenimiento(mensajes: InboundMessage[]): Promise<void> {
       logger.warn('wa.aviso_apagado_falló', { err: e instanceof Error ? e.message : String(e) });
     }
   }
-}
-
-/** Solo para pruebas: el Map es de módulo y se comparte entre casos. */
-export function olvidarAvisosDeApagado(): void {
-  avisadosDeApagado.clear();
 }
 
 function extractStatuses(p: WaWebhook): WaEstado[] {

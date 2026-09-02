@@ -11,7 +11,7 @@ vi.mock('@upstash/qstash', () => ({
   Receiver: class { verify = async () => firmaValida; },
 }));
 const procesarLoteEnCola = vi.fn(async () => new Response(JSON.stringify({ corrio: true }), { status: 200 }));
-vi.mock('../route', () => ({ procesarLoteEnCola: (...a: unknown[]) => procesarLoteEnCola(...(a as [])) }));
+vi.mock('../lote', () => ({ procesarLoteEnCola: (...a: unknown[]) => procesarLoteEnCola(...(a as [])) }));
 vi.mock('@/lib/likida/interruptores', () => ({ estaApagado: async () => false }));
 vi.mock('@/lib/supabase/admin', () => ({ supabaseAdmin: () => ({ from: () => ({ select: () => ({ in: () => ({ is: async () => ({ data: [], error: null }) }) }) }) }) }));
 const { POST } = await import('./route');

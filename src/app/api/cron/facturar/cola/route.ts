@@ -5,14 +5,15 @@ import { logger } from '@/lib/logger';
 import { hoyMx } from '@/lib/formato';
 import { estaApagado } from '@/lib/likida/interruptores';
 import { registrarLatido } from '@/lib/admin/salud';
-import { procesarLoteEnCola, type FilaCola } from '../route';
+import { procesarLoteEnCola, type FilaCola } from '../lote';
 
 export const runtime = 'nodejs';
 // AUDITORÍA 18 (M2, B12): decía 600 "porque QStash permite 10 min de timeout".
 // QStash es el CLIENTE: espera más, no deja correr más. El plan del equipo
 // está verificado como pro, tope 300s (`presupuesto.ts`, `webhook/whatsapp/
 // route.ts`), y el corte real del lote es `PRESUPUESTO_LOTE_MS - MARGEN_LOTE_MS`
-// de `../route.ts`, derivado de SU maxDuration = 300 — o sea 150s de trabajo
+// de `../lote.ts`, derivado de `TOPE_DURACION_S` = 300 (el mismo que declara
+// `../route.ts` en su `maxDuration`) — o sea 150s de trabajo
 // útil. Con 600 aquí, el número escrito no era el que la ruta respetaba ni el
 // que la plataforma concede, y quien subiera MARGEN_LOTE_MS "porque tengo
 // 600s" dimensionaría contra un presupuesto que no existe. Lo que esta cola

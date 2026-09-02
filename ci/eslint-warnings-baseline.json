@@ -63,7 +63,7 @@
     "src/lib/likida/fiscal_agregado.test.ts::security/detect-unsafe-regex": 1,
     "src/lib/likida/frontera_datos_guardiana.test.ts::security/detect-non-literal-fs-filename": 3,
     "src/lib/likida/intake/cfdi.ts::security/detect-unsafe-regex": 1,
-    "src/lib/likida/intake/cfdi.ts::security/detect-non-literal-fs-filename": 1,
+    "src/lib/likida/intake/cfdi_imagen.ts::security/detect-non-literal-fs-filename": 1,
     "src/lib/likida/intake/desglose_peaje.ts::security/detect-unsafe-regex": 2,
     "src/lib/likida/intake/sanitizar.ts::security/detect-unsafe-regex": 1,
     "src/lib/likida/jornada/orden-asientos.test.ts::security/detect-non-literal-fs-filename": 1,

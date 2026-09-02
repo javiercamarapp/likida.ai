@@ -51,6 +51,7 @@ Esto está **probado** (S41 de la auditoría 24) y **vigilado**: el bloque
 | **0290** | Forma de teléfono/RFC/año/km/placas + `app_user.operador_id` por tenant (DAT-10/11) | Un operador sin celular cargado por el ERP **le impide a CUALQUIER otra flota** dar de alta al suyo (`23505 … Key ()=()`). |
 | **0291** | Forma de `wa_conversacion.estado`, `tenant.perfil` y del expediente ARCO (DAT-13) | Una solicitud ARCO puede nacer sin titular y ya vencida. |
 | **0292** | Las policies `tenant_data`/`tenant_finanzas` quedan de **solo lectura** (SEG-2) | Un contador con su cookie y la anon key puede `PATCH /rest/v1/liquidacion` con `curl`: la cifra cambia, el PDF archivado dice otra, y la bitácora no tiene entrada. |
+| **0300** | Reconcilia `gasto_no_tras_liquidar()`: la 0283 (fiscal) y la 0299 (revision) redefinieron la MISMA función en paralelo sin saberlo, y `create or replace` se queda con la última entera — la 0299 se llevó la mitad de la 0283 (mover un gasto FUERA de un viaje liquidado dejaba de rebotar). Solo lo encontró la batería completa contra Postgres real, no ninguna prueba de TypeScript. | Un gasto puede moverse de un viaje ya liquidado a uno abierto sin que el trigger lo impida: la liquidación firmada deja de reflejar los gastos reales del viaje. |
 
 ## Antes de aplicar
 

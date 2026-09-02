@@ -38,11 +38,11 @@ export const dynamic = 'force-dynamic';
 
 /** Lo que se puede pedir en `?revision=`. `firmadas` es el default y NO es una
  *  columna: es «aprobada o ajustada», o sea lo asentable. */
-export type FiltroRevision = RevisionLiquidacion | 'firmadas' | 'todas';
+type FiltroRevision = RevisionLiquidacion | 'firmadas' | 'todas';
 const FILTROS: readonly FiltroRevision[] = [...REVISIONES, 'firmadas', 'todas'];
-export const FILTRO_DEFECTO: FiltroRevision = 'firmadas';
+const FILTRO_DEFECTO: FiltroRevision = 'firmadas';
 
-export interface LiquidacionApi {
+interface LiquidacionApi {
   id: string;
   viajeId: string;
   folio: string | null;
@@ -109,7 +109,7 @@ function aLiquidacionApi(r: FilaCruda): LiquidacionApi {
 /** Lee `?revision=`. No recorta en silencio: un valor desconocido es 400, no
  *  «te devuelvo el default» — el integrador que escribió `aprobadas` en plural
  *  se llevaría una lista que no es la que pidió. */
-export function leerFiltroRevision(url: string): { ok: true; filtro: FiltroRevision } | { ok: false; respuesta: NextResponse<CuerpoError> } {
+function leerFiltroRevision(url: string): { ok: true; filtro: FiltroRevision } | { ok: false; respuesta: NextResponse<CuerpoError> } {
   const crudo = new URL(url).searchParams.get('revision');
   if (crudo === null || crudo === '') return { ok: true, filtro: FILTRO_DEFECTO };
   if (!(FILTROS as readonly string[]).includes(crudo)) {

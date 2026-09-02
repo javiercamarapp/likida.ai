@@ -32,7 +32,8 @@ vi.mock('@/lib/logger', () => ({
   },
 }));
 
-const { POST, reiniciarAntiReplay } = await import('./route');
+const { POST } = await import('./route');
+const { reiniciarAntiReplay } = await import('./anti_replay');
 
 const LLAVE = crypto.randomBytes(24);
 const SECRETO = `v1,whsec_${LLAVE.toString('base64')}`;
