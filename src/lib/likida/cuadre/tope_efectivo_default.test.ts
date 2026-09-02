@@ -35,6 +35,7 @@ describe('PRU-2: el tope de efectivo por defecto es el de la ficha, y se prueba 
     expect(TOPE_EFECTIVO_LISR_27_III).toBe(2000);
     // Y la ficha lo dice con esa cifra: si la ley cambia, cambia la ficha y
     // esta prueba la sigue.
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- lee una ficha del propio repo en tiempo de prueba; la ruta no viene de ninguna entrada de usuario.
     const ficha = readFileSync(new URL('../../../../normas/lisr-27-III.yaml', import.meta.url), 'utf8');
     expect(ficha).toMatch(/2,000\.00/);
   });

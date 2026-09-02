@@ -470,6 +470,48 @@ export function copiasDeComprobante(gastos: Gasto[]): Map<string, string> {
   return originalDe;
 }
 
+/**
+ * Qué FRACCIÓN de cada gasto es deducible, reconstruida desde las diferencias
+ * que la liquidación ya guarda. Un gasto que no esté en el mapa es deducible
+ * al 100% (o cayó entero en otra cubeta, que `cubetaDe` decide aparte).
+ *
+ * AUDITORÍA 24, FIS-2 (CRÍTICO, reincidente 23): `proporcionDeducible` vivía
+ * solo DENTRO de `cuadrarViaje`; ni la RPC ni la liquidación guardada la
+ * exponían, y `repartirPorCubeta` (api/export/poliza) no tenía con qué partir:
+ * una comida de $2,000 con tope de $750 salía «$750 deducible» en el PDF y
+ * `5020-001 cargo 1,724.14` —la base entera— en la póliza.
+ *
+ * Las dos reglas que parten un gasto, y de dónde sale cada una:
+ *   · RFA 2.9 (`normas/rfa-2026-2.9.yaml`): `efectivo_sobre_15` guarda en
+ *     `esperado`/`monto` el excedente de ESTE comprobante → `1 − exc/monto`.
+ *   · LISR 28-V (`normas/lisr-28-V.yaml`): `viatico_excede_fiscal` guarda en
+ *     `esperado` el tope diario; la proporción del día entre TIMBRADOS la da
+ *     `diasSobreTope`, la misma función que el motor llama.
+ * `proporciones_deducibles.test.ts` exige que este mapa reproduzca al centavo
+ * los totales del motor: si `cuadrarViaje` cambia la regla, ese test cae.
+ */
+export function proporcionesDeducibles(
+  gastos: Gasto[],
+  diferencias: Pick<Diferencia, 'tipo' | 'gastoId' | 'esperado' | 'monto'>[],
+): Map<string, number> {
+  const p = new Map<string, number>();
+  for (const d of diferencias) {
+    if (d.tipo !== 'efectivo_sobre_15' || !d.gastoId) continue;
+    const g = gastos.find((x) => x.id === d.gastoId);
+    if (!g || !(g.monto > 0)) continue;
+    const excedente = d.esperado ?? d.monto;
+    p.set(g.id, Math.max(0, Math.min(1, (g.monto - excedente) / g.monto)));
+  }
+  const tope = diferencias.find((d) => d.tipo === 'viatico_excede_fiscal')?.esperado;
+  if (tope != null && tope > 0) {
+    for (const d of diasSobreTope(gastos, tope)) {
+      if (d.proporcionTimbrado == null) continue;
+      for (const x of d.delDia) if (x.cfdiUuid) p.set(x.id, d.proporcionTimbrado);
+    }
+  }
+  return p;
+}
+
 export function cuadrarViaje(input: CuadreInput): Omit<Liquidacion, 'id' | 'creadaEn'> {
   const umbral = input.umbralConfianza ?? 0.85;
   const diferencias: Diferencia[] = [];

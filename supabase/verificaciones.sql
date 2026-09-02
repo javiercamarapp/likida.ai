@@ -15349,3 +15349,80 @@ begin
   raise exception E'WA_CONVERSACION_TEL_NORM_0274  variante-choca=%  otro-numero=%  otra-flota=%   (esperado t / t / t)',
     choca_variante, otro_numero_ok, otra_flota_ok;
 end $$;
+
+-- ── 228. `poliza_datos_tenant` v281 entrega los insumos por comprobante y `gasto` tiene piso en sus cinco columnas de dinero (mig. 0281) ──
+--
+-- AUDITORÍA 24, FIS-2 + FIS-3 (CRÍTICOS) + DAT-3 (ALTO). La 0272 entregaba
+-- `gastos` sin monto, sin folio, sin forma de pago: la ruta no podía ni
+-- deduplicar (una foto repetida se asentaba dos veces) ni partir un gasto
+-- parcialmente deducible (la comida de $2,000 con tope de $750 se asentaba
+-- entera como deducible). Y las cinco columnas de dinero distintas de `monto`
+-- aceptaban negativos que la póliza volvía cargos.
+--
+-- Lo que este bloque asevera (la FORMA del contrato, que es lo que la base
+-- puede demostrar; la clasificación sigue viviendo en TS — bloque 220):
+--   (a) cada fila trae `version` = 281;
+--   (b) cada gasto trae `monto`, `folioNorm`, `cfdiUuid` y `formaPago` — lo que
+--       `copiasDeComprobante`, `cubetaDe` y `proporcionesDeducibles` leen —, y
+--       las DOS fotos del mismo ticket vienen las dos (deduplica la ruta con la
+--       misma función que el motor, no SQL);
+--   (c) `sub_total = -1` no entra (23514), y un descuento mayor al SubTotal
+--       tampoco.
+do $$
+declare
+  t uuid := gen_random_uuid(); v uuid := gen_random_uuid();
+  l uuid := gen_random_uuid(); op uuid := gen_random_uuid();
+  g1 uuid := gen_random_uuid(); g2 uuid := gen_random_uuid();
+  fila jsonb;
+  version_281 boolean := false;
+  insumos_por_gasto boolean := false;
+  dos_fotos boolean := false;
+  piso_subtotal boolean := false;
+  piso_descuento boolean := false;
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0281__');
+  insert into public.operador (id, tenant_id, nombre, telefono)
+    values (op, t, 'Operador 0281', '+5218100000281');
+  insert into public.viaje (id, tenant_id, operador_id, folio, anticipo, estatus)
+    values (v, t, op, 'VJ-0281', 10000, 'liquidado');
+  -- Dos fotos del MISMO ticket de diésel: sin UUID, mismo folio normalizado y
+  -- mismo monto (el caso real de la base: el índice único de (uuid, orden)
+  -- impide la copia por UUID, la copia por folio no la impide nadie).
+  insert into public.gasto (id, tenant_id, viaje_id, concepto, monto, sub_total, folio, folio_norm, forma_pago, fecha)
+    values (g1, t, v, 'diesel', 3480, 3000, '05461', '5461', '01', current_date),
+           (g2, t, v, 'diesel', 3480, 3000, '5461',  '5461', '01', current_date);
+  -- (c) antes de liquidar: con liquidación emitida el trigger de la 0036
+  -- rebota cualquier alta (CU001) y taparía el CHECK que aquí se prueba.
+  begin
+    insert into public.gasto (tenant_id, viaje_id, concepto, monto, sub_total)
+      values (t, v, 'diesel', 100, -1);
+  exception when check_violation then
+    piso_subtotal := true;
+  end;
+  begin
+    insert into public.gasto (tenant_id, viaje_id, concepto, monto, sub_total, descuento)
+      values (t, v, 'caseta', 100, 50, 60);
+  exception when check_violation then
+    piso_descuento := true;
+  end;
+
+  insert into public.liquidacion
+    (id, tenant_id, viaje_id, total_anticipo, total_comprobado, diferencia, iva_acreditable, diferencias)
+    values (l, t, v, 10000, 3480, 6520, 0, '[]'::jsonb);
+
+  select x into fila
+    from jsonb_array_elements(public.poliza_datos_tenant(t, current_date - 1, current_date + 1)) x
+   limit 1;
+
+  version_281       := (fila->>'version')::int = 281;
+  insumos_por_gasto := (fila->'gastos'->0->>'monto')::numeric = 3480
+                       and (fila->'gastos'->0->>'folioNorm') = '5461'
+                       and (fila->'gastos'->0->>'formaPago') = '01'
+                       and (fila->'gastos'->0) ? 'cfdiUuid'
+                       and (fila->'gastos'->0) ? 'pagadoEn'
+                       and (fila->'gastos'->0) ? 'ivaRetenido';
+  dos_fotos         := jsonb_array_length(fila->'gastos') = 2;
+
+  raise exception E'POLIZA_V2_0281  version=%  insumos-por-gasto=%  dos-fotos=%  piso-subtotal=%  piso-descuento=%   (esperado t / t / t / t / t)',
+    version_281, insumos_por_gasto, dos_fotos, piso_subtotal, piso_descuento;
+end $$;
