@@ -15503,3 +15503,91 @@ begin
   raise exception E'AGENTES_EXPERIMENTALES_0301  col_existe=%  faltantes=%  redactor_intacto=%  default_es_false=%   (esperado t / ninguno / t / t)',
     col_existe, faltantes, redactor_intacto, default_es_false;
 end $$;
+
+-- ── 243. `tenant_perfil_merge` mezcla el perfil ATÓMICAMENTE — leer+escribir en el mismo UPDATE, no en dos viajes de Node (mig. 0296, auditoría 24, H20/H21/H22) ──
+--
+-- El hallazgo: `guardarPerfilPatch` (lib/likida/repo.ts) hacía SELECT
+-- perfil → mezclar en JS → UPDATE perfil, en dos statements separados. Dos
+-- respuestas de la entrevista de onboarding mandadas casi juntas (doble
+-- clic, dos pestañas) intercalan sus dos SELECT antes de que cualquiera
+-- escriba: la segunda UPDATE pisa la primera con un `perfil` que nunca vio
+-- su patch — un "lost update" de libro de texto. `tenant_perfil_merge` hace
+-- la lectura Y la escritura en el MISMO statement (`perfil = perfil ||
+-- patch` dentro del propio UPDATE), así que cada invocación siempre parte
+-- del valor MÁS RECIENTE persistido, sin importar cuántas otras invocaciones
+-- corrieron entre medio — a diferencia de un INSERT contra un índice único
+-- (el patrón de los bloques 172/218/64), aquí no hay un árbitro que rechace
+-- a un "perdedor": la prueba de la atomicidad es que DOS llamadas
+-- SECUENCIALES, cada una con SU PROPIO patch y SIN que ninguna reciba el
+-- perfil de la otra como argumento, terminan con las dos contribuciones
+-- presentes — que es precisamente lo que el código viejo NO garantizaba
+-- bajo concurrencia real (ahí sí hacía falta una carrera de verdad para
+-- perder una escritura; aquí la garantía es estructural: el RPC nunca
+-- mantiene una copia del perfil fuera de la fila).
+--
+-- (a) primera llamada aplica su patch sobre un perfil vacío; (b) segunda
+-- llamada, patch DISTINTO, sin arrastrar el resultado de la primera como
+-- argumento — el resultado final trae AMBAS claves; (c) el merge es
+-- superficial: una clave repetida la gana el patch más reciente, las demás
+-- sobreviven; (d) `perfil_actualizado_por` queda en el actor de la ÚLTIMA
+-- llamada; (e) el trigger de la 0169 selló DOS versiones en
+-- `tenant_perfil_version` (una por UPDATE real); (f) un tenant que no existe
+-- falla cerrado (excepción, no perfil vacío ni silencio); (g) un patch que
+-- no es un objeto jsonb (aquí, un arreglo) también falla cerrado, antes de
+-- tocar la fila.
+do $$
+declare
+  t uuid := gen_random_uuid();
+  r1 jsonb; r2 jsonb;
+  u1 uuid := gen_random_uuid(); u2 uuid := gen_random_uuid();
+  perfil_final jsonb;
+  actualizado_final uuid;
+  n_versiones int;
+  tiene_ambas_claves boolean;
+  clave_repetida_gana_ultima boolean;
+  actor_es_ultimo boolean;
+  sella_dos_versiones boolean;
+  tenant_inexistente_falla boolean := false;
+  patch_no_objeto_falla boolean := false;
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0296__');
+  insert into public.app_user (id, tenant_id, email, rol) values (u1, t, 'verif-0296-u1@likida.ai', 'flota_admin');
+  insert into public.app_user (id, tenant_id, email, rol) values (u2, t, 'verif-0296-u2@likida.ai', 'contador');
+
+  -- (a) Primera "invocación": declara el stack de GPS.
+  r1 := public.tenant_perfil_merge(t, jsonb_build_object('stackGps', 'samsara'), u1);
+
+  -- (b) Segunda "invocación", CASI JUNTA a la primera en el mundo real: NO
+  -- recibe `r1` como base — el RPC tiene que ir a buscar el valor vigente
+  -- por su cuenta. Declara el umbral de ingresos, y de paso REPITE
+  -- 'stackGps' con un valor distinto (para probar (c)).
+  r2 := public.tenant_perfil_merge(t, jsonb_build_object('ingresosMenoresA300M', true, 'stackGps', 'geotab'), u2);
+
+  select perfil, perfil_actualizado_por into perfil_final, actualizado_final
+    from public.tenant where id = t;
+
+  tiene_ambas_claves := (perfil_final ? 'ingresosMenoresA300M') and (perfil_final->>'ingresosMenoresA300M' = 'true');
+  clave_repetida_gana_ultima := (perfil_final->>'stackGps') = 'geotab';
+  actor_es_ultimo := actualizado_final = u2;
+
+  select count(*) = 2 into sella_dos_versiones
+    from public.tenant_perfil_version where tenant_id = t;
+
+  -- (f) Tenant inexistente: falla cerrado, no devuelve un perfil de mentiras.
+  begin
+    perform public.tenant_perfil_merge(gen_random_uuid(), '{}'::jsonb, u1);
+  exception when others then
+    tenant_inexistente_falla := true;
+  end;
+
+  -- (g) Un patch que no es objeto (aquí, un arreglo jsonb): falla cerrado
+  -- ANTES de tocar la fila — no hay `perfil = perfil || '[1,2]'` silencioso.
+  begin
+    perform public.tenant_perfil_merge(t, '[1,2]'::jsonb, u1);
+  exception when others then
+    patch_no_objeto_falla := true;
+  end;
+
+  raise exception E'TENANT_PERFIL_MERGE_0296  ambas-claves=%  repetida-gana-ultima=%  actor-ultimo=%  dos-versiones=%  tenant-inexistente-falla=%  patch-no-objeto-falla=%   (esperado t / t / t / t / t / t)',
+    tiene_ambas_claves, clave_repetida_gana_ultima, actor_es_ultimo, sella_dos_versiones, tenant_inexistente_falla, patch_no_objeto_falla;
+end $$;
