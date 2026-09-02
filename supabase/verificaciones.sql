@@ -15574,3 +15574,92 @@ begin
     lat91 is null, not (det91 ? 'lat'), det91 ? 'geolocalizacion_purgada_en', eventos_91, lat30, det30 ? 'lat', latab,
     r->>'incidencias', m ? 'incidenciaGeoPurgada';
 end $$;
+
+-- ── 238. Teléfono, RFC y placas tienen forma; el operador ligado es de la flota (mig. 0290) ──
+--
+-- AUDITORÍA 24, DAT-10 y DAT-11 (MEDIO). Lo que se asevera:
+--   (a) `telefono = 'abc'` ya NO entra (23514) — y con eso desaparece el
+--       choque entre flotas: dos operadores sin celular en tenants distintos
+--       reventaban con `uq_operador_telefono_activo Key ()=()`;
+--   (b) un teléfono de verdad sigue entrando, en cualquiera de sus formas;
+--   (c) `rfc` chatarra rebota, `rfc` con molde del SAT pasa, NULL pasa;
+--   (d) `anio = 3000`, `km_actual = -5` y `numero_economico = ' 12'` rebotan;
+--   (e) las mismas placas con otra caja/espacios rebotan DENTRO de la flota
+--       (23505) y sí entran en OTRA flota;
+--   (f) `app_user.operador_id` de otra flota rebota (23503) y el de la propia
+--       entra.
+do $$
+declare
+  ta uuid := gen_random_uuid(); tb uuid := gen_random_uuid();
+  opa uuid := gen_random_uuid(); opb uuid := gen_random_uuid();
+  tel_chatarra text := 'no'; tel_bueno text := 'no'; rfc_malo text := 'no'; rfc_bueno text := 'no';
+  anio_malo text := 'no'; km_malo text := 'no'; eco_malo text := 'no';
+  placa_dup text := 'no'; placa_otra_flota text := 'no';
+  fk_ajena text := 'no'; fk_propia text := 'no';
+begin
+  insert into public.tenant (id, nombre) values (ta, '__verif_0290_a__'), (tb, '__verif_0290_b__');
+
+  -- (a) el teléfono que no es un teléfono
+  begin
+    insert into public.operador (tenant_id, nombre, telefono) values (ta, 'Sin celular', 'abc');
+    tel_chatarra := 'ENTRO';
+  exception when check_violation then tel_chatarra := 'rebota'; end;
+
+  -- (b) el teléfono de verdad, con el 1 de móvil que Meta a veces manda
+  begin
+    insert into public.operador (id, tenant_id, nombre, telefono) values (opa, ta, 'Juan', '+52 1 999 370 0779');
+    tel_bueno := 'entro';
+  exception when others then tel_bueno := 'REBOTO: ' || sqlerrm; end;
+
+  -- (c) RFC
+  begin
+    insert into public.operador (tenant_id, nombre, telefono, rfc) values (ta, 'Malo', '5299937007 80', 'xx');
+    rfc_malo := 'ENTRO';
+  exception when check_violation then rfc_malo := 'rebota'; end;
+  begin
+    insert into public.operador (tenant_id, nombre, telefono, rfc) values (ta, 'Bueno', '5299937007 81', 'PECJ850101H23');
+    rfc_bueno := 'entro';
+  exception when others then rfc_bueno := 'REBOTO: ' || sqlerrm; end;
+
+  -- (d) unidad: año, km y económico
+  begin
+    insert into public.unidad (tenant_id, numero_economico, anio) values (ta, 'U-anio', 3000);
+    anio_malo := 'ENTRO';
+  exception when check_violation then anio_malo := 'rebota'; end;
+  begin
+    insert into public.unidad (tenant_id, numero_economico, km_actual) values (ta, 'U-km', -5);
+    km_malo := 'ENTRO';
+  exception when check_violation then km_malo := 'rebota'; end;
+  begin
+    insert into public.unidad (tenant_id, numero_economico) values (ta, ' 12');
+    eco_malo := 'ENTRO';
+  exception when check_violation then eco_malo := 'rebota'; end;
+
+  -- (e) placas: la misma placa con otra caja, dentro y fuera de la flota
+  insert into public.unidad (tenant_id, numero_economico, placas) values (ta, '12', 'ABC-123-A');
+  begin
+    insert into public.unidad (tenant_id, numero_economico, placas) values (ta, '13', ' abc-123-a ');
+    placa_dup := 'ENTRO';
+  exception when unique_violation then placa_dup := 'rebota'; end;
+  begin
+    insert into public.unidad (tenant_id, numero_economico, placas) values (tb, '12', 'ABC-123-A');
+    placa_otra_flota := 'entro';
+  exception when others then placa_otra_flota := 'REBOTO: ' || sqlerrm; end;
+
+  -- (f) DAT-11: el operador ligado a un usuario es de su flota
+  insert into public.operador (id, tenant_id, nombre, telefono) values (opb, tb, 'Chofer B', '5299937007 82');
+  begin
+    insert into public.app_user (id, tenant_id, email, rol, operador_id)
+      values (gen_random_uuid(), ta, '__verif_0290_a__@likida.test', 'flota_admin', opb);
+    fk_ajena := 'ENTRO';
+  exception when foreign_key_violation then fk_ajena := 'rebota'; end;
+  begin
+    insert into public.app_user (id, tenant_id, email, rol, operador_id)
+      values (gen_random_uuid(), ta, '__verif_0290_b__@likida.test', 'flota_admin', opa);
+    fk_propia := 'entro';
+  exception when others then fk_propia := 'REBOTO: ' || sqlerrm; end;
+
+  raise exception E'OPERADOR_UNIDAD_FORMA_0290  tel-chatarra=%  tel-bueno=%  rfc-malo=%  rfc-bueno=%  anio=%  km=%  eco=%  placa-dup=%  placa-otra-flota=%  fk-ajena=%  fk-propia=%   (esperado rebota / entro / rebota / entro / rebota / rebota / rebota / rebota / entro / rebota / entro)',
+    tel_chatarra, tel_bueno, rfc_malo, rfc_bueno, anio_malo, km_malo, eco_malo,
+    placa_dup, placa_otra_flota, fk_ajena, fk_propia;
+end $$;
