@@ -77,6 +77,7 @@ import {
 } from '@/lib/likida/conv';
 import { registrarCosto, registrarCostoWhatsApp, faseDeModelo, vincularCostosALiquidacion } from '@/lib/likida/costos';
 import { sendText, sendButtons, sendDocument, downloadMediaAsDataUrl, downloadMediaAsText, ImagenDemasiadoPesadaError } from '@/lib/meta/client';
+import { avisarOficina, parametrosAvisoOficina } from '@/lib/meta/aviso_oficina';
 import {
   decidirAcuse, mensajeConfirmar, mensajeAcuse, mensajeRefoto, esPeticionDeFoto,
   mensajeCorregir, mensajeConfirmado, leerBoton, mensajeDemasiadasDudas,
@@ -136,9 +137,11 @@ export interface InboundMessage {
  * La ubicación del chofer (F-Ruta): guarda en `posicion` si el viaje trae
  * unidad y avisa al jefe con el link del mapa. BEST-EFFORT en cada pata por
  * separado: que falle el INSERT no debe callar el aviso al jefe, y viceversa.
- * Nunca lanza — el llamador confirma al chofer pase lo que pase.
+ * Nunca lanza — el llamador confirma al chofer pase lo que pase. Devuelve si
+ * el JEFE recibió el aviso: la frase «ya se la pasé a tu jefe» solo se dice
+ * cuando es verdad (AGEN-5 / WA-4).
  */
-async function registrarUbicacionChofer(op: ResolvedOperador, viajeId: string, lat: number, lng: number): Promise<void> {
+async function registrarUbicacionChofer(op: ResolvedOperador, viajeId: string, lat: number, lng: number): Promise<boolean> {
   const admin = supabaseAdmin();
   try {
     const { data: viaje, error } = await admin.from('viaje')
@@ -159,13 +162,32 @@ async function registrarUbicacionChofer(op: ResolvedOperador, viajeId: string, l
   } catch (e) {
     logger.error('ubicacion.insert', { viaje: viajeId, err: e instanceof Error ? e.message : String(e) });
   }
+  return avisarUbicacionAlJefe(op, `https://maps.google.com/?q=${lat},${lng}`, 'compartió su ubicación en ruta', { viaje: viajeId });
+}
+
+/**
+ * El link del mapa al jefe, por texto y —fuera de la ventana de 24 h— por
+ * plantilla (`avisarOficina`, AGEN-5 / WA-4). El jefe de una flota grande
+ * RECIBE y no escribe: `sendText` le rebotaba con 131047 en silencio y al
+ * chofer varado a las 02:00 se le afirmaba «ya se la pasé». Nunca lanza;
+ * `false` = el jefe NO lo recibió, y el llamador lo dice así.
+ */
+async function avisarUbicacionAlJefe(op: ResolvedOperador, mapa: string, motivo: string, contexto: Record<string, unknown>): Promise<boolean> {
   try {
     const jefe = await telefonoJefeDe(op.tenantId);
-    if (jefe) {
-      await sendText(jefe, `📍 ${op.nombre} compartió su ubicación en ruta.\nhttps://maps.google.com/?q=${lat},${lng}`);
+    if (!jefe) {
+      logger.warn('ubicacion.sin_jefe', { tenant: op.tenantId, ...contexto });
+      return false;
     }
+    const r = await avisarOficina(jefe, `📍 ${op.nombre} ${motivo}.\n${mapa}`, {
+      parametros: parametrosAvisoOficina(op.nombre, motivo, mapa),
+      contexto: { tenant: op.tenantId, ...contexto },
+    });
+    if (!r.ok) logger.error('ubicacion.aviso_jefe', { tenant: op.tenantId, ...contexto, motivo: r.motivo, codigo: r.codigo });
+    return r.ok;
   } catch (e) {
-    logger.error('ubicacion.aviso_jefe', { viaje: viajeId, err: e instanceof Error ? e.message : String(e) });
+    logger.error('ubicacion.aviso_jefe', { ...contexto, err: e instanceof Error ? e.message : String(e) });
+    return false;
   }
 }
 
@@ -1685,13 +1707,10 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
       if (msg.type === 'location' && typeof msg.lat === 'number' && typeof msg.lng === 'number') {
         const anclada = await anclarUbicacionIncidencia(op.tenantId, op.operadorId, msg.lat, msg.lng);
         if (anclada) {
-          try {
-            const jefe = await telefonoJefeDe(op.tenantId);
-            if (jefe) await sendText(jefe, `📍 ${op.nombre} compartió su ubicación (emergencia en curso).\nhttps://maps.google.com/?q=${msg.lat},${msg.lng}`);
-          } catch (e) {
-            logger.error('ubicacion.aviso_jefe', { operador: op.operadorId, err: e instanceof Error ? e.message : String(e) });
-          }
-          await sendText(msg.from, '📍 Recibida tu ubicación — quedó en tu reporte de emergencia y ya se la pasé a tu jefe.');
+          const avisado = await avisarUbicacionAlJefe(op, `https://maps.google.com/?q=${msg.lat},${msg.lng}`, 'compartió su ubicación (emergencia en curso)', { operador: op.operadorId });
+          await sendText(msg.from, avisado
+            ? '📍 Recibida tu ubicación — quedó en tu reporte de emergencia y ya se la pasé a tu jefe.'
+            : '📍 Recibida tu ubicación — quedó en tu reporte de emergencia, pero NO pude pasársela a tu jefe por WhatsApp. Si es urgente, márcale directo.');
           return;
         }
         // Sin expediente vivo, el pin sin viaje sigue al mensaje de abajo.
@@ -2923,14 +2942,17 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
     // best-effort menos la confirmación: perder el INSERT es malo, dejarlo sin
     // respuesta creyendo que nadie la vio es peor.
     if (msg.type === 'location' && typeof msg.lat === 'number' && typeof msg.lng === 'number') {
-      await registrarUbicacionChofer(op, viajeId, msg.lat, msg.lng);
+      const avisadoJefe = await registrarUbicacionChofer(op, viajeId, msg.lat, msg.lng);
       // c4-6: el pin que el propio bot pide ("mándame tu ubicación") ahora SÍ
       // llega a donde la cascada y el mensaje al proveedor lo van a usar — el
       // expediente de asistencia vivo del chofer, si lo hay. Best-effort.
       const anclada = await anclarUbicacionIncidencia(op.tenantId, op.operadorId, msg.lat, msg.lng);
-      await say(anclada
-        ? '📍 Recibida tu ubicación — quedó en tu viaje Y en tu reporte de emergencia, y ya se la pasé a tu jefe.'
-        : '📍 Recibida tu ubicación — queda registrada en tu viaje y ya se la pasé a tu jefe.');
+      // AGEN-5 / WA-4: «ya se la pasé a tu jefe» solo cuando Meta la aceptó
+      // (texto o plantilla). Si no, se dice y se le da la salida.
+      const donde = anclada ? 'quedó en tu viaje Y en tu reporte de emergencia' : 'queda registrada en tu viaje';
+      await say(avisadoJefe
+        ? `📍 Recibida tu ubicación — ${donde}, y ya se la pasé a tu jefe.`
+        : `📍 Recibida tu ubicación — ${donde}, pero NO pude pasársela a tu jefe por WhatsApp. Si es urgente, márcale directo.`);
       return;
     }
 
