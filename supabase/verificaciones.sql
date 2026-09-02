@@ -15349,3 +15349,86 @@ begin
   raise exception E'WA_CONVERSACION_TEL_NORM_0274  variante-choca=%  otro-numero=%  otra-flota=%   (esperado t / t / t)',
     choca_variante, otro_numero_ok, otra_flota_ok;
 end $$;
+
+-- ── 245. La terminal gana escritor: unidad.terminal_id atado al tenant, un patio por nombre, y el registro paginado cuenta de verdad (mig. 0298) ──
+--
+-- AUDITORÍA 24 (ADM-2 / producto-completitud, faltante 3). `terminal` era la
+-- huérfana de la 0001 y `unidad` no tenía patio. La 0298 le da columna a la
+-- unidad, unicidad al nombre del patio y lecturas paginadas en SQL para que
+-- 800 tractos no viajen enteros a la pantalla.
+--
+-- Lo que solo la base puede demostrar:
+--   (a) `uq_terminal_tenant_nombre`: «Patio Norte» y « patio norte » de la
+--       MISMA flota chocan; el mismo nombre en OTRA flota convive.
+--   (b) `unidad_terminal_tenant_fkey`: una unidad de la flota A NO puede
+--       colgar de un patio de la flota B aunque el uuid exista.
+--   (c) `on delete set null`: borrar el patio deja la unidad con
+--       terminal_id NULL, no la borra.
+--   (d) `operadores_registro_tenant`: con 3 operadores y límite 2, la página
+--       trae 2 filas y `total`=3 (el total NO es el largo de la página); la
+--       búsqueda «ramirez» encuentra a «Ramírez» (sin acentos).
+--   (e) `unidades_conteos_tenant`: con una unidad vencida ayer, una que vence
+--       en 10 días, una sin papeles y una de baja, los cuatro contadores
+--       salen 1-1-0-1 y la baja no cuenta en ninguno.
+-- Esperado: TERMINAL_ESCRITOR_0298 choca-variante=t otra-flota-ok=t patio-ajeno=f set-null=t pagina=2 total=3 busca=1 conteos=1-1-0-1
+do $$
+declare
+  ta uuid := gen_random_uuid(); tb uuid := gen_random_uuid();
+  pa uuid; pb uuid; u1 uuid;
+  choca_variante boolean := false;
+  otra_flota_ok boolean := false;
+  patio_ajeno boolean := true;
+  set_null boolean := false;
+  r jsonb; c jsonb;
+  n_pagina int; n_total int; n_busca int;
+  conteos text;
+begin
+  insert into public.tenant (id, nombre) values (ta, '__verif_0298_a__');
+  insert into public.tenant (id, nombre) values (tb, '__verif_0298_b__');
+
+  -- (a) un patio por nombre, por flota
+  insert into public.terminal (tenant_id, nombre) values (ta, 'Patio Norte') returning id into pa;
+  begin
+    insert into public.terminal (tenant_id, nombre) values (ta, ' patio norte ');
+  exception when unique_violation then choca_variante := true;
+  end;
+  begin
+    insert into public.terminal (tenant_id, nombre) values (tb, 'Patio Norte') returning id into pb;
+    otra_flota_ok := true;
+  exception when others then otra_flota_ok := false;
+  end;
+
+  -- (b) la unidad de A no cuelga del patio de B
+  begin
+    insert into public.unidad (tenant_id, numero_economico, terminal_id) values (ta, 'T-01', pb);
+    patio_ajeno := true;
+  exception when foreign_key_violation then patio_ajeno := false;
+  end;
+
+  -- (c) borrar el patio deja la unidad, con terminal_id NULL
+  insert into public.unidad (tenant_id, numero_economico, terminal_id) values (ta, 'T-02', pa) returning id into u1;
+  delete from public.terminal where id = pa;
+  select (terminal_id is null) into set_null from public.unidad where id = u1;
+
+  -- (d) el registro paginado cuenta de verdad y busca sin acentos
+  insert into public.operador (tenant_id, nombre, telefono) values
+    (ta, 'Juan Ramírez', '525511111101'),
+    (ta, 'Pedro López', '525511111102'),
+    (ta, 'Ana Torres',  '525511111103');
+  r := public.operadores_registro_tenant(ta, null, 0, 2);
+  n_pagina := jsonb_array_length(r -> 'filas');
+  n_total  := (r ->> 'total')::int;
+  r := public.operadores_registro_tenant(ta, 'ramirez', 0, 25);
+  n_busca := jsonb_array_length(r -> 'filas');
+
+  -- (e) los contadores de papeles van sobre la flota entera, activas nada más
+  insert into public.unidad (tenant_id, numero_economico, poliza_vence) values (ta, 'T-03', date '2026-09-01' - 1);
+  insert into public.unidad (tenant_id, numero_economico, verificacion_vence) values (ta, 'T-04', date '2026-09-01' + 10);
+  insert into public.unidad (tenant_id, numero_economico, poliza_vence, activo) values (ta, 'T-05', date '2026-09-01' - 40, false);
+  -- T-02 (de arriba) es la que no tiene papeles.
+  c := public.unidades_conteos_tenant(ta, date '2026-09-01', 30);
+  conteos := (c ->> 'vencidos') || '-' || (c ->> 'porVencer') || '-' || (c ->> 'vigentes') || '-' || (c ->> 'sinDato');
+
+  raise exception E'TERMINAL_ESCRITOR_0298 choca-variante=% otra-flota-ok=% patio-ajeno=% set-null=% pagina=% total=% busca=% conteos=%   (esperado t / t / f / t / 2 / 3 / 1 / 1-1-0-1)',
+    choca_variante, otra_flota_ok, patio_ajeno, set_null, n_pagina, n_total, n_busca, conteos;
+end $$;
