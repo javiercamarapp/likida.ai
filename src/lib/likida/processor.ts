@@ -45,7 +45,7 @@ import { interpretarAsistencia, atenderAsistenciaChofer, atenderReconocimientoAs
 import { atenderCoordinacionOficina, atenderMensajeProveedor, atenderMedioProveedorSinTexto } from '@/lib/likida/asistencia_coordinacion';
 import { esCaptionPod, guardarPodDelChofer, mensajePod } from '@/lib/likida/pod_wa';
 import { atenderInformeOficina } from '@/lib/likida/informes_wa';
-import { pideInformePdf, mandarInformePdf, atenderPreguntaLibre } from '@/lib/likida/oficina_wa';
+import { pideInformePdf, mandarInformePdf, atenderPreguntaLibre, RESPUESTA_OFICINA_SIN_TIEMPO } from '@/lib/likida/oficina_wa';
 import { atenderAsignacionOficina } from '@/lib/likida/asignar_wa';
 import { violaIndice, llegoTarde } from '@/lib/likida/pg_errores';
 import { mxn, fechaMx } from '@/lib/formato';
@@ -553,8 +553,8 @@ async function atenderTextoOficina(
   cuenta: CuentaOficina,
   from: string,
   texto: string,
-  opciones: { incluirPreguntaLibre: boolean; incluirDespacho: boolean },
-): Promise<boolean> {
+  opciones: { incluirPreguntaLibre: boolean; incluirDespacho: boolean; reloj?: Presupuesto },
+): Promise<boolean | 'reintentar'> {
   // La ASISTENCIA va antes que todo (0198, punto D del plano): el botón
   // `asi_ok:<uuid>` del 🚨 responde a una pregunta nuestra, y un ROJO escrito
   // por el dueño ("chocamos") no puede caer al analista como si fuera una
@@ -749,7 +749,16 @@ async function atenderTextoOficina(
   if (opciones.incluirPreguntaLibre) {
     const rLibre = await atenderPreguntaLibre(
       { tenantId: cuenta.tenantId, rol: cuenta.rol, userId: cuenta.userId, nombre: cuenta.nombre }, texto,
+      { reloj: opciones.reloj },
     );
+    // REN-A2: no cupo en lo que queda de la invocación. Se le dice y se pide
+    // al llamador que suelte el claim: la bandeja durable lo trae de vuelta
+    // en otra invocación, con reloj entero. Hasta aquí ningún reconocedor
+    // escribió nada, así que reprocesar el texto es seguro.
+    if (rLibre === RESPUESTA_OFICINA_SIN_TIEMPO) {
+      await sendText(from, rLibre);
+      return 'reintentar';
+    }
     if (rLibre) {
       logger.info('oficina.pregunta_libre', { user: cuenta.userId, rol: cuenta.rol });
       await sendText(from, rLibre);
@@ -1345,9 +1354,10 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
         // necesita (un dueño que maneja es su propio operador). Aquí entra con
         // el analista ENCENDIDO: este número no es de nadie más, así que una
         // pregunta suelta es suya y no se le disputa a ningún acuse de ruta.
-        if (msg.type === 'text' && msg.text
-            && await atenderTextoOficina(cuenta, msg.from, msg.text, { incluirPreguntaLibre: true, incluirDespacho: true })) {
-          return;
+        if (msg.type === 'text' && msg.text) {
+          const rOficina = await atenderTextoOficina(cuenta, msg.from, msg.text, { incluirPreguntaLibre: true, incluirDespacho: true, reloj });
+          if (rOficina === 'reintentar') { await soltarClaim(); return; }
+          if (rOficina) return;
         }
         const quien = cuenta.nombre ? `${cuenta.nombre}` : 'Qué tal';
         // Se le dice lo que SÍ puede hacer hoy por aquí y se le manda al panel
@@ -1582,8 +1592,10 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
           // «ya llegué» y «listo», que son con los que se cierra un viaje. Sin
           // viaje abierto no hay nada de ruta que decir y la pregunta es del
           // dueño. Lo que ningún reconocedor reclame sigue su camino intacto.
-          && await atenderTextoOficina(cuentaPropia, msg.from, msg.text, { incluirPreguntaLibre: !viajeId, incluirDespacho: !viajeId })) {
-        return;
+      ) {
+        const rOficina = await atenderTextoOficina(cuentaPropia, msg.from, msg.text, { incluirPreguntaLibre: !viajeId, incluirDespacho: !viajeId, reloj });
+        if (rOficina === 'reintentar') { await soltarClaim(); return; }
+        if (rOficina) return;
       }
     }
 
