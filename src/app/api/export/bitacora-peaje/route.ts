@@ -5,6 +5,7 @@ import { resolverTenantApi } from '@/lib/auth/tenant-api';
 import { puedeExportar } from '@/lib/auth/permisos';
 import { puedeVerArea } from '@/lib/auth/visibilidad';
 import { logger } from '@/lib/logger';
+import { LecturaIncompleta } from '@/lib/likida/pg';
 
 export const runtime = 'nodejs';
 
@@ -60,6 +61,15 @@ export async function GET(req: Request) {
       },
     });
   } catch (e) {
+    // AUDITORÍA 24, BE-24: `LecturaIncompleta` no es un bache — es «hay más
+    // cruces de los que se pueden traer demostrando que están todos». Decirle
+    // «intenta de nuevo en un momento» manda al contralor a reintentar un
+    // error determinista y a creer que fue mala suerte. Se nombra, como en
+    // export/facturas-proveedor.
+    if (e instanceof LecturaIncompleta) {
+      logger.error('export.bitacora_peaje_incompleta', { tenant: t.tenantId, leidas: e.leidas, esperadas: e.esperadas });
+      return new NextResponse('Ese desglose trae más cruces de los que la bitácora puede traer demostrando que están todos. No se manda un archivo corto: avísanos.', { status: 500 });
+    }
     logger.error('export.bitacora_peaje', { tenant: t.tenantId, err: e instanceof Error ? e.message : String(e) });
     return new NextResponse('No se pudo generar la bitácora. Intenta de nuevo en un momento.', { status: 500 });
   }
