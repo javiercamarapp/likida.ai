@@ -2094,6 +2094,15 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
           // ruido. Lo que cambia el caso es que el gasto que empata tenga la
           // fecha en duda, porque entonces esa foto NO puede aportar nada:
           // es la misma que ya se leyó mal.
+          //
+          // AUDITORÍA 24 · AGEN-11 (BAJO): dentro de una ráfaga, callar rompe
+          // la cuenta. `anotarFoto` ya la contó en «de tus 5 fotos», el gasto
+          // no se duplicó, y el resumen decía «llevo 4 comprobantes» sin
+          // explicar la resta: el chofer la reenvía y vuelve el silencio. Se
+          // anota en la libreta (no se manda nada por sí sola: para una foto
+          // suelta el silencio SIGUE siendo lo correcto) y el resumen de la
+          // ráfaga dice «*1* venía repetida (ya la tenía)».
+          let avisadaPorFecha = false;
           try {
             const [previo, v] = await Promise.all([
               gastoPorHash(viajeId, imgHash, op.tenantId),
@@ -2101,11 +2110,14 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
             ]);
             if (previo && v && fechaDudosa(previo.fecha, v)) {
               await say(`Esa es la *misma foto* que ya me habías mandado 🔁, así que la fecha sigue igual. Necesito una foto *nueva* de ese ticket de ${mxn(previo.monto)} —tomada otra vez, no reenviada— enfocando la parte donde viene la fecha. 📸`);
+              avisadaPorFecha = true;
             }
+            if (!avisadaPorFecha) anotarIncidencia(viajeId, { tipo: 'repetida', monto: previo?.monto ?? null });
           } catch (e) {
             // Best-effort: el dedup ya hizo su trabajo. Fallar aquí no puede
             // costar un gasto, solo un aviso.
             logger.warn('foto.dedup_aviso_falló', { err: e instanceof Error ? e.message : String(e) });
+            if (!avisadaPorFecha) anotarIncidencia(viajeId, { tipo: 'repetida' });
           }
           return; // ya la teníamos: no re-OCR, no duplicar gasto
         }

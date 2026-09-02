@@ -73,7 +73,7 @@ describe('AGEN-A2 — el corte por falta de reloj cierra SOLO la libreta del cho
 
     // Solo B recibió un mensaje, y con SU cuenta.
     expect(salientes.map((s) => s.to)).toEqual([expect.stringContaining('9992220002')]);
-    expect(salientes[0].body).toContain('De tus 2 fotos');
+    expect(salientes[0].body).toContain('De las fotos que me mandaste,');
     expect(salientes.some((s) => s.to.includes('9991110001')), 'le escribió al chofer A').toBe(false);
   });
 
