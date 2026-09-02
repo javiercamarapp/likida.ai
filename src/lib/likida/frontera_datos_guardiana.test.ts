@@ -26,8 +26,16 @@ import { join, relative } from 'node:path';
  * `pruebas-manuales` — con al menos un `.from(`/`.rpc(`, SIN contar
  * `repo.ts` ni `pg.ts` (la frontera declarada). Es un TECHO, no un objetivo:
  * si sube, actualiza este número en el mismo commit que explica por qué.
+ *
+ * 241 → 244 el 1-sep-2026 (auditoría 24, alta masiva para 800 tractos). Los
+ * tres nuevos son `importacion/unidades.ts`, `importacion/operadores.ts` y
+ * `terminales.ts`. NO es que se haya preferido el acceso directo: `repo.ts`
+ * es de otra entrega y esta no podía tocarlo, así que los tres quedan del
+ * lado de afuera y anotados aquí para que la próxima pasada de la frontera
+ * los recoja. Los tres escriben por tandas con el tenant en cada fila y con
+ * su lectura previa anclada al tenant, que es lo que la frontera protege.
  */
-const TECHO_ARCHIVOS_FUERA_DE_LA_FRONTERA = 241;
+const TECHO_ARCHIVOS_FUERA_DE_LA_FRONTERA = 244;
 
 const RAIZ_SRC = new URL('../../', import.meta.url).pathname;
 

@@ -31,11 +31,18 @@ import { join, relative, sep } from 'node:path';
  * revisados (auditoría 21, 29-ago-2026: sesión + rol + tenant confirmados
  * en las 64, con las excepciones públicas documentadas en cada archivo).
  *
+ * 64 → 65 el 1-sep-2026 (auditoría 24): entra `v1/operadores/route.ts`. Su
+ * puerta es la de /v1 —`abrir(req, área)`, que resuelve credencial, tasa,
+ * rol/área y tenant antes de leer el cuerpo—, con `operacion` para el GET y
+ * `administracion` para el POST; el tenant sale SIEMPRE de la credencial y un
+ * `tenant_id` en el cuerpo no se lee. Fijado en `v1/operadores/route.test.ts`
+ * y en el guardia de áreas del OpenAPI.
+ *
  * Si vas a subir este número: primero confirma que la ruta nueva trae su
  * propia puerta COMPLETA — sesión (o firma de webhook / llave de API / secreto
  * de cron), rol y tenant — ANTES de procesar nada. El proxy no la va a salvar.
  */
-const RUTAS_API_REVISADAS = 64;
+const RUTAS_API_REVISADAS = 65;
 
 function rutasApi(): string[] {
   const raiz = join(process.cwd(), 'src', 'app', 'api');

@@ -29,6 +29,8 @@ import { DatoInvalido } from './errores';
 import type { AjustesValidos } from './ajustes_operativos';
 import { acotada } from './presupuesto';
 import { resolverTerminalDeFlota } from './terminales';
+import { PAPELES_UNIDAD } from './vigencias';
+import { diasEntreIso } from './relojes_legales';
 
 // `DatoInvalido` y `mensajeParaPantalla` viven en `errores.ts` desde que
 // `saas/suscripcion.ts` los necesitó: importarlos de aquí metía todo este módulo
@@ -1173,4 +1175,208 @@ export async function reabrirViaje(
   } finally {
     await releaseViajeLock(viajeId);
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EL REGISTRO DE UNIDADES, PAGINADO POR LA BASE (auditoría 24, ADM-2)
+//
+// `getUnidades` (operacion.ts) trae el parque COMPLETO con `traerTodo` — lo
+// que DEMUESTRA que está completo, y por eso sigue siendo lo correcto para el
+// semáforo de la API y para cualquier cuenta sobre la flota. Lo que no es, a
+// 800 tractos, es lo correcto para PINTAR 25 renglones: el catálogo entero
+// viaja a la pantalla en cada render.
+//
+// `unidades_registro_tenant` (0298) corta la página sobre un orden TOTAL
+// (papel más próximo a vencer, sin papeles al final, desempate por económico e
+// id) y devuelve el `total` real en la MISMA respuesta.
+//
+// ── POR QUÉ EL CÁLCULO DE VENCIMIENTO SE REHACE AQUÍ ─────────────────────
+//
+// La cuenta de "cuál de los tres papeles vence antes y en cuántos días" vive
+// dentro de `getUnidades`, en un bucle sin exportar. Esta lectura no la puede
+// importar, así que la rehace — pero NO copiando la lista de papeles ni la
+// aritmética a mano: los nombres salen de `PAPELES_UNIDAD` (vigencias.ts), que
+// es la misma constante que usa el resto del producto, y los días de
+// `diasEntreIso` (relojes_legales.ts). Lo único propio de aquí es el orden en
+// que se recorren, y `administracion_aud24.test.ts` fija que las dos
+// implementaciones coincidan sobre los mismos papeles.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Una fila del registro de unidades. Superconjunto de lo que la pantalla
+ *  necesita: trae las tres fechas crudas para precargar la forma de edición. */
+export interface FilaRegistroUnidad {
+  id: string;
+  numeroEconomico: string;
+  placas: string | null;
+  marca: string | null;
+  modelo: string | null;
+  anio: number | null;
+  estado: string;
+  kmActual: number | null;
+  /** Días al vencimiento MÁS PRÓXIMO de los tres papeles. NEGATIVO = ya
+   *  venció. `null` = ninguno capturado — que NO es estar en regla. */
+  diasAlVencimiento: number | null;
+  /** Cuál de los tres vence antes. `null` sin dato. */
+  queVence: string | null;
+  polizaVence: string | null;
+  permisoSictVence: string | null;
+  verificacionVence: string | null;
+  gpsProveedor: string | null;
+  gpsDeviceId: string | null;
+  gpsVistoEn: string | null;
+  ordenesAbiertas: number;
+  activo: boolean;
+  terminalId: string | null;
+  terminalNombre: string | null;
+}
+
+export interface PaginaUnidades {
+  filas: FilaRegistroUnidad[];
+  /** Cuántas casan con el filtro. Lo CUENTA la base; no es el largo de la
+   *  página. */
+  total: number;
+  pagina: number;
+  paginas: number;
+  q: string;
+}
+
+export interface ConteosUnidades {
+  total: number;
+  activas: number;
+  bajas: number;
+  vencidos: number;
+  porVencer: number;
+  vigentes: number;
+  sinDato: number;
+}
+
+/** Filas por página del registro de unidades. */
+export const UNIDADES_POR_PAGINA = 25;
+
+/**
+ * Cuál de los tres papeles vence antes, y en cuántos días desde `hoy` (día de
+ * México en ISO). Los nombres salen de `PAPELES_UNIDAD` para que la pantalla
+ * de unidades, la API y el bot llamen igual al mismo papel.
+ */
+export function papelMasProximo(
+  papeles: { polizaVence: string | null; permisoSictVence: string | null; verificacionVence: string | null },
+  hoy: string,
+): { diasAlVencimiento: number | null; queVence: string | null } {
+  const fechas: Array<string | null> = [papeles.polizaVence, papeles.permisoSictVence, papeles.verificacionVence];
+  let diasAlVencimiento: number | null = null;
+  let queVence: string | null = null;
+  for (let i = 0; i < fechas.length; i++) {
+    const v = fechas[i];
+    if (!v) continue;
+    const iso = v.slice(0, 10);
+    // Una fecha que no se pueda interpretar se SALTA, no se cuenta como hoy:
+    // contarla daría 0 días y pintaría de amarillo un papel que nadie capturó.
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso) || Number.isNaN(Date.parse(`${iso}T00:00:00Z`))) continue;
+    const dias = diasEntreIso(hoy, iso);
+    // `<` y no `<=`: con dos papeles el mismo día gana el primero de
+    // `PAPELES_UNIDAD`, igual que en `getUnidades`.
+    if (diasAlVencimiento === null || dias < diasAlVencimiento) {
+      diasAlVencimiento = dias;
+      queVence = PAPELES_UNIDAD[i];
+    }
+  }
+  return { diasAlVencimiento, queVence };
+}
+
+/**
+ * Una página del registro de unidades (`unidades_registro_tenant`, 0298).
+ *
+ * FALLA CERRADO: un error de lectura LANZA. La página lo atrapa y pinta la
+ * sección caída diciéndolo — media lista se ve igual que la lista entera.
+ */
+export async function getUnidadesRegistro(
+  tenantId: string,
+  hoy: string,
+  opciones: { q?: string; pagina?: number; porPagina?: number; activo?: boolean } = {},
+): Promise<PaginaUnidades> {
+  const porPagina = Math.max(1, Math.min(200, opciones.porPagina ?? UNIDADES_POR_PAGINA));
+  const q = (opciones.q ?? '').trim().replace(/\s+/g, ' ').slice(0, MAX_BUSQUEDA_OPERADORES);
+  // `%` y `_` son comodines del LIKE del lado de la base: se escapan para que
+  // buscar «100%» busque eso y no «todo».
+  const qSql = q.replace(/[\\%_]/g, (c) => `\\${c}`);
+  const pedida = Number.isInteger(opciones.pagina) && (opciones.pagina as number) >= 1 ? (opciones.pagina as number) : 1;
+
+  const leer = async (pagina: number) => {
+    const { data, error } = await acotada(supabaseAdmin().rpc('unidades_registro_tenant', {
+      p_tenant: tenantId, p_q: qSql || null, p_activo: opciones.activo ?? true,
+      p_desde: (pagina - 1) * porPagina, p_limite: porPagina,
+    }), 'unidades_registro_tenant');
+    if (error) throw new Error(`getUnidadesRegistro: ${error.message}`);
+    const r = data as { total?: unknown; filas?: unknown } | null;
+    if (!r || !esNumero(r.total) || !Array.isArray(r.filas)) {
+      throw new Error('getUnidadesRegistro: unidades_registro_tenant devolvió otra forma (¿migración 0298 sin aplicar?)');
+    }
+    return { total: r.total, filas: r.filas as Array<Record<string, unknown>> };
+  };
+
+  let pagina = pedida;
+  let r = await leer(pagina);
+  const paginas = Math.max(1, Math.ceil(r.total / porPagina));
+  // Un `?p=` más allá del final (un link viejo) cae a la última página real.
+  if (pagina > paginas) { pagina = paginas; r = await leer(pagina); }
+
+  const filas: FilaRegistroUnidad[] = r.filas.map((f) => {
+    const polizaVence = textoONull(f.polizaVence);
+    const permisoSictVence = textoONull(f.permisoSictVence);
+    const verificacionVence = textoONull(f.verificacionVence);
+    const { diasAlVencimiento, queVence } = papelMasProximo({ polizaVence, permisoSictVence, verificacionVence }, hoy);
+    return {
+      id: String(f.id),
+      numeroEconomico: String(f.numeroEconomico),
+      placas: textoONull(f.placas),
+      marca: textoONull(f.marca),
+      modelo: textoONull(f.modelo),
+      // `null` se queda `null`: un 0 diría que la unidad es del año cero.
+      anio: f.anio == null ? null : Number(f.anio),
+      estado: String(f.estado),
+      // Lo mismo con el odómetro: `null` = nadie lo capturó, NO cero km.
+      kmActual: f.kmActual == null ? null : Number(f.kmActual),
+      diasAlVencimiento,
+      queVence,
+      polizaVence,
+      permisoSictVence,
+      verificacionVence,
+      gpsProveedor: textoONull(f.gpsProveedor),
+      gpsDeviceId: textoONull(f.gpsDeviceId),
+      gpsVistoEn: textoONull(f.gpsVistoEn),
+      ordenesAbiertas: esNumero(f.ordenesAbiertas) ? f.ordenesAbiertas : Number(f.ordenesAbiertas ?? 0),
+      activo: Boolean(f.activo),
+      terminalId: textoONull(f.terminalId),
+      terminalNombre: textoONull(f.terminalNombre),
+    };
+  });
+  return { filas, total: r.total, pagina, paginas, q };
+}
+
+/**
+ * Los contadores de papeles sobre la FLOTA ENTERA (`unidades_conteos_tenant`,
+ * 0298). `null` = no se pudo contar; la vista pinta «—» y lo dice, nunca un 0
+ * que se lea como medición.
+ */
+export async function getUnidadesConteos(tenantId: string, hoyMxIso: string, diasAviso: number): Promise<ConteosUnidades | null> {
+  const { data, error } = await acotada(supabaseAdmin().rpc('unidades_conteos_tenant', {
+    p_tenant: tenantId, p_hoy: hoyMxIso, p_dias_aviso: diasAviso,
+  }), 'unidades_conteos_tenant');
+  if (error) {
+    logger.warn('getUnidadesConteos', { tenantId, err: error.message });
+    return null;
+  }
+  const r = data as Record<string, unknown> | null;
+  const llaves: Array<keyof ConteosUnidades> = ['total', 'activas', 'bajas', 'vencidos', 'porVencer', 'vigentes', 'sinDato'];
+  const salida = {} as ConteosUnidades;
+  for (const k of llaves) {
+    const v = r?.[k];
+    const n = typeof v === 'string' ? Number(v) : v;
+    if (!esNumero(n)) {
+      logger.warn('getUnidadesConteos.forma', { tenantId, llave: k });
+      return null;
+    }
+    salida[k] = n;
+  }
+  return salida;
 }

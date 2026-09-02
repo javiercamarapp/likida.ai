@@ -401,7 +401,14 @@ export async function buscarOperadorPorTelefono(
 ): Promise<{ id: string; nombre: string; numeroEmpleado: string | null; activo: boolean } | null> {
   const { data, error } = await acotada(
     supabaseAdmin().from('operador').select('id, nombre, numero_empleado, activo')
-      .eq('tenant_id', tenantId).in('telefono', variantesTelefono(telefono)).order('activo', { ascending: false }).limit(1),
+      // `activo` primero (si hay uno vivo con ese número, ÉSE es el que
+      // responde) y `id` como desempate TOTAL: sin él, dos fichas con el
+      // mismo `activo` —el mismo teléfono escrito en dos variantes, que es
+      // justo lo que `variantesTelefono` va a buscar— devolverían una
+      // cualquiera, y la idempotencia de `POST /v1/operadores` acusaría un id
+      // distinto en cada reintento del mismo lote.
+      .eq('tenant_id', tenantId).in('telefono', variantesTelefono(telefono))
+      .order('activo', { ascending: false }).order('id').limit(1),
     'buscarOperadorPorTelefono',
   );
   if (error) throw new Error(`buscarOperadorPorTelefono: ${error.message}`);
