@@ -369,10 +369,17 @@ export async function getResumenNegocio(
   // cientos de miles): cubre el error por valor y el recorte a `max_rows`, y
   // LANZA si no completa. `llm_costo` (0062) y `viaje`/`gasto` (0153) no se
   // traen: se cuentan en la base. Ver la cabecera.
+  //
+  // AUDITORÍA 24, ADM-3 (ALTO): `not.ilike('nombre', 'ZZZ %')` — una corrida
+  // de QA abortada CONSERVA su tenant sintético a propósito (es evidencia
+  // para inspección, ver qa-motor.ts), y sin este filtro entraba aquí como
+  // una flota real hasta que alguien la limpiara a mano. El prefijo 'ZZZ '
+  // es la misma llave que usa el guard de borrado del ejército de QA
+  // (`scripts/qa-agentes/config.qa.ts`) — no una convención nueva.
   const [tenantsData, costoIa, negocio] = await Promise.all([
     traerTodo<{ id: string; nombre: string; plan: string; config: unknown }>(
       (d, h) => acotada(
-        admin.from('tenant').select('id, nombre, plan, config', conteo(d)).order('id').range(d, h),
+        admin.from('tenant').select('id, nombre, plan, config', conteo(d)).not('nombre', 'ilike', 'ZZZ %').order('id').range(d, h),
         'getResumenNegocio/tenant',
       ),
       'getResumenNegocio/tenant',

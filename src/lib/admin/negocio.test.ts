@@ -34,6 +34,9 @@ function crearBuilder(tabla: string) {
   // existían en el mock — la búsqueda por teléfono y el detalle por
   // (tenant, teléfono) los necesitan de verdad, como PostgREST.
   let filtroIlike: [string, RegExp] | null = null;
+  // ADM-3: `.not(col, 'ilike', patron)` — getResumenNegocio excluye los
+  // tenants sintéticos 'ZZZ %' que una corrida de QA abortada conserva.
+  const filtrosNot: Array<[string, RegExp]> = [];
   const filtradas = (): Array<Record<string, unknown>> => {
     let todas = (raw().data ?? []) as Array<Record<string, unknown>>;
     for (const [col, val] of filtros) todas = todas.filter((f) => f[col] === val);
@@ -41,6 +44,7 @@ function crearBuilder(tabla: string) {
       const [col, re] = filtroIlike;
       todas = todas.filter((f) => re.test(String(f[col] ?? '')));
     }
+    for (const [col, re] of filtrosNot) todas = todas.filter((f) => !re.test(String(f[col] ?? '')));
     return todas;
   };
   const b: Record<string, unknown> = {};
@@ -51,6 +55,13 @@ function crearBuilder(tabla: string) {
   b.ilike = (col: string, patron: string) => {
     const cuerpo = patron.split('%').map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*');
     filtroIlike = [col, new RegExp(`^${cuerpo}$`, 'i')];
+    return b;
+  };
+  b.not = (col: string, op: string, patron: string) => {
+    if (op === 'ilike') {
+      const cuerpo = patron.split('%').map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*');
+      filtrosNot.push([col, new RegExp(`^${cuerpo}$`, 'i')]);
+    }
     return b;
   };
   b.maybeSingle = () => {
@@ -251,6 +262,20 @@ describe('getResumenNegocio', () => {
       facturasTotal: 0,
       tendenciaCosto: null, tendenciaTokens: null,
     });
+  });
+
+  it('ADM-3: un tenant "ZZZ QA …" conservado por una corrida abortada no cuenta como flota real', async () => {
+    respuestas.set('tenant', {
+      data: [
+        { id: 't1', nombre: 'Flota Real SA de CV', plan: 'pro' },
+        { id: 'zzz1', nombre: 'ZZZ QA a1b2c3d4', plan: 'demo' },
+      ],
+      error: null,
+    });
+    respuestas.set('viaje', { data: [{ id: 'v1', tenant_id: 't1' }], error: null });
+    const r = await getResumenNegocio('2026-08-02');
+    expect(r.tenants).toBe(1);
+    expect(r.flotas.map((f) => f.nombre)).toEqual(['Flota Real SA de CV']);
   });
 
   it('con dos semanas de historia, la tendencia es el % real de cambio', async () => {
