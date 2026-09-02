@@ -240,6 +240,63 @@ Para listarlas: `vercel env ls production`.
 
 ---
 
+## Auth
+
+### Encender el segundo factor obligatorio del superadmin (SEG-3)
+
+La cuenta de superadmin cruza **todas** las flotas: `is_superadmin()` abre la
+RLS entera, `?tenant=` abre el panel de cualquier cliente y `/api/export/*` sus
+liquidaciones. Su única puerta es un enlace mágico al correo, así que un
+phishing que consiga que pegues un código de seis dígitos entrega la base de
+todos los clientes. La palanca `LIKIDA_SUPERADMIN_MFA=obligatorio` cierra eso.
+
+**Está apagada por default a propósito: encenderla sin haber inscrito el factor
+te deja fuera de tu propia consola.** La secuencia, en este orden:
+
+1. **Habilita TOTP en el proyecto de producción**: Supabase → Authentication →
+   Multi-Factor → *TOTP: enabled*. (En local es `[auth.mfa.totp]
+   enroll_enabled = true` / `verify_enabled = true` en `supabase/config.toml`;
+   hoy están en `false`, que es por lo que este paso no se puede saltar.)
+2. **Inscribe tu factor** en `https://app.likida.ai/dashboard/mi-perfil` →
+   *Seguridad — segundo factor* → «Inscribir». Guarda el secreto en el gestor
+   de contraseñas, no solo en el teléfono.
+3. **Comprueba que verificas**: escribe el código de la app en esa misma
+   pantalla y espera el aviso «Segundo factor verificado».
+4. Solo entonces: `vercel env add LIKIDA_SUPERADMIN_MFA production` con el
+   valor exacto `obligatorio` (ningún otro valor la enciende — ni `true`, ni
+   `1`), y redespliega.
+
+**Qué cambia con la palanca puesta.** Al abrir `/admin` o cualquier página de
+`/dashboard`, una sesión de superadmin sin factor —o con factor pero en AAL1—
+rebota a `/dashboard/mi-perfil?exige=…`, con el aviso de qué falta. Esa
+pantalla es la **única exenta** (gatearla sería un círculo) y, mientras la
+palanca esté puesta, resuelve sin exigir flota elegida. Si Supabase Auth no
+contesta, también rebota: fallar cerrado.
+
+**Cómo apagarla si te quedas fuera.** `vercel env rm LIKIDA_SUPERADMIN_MFA
+production` y redesplegar. La cuenta no queda bloqueada en la base: la
+exigencia vive solo en el código (`src/lib/auth/guard.ts`).
+
+### Dar de baja a alguien de una flota (SEG-1)
+
+La flota lo hace sola desde `/dashboard/usuarios` → «Dar de baja». Son tres
+capas y conviene saber qué hace cada una cuando algo se ve raro:
+
+1. `app_user.activo = false` (mig. 0294) — las cuatro funciones de RLS filtran
+   por esa columna, así que la base cierra en la siguiente petición aunque el
+   JWT siga vigente, y `session.ts` devuelve `null`.
+2. **Ban en Supabase Auth** (`ban_duration`) — es lo que mata el *refresh* del
+   token: sin él la cookie de 400 días se sigue renovando cada hora. Si el ban
+   no entra, la pantalla lo **dice** («la revocación de su sesión no se pudo
+   confirmar») y queda `equipo.ban_fallo` en el log; se arregla reactivando y
+   volviendo a dar de baja.
+3. Bitácora (`usuario.desactivado`) con quién y a quién.
+
+Reactivar levanta el ban. La fila **no se borra nunca**: es el rastro de quién
+tuvo acceso y hasta cuándo.
+
+---
+
 ## Desplegar
 
 Con el proyecto ya vinculado:

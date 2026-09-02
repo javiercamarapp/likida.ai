@@ -26,8 +26,16 @@ import { join, relative } from 'node:path';
  * `pruebas-manuales` — con al menos un `.from(`/`.rpc(`, SIN contar
  * `repo.ts` ni `pg.ts` (la frontera declarada). Es un TECHO, no un objetivo:
  * si sube, actualiza este número en el mismo commit que explica por qué.
+ *
+ * 241 → 242 el 1-sep-2026 (auditoría 24, SEG-1): nace
+ * `lib/auth/usuarios_escritura.ts` — cambiar rol, dar de baja y reactivar a
+ * alguien del equipo de una flota. Va con `.from(` directo A PROPÓSITO, igual
+ * que su hermano `lib/auth/llave-api-escritura.ts` (que ya estaba dentro del
+ * conteo): son escrituras de AUTORIZACIÓN sobre `app_user`, y meterlas en
+ * `repo.ts` —que es el repositorio del dominio de viajes— mezclaría la puerta
+ * con lo que la puerta protege.
  */
-const TECHO_ARCHIVOS_FUERA_DE_LA_FRONTERA = 241;
+const TECHO_ARCHIVOS_FUERA_DE_LA_FRONTERA = 242;
 
 const RAIZ_SRC = new URL('../../', import.meta.url).pathname;
 

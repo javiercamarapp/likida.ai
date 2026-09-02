@@ -17,6 +17,9 @@ import { fileURLToPath } from 'node:url';
 import { puedeVerRuta } from '@/lib/auth/visibilidad';
 import { puedeAdministrar } from '@/lib/auth/permisos';
 
+// La ruta la arma `import.meta.url`, no entrada de nadie: es el archivo
+// de al lado. La regla no distingue eso de un path de usuario.
+// eslint-disable-next-line security/detect-non-literal-fs-filename
 const PAGINA = readFileSync(fileURLToPath(new URL('./page.tsx', import.meta.url)), 'utf8');
 const RUTA = '/dashboard/arco';
 
