@@ -34,6 +34,10 @@ import { cubetaDe } from '@/lib/likida/cuadre/engine';
 import type { ConceptoGasto, Diferencia, Gasto } from '@/types/likida';
 
 export const runtime = 'nodejs';
+// BE-19 (auditoría 24): sin esto el tope lo pone el default de la plataforma
+// (15 s en Node sin Fluid Compute) y un export de 92 días sobre 45,000
+// liquidaciones muere en 504 mudo. Literal a propósito: Next lo lee en build.
+export const maxDuration = 120;
 export const dynamic = 'force-dynamic';
 
 type Formato = 'contpaqi' | 'sap_b1';
