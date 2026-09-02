@@ -640,13 +640,13 @@ export async function correrRunner(
 
   const { data, error } = await acotada(supabaseAdmin()
     .from('agente_definicion')
-    .select('id, presupuesto_dia_usd')
+    .select('id, presupuesto_dia_usd, experimental')
     .eq('estado', 'vivo')
     .eq('runner_habilitado', true)
     .eq('disparador', 'cron')
     .order('id'), 'runner.agentes');
   if (error) throw new Error(`correrRunner: ${error.message}`);
-  const habilitados = ordenarPorCosto(((data ?? []) as Array<{ id: string; presupuesto_dia_usd: number | null }>)
+  const habilitados = ordenarPorCosto(((data ?? []) as Array<{ id: string; presupuesto_dia_usd: number | null; experimental: boolean | null }>)
     .filter((a) => !soloAgente || a.id === soloAgente));
 
   const venceEn = opts.venceEn ?? Date.now() + PLAZO_RUNNER_MS;
@@ -683,6 +683,19 @@ export async function correrRunner(
     const interruptor = `agente:${a.id}`;
     if (!(INTERRUPTORES as readonly string[]).includes(interruptor)) {
       agentes.push({ agente: a.id, resultado: 'saltado', motivo: 'sin kill switch declarado (interruptores.ts + CHECK 0110) — un autónomo inapagable no corre' });
+      continue;
+    }
+    // Candado 2 — EXPERIMENTAL (auditoría 24, "agentes teatro", 0301). Nueve
+    // agentes del catálogo (cazador, seo_distribucion, guiones,
+    // noticias_mercado, promos_diarias, visuales, video_demo,
+    // video_marketing, pruebas) prometen un motor que el código no tiene
+    // todavía — producen texto sin motor detrás, o su promesa no
+    // corresponde con lo que corre. Siguen `vivo` en el organigrama (Javier
+    // los puede ver y graduar) pero el runner NO los despacha por default:
+    // presentarlos junto a los agentes reales como "back office completo"
+    // fue justo lo que esta auditoría vino a corregir.
+    if (a.experimental) {
+      agentes.push({ agente: a.id, resultado: 'saltado', motivo: 'experimental (agente_definicion.experimental) — el catálogo promete un motor que el código no tiene todavía; no se despacha en automático hasta que se gradúe' });
       continue;
     }
     try {

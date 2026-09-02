@@ -982,6 +982,40 @@ describe('el despacho de crecimiento (0230)', () => {
   });
 });
 
+// ═══════════════════════════════════════════════════════════════════════════
+// AGENTES TEATRO (auditoría 24, 1-sep-2026, migración 0301) — nueve agentes
+// del catálogo prometen un motor que el código no tiene todavía. Siguen
+// `vivo` + `runner_habilitado` en la base, pero `experimental = true` los
+// saca del despacho automático — candado 2, entre el kill switch y el techo.
+// ═══════════════════════════════════════════════════════════════════════════
+describe('candado 2 — experimental (agentes teatro, 0301)', () => {
+  it('experimental=true salta el agente ANTES de tocar su motor, con el motivo dicho', async () => {
+    // `promos_diarias` sí tiene kill switch declarado en este arnés — para
+    // aislar el candado 2 del candado 1, que ya tiene su propia prueba.
+    respuestas.set('agente_definicion', [{ data: [{ id: 'promos_diarias', presupuesto_dia_usd: 0.1, experimental: true }], error: null }]);
+    const r = await correrRunner(undefined, TENANT);
+    expect(correrCrecimiento).not.toHaveBeenCalled();
+    expect(r.agentes[0]).toMatchObject({ agente: 'promos_diarias', resultado: 'saltado' });
+    expect(r.agentes[0].motivo).toMatch(/experimental/);
+  });
+
+  it('experimental=false (o ausente) NO lo afecta — corre como cualquier agente real', async () => {
+    respuestas.set('agente_definicion', [{ data: [{ id: 'promos_diarias', presupuesto_dia_usd: 0.1, experimental: false }], error: null }]);
+    respuestas.set('agente_corrida', [{ data: null, error: { message: 'nadie debería preguntar' } }]);
+    const r = await correrRunner(undefined, TENANT);
+    expect(r.agentes[0]).toMatchObject({ agente: 'promos_diarias', resultado: 'corrio' });
+  });
+
+  it('el candado 1 (kill switch) sigue mandando ANTES que el 2: sin interruptor, ni siquiera se mira si es experimental', async () => {
+    // `cazador` (LEADS, también experimental) no tiene interruptor declarado
+    // en este arnés a propósito — el motivo tiene que seguir siendo el del
+    // candado 1, no el del 2, aunque el agente sea de los nueve.
+    respuestas.set('agente_definicion', [{ data: [{ id: 'cazador', presupuesto_dia_usd: 0.1, experimental: true }], error: null }]);
+    const r = await correrRunner(undefined, TENANT);
+    expect(r.agentes[0].motivo).toMatch(/kill switch/);
+  });
+});
+
 describe('el despacho de ingeniería (0234)', () => {
   // La misma costura que la del back office y crecimiento: los ids viven DOS
   // veces —literal en el runner, para no cargar los lectores del catálogo de
