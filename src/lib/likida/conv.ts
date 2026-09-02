@@ -920,6 +920,17 @@ export async function intentarLockViaje(viajeId: string, opts?: { ttlMs?: number
  */
 export async function fotoAnteriorSinProcesar(telefono: string, mensajeMs: number): Promise<boolean> {
   if (!telefono || !Number.isFinite(mensajeMs) || mensajeMs <= 0) return false;
+  try {
+    return await consultarFotoAnterior(telefono, mensajeMs);
+  } catch (e) {
+    // FAIL-OPEN también ante excepción, por lo mismo: lo caro es dejar a todos
+    // los choferes sin poder cerrar.
+    logger.warn('inbox.foto_anterior_ilegible', { err: e instanceof Error ? e.message : String(e) });
+    return false;
+  }
+}
+
+async function consultarFotoAnterior(telefono: string, mensajeMs: number): Promise<boolean> {
   const { data, error } = await acotada(supabaseAdmin()
     .from('wa_evento_pendiente')
     .select('id')
@@ -929,6 +940,9 @@ export async function fotoAnteriorSinProcesar(telefono: string, mensajeMs: numbe
     .eq('evento->>type', 'image')
     // `->` (jsonb) y no `->>`: con texto, «999…» compararía como cadena.
     .lt('evento->timestampMs', mensajeMs)
+    // orden-no-importa: esto pregunta si EXISTE alguna, no cuál. Con `limit(1)`
+    // el resultado es «hay» o «no hay», y las dos respuestas son las mismas sin
+    // importar qué fila devuelva la base.
     .limit(1), 'fotoAnteriorSinProcesar');
   if (error) {
     logger.warn('inbox.foto_anterior_ilegible', { err: error.message });

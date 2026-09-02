@@ -27,7 +27,14 @@ import { join, relative } from 'node:path';
  * `repo.ts` ni `pg.ts` (la frontera declarada). Es un TECHO, no un objetivo:
  * si sube, actualiza este número en el mismo commit que explica por qué.
  */
-const TECHO_ARCHIVOS_FUERA_DE_LA_FRONTERA = 241;
+// 242 desde el 1-sep-2026 (auditoría 24, WA-3): `gasto_correccion.ts`, el
+// primer camino que existe para cambiar `gasto.monto` — hasta esa fecha una
+// cifra mal leída no se podía corregir desde ningún lado. Vive fuera de
+// `repo.ts` porque es una POLÍTICA (quién puede corregir, con qué motivo, qué
+// se conserva de lo anterior, qué se rechaza) y no un acceso a datos; sus dos
+// consultas filtran por `tenant_id` y pasan por `acotada`, que es lo que la
+// frontera protege.
+const TECHO_ARCHIVOS_FUERA_DE_LA_FRONTERA = 242;
 
 const RAIZ_SRC = new URL('../../', import.meta.url).pathname;
 
