@@ -8,7 +8,7 @@ import { puedeVerArea } from '@/lib/auth/visibilidad';
 import { logger } from '@/lib/logger';
 import { exigir, PAGINA, MAX_PAGINAS, LecturaIncompleta } from '@/lib/likida/pg';
 import { acotada } from '@/lib/likida/presupuesto';
-import { leerPeriodo } from './periodo';
+import { leerPeriodo, leerFiltroRevision, LEYENDA_REVISION } from './periodo';
 
 export const runtime = 'nodejs';
 
@@ -77,9 +77,19 @@ export async function GET(req: Request) {
   // 1,000 filas. Las columnas y el formato son EXACTAMENTE los de antes (el
   // ERP del contador ya los lee): `toCsv` de `lib/likida/export` sigue
   // escribiendo cada página, y solo la primera lleva el encabezado.
-  const periodo = leerPeriodo(new URL(req.url).searchParams);
+  const params = new URL(req.url).searchParams;
+  const periodo = leerPeriodo(params);
   if (!periodo.ok) return new NextResponse(periodo.motivo, { status: 400 });
   const { desde, hastaExclusivo, etiqueta } = periodo;
+
+  // ── BLOQ-6 (0299): EL ARCHIVO RESPETA LA FIRMA HUMANA ───────────────────
+  // Ver la nota larga en `periodo.ts`. Por omisión NO salen las rechazadas:
+  // tesorería dispersa con este CSV y el total de una rechazada está a punto
+  // de cambiar. El corte va en el nombre del archivo y en un encabezado —
+  // un export que oculta filas sin decirlo es un dato corto con cara de
+  // completo, que es justo lo que este archivo persigue.
+  const rev = leerFiltroRevision(params);
+  if (!rev.ok) return new NextResponse(rev.motivo, { status: 400 });
 
   // ── KEYSET, NO `range` POR POSICIÓN (auditoría 21, MEDIO REINCIDENTE 18-c4) ─
   //
@@ -105,6 +115,9 @@ export async function GET(req: Request) {
       .eq('tenant_id', tenantId)
       .gte('created_at', desde)
       .lt('created_at', hastaExclusivo);
+    if (rev.filtro === 'sin_rechazadas') q = q.neq('revision', 'rechazada');
+    else if (rev.filtro === 'firmadas') q = q.in('revision', ['aprobada', 'ajustada']);
+    else if (rev.filtro !== 'todas') q = q.eq('revision', rev.filtro);
     // `(created_at, id) < (c, i)` en el dialecto de PostgREST: o es más vieja,
     // o es del mismo instante y su id va después en el orden. Sin la segunda
     // rama, dos liquidaciones del mismo microsegundo se pierden o se repiten —
@@ -182,7 +195,9 @@ export async function GET(req: Request) {
   return new NextResponse(stream, {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="liquidaciones_likida.csv"`,
+      'Content-Disposition': `attachment; filename="liquidaciones_likida_${rev.filtro}.csv"`,
+      // El corte, legible por quien reciba el archivo sin ver la URL.
+      'X-Likida-Revision': `${rev.filtro} (${LEYENDA_REVISION[rev.filtro]})`,
       'Cache-Control': 'no-store',
     },
   });
