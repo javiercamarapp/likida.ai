@@ -744,10 +744,21 @@ export default function ChatFlota({
     // curva easeOutQuint del resto del producto; sticky para quedarse
     // pegado mientras el hilo scrollea, y la altura se midió contra el
     // ancla al abrir (arranca al nivel del gris, cinta de rol incluida).
+    //
+    // H12 (auditoría 24): esos 352px fijos son correctos en escritorio, pero
+    // en un teléfono (<lg) 352px es casi TODO el ancho disponible — el hilo
+    // de la conversación quedaba comprimido a unos pocos píxeles al lado,
+    // ilegible, en vez de que el historial ocupe la pantalla completa como
+    // una cortina. Bajo `lg` y con el historial abierto, el panel se vuelve
+    // un overlay `fixed inset-0` de ancho completo (`!` fuerza el override
+    // sobre el `width` inline, que sigue animando el caso de escritorio).
+    const panelHistorialMovil = historialAbierto
+      ? 'max-lg:!fixed max-lg:!inset-0 max-lg:!top-0 max-lg:!mt-0 max-lg:!w-full max-lg:!h-full max-lg:z-40'
+      : '';
     const panelHistorial = (
-      <div className="shrink-0 self-start sticky top-4 mt-4 overflow-hidden"
+      <div className={`shrink-0 self-start sticky top-4 mt-4 overflow-hidden ${panelHistorialMovil}`}
         style={{ width: historialAbierto ? 352 : 0, height: `calc(100dvh - ${topPanel + 32}px)`, transition: 'width 480ms cubic-bezier(0.22, 1, 0.36, 1)' }}>
-        <div className="w-[320px] mx-4 h-full rounded-2xl hairline flex flex-col p-3 gap-2.5"
+        <div className="w-[320px] mx-4 h-full rounded-2xl hairline flex flex-col p-3 gap-2.5 max-lg:!w-full max-lg:!mx-0 max-lg:!rounded-none"
           style={{ background: 'var(--surface)', boxShadow: 'var(--shadow-card)' }}>
           <div className="flex items-center justify-between">
             <button type="button" onClick={nuevoChat}
