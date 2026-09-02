@@ -44,7 +44,7 @@ el panel afirma "aún no hay liquidaciones" estando ciego. Ver `exigir()` y
 - `wa_mensaje_procesado` NO tiene `tenant_id`: no se puede atribuir a una flota.
 - `viaje.estatus` solo admite `abierto | en_cuadre | liquidado` (constraint
   `viaje_estatus_dominio`). `app_user.rol`: superadmin, flota_admin, contador,
-  operador, encargado.
+  encargado, vendedor (`operador` se retiró en la 0086; `vendedor` entró en la 0105).
 - `cliente`, `unidad`, `tarifa`, `factura_emitida`, `pago_recibido`, `posicion` y
   `geocerca` SÍ EXISTEN (migs. 0047-0050), y `viaje` tiene `km_recorridos` e
   `ingreso_flete`. **Están vacías, pero YA NO por falta de escritor** — la
