@@ -8,6 +8,7 @@ import {
   ejecutarCobranza, dentroDeVentana,
 } from '@/lib/likida/agentes/cobranza';
 import { logger } from '@/lib/logger';
+import { ahoraMs } from '@/lib/saludo';
 import { registrarCorrida, ultimasCorridas, type CorridaRegistrada } from '@/lib/likida/agentes/corridas';
 import { VistaAgenteCobranza } from './vista';
 import { SeccionNotificaciones } from '../seccion-notificaciones';
@@ -114,7 +115,7 @@ export default async function PaginaAgenteCobranza({
     // (`cortadosPorReloj`); solo faltaba pasárselo aquí.
     const inicio = new Date();
     const resultado = await ejecutarCobranza(tenantId, new Date(), {
-      ignorarVentana: true, venceEn: Date.now() + 25_000,
+      ignorarVentana: true, venceEn: ahoraMs() + 25_000,
     });
     // La bitácora de corridas (B3). `registrarCorrida` nunca lanza.
     await registrarCorrida(tenantId, 'cobranza', {

@@ -245,7 +245,7 @@ export async function buscarViajesVivos(tenantId: string, q: string): Promise<Op
     'repo_paginado.buscar_viajes_folio',
   );
   if (error) throw new Error(error.message);
-  let filas = (data ?? []) as Array<{ id: string; folio: string | null; origen: string | null; destino: string | null; operador: { nombre?: string } | null }>;
+  const filas = (data ?? []) as Array<{ id: string; folio: string | null; origen: string | null; destino: string | null; operador: { nombre?: string } | null }>;
 
   if (texto && filas.length < TOPE_BUSCADOR_VIAJES) {
     // Completa por nombre de operador — el caso "el huérfano trae el

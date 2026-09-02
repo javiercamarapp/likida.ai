@@ -83,7 +83,7 @@ export function BotonEjecutar({ ejecutarAhora, enCola, activo }: {
               se contactó a todos. */}
           {r.cortadosPorReloj > 0 && (
             <p style={{ color: 'var(--warn)' }}>
-              El reloj cortó la corrida — {r.cortadosPorReloj} sin tocar todavía. Vuelve a apretar "Ejecutar ahora" para seguir.
+              El reloj cortó la corrida — {r.cortadosPorReloj} sin tocar todavía. Vuelve a apretar &quot;Ejecutar ahora&quot; para seguir.
             </p>
           )}
           {r.fallos.map((f, i) => (

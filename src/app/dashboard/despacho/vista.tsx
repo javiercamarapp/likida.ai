@@ -170,7 +170,7 @@ export function VistaDespacho({
               </div>
               {activos.error !== null ? (
                 <Leyenda icono={<Truck width={17} height={17} strokeWidth={1.75} style={{ color: 'var(--bad)' }} />}>
-                  No se pudo leer "En curso" ahora mismo — vuelve a intentar en un momento.
+                  No se pudo leer &quot;En curso&quot; ahora mismo — vuelve a intentar en un momento.
                 </Leyenda>
               ) : activos.filas.length === 0 ? (
                 <Leyenda icono={<Truck width={17} height={17} strokeWidth={1.75} style={{ color: 'var(--marca)' }} />}>
