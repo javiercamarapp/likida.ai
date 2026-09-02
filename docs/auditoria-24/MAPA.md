@@ -24,7 +24,7 @@ mergear es exactamente el trabajo de hoy.
 
 - Rama base: `master` = `615496d`.
 - Árbol auditado: `aud24/integracion` = `49ecf93`.
-- Ronda anterior: `docs/auditoria-23/00-SINTESIS.md`, global **5.4**.
+- Ronda anterior: auditoría 23 (reporte archivado fuera del repo), global **5.4**.
 - Árbol limpio al arrancar (`git status --porcelain` vacío) → **autofix habilitado**.
 
 ## Qué cambió desde la auditoría 23
