@@ -76,8 +76,13 @@ export default async function MiPerfilFlota({
   const sp = await searchParams;
   const sufijo = sufijoTenant(sp);
 
-  const { data: fila } = await supabaseAdmin()
+  // H16 (auditoría 24): sin comprobar `error`, una lectura caída de
+  // `app_user` se veía IGUAL que una cuenta sin correo — la fila "Correo" de
+  // abajo pintaba el mismo "—" para las dos, y "—" en ESTA pantalla lee como
+  // "tu cuenta no tiene correo", no como "no se pudo leer ahora mismo".
+  const { data: fila, error: errFila } = await supabaseAdmin()
     .from('app_user').select('email').eq('id', s.userId).maybeSingle();
+  const correoFalloLectura = Boolean(errFila);
 
   // ── MIS CLIENTES MCP (H3, auditoría de dashboards 29-ago-2026) ──────────
   // La 0260 dejó que cualquiera del panel autorizara Claude o ChatGPT a leer
@@ -124,7 +129,12 @@ export default async function MiPerfilFlota({
     // Tope de 80: la misma medida que la firma del Agente de Cobranza. Un
     // nombre de 4,000 caracteres rompe el sidebar y el PDF.
     if (nombre.length > 80) redirect(volverAMiPerfil(sufijo, 'error=largo'));
-    await supabaseAdmin().from('app_user').update({ nombre }).eq('id', userId);
+    // H36 (auditoría 24): mismo patrón que subirAvatar (H17) — sin comprobar
+    // `error`, un UPDATE que falla (base caída, RLS, lo que sea) redirigía
+    // igual a "ok=nombre" y "Nombre guardado.", con el nombre viejo todavía
+    // en la fila. Fallar cerrado: se dice, no se finge.
+    const { error: errNombre } = await supabaseAdmin().from('app_user').update({ nombre }).eq('id', userId);
+    if (errNombre) redirect(volverAMiPerfil(sufijo, 'error=nombre_guardar'));
     redirect(volverAMiPerfil(sufijo, 'ok=nombre'));
   }
 
@@ -148,9 +158,16 @@ export default async function MiPerfilFlota({
     if (error) redirect(volverAMiPerfil(sufijo, 'error=avatar'));
 
     const { data: pub } = admin.storage.from('avatares').getPublicUrl(ruta);
+    // H17 (auditoría 24): este `.update()` no comprobaba `error` — un fallo
+    // aquí (la subida a Storage YA quedó hecha) redirigía igual a
+    // `ok=avatar` y "Foto de perfil actualizada", cuando en realidad
+    // `app_user.avatar_url` se quedó apuntando a la foto vieja. El archivo
+    // nuevo existe en el bucket, pero nadie lo ve — y el usuario cree que sí
+    // se guardó.
     // `?t=` revienta el caché: la ruta pública no cambia entre subidas.
-    await admin.from('app_user')
+    const { error: errUpdate } = await admin.from('app_user')
       .update({ avatar_url: `${pub.publicUrl}?t=${Date.now()}` }).eq('id', userId);
+    if (errUpdate) redirect(volverAMiPerfil(sufijo, 'error=avatar'));
     redirect(volverAMiPerfil(sufijo, 'ok=avatar'));
   }
 
@@ -220,6 +237,7 @@ export default async function MiPerfilFlota({
   const ERROR: Record<string, string> = {
     avatar: 'No se pudo subir la foto — intenta con otra imagen.',
     nombre: 'El nombre no puede quedar vacío.',
+    nombre_guardar: 'No se pudo guardar el nombre ahora mismo — vuelve a intentarlo.',
     largo: 'El nombre no puede pasar de 80 caracteres.',
     tipo: 'Solo se aceptan imágenes JPG, PNG o WebP.',
     peso: 'La imagen pasa de 2 MB — usa una más ligera.',
@@ -371,7 +389,9 @@ export default async function MiPerfilFlota({
             <dl className="mt-6 pt-6 border-t space-y-3 text-[13px]" style={{ borderColor: 'var(--line)' }}>
               <div className="flex justify-between gap-4">
                 <dt style={{ color: 'var(--muted)' }}>Correo</dt>
-                <dd className="text-right">{(fila?.email as string) ?? '—'}</dd>
+                <dd className="text-right">
+                  {correoFalloLectura ? 'No se pudo leer' : (fila?.email as string) ?? '—'}
+                </dd>
               </div>
               <div className="flex justify-between gap-4">
                 <dt style={{ color: 'var(--muted)' }}>Rol</dt>
