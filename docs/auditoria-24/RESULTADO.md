@@ -47,3 +47,8 @@ CONTINUACIÓN: los 12 rubros auditados sobre el PR #303, 2 CRÍTICOS arreglados,
 - **Tablero:** `tablero.html` + `tablero.png`, capturado con Chromium headless y
   **mirado**: 12 rubros contados, notas cuadradas contra esta síntesis, colores
   por nota y no por delta.
+- **CI DEL PR #303: VERDE, verificada por API sobre el head `7991354`** — los 8
+  checks en `success` y `mergeable_state: clean`. El job `verificar` corrió
+  completo (12 min 53 s): Typecheck en 53 s y luego Lint, `test:coverage`,
+  pruebas de tiempo, **Build** y el smoke de Playwright — los seis pasos que
+  nunca se habían ejecutado en esta rama porque morían `skipped` detrás del OOM.

@@ -84,3 +84,13 @@ error que produjo el hallazgo.
 - `11:34` Tablero renderizado con Chromium headless y **mirado**: 12 rubros,
   global 6.2 = 74/12, colores por nota.
 - Tope de 3 vueltas: **2 usadas**. La tercera se deja sin gastar a propósito.
+
+## CI verificada en verde (cierre real de la ronda)
+
+- `11:50` Job `verificar` sobre `7991354`: **success**, 12 min 53 s. El paso
+  Typecheck pasa en **53 s** y el job sigue de largo — Lint, resiliencia,
+  `test:coverage`, pruebas de tiempo, **Build** y el smoke de Playwright.
+  Esos seis pasos **nunca se habían ejecutado en esta rama**: morían `skipped`
+  detrás del OOM. `npm run build` corriendo en CI es, además, la única
+  verificación del build que esta ronda podía obtener — aquí no corre.
+- `11:50` **Los 8 checks del PR #303 en `success`** y `mergeable_state: clean`.
