@@ -129,6 +129,51 @@ describe('c5-14 — el formato se verifica sobre el TEXTO FINAL, asunto incluido
   });
 });
 
+describe('AGB-9 (auditoría 24) — 0 medido ≠ costo desconocido', () => {
+  const candidato = () => {
+    respuestas.set('prospecto', [{ data: [PROSPECTO], error: null }]);
+    respuestas.set('prospecto_contacto', [{ data: [{ direccion: 'salida', ocurrio_en: hace(4) }], error: null }]);
+    respuestas.set('cola_aprobacion', [
+      { data: [], error: null },
+      { data: [], error: null },
+    ]);
+  };
+
+  it('con `usage` medido y cost real (incluido 0), costoUsd es el número — nunca null', async () => {
+    candidato();
+    generar.mockResolvedValue({ text: '**Asunto:** Seguimiento\nLe escribí hace unos días. ¿Le vienen bien 15 minutos?', cost: 0 });
+    const r = await correrSdr('cron', 5);
+    expect(r.piezas).toBe(1);
+    expect(r.costoUsd).toBe(0);
+  });
+
+  it('con `noMedido: true` (el proveedor omitió usage), costoUsd sale NULL — no el 0/la reserva disfrazados de cifra', async () => {
+    candidato();
+    generar.mockResolvedValue({ text: '**Asunto:** Seguimiento\nLe escribí hace unos días. ¿Le vienen bien 15 minutos?', cost: 0.002, noMedido: true });
+    const r = await correrSdr('cron', 5);
+    expect(r.piezas).toBe(1);
+    expect(r.costoUsd).toBeNull();
+  });
+
+  it('null es PEGAJOSO: una sola llamada sin medir vuelve incierta la corrida entera, aunque las demás sí midieron', async () => {
+    respuestas.set('prospecto', [{ data: [{ ...PROSPECTO, id: 'pr-1' }, { ...PROSPECTO, id: 'pr-2' }], error: null }]);
+    respuestas.set('prospecto_contacto', [
+      { data: [{ direccion: 'salida', ocurrio_en: hace(4) }], error: null },
+      { data: [{ direccion: 'salida', ocurrio_en: hace(4) }], error: null },
+    ]);
+    respuestas.set('cola_aprobacion', [
+      { data: [], error: null }, { data: [], error: null },
+      { data: [], error: null }, { data: [], error: null },
+    ]);
+    generar
+      .mockResolvedValueOnce({ text: '**Asunto:** Seguimiento\nLe escribí hace unos días. ¿Le vienen bien 15 minutos?', cost: 0.001 })
+      .mockResolvedValueOnce({ text: '**Asunto:** Seguimiento\nLe escribí hace unos días. ¿Le vienen bien 15 minutos?', cost: 0.003, noMedido: true });
+    const r = await correrSdr('cron', 5);
+    expect(r.piezas).toBe(2);
+    expect(r.costoUsd).toBeNull();
+  });
+});
+
 // ═══════════════════════════════════════════════════════════════════════════
 // EL RELOJ TAMBIÉN EN LA BÚSQUEDA (auditoría ciclo 7, c7-1).
 //
