@@ -15349,3 +15349,86 @@ begin
   raise exception E'WA_CONVERSACION_TEL_NORM_0274  variante-choca=%  otro-numero=%  otra-flota=%   (esperado t / t / t)',
     choca_variante, otro_numero_ok, otra_flota_ok;
 end $$;
+
+-- ── 241. Un usuario dado de baja (`app_user.activo = false`) no tiene tenant ni permisos para RLS (mig. 0294) ──
+--
+-- AUDITORÍA 24, SEG-1 (ALTO) / H5. Hasta la 0294 no había baja: el contador
+-- externo que dejó de trabajar con la flota conservaba su cookie y sus
+-- permisos. Lo que este bloque asevera es la SEGUNDA capa —la base—: con un
+-- JWT todavía vigente, un usuario con `activo = false` obtiene de las cuatro
+-- funciones de RLS lo mismo que un extraño (cero tenants, cero permisos), y
+-- por tanto `tenant_data` no le devuelve una sola fila aunque la capa de app
+-- tuviera un hueco. El usuario ACTIVO de la misma flota sigue entero (control).
+-- Esperado: RLS_USUARIO_INACTIVO_0294 activo-tenants=1 activo-administra=t inactivo-tenants=0 inactivo-finanzas=f inactivo-administra=f inactivo-superadmin=f
+do $$
+declare
+  t uuid := gen_random_uuid();
+  u_activo uuid := gen_random_uuid();
+  u_baja uuid := gen_random_uuid();
+  activo_tenants int; activo_administra boolean;
+  baja_tenants int; baja_finanzas boolean; baja_administra boolean; baja_superadmin boolean;
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0294__');
+  insert into public.app_user (id, tenant_id, email, nombre, rol)
+    values (u_activo, t, 'activo-0294@verif.local', 'Activo', 'flota_admin');
+  -- El superadmin dado de baja es el caso más caro: `is_superadmin()` abre
+  -- TODAS las flotas, y es exactamente lo que no puede sobrevivir a la baja.
+  insert into public.app_user (id, tenant_id, email, nombre, rol, activo, desactivado_en, desactivado_por)
+    values (u_baja, t, 'baja-0294@verif.local', 'Baja', 'superadmin', false, now(), u_activo);
+
+  set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', u_activo)::text, true);
+  activo_tenants    := coalesce(array_length(public.get_user_tenant_ids(), 1), 0);
+  activo_administra := public.administra_flota();
+
+  perform set_config('request.jwt.claims', json_build_object('sub', u_baja)::text, true);
+  baja_tenants    := coalesce(array_length(public.get_user_tenant_ids(), 1), 0);
+  baja_finanzas   := public.ve_finanzas();
+  baja_administra := public.administra_flota();
+  baja_superadmin := public.is_superadmin();
+  reset role;
+
+  raise exception E'RLS_USUARIO_INACTIVO_0294  activo-tenants=%  activo-administra=%  inactivo-tenants=%  inactivo-finanzas=%  inactivo-administra=%  inactivo-superadmin=%   (esperado 1 / t / 0 / f / f / f)',
+    activo_tenants, activo_administra, baja_tenants, baja_finanzas, baja_administra, baja_superadmin;
+end $$;
+
+-- ── 242. Una llave de API puede caducar, y no puede nacer ya vencida (mig. 0294) ──
+--
+-- AUDITORÍA 24, SEG-8. `tenant_api_key.expira_en` es opcional (null = no
+-- caduca, decisión explícita). Lo que la base demuestra: (a) una llave con
+-- `expira_en` anterior a `creada_en` rebota (el CHECK), (b) una con fecha
+-- futura entra, (c) sin fecha sigue entrando. Que el camino caliente la
+-- rechace vencida se prueba en TS (llave-api.test.ts).
+-- Esperado: LLAVE_API_EXPIRA_0294 pasado-rebota=t futuro-ok=t nulo-ok=t
+do $$
+declare
+  t uuid := gen_random_uuid();
+  pasado_rebota boolean := false;
+  futuro_ok boolean := false;
+  nulo_ok boolean := false;
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0294_llaves__');
+
+  begin
+    insert into public.tenant_api_key (tenant_id, nombre, prefijo, hash, expira_en)
+      values (t, 'vencida al nacer', 'lk_live_aaaaaa', repeat('a', 64), now() - interval '1 day');
+  exception when check_violation then pasado_rebota := true;
+  end;
+
+  begin
+    insert into public.tenant_api_key (tenant_id, nombre, prefijo, hash, expira_en)
+      values (t, 'un año', 'lk_live_bbbbbb', repeat('b', 64), now() + interval '365 days');
+    futuro_ok := true;
+  exception when others then futuro_ok := false;
+  end;
+
+  begin
+    insert into public.tenant_api_key (tenant_id, nombre, prefijo, hash)
+      values (t, 'sin caducidad', 'lk_live_cccccc', repeat('c', 64));
+    nulo_ok := true;
+  exception when others then nulo_ok := false;
+  end;
+
+  raise exception E'LLAVE_API_EXPIRA_0294  pasado-rebota=%  futuro-ok=%  nulo-ok=%   (esperado t / t / t)',
+    pasado_rebota, futuro_ok, nulo_ok;
+end $$;
