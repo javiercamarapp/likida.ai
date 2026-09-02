@@ -321,6 +321,10 @@ const MAX_TURNS = 12;
  * cerré", no lo tapa nada — es munición para la afirmación de estado falsa. Y
  * encima se pagan tokens de un viaje ajeno en cada turno.
  */
+/** Los índices únicos de `wa_conversacion` contra los que choca el insert que
+ *  pierde la carrera: el crudo de la 0005 y el normalizado de la 0274. */
+export const ES_CARRERA_DE_CONVERSACION: readonly string[] = ['wa_conversacion_tenant_tel_uidx', 'uq_wa_conversacion_tenant_telefono_norm'];
+
 export async function loadConversation(tenantId: string, telefono: string, viajeId: string | null): Promise<Conversacion> {
   const admin = supabaseAdmin();
   const { data, error } = await acotada(admin
@@ -376,15 +380,29 @@ export async function loadConversation(tenantId: string, telefono: string, viaje
   if (!errInsert && creada) return desdeFila(creada, viajeId, telefono);
   // Cualquier otro fallo —red, permisos, un choque contra OTRO índice— no es
   // esta carrera y tragárselo escondería un bug distinto.
-  if (errInsert && !violaIndice(errInsert, 'wa_conversacion_tenant_tel_uidx')) {
+  //
+  // AUDITORÍA 24 · BE-4 (MEDIO, reincidente): desde la 0274 el índice que
+  // gana la carrera es `uq_wa_conversacion_tenant_telefono_norm` (teléfono
+  // NORMALIZADO); el viejo `wa_conversacion_tenant_tel_uidx` puede seguir
+  // existiendo en bases que no lo soltaron. Un choque contra cualquiera de los
+  // dos ES esta carrera — reconocer solo el viejo convertía la carrera normal
+  // de dos invocaciones con distinta forma del número en «No pude consultar
+  // tus datos» sobre una conversación sana.
+  if (errInsert && !ES_CARRERA_DE_CONVERSACION.some((idx) => violaIndice(errInsert, idx))) {
     throw new ConsultaFallida(`loadConversation.insert: ${errInsert.message}`);
   }
 
+  // La relectura busca como la lectura de arriba: por las seis variantes, no
+  // por el texto exacto (BE-4). La fila que ganó pudo nacer con la OTRA forma
+  // del número, y con `.eq` no aparecía aunque el índice acababa de decir
+  // que existe.
   const { data: ganadora, error: errRelectura } = await acotada(admin
     .from('wa_conversacion')
     .select('id, estado, viaje_id')
     .eq('tenant_id', tenantId)
-    .eq('telefono', telefono)
+    .in('telefono', variantesTelefono(telefono))
+    .order('updated_at', { ascending: false }).order('id', { ascending: false })
+    .limit(1)
     .maybeSingle(), 'loadConversation.relectura');
   if (errRelectura) throw new ConsultaFallida(`loadConversation.relectura: ${errRelectura.message}`);
   // Chocó con el índice y aun así no está: la fila no se puede nombrar, y
