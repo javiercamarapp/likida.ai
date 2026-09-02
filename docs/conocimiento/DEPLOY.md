@@ -281,11 +281,47 @@ el que dejó fuera el tenant del demo. El inventario de arriba es el que manda.
 
 ---
 
-## Publicar un cambio (cambió el 5-ago-2026)
+## Publicar un cambio (cambió el 5-ago-2026; compuerta desde el 1-sep-2026)
+
+### El orden es migraciones → verificar → `[deploy]`, y ya no depende de la memoria
+
+Auditoría 24, OP-P1: producción corrió con la base en la migración 0271
+mientras `master` pedía la forma 0272 de `poliza_datos_tenant`; publicar sin
+migrar rompía el export de póliza y no publicar dejaba 34 arreglos sin vivir.
+Ahora hay tres piezas que lo atan:
+
+1. **`/api/health` publica `migracion: {base, codigo, atras, motivo?}`** —
+   `base` es la última migración que la base registra aplicada
+   (`migraciones_aplicadas()`), `codigo` la última del código que corre
+   (`LIKIDA_MIGRACION_CODIGO`, inlineada en build por `next.config.ts`). Con
+   `atras > 0` o base ilegible el pulso es `degraded` (503) y `motivo` dice
+   qué aplicar.
+2. **La compuerta de Vercel.** `vercel.json` corre
+   `scripts/ci/compuerta-deploy.mjs` como `ignoreCommand`: lee el asunto del
+   commit, la última `supabase/migrations/NNNN_*.sql` del repo y
+   `migracion.base` del health de producción. Con `[deploy]` y base atrás
+   **no construye**. Health caído o base ilegible tampoco construyen (un cotejo
+   que no se hizo no es verde). La única excepción de arranque: si el health
+   desplegado todavía no publica `migracion` (versión anterior), construye esa
+   vez con aviso. `[deploy:forzar]` en el asunto salta la compuerta a la vista.
+3. **El mismo veredicto en rojo, en Actions.** `salud-produccion.yml` corre la
+   compuerta en cada push con `[deploy]` (el `ignoreCommand` es mudo; esto no),
+   y por `schedule` comprueba además que producción corra el último commit con
+   `[deploy]` de `master` (o uno posterior), abre un issue `salud-produccion`
+   cuando el pulso pasa a rojo y lo cierra al recuperarse.
+
+El procedimiento, entonces:
+
+```bash
+bash scripts/aplicar-migraciones-y-humos.sh   # 1. migraciones a producción
+curl -s https://app.likida.ai/api/health | grep -o '"migracion":{[^}]*}'   # 2. atras:0
+git commit -m 'fix(x): … [deploy]' && git push   # 3. ahora sí construye
+```
 
 **El push a `master` ya no despliega solo.** `vercel.json` trae un
 `ignoreCommand` que solo construye cuando **el asunto del commit** —la primera
-línea, no el cuerpo— lleva la bandera `[deploy]`.
+línea, no el cuerpo— lleva la bandera `[deploy]` (y, desde la auditoría 24,
+cuando la compuerta de arriba lo deja pasar).
 
 ```
 fix(cuadre): redondeo de casetas [deploy]     -> construye y publica
@@ -315,10 +351,14 @@ solo dato de negocio. El workflow `.github/workflows/salud-produccion.yml` lo
 consume de dos formas:
 
 - cada 30 minutos pega a `https://app.likida.ai/api/health` y falla (correo
-  de GitHub Actions al dueño del repo) si no responde 200 con `ok:true`;
-- tras cada push a `master` cuyo asunto lleve `[deploy]`, espera hasta 10
-  minutos a que `version` coincida con el sha pusheado y falla si no — que es
-  exactamente el modo de falla silencioso del `ignoreCommand`.
+  de GitHub Actions al dueño del repo, más un issue `salud-produccion` que se
+  abre en rojo y se cierra en verde) si no responde 200 con `ok:true`; y
+  comprueba que `version` sea el último commit con `[deploy]` de `master` o
+  uno posterior;
+- tras cada push a `master` cuyo asunto lleve `[deploy]`, corre la compuerta
+  de migraciones y luego espera hasta 10 minutos a que `version` coincida con
+  el sha pusheado y falla si no — que es exactamente el modo de falla
+  silencioso del `ignoreCommand`.
 
 ```bash
 curl -s https://app.likida.ai/api/health   # {"ok":true,"db":"ok","sentry":"configurado","version":"553bee7",...}
