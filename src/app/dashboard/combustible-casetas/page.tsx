@@ -10,7 +10,9 @@ import {
 import { resolverLineaAMano, type ResolucionLineaManual } from '@/lib/likida/intake/consolidado';
 import { etiquetaConcepto } from '@/lib/likida/cuadre/engine';
 import { mxn } from '@/lib/utils';
-import { numero } from '@/lib/formato';
+import { numero, hoyMx } from '@/lib/formato';
+import { resolverPeriodo } from '@/lib/likida/fiscal';
+import { ahoraMs } from '@/lib/saludo';
 import { resolverTenantEfectivo } from '@/lib/auth/tenant-efectivo';
 import { requireSessionTenant } from '@/lib/auth/guard';
 import { puedeVerRuta } from '@/lib/auth/visibilidad';
@@ -133,9 +135,22 @@ export default async function CombustibleCasetasPage({
   const { tenantId } = await resolverTenantEfectivo('/dashboard/combustible-casetas', sp);
   const sufijo = sufijoTenant(sp);
 
+  // FE-8: EL MISMO "cuándo" que el contador (`inicio-contador.tsx`) — antes
+  // esta pantalla llamaba `getAcreditables(tenantId)` SIN ventana, que
+  // `corteVentana(undefined)` resuelve al histórico completo, mientras el
+  // contador la llama con `diasEjercicio`. Dos pantallas midiendo "litros
+  // elegibles para el estímulo, LIF 20-A" con dos ventanas distintas: la
+  // misma cita legal, dos cifras. CLAUDE.md: una cifra fiscal que se lee
+  // distinto en dos pantallas se lee como dos cálculos.
+  const hoy = hoyMx(new Date(ahoraMs()));
+  const periodoFiscal = resolverPeriodo(undefined, hoy);
+  const diasEjercicio = periodoFiscal.desde
+    ? Math.floor((Date.parse(`${hoy}T00:00:00Z`) - Date.parse(`${periodoFiscal.desde}T00:00:00Z`)) / 86_400_000) + 1
+    : undefined;
+
   const [porConcepto, acred, anomalias, docs, conciliacion, lineasPendientes] = await Promise.all([
     safe<GastoPorConcepto[]>(() => getGastoPorConcepto(tenantId)),
-    safe<Acreditables>(() => getAcreditables(tenantId)),
+    safe<Acreditables>(() => getAcreditables(tenantId, diasEjercicio)),
     safe<Anomalia[]>(() => detectarAnomalias(tenantId)),
     safe<DocumentoRow[]>(() => getDocumentos(tenantId, VENTANA_DOCUMENTOS)),
     safeConciliacion(tenantId),
@@ -196,14 +211,25 @@ export default async function CombustibleCasetasPage({
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
               <KpiTile icono={<Fuel width={15} height={15} strokeWidth={1.75} style={{ color: 'var(--marca)' }} />}
+                // FE-9: `getGastoPorConcepto` no tiene ventana (histórico
+                // completo) — junto al tile vecino, que sí declara la suya
+                // ("últimos 100 comprobantes"), esto se leía como "del mes".
+                // A 15k viajes/mes este acumulado crece sin fin, y ES la
+                // pantalla que el contador abre para el cierre.
                 etiqueta="Gastado en combustible" valor={diesel?.total ?? 0} formato="mxn"
-                nota={diesel ? `${numero(diesel.n)} cargas registradas` : 'Sin cargas registradas todavía'} />
+                nota={diesel ? `histórico · ${numero(diesel.n)} cargas registradas` : 'Sin cargas registradas todavía'} />
               <KpiTile icono={<RouteIcon width={15} height={15} strokeWidth={1.75} style={{ color: 'var(--marca)' }} />}
                 etiqueta="Gastado en casetas" valor={caseta?.total ?? 0} formato="mxn"
-                nota={caseta ? `${numero(caseta.n)} casetas registradas` : 'Sin casetas registradas todavía'} />
+                nota={caseta ? `histórico · ${numero(caseta.n)} casetas registradas` : 'Sin casetas registradas todavía'} />
               <KpiTile icono={<Fuel width={15} height={15} strokeWidth={1.75} style={{ color: 'var(--marca)' }} />}
-                etiqueta="Litros elegibles para el estímulo" valor={acred?.litrosDiesel ?? 0} formato="litros"
-                nota="LIF 2026, Art. 20-A" />
+                // A23-ALTO: era `acred?.litrosDiesel ?? 0` — una lectura caída
+                // se pintaba como "0 litros elegibles", una cifra fiscal FALSA
+                // (no es que no haya nada acreditable: es que no se pudo leer).
+                // FE-8: el rótulo ahora dice la ventana del ejercicio en curso,
+                // la misma que usa el contador.
+                etiqueta="Litros elegibles para el estímulo" valor={acred ? acred.litrosDiesel : null} formato="litros"
+                vacio={acred === null ? 'No se pudo leer lo acreditable' : undefined}
+                nota={`LIF 2026, Art. 20-A · ejercicio en curso (desde ${periodoFiscal.desde ?? '—'})`} />
               <KpiTile icono={<Receipt width={15} height={15} strokeWidth={1.75} style={{ color: 'var(--marca)' }} />}
                 // AUDITORÍA 1, ALTO: sin comprobantes, `pctSinCfdi` es null — se
                 // PRESERVA para que el encabezado diga "—" y no un "0%" que se
