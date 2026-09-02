@@ -70,14 +70,17 @@ describe('GET /api/export/liquidaciones', () => {
     const r = await pedir();
     expect(r.status).toBe(200);
     expect(consultas[0].neq).toEqual([['revision', 'rechazada']]);
-    expect(r.headers.get('Content-Disposition')).toContain('sin_rechazadas');
+    // El nombre por omisión NO cambia (el contador ya tiene su macro apuntando
+    // ahí); lo que siempre declara el corte es el encabezado.
+    expect(r.headers.get('Content-Disposition')).toContain('liquidaciones_likida.csv');
     expect(r.headers.get('X-Likida-Revision')).toContain('todas menos las rechazadas');
   });
 
-  it('`?revision=firmadas` deja solo lo que una persona aprobó o ajustó', async () => {
-    await pedir('&revision=firmadas');
+  it('`?revision=firmadas` deja solo lo que una persona aprobó o ajustó, y el archivo lo lleva en el nombre', async () => {
+    const r = await pedir('&revision=firmadas');
     expect(consultas[0].in).toEqual([['revision', ['aprobada', 'ajustada']]]);
     expect(consultas[0].neq).toEqual([]);
+    expect(r.headers.get('Content-Disposition')).toContain('liquidaciones_likida_firmadas.csv');
   });
 
   it('`?revision=todas` no filtra nada; `?revision=rechazada` filtra por igualdad', async () => {

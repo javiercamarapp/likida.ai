@@ -390,6 +390,44 @@ function documento(servidor: string) {
       },
       schemas: {
         Error: cuerpoError,
+        // ── BLOQ-6 (mig. 0299): el CIERRE de un viaje, con su firma ────────
+        Liquidacion: {
+          type: 'object',
+          description:
+            'El cierre de un viaje. TIENE DOS ESTADOS Y NO UNO: `estatus` es el veredicto del MOTOR y `revision` el de la PERSONA. '
+            + 'Contabilizar por `estatus` asienta cierres que nadie firmó.',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            viajeId: { type: 'string', format: 'uuid' },
+            folio: anulable('string', 'Folio del viaje.'),
+            creadaEn: { type: 'string', description: 'ISO-8601.' },
+            estatus: { type: 'string', enum: ['cuadrada', 'con_diferencias', 'revisar'], description: 'Lo que concluyó el motor.' },
+            revision: { type: 'string', enum: ['pendiente', 'aprobada', 'ajustada', 'rechazada'], description: 'Lo que firmó una persona. `pendiente` = nadie la ha firmado: no la asientes.' },
+            revisadaPor: anulable('string', 'Correo de quien firmó. `null` con `revision` distinta de `pendiente` = la firmó el motor (cuadró sola), que NO es lo mismo que "la firmó alguien".'),
+            revisadaEn: anulable('string', 'ISO-8601 de la firma.'),
+            motivo: anulable('string', 'Lo que se escribió al ajustar o rechazar (la base lo exige en esos dos).'),
+            ajustes: {
+              type: 'array',
+              description: 'Montos que la persona corrigió al ajustar: el comprobante mal leído, de cuánto a cuánto.',
+              items: {
+                type: 'object',
+                properties: {
+                  gastoId: { type: 'string' }, concepto: { type: 'string' },
+                  montoAnterior: { type: 'number' }, montoNuevo: { type: 'number' },
+                },
+                required: ['gastoId', 'concepto', 'montoAnterior', 'montoNuevo'],
+              },
+            },
+            anticipo: { type: 'number' },
+            comprobado: { type: 'number' },
+            diferencia: { type: 'number', description: 'anticipo − comprobado. Positivo = el operador debe; negativo = se le repone.' },
+            ivaAcreditable: { type: 'number' },
+            iepsAcreditable: { type: 'number' },
+            litrosDieselAcreditables: { type: 'number' },
+            hallazgos: { type: 'integer', description: 'Cuántas observaciones levantó el motor. El detalle vive en el PDF.' },
+          },
+          required: ['id', 'viajeId', 'folio', 'creadaEn', 'estatus', 'revision', 'revisadaPor', 'revisadaEn', 'motivo', 'ajustes', 'anticipo', 'comprobado', 'diferencia', 'hallazgos'],
+        },
         Pagina: paginaSobre,
         Documental: documental,
         FacturaDelViaje: factura,
@@ -758,6 +796,54 @@ function documento(servidor: string) {
                       },
                     },
                     required: ['datos', 'pagina', 'resumen'],
+                  },
+                },
+              },
+            },
+            ...respuestasError,
+          },
+        },
+      },
+      '/v1/liquidaciones': {
+        get: {
+          operationId: 'listarLiquidaciones',
+          'x-likida-area': 'dinero',
+          summary: 'El cierre de cada viaje, con la firma de quien lo revisó.',
+          description:
+            'Área `dinero`: anticipo, comprobado y diferencia por viaje.\n\n'
+            + 'POR OMISIÓN TRAE SOLO LO ASENTABLE (`?revision=firmadas`: aprobada o ajustada). Las que esperan firma y las rechazadas —cuyas cifras el motor va a '
+            + 'recalcular en cuanto llegue el comprobante bueno— se piden explícito con `?revision=pendiente` o `?revision=rechazada`; `?revision=todas` las trae todas. '
+            + 'El filtro aplicado viaja en `filtro.revision` de la respuesta, para que nadie confunda "no hay" con "no lo pedí".\n\n'
+            + 'Recorre el histórico con el cursor: `?despues=` + el `pagina.siguiente` de la respuesta anterior, hasta que `siguiente` sea `null`.',
+          tags: ['liquidaciones', 'dinero'],
+          parameters: [
+            ...parametrosPagina, ...parametrosCursor,
+            {
+              name: 'revision', in: 'query', required: false,
+              description: 'Qué revisiones traer. Un valor desconocido es 400 — no se cae al default en silencio.',
+              schema: { type: 'string', enum: ['firmadas', 'todas', 'pendiente', 'aprobada', 'ajustada', 'rechazada'], default: 'firmadas' },
+            },
+          ],
+          responses: {
+            '200': {
+              description: 'Página de liquidaciones más el filtro que se aplicó.',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      datos: { type: 'array', items: { $ref: '#/components/schemas/Liquidacion' } },
+                      pagina: paginaSobre,
+                      filtro: {
+                        type: 'object',
+                        properties: {
+                          revision: { type: 'string' },
+                          significado: { type: 'string', description: 'El corte, en español: qué entró y qué no.' },
+                        },
+                        required: ['revision', 'significado'],
+                      },
+                    },
+                    required: ['datos', 'pagina', 'filtro'],
                   },
                 },
               },

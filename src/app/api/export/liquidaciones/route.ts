@@ -8,7 +8,7 @@ import { puedeVerArea } from '@/lib/auth/visibilidad';
 import { logger } from '@/lib/logger';
 import { exigir, PAGINA, MAX_PAGINAS, LecturaIncompleta } from '@/lib/likida/pg';
 import { acotada } from '@/lib/likida/presupuesto';
-import { leerPeriodo, leerFiltroRevision, LEYENDA_REVISION } from './periodo';
+import { leerPeriodo, leerFiltroRevision, LEYENDA_REVISION, FILTRO_REVISION_DEFECTO } from './periodo';
 
 export const runtime = 'nodejs';
 
@@ -195,8 +195,12 @@ export async function GET(req: Request) {
   return new NextResponse(stream, {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="liquidaciones_likida_${rev.filtro}.csv"`,
-      // El corte, legible por quien reciba el archivo sin ver la URL.
+      // El nombre por omisión NO cambia: el contador ya tiene su carpeta y su
+      // macro apuntando a `liquidaciones_likida.csv`. Un corte PEDIDO sí se
+      // marca en el nombre, porque entonces conviven dos archivos distintos en
+      // la misma carpeta de Descargas.
+      'Content-Disposition': `attachment; filename="liquidaciones_likida${rev.filtro === FILTRO_REVISION_DEFECTO ? '' : `_${rev.filtro}`}.csv"`,
+      // El corte, SIEMPRE, legible por quien reciba el archivo sin ver la URL.
       'X-Likida-Revision': `${rev.filtro} (${LEYENDA_REVISION[rev.filtro]})`,
       'Cache-Control': 'no-store',
     },

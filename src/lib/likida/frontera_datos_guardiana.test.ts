@@ -27,7 +27,12 @@ import { join, relative } from 'node:path';
  * `repo.ts` ni `pg.ts` (la frontera declarada). Es un TECHO, no un objetivo:
  * si sube, actualiza este número en el mismo commit que explica por qué.
  */
-const TECHO_ARCHIVOS_FUERA_DE_LA_FRONTERA = 241;
+// 1-sep-2026 (auditoría 24, BLOQ-6): 241 → 243. Los dos nuevos son
+// `lib/likida/revision.ts` (el único lector/escritor de `liquidacion.revision`
+// en la app — meterlo en repo.ts sería partir en dos la regla que ese archivo
+// existe para concentrar) y `app/api/v1/liquidaciones/route.ts`, que copia
+// letra por letra el keyset de `v1/viajes/route.ts`, ya contado aquí.
+const TECHO_ARCHIVOS_FUERA_DE_LA_FRONTERA = 243;
 
 const RAIZ_SRC = new URL('../../', import.meta.url).pathname;
 
