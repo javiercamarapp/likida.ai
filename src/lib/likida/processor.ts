@@ -15,10 +15,10 @@ import { fechaDudosa } from '@/lib/likida/cuadre/fecha_dudosa';
 import { etiquetaConcepto, copiasDeComprobante } from '@/lib/likida/cuadre/engine';
 import { mensajePideFechaOtraVez } from '@/lib/likida/intake/pedir_fecha';
 import { resumenCuadre } from '@/lib/likida/cuadre/resumen';
-import { PartialExecutionError, isTransientError, type ToolCallRecord } from '@/lib/llm/openrouter';
+import { PartialExecutionError, isTransientError, esErrorDePresupuesto, type ToolCallRecord } from '@/lib/llm/openrouter';
 import type { Gasto } from '@/types/likida';
 import { extraerComprobante } from '@/lib/likida/intake/ocr';
-import { createLlmBudget, LlmBudgetExceededError } from '@/lib/llm/budget';
+import { createLlmBudget } from '@/lib/llm/budget';
 import { hashImagen } from '@/lib/likida/intake/hash';
 import { subirComprobante } from '@/lib/likida/intake/almacen';
 import {
@@ -948,33 +948,6 @@ async function atenderJornadaSiAplica(args: {
   }
 
   return mensajes;
-}
-
-/**
- * ¿Este error —o alguno de sus envoltorios— es el tope de $/día de IA?
- *
- * AUDITORÍA 24, TC-N1 (CRÍTICO, 3ª vez que el tope apaga el producto en
- * silencio): `generateWithTools` envuelve CUALQUIER excepción del ciclo en
- * `PartialExecutionError` (`openrouter.ts`), así que `e instanceof
- * LlmBudgetExceededError` sobre lo que llega al processor es `false` SIEMPRE
- * en producción — la rama de degradado a cuadre determinístico era código
- * muerto, y la prueba que la "cubría" rechazaba con el error DESNUDO. Se
- * recorre la cadena de `cause` (tope de 6 niveles: no hay envoltorio legítimo
- * más hondo, y un `cause` circular no puede colgar el turno). Se acepta
- * también por `name`: en pruebas y con dos copias del módulo `instanceof`
- * puede fallar por identidad de clase, y el nombre es lo que `budget.ts` fija.
- *
- * Nota: el constructor `llm` puede exportar `esErrorDePresupuesto` desde
- * `src/lib/llm/`; cuando exista, este helper local se sustituye por aquél.
- */
-function esErrorDePresupuesto(e: unknown): boolean {
-  let actual: unknown = e;
-  for (let nivel = 0; nivel < 6 && actual != null; nivel++) {
-    if (actual instanceof LlmBudgetExceededError) return true;
-    if (actual instanceof Error && actual.name === 'LlmBudgetExceededError') return true;
-    actual = (actual as { cause?: unknown }).cause;
-  }
-  return false;
 }
 
 /**
