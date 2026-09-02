@@ -15461,3 +15461,66 @@ begin
     cancela, con_pagos_rebota, sobre_cancelada_rebota, sobrepago_rebota, pagada_sin_dinero_rebota,
     salda_y_marca, pagada_no_se_cancela, ajena_rebota, anon_ok;
 end $$;
+
+-- ── 233. Cerrar una orden del bus exige ser quien la tomó (mig. 0285) ──────
+--
+-- AUDITORÍA 24, BE-22 (BAJO). `ordenes-resolver` cerraba con `.eq('id', id)` a
+-- secas: el worker B marcaba `hecha` la orden que tomó A, y `resultado` contaba
+-- lo que hizo B sobre el trabajo de A. La ruta ancla ahora por estado Y por
+-- dueño; el dueño no existía en el esquema (la 0127 guarda `creado_por` y
+-- `tomada_en`, no quién tomó) y lo agrega la 0285.
+--
+-- Se asevera lo que solo Postgres puede demostrar:
+--   (a) la columna existe y es anulable (las tomadas antes de la 0285 no
+--       tienen dueño y no se les inventa uno);
+--   (b) el UPDATE anclado a OTRO dueño no toca ni una fila;
+--   (c) el anclado al dueño bueno sí la cierra;
+--   (d) y una orden ya cerrada no se vuelve a cerrar (el ancla por estado).
+--
+-- Esperado: BUS_ORDEN_TOMADA_POR_0285 existe=t anulable=t ajeno=0 propio=1 recierre=0
+do $$
+declare
+  existe boolean;
+  anulable boolean;
+  o uuid;
+  ajeno integer;
+  propio integer;
+  recierre integer;
+begin
+  select true, (is_nullable = 'YES')
+    into existe, anulable
+    from information_schema.columns
+   where table_schema = 'public' and table_name = 'bus_orden' and column_name = 'tomada_por';
+  existe := coalesce(existe, false);
+  anulable := coalesce(anulable, false);
+
+  insert into public.bus_orden (tipo, rutina, creado_por)
+    values ('correr_ahora', 'auditoria-24', 'verificaciones')
+    returning id into o;
+
+  -- El claim, como lo hace la ruta: anclado a `pendiente` y firmando quién.
+  update public.bus_orden
+     set estado = 'tomada', tomada_en = now(), tomada_por = 'worker-a'
+   where id = o and estado = 'pendiente';
+
+  -- (b) El worker B intenta cerrarla: no toca nada.
+  update public.bus_orden
+     set estado = 'hecha', resuelta_en = now(), resultado = 'la cerró B'
+   where id = o and estado = 'tomada' and tomada_por = 'worker-b';
+  get diagnostics ajeno = row_count;
+
+  -- (c) El worker A sí.
+  update public.bus_orden
+     set estado = 'hecha', resuelta_en = now(), resultado = 'la cerró A'
+   where id = o and estado = 'tomada' and tomada_por = 'worker-a';
+  get diagnostics propio = row_count;
+
+  -- (d) Y ya cerrada, nadie la vuelve a cerrar.
+  update public.bus_orden
+     set estado = 'fallida', resuelta_en = now(), resultado = 'segundo cierre'
+   where id = o and estado = 'tomada' and tomada_por = 'worker-a';
+  get diagnostics recierre = row_count;
+
+  raise exception E'BUS_ORDEN_TOMADA_POR_0285  existe=%  anulable=%  ajeno=%  propio=%  recierre=%   (esperado t / t / 0 / 1 / 0)',
+    existe, anulable, ajeno, propio, recierre;
+end $$;
