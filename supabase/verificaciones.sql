@@ -16605,3 +16605,205 @@ begin
   raise exception E'BUS_ORDEN_TOMADA_POR_0285  existe=%  anulable=%  ajeno=%  propio=%  recierre=%   (esperado t / t / 0 / 1 / 0)',
     existe, anulable, ajeno, propio, recierre;
 end $$;
+
+-- ── 228. `poliza_datos_tenant` v281 entrega los insumos por comprobante y `gasto` tiene piso en sus cinco columnas de dinero (mig. 0281) ──
+--
+-- AUDITORÍA 24, FIS-2 + FIS-3 (CRÍTICOS) + DAT-3 (ALTO). La 0272 entregaba
+-- `gastos` sin monto, sin folio, sin forma de pago: la ruta no podía ni
+-- deduplicar (una foto repetida se asentaba dos veces) ni partir un gasto
+-- parcialmente deducible (la comida de $2,000 con tope de $750 se asentaba
+-- entera como deducible). Y las cinco columnas de dinero distintas de `monto`
+-- aceptaban negativos que la póliza volvía cargos.
+--
+-- Lo que este bloque asevera (la FORMA del contrato, que es lo que la base
+-- puede demostrar; la clasificación sigue viviendo en TS — bloque 220):
+--   (a) cada fila trae `version` = 281;
+--   (b) cada gasto trae `monto`, `folioNorm`, `cfdiUuid` y `formaPago` — lo que
+--       `copiasDeComprobante`, `cubetaDe` y `proporcionesDeducibles` leen —, y
+--       las DOS fotos del mismo ticket vienen las dos (deduplica la ruta con la
+--       misma función que el motor, no SQL);
+--   (c) `sub_total = -1` no entra (23514), y un descuento mayor al SubTotal
+--       tampoco.
+do $$
+declare
+  t uuid := gen_random_uuid(); v uuid := gen_random_uuid();
+  l uuid := gen_random_uuid(); op uuid := gen_random_uuid();
+  g1 uuid := gen_random_uuid(); g2 uuid := gen_random_uuid();
+  fila jsonb;
+  version_281 boolean := false;
+  insumos_por_gasto boolean := false;
+  dos_fotos boolean := false;
+  piso_subtotal boolean := false;
+  piso_descuento boolean := false;
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0281__');
+  insert into public.operador (id, tenant_id, nombre, telefono)
+    values (op, t, 'Operador 0281', '+5218100000281');
+  insert into public.viaje (id, tenant_id, operador_id, folio, anticipo, estatus)
+    values (v, t, op, 'VJ-0281', 10000, 'liquidado');
+  -- Dos fotos del MISMO ticket de diésel: sin UUID, mismo folio normalizado y
+  -- mismo monto (el caso real de la base: el índice único de (uuid, orden)
+  -- impide la copia por UUID, la copia por folio no la impide nadie).
+  insert into public.gasto (id, tenant_id, viaje_id, concepto, monto, sub_total, folio, folio_norm, forma_pago, fecha)
+    values (g1, t, v, 'diesel', 3480, 3000, '05461', '5461', '01', current_date),
+           (g2, t, v, 'diesel', 3480, 3000, '5461',  '5461', '01', current_date);
+  -- (c) antes de liquidar: con liquidación emitida el trigger de la 0036
+  -- rebota cualquier alta (CU001) y taparía el CHECK que aquí se prueba.
+  begin
+    insert into public.gasto (tenant_id, viaje_id, concepto, monto, sub_total)
+      values (t, v, 'diesel', 100, -1);
+  exception when check_violation then
+    piso_subtotal := true;
+  end;
+  begin
+    insert into public.gasto (tenant_id, viaje_id, concepto, monto, sub_total, descuento)
+      values (t, v, 'caseta', 100, 50, 60);
+  exception when check_violation then
+    piso_descuento := true;
+  end;
+
+  insert into public.liquidacion
+    (id, tenant_id, viaje_id, total_anticipo, total_comprobado, diferencia, iva_acreditable, diferencias)
+    values (l, t, v, 10000, 3480, 6520, 0, '[]'::jsonb);
+
+  select x into fila
+    from jsonb_array_elements(public.poliza_datos_tenant(t, current_date - 1, current_date + 1)) x
+   limit 1;
+
+  version_281       := (fila->>'version')::int = 281;
+  insumos_por_gasto := (fila->'gastos'->0->>'monto')::numeric = 3480
+                       and (fila->'gastos'->0->>'folioNorm') = '5461'
+                       and (fila->'gastos'->0->>'formaPago') = '01'
+                       and (fila->'gastos'->0) ? 'cfdiUuid'
+                       and (fila->'gastos'->0) ? 'pagadoEn'
+                       and (fila->'gastos'->0) ? 'ivaRetenido';
+  dos_fotos         := jsonb_array_length(fila->'gastos') = 2;
+
+  raise exception E'POLIZA_V2_0281  version=%  insumos-por-gasto=%  dos-fotos=%  piso-subtotal=%  piso-descuento=%   (esperado t / t / t / t / t)',
+    version_281, insumos_por_gasto, dos_fotos, piso_subtotal, piso_descuento;
+end $$;
+
+-- ── 229. El agregado fiscal parte las celdas por el sello del complemento de pago (mig. 0282) ──
+--
+-- AUDITORÍA 24, FIS-7 (MEDIO). Dos CFDI '99' idénticos en todo menos en
+-- `pagado_en` caían en UNA celda y el panel del contador negaba el IVA de los
+-- dos. Con la 0282 son DOS celdas, cada una con `pagado` y `pagadoForma`, y
+-- `ivaSostenible` (fiscal.ts) puede sostener el pagado — la ley sigue en TS.
+do $$
+declare
+  t uuid := gen_random_uuid(); v uuid := gen_random_uuid(); op uuid := gen_random_uuid();
+  celdas jsonb;
+  dos_celdas boolean := false;
+  trae_pagado boolean := false;
+  forma_del_rep boolean := false;
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0282__');
+  insert into public.operador (id, tenant_id, nombre, telefono)
+    values (op, t, 'Operador 0282', '+5218100000282');
+  insert into public.viaje (id, tenant_id, operador_id, folio, anticipo, estatus)
+    values (v, t, op, 'VJ-0282', 10000, 'abierto');
+  insert into public.gasto (tenant_id, viaje_id, concepto, monto, sub_total, iva_traslado, cfdi_uuid, forma_pago, metodo_pago, fecha, pagado_en, pagado_forma)
+    values (t, v, 'diesel', 1160, 1000, 160, 'aaaaaaaa-0282-0282-0282-000000000001', '99', 'PPD', current_date, null, null),
+           (t, v, 'diesel', 1160, 1000, 160, 'aaaaaaaa-0282-0282-0282-000000000002', '99', 'PPD', current_date, current_date, '03');
+
+  celdas := public.gastos_fiscales_agregados_tenant(t, null, null, 2000, 750, array['alimentacion','viaticos'], '{}'::date[]);
+
+  dos_celdas   := jsonb_array_length(celdas) = 2;
+  trae_pagado  := (select bool_and(x ? 'pagado' and x ? 'pagadoForma') from jsonb_array_elements(celdas) x);
+  forma_del_rep := exists (select 1 from jsonb_array_elements(celdas) x where (x->>'pagado')::boolean and x->>'pagadoForma' = '03' and (x->>'n')::int = 1)
+               and exists (select 1 from jsonb_array_elements(celdas) x where not (x->>'pagado')::boolean and x->'pagadoForma' = 'null'::jsonb and (x->>'n')::int = 1);
+
+  raise exception E'FISCAL_AGREGADO_PAGADO_0282  dos-celdas=%  trae-pagado=%  forma-del-rep=%   (esperado t / t / t)',
+    dos_celdas, trae_pagado, forma_del_rep;
+end $$;
+
+-- ── 230. Lo liquidado no se mueve, y el REP tiene piso y forma (mig. 0283) ──
+--
+-- AUDITORÍA 24, DAT-4 (ALTO) + DAT-12 (MEDIO). Con la liquidación emitida, el
+-- escenario S21 movía el gasto a otro viaje y reescribía retenciones y
+-- descuento sin que el trigger de la 0037/0158 se enterara (solo miraba 10
+-- columnas y solo `new.viaje_id`). S13/S27: `cfdi_pago` aceptaba importes
+-- negativos y UUID en MAYÚSCULAS —el mismo REP dos veces para
+-- `uq_cfdi_pago_docto`, IVA liberado dos veces—, y `codigo_pendiente.monto`
+-- tampoco tenía piso.
+-- Esperado: INMUTABLE_TRAS_LIQUIDAR_0283 mover=t reten=t descuento=t viaje=t
+--           unidad-libre=t rep-negativo=t rep-mayusculas=t codigo-negativo=t
+do $$
+declare
+  t uuid := gen_random_uuid(); v1 uuid := gen_random_uuid(); v2 uuid := gen_random_uuid();
+  op uuid := gen_random_uuid(); op2 uuid := gen_random_uuid();
+  g uuid := gen_random_uuid(); u uuid := gen_random_uuid();
+  mover boolean := false; reten boolean := false; descuento boolean := false;
+  viaje_enc boolean := false; unidad_libre boolean := false;
+  rep_negativo boolean := false; rep_mayusculas boolean := false; codigo_negativo boolean := false;
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0283__');
+  -- Dos operadores: `uq_viaje_abierto_por_operador` (0029) solo deja UN viaje
+  -- abierto por operador, y aquí hacen falta dos viajes.
+  insert into public.operador (id, tenant_id, nombre, telefono)
+    values (op,  t, 'Operador 0283 A', '+5218100000283'),
+           (op2, t, 'Operador 0283 B', '+5218100000284');
+  insert into public.unidad (id, tenant_id, numero_economico, placas) values (u, t, 'U-0283', 'V283ABC');
+  insert into public.viaje (id, tenant_id, operador_id, folio, anticipo, estatus, origen, destino, fecha_inicio)
+    values (v1, t, op,  'VJ-0283-A', 10000, 'abierto', 'Monterrey', 'Saltillo', current_date),
+           (v2, t, op2, 'VJ-0283-B', 10000, 'abierto', 'Monterrey', 'Saltillo', current_date);
+  insert into public.gasto (id, tenant_id, viaje_id, concepto, monto, sub_total, iva_traslado, fecha)
+    values (g, t, v1, 'diesel', 5800, 5000, 800, current_date);
+
+  -- El papel: a partir de aquí v1 está firmado.
+  insert into public.liquidacion (tenant_id, viaje_id, total_comprobado, total_anticipo, diferencia)
+    values (t, v1, 5800, 10000, 4200);
+
+  -- (1) Mover el gasto a OTRO viaje — la punta que la 0036 no miraba.
+  begin
+    update public.gasto set viaje_id = v2 where id = g;
+  exception when sqlstate 'CU001' then mover := true;
+  end;
+
+  -- (2) Reescribir las retenciones que la póliza asienta como cuenta por pagar.
+  begin
+    update public.gasto set iva_retenido = 99999, isr_retenido = 99999 where id = g;
+  exception when sqlstate 'CU001' then reten := true;
+  end;
+
+  -- (3) Y el descuento (0171), base del estímulo de peaje.
+  begin
+    update public.gasto set descuento = 4000 where id = g;
+  exception when sqlstate 'CU001' then descuento := true;
+  end;
+
+  -- (4) El encabezado del PDF: origen/destino/fechas/cliente.
+  begin
+    update public.viaje set fecha_inicio = current_date - 30, origen = 'Otra' where id = v1;
+  exception when sqlstate 'CU004' then viaje_enc := true;
+  end;
+
+  -- (5) `unidad_id` sigue LIBRE a propósito (se captura tarde de rutina):
+  --     si esto fallara, el tablero del encargado quedaría trabado.
+  update public.viaje set unidad_id = u where id = v1;
+  unidad_libre := true;
+
+  -- (6) DAT-12: piso del complemento de pago.
+  begin
+    insert into public.cfdi_pago (tenant_id, cfdi_uuid, fecha_pago, docto_relacionado_uuid, imp_pagado)
+      values (t, 'bbbbbbbb-0283-0283-0283-000000000001', current_date, 'bbbbbbbb-0283-0283-0283-000000000002', -500);
+  exception when check_violation then rep_negativo := true;
+  end;
+
+  -- (7) …y su forma: 'AAAA…' y 'aaaa…' no pueden ser dos complementos.
+  begin
+    insert into public.cfdi_pago (tenant_id, cfdi_uuid, fecha_pago, docto_relacionado_uuid, imp_pagado)
+      values (t, 'BBBBBBBB-0283-0283-0283-000000000003', current_date, 'bbbbbbbb-0283-0283-0283-000000000004', 500);
+  exception when check_violation then rep_mayusculas := true;
+  end;
+
+  -- (8) La cola de códigos, misma familia.
+  begin
+    insert into public.codigo_pendiente (tenant_id, viaje_id, codigo_barras, monto)
+      values (t, v2, 'ABC283', -100);
+  exception when check_violation then codigo_negativo := true;
+  end;
+
+  raise exception E'INMUTABLE_TRAS_LIQUIDAR_0283  mover=%  reten=%  descuento=%  viaje=%  unidad-libre=%  rep-negativo=%  rep-mayusculas=%  codigo-negativo=%   (esperado t / t / t / t / t / t / t / t)',
+    mover, reten, descuento, viaje_enc, unidad_libre, rep_negativo, rep_mayusculas, codigo_negativo;
+end $$;
