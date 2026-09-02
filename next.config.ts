@@ -269,7 +269,8 @@ const nextConfig: NextConfig = {
           // origen HTTPS real, así que restringirla a producción evita
           // publicar una cabecera que en `localhost` no hace nada, no una
           // que haga daño — pero se sigue el mismo patrón por consistencia.
-          ...(produccion ? [{ key: 'Strict-Transport-Security', value: 'max-age=31536000' }] : []),
+          // SEG-5 (auditoría 24): mismo valor que `HSTS` en `src/proxy.ts`.
+          ...(produccion ? [{ key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' }] : []),
         ],
       },
     ];
