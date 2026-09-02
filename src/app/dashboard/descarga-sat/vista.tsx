@@ -5,7 +5,7 @@ import { resolverTenantEfectivo } from '@/lib/auth/tenant-efectivo';
 import { puedeVerRuta } from '@/lib/auth/visibilidad';
 import { mensajeParaPantalla } from '@/lib/likida/administracion';
 import { estadoDescargaSat } from '@/lib/likida/sat_descarga';
-import { leerDescargaSat, type VistaDescargaSat } from '@/lib/likida/sat_descarga/lectura';
+import { leerDescargaSat, TOPE_SOLICITUDES, type VistaDescargaSat } from '@/lib/likida/sat_descarga/lectura';
 import {
   guardarConfigDescarga, verificarCredencial, pedirRangoManual,
 } from '@/lib/likida/sat_descarga/escritura';
@@ -325,7 +325,15 @@ export async function VistaDescargaSat({ searchParams, tenantExiste = true }: {
           {/* ── 5. LAS SOLICITUDES ────────────────────────────────────── */}
           {datos.solicitudes.length > 0 && (
             <section className="card p-3">
-              <TituloSeccion>Tus solicitudes</TituloSeccion>
+              {/* FE-34: antes callaba la ventana — "Tus solicitudes" es
+                  siempre "las 12 más recientes" (`TOPE_SOLICITUDES`), nunca
+                  el historial completo. */}
+              <TituloSeccion>
+                Tus solicitudes
+                {datos.solicitudes.length >= TOPE_SOLICITUDES && (
+                  <span className="font-normal" style={{ color: 'var(--faint)' }}> — las {TOPE_SOLICITUDES} más recientes</span>
+                )}
+              </TituloSeccion>
               <div className="mt-2 overflow-x-auto">
                 <table className="w-full text-[12.5px]">
                   <thead>

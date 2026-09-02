@@ -204,9 +204,12 @@ export default async function PaginaDespacho({
       const detalle = err instanceof Error ? err.message : String(err);
       if (detalle.includes('uq_viaje_abierto_por_operador')) {
         const operadorId = texto('operadorId', 64);
+        // El filtro de abajo (tenant+operador+estatus vivo) es exactamente
+        // el de `uq_viaje_abierto_por_operador` (0029): a lo más UNA fila.
         const { data: abierto } = await supabaseAdmin()
           .from('viaje').select('folio')
           .eq('tenant_id', tenantId).eq('operador_id', operadorId)
+          // orden-no-importa: índice único parcial (0029) garantiza ≤1 fila
           .in('estatus', ['abierto', 'en_cuadre']).limit(1).maybeSingle();
         const folio = (abierto?.folio as string | undefined) || null;
         return {
