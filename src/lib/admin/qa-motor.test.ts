@@ -108,8 +108,14 @@ function dbFalsa(): SupabaseClient {
     let cabeza = false;
     let devolver = false;
     let tope: number | null = null;
-    let orden: { col: string; asc: boolean } | null = null;
+    // AUDITORÍA 24 (BE-27): los `order` se ACUMULAN. `leerManifiesto` pagina y
+    // desempata con `id`; guardar solo el último haría que el doble ordenara
+    // por una columna que no es la que manda.
+    const orden: Array<{ col: string; asc: boolean }> = [];
+    let rango: [number, number] | null = null;
     let uno: 'single' | 'maybe' | null = null;
+    /** El recorte REAL de PostgREST: nunca más de `max_rows` por respuesta. */
+    const MAX_ROWS = 1_000;
 
     const b: Record<string, unknown> = {};
     const yo = () => b as never;
@@ -147,8 +153,11 @@ function dbFalsa(): SupabaseClient {
       }));
       return yo();
     };
-    b.order = (col: string, o?: { ascending?: boolean }) => { orden = { col, asc: o?.ascending !== false }; return yo(); };
+    b.order = (col: string, o?: { ascending?: boolean }) => { orden.push({ col, asc: o?.ascending !== false }); return yo(); };
     b.limit = (n: number) => { tope = n; return yo(); };
+    // BE-27: `leerManifiesto` pagina con `range`. Sin esto el doble ni existe
+    // ese método y la lectura del banco revienta antes de empezar.
+    b.range = (d: number, h: number) => { rango = [d, h]; return yo(); };
     b.single = () => { uno = 'single'; return yo(); };
     b.maybeSingle = () => { uno = 'maybe'; return yo(); };
     b.insert = (f: Fila | Fila[]) => { modo = 'insert'; payload = Array.isArray(f) ? f : [f]; return yo(); };
@@ -192,12 +201,22 @@ function dbFalsa(): SupabaseClient {
         tablas[tabla] = (tablas[tabla] ?? []).filter((f) => !fuera.has(f));
       } else {
         let filas = filtradas();
-        if (orden) {
-          const o = orden;
-          filas = [...filas].sort((a, z) => (String(a[o.col]) < String(z[o.col]) ? -1 : 1) * (o.asc ? 1 : -1));
+        if (orden.length > 0) {
+          filas = [...filas].sort((a, z) => {
+            for (const o of orden) {
+              if (String(a[o.col]) === String(z[o.col])) continue;
+              return (String(a[o.col]) < String(z[o.col]) ? -1 : 1) * (o.asc ? 1 : -1);
+            }
+            return 0;
+          });
         }
         if (tope !== null) filas = filas.slice(0, tope);
+        // El `count` es el TOTAL que casa con los filtros — lo que PostgREST
+        // devuelve con `count: 'exact'`—, no el tamaño de la página.
         count = filas.length;
+        filas = rango
+          ? filas.slice(rango[0], Math.min(rango[1] + 1, rango[0] + MAX_ROWS))
+          : filas.slice(0, MAX_ROWS);
         data = cabeza ? null : filas;
       }
 
