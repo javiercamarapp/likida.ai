@@ -11,7 +11,7 @@ import { resolverLineaAMano, type ResolucionLineaManual } from '@/lib/likida/int
 import { etiquetaConcepto } from '@/lib/likida/cuadre/engine';
 import { mxn } from '@/lib/utils';
 import { numero, hoyMx } from '@/lib/formato';
-import { resolverPeriodo } from '@/lib/likida/fiscal';
+import { ventanaLitrosElegibles } from '@/lib/likida/fiscal';
 import { ahoraMs } from '@/lib/saludo';
 import { resolverTenantEfectivo } from '@/lib/auth/tenant-efectivo';
 import { requireSessionTenant } from '@/lib/auth/guard';
@@ -135,22 +135,17 @@ export default async function CombustibleCasetasPage({
   const { tenantId } = await resolverTenantEfectivo('/dashboard/combustible-casetas', sp);
   const sufijo = sufijoTenant(sp);
 
-  // FE-8: EL MISMO "cuándo" que el contador (`inicio-contador.tsx`) — antes
-  // esta pantalla llamaba `getAcreditables(tenantId)` SIN ventana, que
-  // `corteVentana(undefined)` resuelve al histórico completo, mientras el
-  // contador la llama con `diasEjercicio`. Dos pantallas midiendo "litros
-  // elegibles para el estímulo, LIF 20-A" con dos ventanas distintas: la
-  // misma cita legal, dos cifras. CLAUDE.md: una cifra fiscal que se lee
+  // FE-8: LA MISMA función que el contador (`inicio-contador.tsx`) y el chat
+  // (`chat/page.tsx`) — antes cada pantalla medía "litros elegibles para el
+  // estímulo, LIF 20-A" con su propio cálculo de ventana, la misma cita legal
+  // con dos o tres cifras distintas. CLAUDE.md: una cifra fiscal que se lee
   // distinto en dos pantallas se lee como dos cálculos.
   const hoy = hoyMx(new Date(ahoraMs()));
-  const periodoFiscal = resolverPeriodo(undefined, hoy);
-  const diasEjercicio = periodoFiscal.desde
-    ? Math.floor((Date.parse(`${hoy}T00:00:00Z`) - Date.parse(`${periodoFiscal.desde}T00:00:00Z`)) / 86_400_000) + 1
-    : undefined;
+  const vl = ventanaLitrosElegibles(hoy);
 
   const [porConcepto, acred, anomalias, docs, conciliacion, lineasPendientes] = await Promise.all([
     safe<GastoPorConcepto[]>(() => getGastoPorConcepto(tenantId)),
-    safe<Acreditables>(() => getAcreditables(tenantId, diasEjercicio)),
+    safe<Acreditables>(() => getAcreditables(tenantId, vl.dias)),
     safe<Anomalia[]>(() => detectarAnomalias(tenantId)),
     safe<DocumentoRow[]>(() => getDocumentos(tenantId, VENTANA_DOCUMENTOS)),
     safeConciliacion(tenantId),
@@ -227,9 +222,9 @@ export default async function CombustibleCasetasPage({
                 // (no es que no haya nada acreditable: es que no se pudo leer).
                 // FE-8: el rótulo ahora dice la ventana del ejercicio en curso,
                 // la misma que usa el contador.
-                etiqueta="Litros elegibles para el estímulo" valor={acred ? acred.litrosDiesel : null} formato="litros"
+                etiqueta={vl.rotulo} valor={acred ? acred.litrosDiesel : null} formato="litros"
                 vacio={acred === null ? 'No se pudo leer lo acreditable' : undefined}
-                nota={`LIF 2026, Art. 20-A · ejercicio en curso (desde ${periodoFiscal.desde ?? '—'})`} />
+                nota={vl.nota} />
               <KpiTile icono={<Receipt width={15} height={15} strokeWidth={1.75} style={{ color: 'var(--marca)' }} />}
                 // AUDITORÍA 1, ALTO: sin comprobantes, `pctSinCfdi` es null — se
                 // PRESERVA para que el encabezado diga "—" y no un "0%" que se

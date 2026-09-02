@@ -2,6 +2,9 @@ import { redirect } from 'next/navigation';
 import { resolverTenantEfectivo } from '@/lib/auth/tenant-efectivo';
 import { puedeVerArea } from '@/lib/auth/visibilidad';
 import { getKpis, getAcreditables, type DashboardKpis, type Acreditables } from '@/lib/likida/analytics';
+import { ventanaLitrosElegibles } from '@/lib/likida/fiscal';
+import { hoyMx } from '@/lib/formato';
+import { ahoraMs } from '@/lib/saludo';
 import { AvisoSinFlota } from '../sin-flota';
 import ChatFlota from '../chat';
 
@@ -36,9 +39,15 @@ export default async function PaginaChat({
 
   if (!puedeVerArea(rol, 'dinero')) redirect('/dashboard');
 
+  // FE-8 (auditoría 24): misma ventana que combustible-casetas/page.tsx e
+  // inicio-contador.tsx — antes esta pantalla leía el HISTÓRICO completo
+  // mientras las otras dos ya medían por ejercicio; el analista podía
+  // contestar con una cifra de "litros elegibles" que no coincidía con
+  // ninguna otra pantalla del panel.
+  const vl = ventanaLitrosElegibles(hoyMx(new Date(ahoraMs())));
   const [kpis, acred] = await Promise.all([
     getKpis(tenantId).catch((): DashboardKpis | null => null),
-    getAcreditables(tenantId).catch((): Acreditables | null => null),
+    getAcreditables(tenantId, vl.dias).catch((): Acreditables | null => null),
   ]);
 
   return (
