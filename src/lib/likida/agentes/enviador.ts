@@ -122,6 +122,7 @@ async function anotarSiCambioElMaestro(encendidoAhora: boolean): Promise<void> {
       .eq('entidad', 'runner')
       .eq('entidad_id', BITACORA_ENTIDAD_ID_MAESTRO)
       .order('ocurrio_en', { ascending: false })
+      .order('id', { ascending: false })
       .limit(1), 'enviador.bitacora_ultimo_estado');
     if (error) {
       logger.warn('enviador.bitacora_ilegible', { err: error.message });

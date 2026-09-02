@@ -122,6 +122,7 @@ async function leerBandejaGlobalSinAtender(): Promise<string | null> {
     .select('creado_en')
     .eq('estado', 'pendiente')
     .order('creado_en', { ascending: true })
+    .order('id', { ascending: true })
     .limit(tope);
   if (error) {
     return 'no se pudo leer la bandeja global — fail closed ("bandeja sin atender")';
