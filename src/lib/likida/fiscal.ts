@@ -29,7 +29,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { traerTodo, conteo } from './pg';
+import { traerTodo, conteo, exigir } from './pg';
 import { acotada } from './presupuesto';
 import { round2, hoyMx, inicioDiaMx, finDiaMx } from '@/lib/formato';
 import { identificarComercio } from './facturacion/identificar';
@@ -1384,6 +1384,25 @@ export interface LiquidacionFiscal {
   pdfUrl: string | null;
 }
 
+/** El cursor de la lista: la ÚLTIMA fila entregada, no una posición. */
+export interface CursorLiquidacionFiscal {
+  creadoEn: string;
+  id: string;
+}
+
+export interface PaginaLiquidacionesFiscales {
+  filas: LiquidacionFiscal[];
+  /** Con qué seguir, o `null` si esta fue la última página. */
+  siguiente: CursorLiquidacionFiscal | null;
+  /** Cuántas hay en el periodo ENTERO. Solo viene en la primera página (pedir
+   *  el count en cada vuelta haría contar de más); `null` en las siguientes. */
+  total: number | null;
+}
+
+/** Cuántas filas por página. Tope duro: nadie pide más aunque lo pase. */
+export const LIQUIDACIONES_FISCALES_POR_PAGINA = 200;
+const MAX_POR_PAGINA = 1_000;
+
 /**
  * Las liquidaciones cerradas del periodo, para amarrar lo contable con lo
  * operativo. SOLO LECTURA: este módulo no expone nada que escriba.
@@ -1391,51 +1410,90 @@ export interface LiquidacionFiscal {
  * Se filtra por `created_at` y no por `fecha` porque una liquidación no tiene
  * fecha de documento: la fecha que le importa al contador es cuándo se cerró.
  * El rótulo de la pantalla lo dice con esas palabras.
+ *
+ * ── AUDITORÍA 24, REN-6 · UNA PÁGINA, NO EL EJERCICIO ENTERO ───────────────
+ *
+ * Traía TODO con `traerTodo` y ordenaba en JS. El periodo por default es el
+ * EJERCICIO: a 12,000 liquidaciones/mes, el mes 8.3 del año llega a 100,000
+ * filas, que es el techo de `traerTodo` (100 páginas × 1,000) — y de ahí en
+ * adelante la pantalla del contador dejaba de servir con un `LecturaIncompleta`
+ * hasta que él acortara el periodo a mano. Antes de reventar, 100 viajes de red
+ * y 13 columnas × 100k filas en memoria de la función.
+ *
+ * Ahora entrega UNA página con cursor keyset `(created_at, id)` — el mismo
+ * patrón que `export/liquidaciones` y `/v1/viajes`, y el mismo índice de la
+ * 0157. El cursor es la FILA, no la posición: una liquidación nueva escrita a
+ * media lectura (un chofer cierra su viaje por WhatsApp) entra arriba del
+ * cursor y no repite ni se salta a nadie.
+ *
+ * El orden ya viene de la base (`created_at desc, id desc`), no de un `.sort()`
+ * en JS: ordenar una página no ordena el conjunto, y el `.sort()` de antes solo
+ * era correcto porque se había traído todo.
  */
 export async function getLiquidacionesFiscales(
   tenantId: string,
   periodo: Periodo,
-): Promise<LiquidacionFiscal[]> {
-  const filas = await traerTodo<Record<string, unknown>>(
-    (desde, hasta) => {
-      let q = supabaseAdmin()
-        .from('liquidacion')
-        .select('id, created_at, total_comprobado, total_anticipo, diferencia, estatus, diferencias, pdf_url, iva_acreditable, ieps_acreditable, peaje_acreditable, litros_diesel_acreditables, viaje:viaje_id(folio, operador:operador_id(nombre))', conteo(desde))
-        .eq('tenant_id', tenantId);
-      // DAT-08 (auditoría prod): el rango se armaba con `Z` —medianoche y
-      // último milisegundo de LONDRES—, así que el periodo real iba de las
-      // 18:00 del día anterior a las 17:59 del último día, en hora de México.
-      // Una liquidación cerrada el 31 de diciembre a las 19:00 se contaba en el
-      // ejercicio SIGUIENTE, y el rótulo seguía diciendo "del periodo".
-      if (periodo.desde) q = q.gte('created_at', inicioDiaMx(periodo.desde));
-      if (periodo.hasta) q = q.lte('created_at', finDiaMx(periodo.hasta));
-      return acotada(q.order('id').range(desde, hasta), 'getLiquidacionesFiscales');
-    },
+  opciones: { despues?: CursorLiquidacionFiscal | null; limite?: number } = {},
+): Promise<PaginaLiquidacionesFiscales> {
+  const despues = opciones.despues ?? null;
+  const limite = Math.max(1, Math.min(opciones.limite ?? LIQUIDACIONES_FISCALES_POR_PAGINA, MAX_POR_PAGINA));
+
+  let q = supabaseAdmin()
+    .from('liquidacion')
+    .select(
+      'id, created_at, total_comprobado, total_anticipo, diferencia, estatus, diferencias, pdf_url, iva_acreditable, ieps_acreditable, peaje_acreditable, litros_diesel_acreditables, viaje:viaje_id(folio, operador:operador_id(nombre))',
+      despues ? {} : { count: 'exact' },
+    )
+    .eq('tenant_id', tenantId);
+  // DAT-08 (auditoría prod): el rango se armaba con `Z` —medianoche y
+  // último milisegundo de LONDRES—, así que el periodo real iba de las
+  // 18:00 del día anterior a las 17:59 del último día, en hora de México.
+  // Una liquidación cerrada el 31 de diciembre a las 19:00 se contaba en el
+  // ejercicio SIGUIENTE, y el rótulo seguía diciendo "del periodo".
+  if (periodo.desde) q = q.gte('created_at', inicioDiaMx(periodo.desde));
+  if (periodo.hasta) q = q.lte('created_at', finDiaMx(periodo.hasta));
+  // `(created_at, id) < (c, i)` en el dialecto de PostgREST: o es más vieja, o
+  // es del mismo instante y su id va después. Sin la segunda rama, dos
+  // liquidaciones del mismo microsegundo se pierden o se repiten (pg.ts).
+  if (despues) {
+    q = q.or(`created_at.lt.${despues.creadoEn},and(created_at.eq.${despues.creadoEn},id.lt.${despues.id})`);
+  }
+
+  const res = await acotada(
+    q.order('created_at', { ascending: false }).order('id', { ascending: false }).range(0, limite - 1),
     'getLiquidacionesFiscales',
   );
+  const crudas = (exigir(res, 'getLiquidacionesFiscales') ?? []) as Array<Record<string, unknown>>;
 
-  return filas
-    .map((r) => {
-      const v = r.viaje as { folio?: string; operador?: { nombre?: string } | null } | null;
-      const difs = r.diferencias as unknown[] | null;
-      return {
-        id: r.id as string,
-        viajeFolio: v?.folio ?? null,
-        operadorNombre: v?.operador?.nombre ?? null,
-        fecha: r.created_at as string,
-        totalComprobado: Number(r.total_comprobado ?? 0),
-        totalAnticipo: Number(r.total_anticipo ?? 0),
-        diferencia: Number(r.diferencia ?? 0),
-        estatus: (r.estatus as string) ?? '',
-        observaciones: Array.isArray(difs) ? difs.length : 0,
-        ivaAcreditable: Number(r.iva_acreditable ?? 0),
-        iepsAcreditable: Number(r.ieps_acreditable ?? 0),
-        peajeAcreditable: Number(r.peaje_acreditable ?? 0),
-        litrosDieselAcreditables: Number(r.litros_diesel_acreditables ?? 0),
-        pdfUrl: (r.pdf_url as string) || null,
-      };
-    })
-    .sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
+  const filas = crudas.map((r) => {
+    const v = r.viaje as { folio?: string; operador?: { nombre?: string } | null } | null;
+    const difs = r.diferencias as unknown[] | null;
+    return {
+      id: r.id as string,
+      viajeFolio: v?.folio ?? null,
+      operadorNombre: v?.operador?.nombre ?? null,
+      fecha: r.created_at as string,
+      totalComprobado: Number(r.total_comprobado ?? 0),
+      totalAnticipo: Number(r.total_anticipo ?? 0),
+      diferencia: Number(r.diferencia ?? 0),
+      estatus: (r.estatus as string) ?? '',
+      observaciones: Array.isArray(difs) ? difs.length : 0,
+      ivaAcreditable: Number(r.iva_acreditable ?? 0),
+      iepsAcreditable: Number(r.ieps_acreditable ?? 0),
+      peajeAcreditable: Number(r.peaje_acreditable ?? 0),
+      litrosDieselAcreditables: Number(r.litros_diesel_acreditables ?? 0),
+      pdfUrl: (r.pdf_url as string) || null,
+    };
+  });
+
+  // Una página CORTA prueba que no hay nada después. Una página llena no lo
+  // prueba: puede que la siguiente venga vacía, y por eso el cursor se
+  // entrega igual — quien pagina lo sabrá en el siguiente viaje, que es más
+  // barato que mentir con un "ya no hay".
+  const ultima = filas[filas.length - 1];
+  const siguiente = filas.length === limite && ultima ? { creadoEn: ultima.fecha, id: ultima.id } : null;
+
+  return { filas, siguiente, total: typeof res.count === 'number' ? res.count : null };
 }
 
 // ── Export ─────────────────────────────────────────────────────────────────
