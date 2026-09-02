@@ -26,8 +26,15 @@ import { join, relative } from 'node:path';
  * `pruebas-manuales` — con al menos un `.from(`/`.rpc(`, SIN contar
  * `repo.ts` ni `pg.ts` (la frontera declarada). Es un TECHO, no un objetivo:
  * si sube, actualiza este número en el mismo commit que explica por qué.
+ *
+ * 241 → 242 (auditoría 24, frontend-op): `lib/likida/repo_paginado.ts`
+ * (nuevo) — lectores keyset (`order`+`range`+`count:'exact'`) para pantallas
+ * que hasta ahora filtraban "los N más recientes" en memoria (FE-2/FE-3/
+ * FE-6). No entra a la `FRONTERA` declarada porque no es un reemplazo de
+ * `repo.ts`/`pg.ts` — es un módulo más con acceso directo, como
+ * `analytics.ts` o `jornada/repo.ts`, y cuenta contra el techo como ellos.
  */
-const TECHO_ARCHIVOS_FUERA_DE_LA_FRONTERA = 241;
+const TECHO_ARCHIVOS_FUERA_DE_LA_FRONTERA = 242;
 
 const RAIZ_SRC = new URL('../../', import.meta.url).pathname;
 
