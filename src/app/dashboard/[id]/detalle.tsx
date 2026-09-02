@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ChevronRight, Download, MessageCircle, RotateCcw, Truck, UserCog } from 'lucide-react';
+import { ChevronRight, Download, MessageCircle, RotateCcw, Truck } from 'lucide-react';
 import type { LiquidacionDetalle } from '@/lib/likida/analytics';
 import type { ResumenLaboral } from '@/lib/likida/laboral/pagadero';
 import { filasDeducibilidad } from '@/lib/likida/liquidacion/deducibilidad';
@@ -8,8 +8,9 @@ import { mxn, litros, fechaMx, fechaCorta } from '@/lib/formato';
 import { StatusPill, type Estado } from '@/app/admin/ui/kit';
 import { FormaConAviso, type ResultadoAccion } from '@/app/admin/ui/forma';
 import { BarraPagina } from '../resumen-visual';
-import { ComboCatalogo, type BuscarCatalogo } from '../combo-catalogo';
+import type { BuscarCatalogo } from '../combo-catalogo';
 import { PanelRevision, type GastoAjustable } from './revision-panel';
+import { FormaReasignar } from './reasignar-forma';
 import type { RevisionDetalle } from '@/lib/likida/revision';
 import {
   BTN_PRIMARIO, BTN_SECUNDARIO, ESTILO_PRIMARIO, ESTILO_SECUNDARIO,
@@ -50,7 +51,9 @@ export interface PropsDetalle {
     /** El nombre del chofer ACTUAL — viene con el detalle, así que el control
      *  arranca lleno sin pedirle nada al catálogo. */
     actualNombre: string;
-    accion: (fd: FormData) => Promise<void>;
+    /** FE-11: devuelve el rechazo en vez de lanzarlo — un chofer dado de baja
+     *  no puede tumbar la pantalla entera por `error.tsx`. */
+    accion: (previo: ResultadoAccion, fd: FormData) => Promise<ResultadoAccion>;
   } | null;
   /** La acción de reabrir, solo si el rol administra. */
   reabrir: ((previo: ResultadoAccion, fd: FormData) => Promise<ResultadoAccion>) | null;
@@ -178,19 +181,8 @@ export function DetalleLiquidacion({ d, sufijo, estatus, etiqueta, pdfHref, wa, 
                   Solo dueño/encargado (permisos.ts: puedeAsignar) — un contador o un
                   superadmin de paso por el tenant demo no mueve viajes de chofer. */}
               {reasignar && (
-                <form action={reasignar.accion} className="flex items-start gap-2">
-                  <label htmlFor="operadorId" className="sr-only">Chofer</label>
-                  <ComboCatalogo tipo="operador" name="operadorId" campoId="operadorId"
-                    buscar={reasignar.buscar} aria-label="Chofer"
-                    etiquetaVacia="Escribe el nombre del chofer…"
-                    valorInicial={reasignar.actual} textoInicial={reasignar.actualNombre}
-                    total={reasignar.total}
-                    className="h-8 text-[12.5px] px-2.5 rounded-lg hairline min-w-0 max-w-[220px]"
-                    estilo={{ background: 'var(--surface)' }} />
-                  <button type="submit" className={BTN_SECUNDARIO} style={ESTILO_SECUNDARIO}>
-                    <UserCog width={13} height={13} strokeWidth={1.75} aria-hidden /> Reasignar chofer
-                  </button>
-                </form>
+                <FormaReasignar accion={reasignar.accion} buscar={reasignar.buscar}
+                  actual={reasignar.actual} actualNombre={reasignar.actualNombre} total={reasignar.total} />
               )}
             </div>
 

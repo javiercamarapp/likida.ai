@@ -129,7 +129,16 @@ export default async function Detalle({
     }
   }
 
-  async function reasignar(formData: FormData) {
+  /**
+   * FE-11: devuelve el rechazo, no lo lanza.
+   *
+   * Antes esto era `(fd) => Promise<void>` con un `await reasignarOperador`
+   * pelón: un chofer dado de baja o un fallo de red lanzaba DENTRO de la
+   * action y `error.tsx` se llevaba la pantalla entera —«No se pudo cargar el
+   * panel»— por un cambio de chofer. Y el rechazo de permiso era un `redirect`
+   * mudo: la pantalla volvía igual, sin decir que no se hizo.
+   */
+  async function reasignar(_previo: ResultadoAccion, formData: FormData): Promise<ResultadoAccion> {
     'use server';
     // Repite la comprobación de permiso EN el server action: el `puedeAsignar`
     // de arriba solo decide si el <form> se pinta. Sin este segundo chequeo,
@@ -137,15 +146,22 @@ export default async function Detalle({
     // botón) podría reasignar igual — el mismo criterio que ya usa
     // `requireSessionTenant` para no confiar solo en lo que el proxy filtra.
     const { tenantId: tDemo, rol: r } = await requireSessionTenant(`/dashboard/${id}`, sp);
-    if (!puedeAsignar(r)) redirect(`/dashboard/${id}${sufijo}`);
+    if (!puedeAsignar(r)) return { error: 'Tu rol no puede reasignar choferes.' };
     let t = tDemo;
     if (r === 'superadmin' && sp?.tenant) {
       t = await resolverTenantPedido(supabaseAdmin(), t, sp.tenant);
     }
     const operadorId = String(formData.get('operadorId') ?? '');
-    if (!operadorId) redirect(`/dashboard/${id}${sufijo}`);
-    await reasignarOperador(t, d!.viajeId, operadorId);
-    redirect(`/dashboard/${id}${sufijo}`);
+    if (!operadorId) {
+      return { error: 'Elige un chofer de la lista: escribir un nombre a medias no basta, y adivinar a quién te referías no es cosa de este panel.' };
+    }
+    try {
+      await reasignarOperador(t, d!.viajeId, operadorId);
+      revalidatePath(`/dashboard/${id}`);
+      return { ok: 'Listo: el viaje quedó a nombre del chofer que elegiste.' };
+    } catch (err) {
+      return { error: mensajeParaPantalla(err, 'reasignar el chofer') };
+    }
   }
 
   /**
