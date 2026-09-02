@@ -527,16 +527,99 @@ export async function getConversacionesActivas(): Promise<ConversacionActiva[]> 
     .order('updated_at', { ascending: false })
     .limit(TOPE_CONVERSACIONES), 'getConversacionesActivas');
   if (error) throw new Error(`getConversacionesActivas: ${error.message}`);
-  return (data ?? []).map((c) => {
-    const estado = (c.estado as { turns?: TurnoConversacion[] }) ?? {};
-    return {
-      telefono: c.telefono as string,
-      tenantId: (c.tenant_id as string | null) ?? null,
-      tenantNombre: ((c.tenant as { nombre?: string } | null)?.nombre) ?? '—',
-      turns: Array.isArray(estado.turns) ? estado.turns : [],
-      actualizadaEn: c.updated_at as string,
-    };
-  });
+  return (data ?? []).map(mapFilaConversacion);
+}
+
+/** La misma fila cruda de `wa_conversacion` (+ join a `tenant`) a
+ *  `ConversacionActiva`, compartida por `getConversacionesActivas`,
+ *  `buscarConversaciones` y `getConversacion` — antes duplicada en la
+ *  primera y a punto de triplicarse con ADM-1. */
+function mapFilaConversacion(c: Record<string, unknown>): ConversacionActiva {
+  const estado = (c.estado as { turns?: TurnoConversacion[] }) ?? {};
+  return {
+    telefono: c.telefono as string,
+    tenantId: (c.tenant_id as string | null) ?? null,
+    tenantNombre: ((c.tenant as { nombre?: string } | null)?.nombre) ?? '—',
+    turns: Array.isArray(estado.turns) ? estado.turns : [],
+    actualizadaEn: c.updated_at as string,
+  };
+}
+
+/** Filas por página de `buscarConversaciones` — mismo criterio que
+ *  `paginar-registro.ts` del dashboard (25 se lee sin scroll infinito). */
+export const CONVERSACIONES_POR_PAGINA = 25;
+
+export interface PaginaConversaciones {
+  filas: ConversacionActiva[];
+  pagina: number;
+  paginas: number;
+  /** Cuántas conversaciones pasan el filtro actual — `count exact`, nunca
+   *  `filas.length`. */
+  total: number;
+}
+
+/**
+ * ADM-1: `getConversacionesActivas` es un TOPE de 20 sin filtro — con
+ * cientos de choferes activos las 20 filas rotan en minutos y no hay forma
+ * de abrir la conversación de un teléfono concreto sin ir a la base. Esta
+ * función SÍ filtra (`?q=` por teléfono, `?tenant=`) y SÍ pagina con
+ * `count exact` real, nunca `filas.length` como total.
+ *
+ * `q` se normaliza a solo dígitos ANTES de armar el `ilike` — el mismo
+ * criterio que `bitacora.ts` (sanear antes de que `%`/`_` entren como
+ * comodines de LIKE) y el mismo que espera un teléfono mexicano en
+ * `wa_conversacion.telefono` (dígitos, sin `+`/espacios).
+ */
+export async function buscarConversaciones(params: {
+  q?: string;
+  tenantId?: string | null;
+  pagina?: number;
+}): Promise<PaginaConversaciones> {
+  const porPagina = CONVERSACIONES_POR_PAGINA;
+  const paginaPedida = Math.trunc(params.pagina ?? 1);
+  const pagina = Number.isFinite(paginaPedida) && paginaPedida >= 1 ? paginaPedida : 1;
+  const q = (params.q ?? '').replace(/[^\d]/g, '').slice(0, 20);
+
+  let consulta = supabaseAdmin()
+    .from('wa_conversacion')
+    .select('telefono, tenant_id, estado, updated_at, tenant:tenant_id(nombre)', { count: 'exact' })
+    .order('updated_at', { ascending: false })
+    .order('telefono'); // desempata `updated_at` repetido entre páginas
+  if (q) consulta = consulta.ilike('telefono', `%${q}%`);
+  if (params.tenantId) consulta = consulta.eq('tenant_id', params.tenantId);
+
+  const desde = (pagina - 1) * porPagina;
+  const { data, error, count } = await acotada(
+    consulta.range(desde, desde + porPagina - 1), 'buscarConversaciones',
+  );
+  if (error) throw new Error(`buscarConversaciones: ${error.message}`);
+  const total = count ?? 0;
+  const paginas = Math.max(1, Math.ceil(total / porPagina));
+  return {
+    filas: ((data ?? []) as Array<Record<string, unknown>>).map(mapFilaConversacion),
+    pagina: Math.min(pagina, paginas),
+    paginas,
+    total,
+  };
+}
+
+/**
+ * Una sola conversación por (tenant, teléfono) — la llave real de
+ * `wa_conversacion` (ver el comentario de `ConversacionActiva.tenantId`).
+ * `null` = no existe esa conversación (no un error: el link vino de un id
+ * viejo o manipulado, y la página de detalle lo trata como 404, no como
+ * "la base falló").
+ */
+export async function getConversacion(tenantId: string, telefono: string): Promise<ConversacionActiva | null> {
+  const { data, error } = await acotada(supabaseAdmin()
+    .from('wa_conversacion')
+    .select('telefono, tenant_id, estado, updated_at, tenant:tenant_id(nombre)')
+    .eq('tenant_id', tenantId)
+    .eq('telefono', telefono)
+    .maybeSingle(), 'getConversacion');
+  if (error) throw new Error(`getConversacion: ${error.message}`);
+  if (!data) return null;
+  return mapFilaConversacion(data as Record<string, unknown>);
 }
 
 /**

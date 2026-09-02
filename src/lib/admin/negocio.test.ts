@@ -30,15 +30,35 @@ function crearBuilder(tabla: string) {
   let esHead = false;
   let tope: number | null = null;
   const filtros: Array<[string, unknown]> = [];
+  // ADM-1 (buscarConversaciones/getConversacion): `.ilike`/`.maybeSingle` no
+  // existían en el mock — la búsqueda por teléfono y el detalle por
+  // (tenant, teléfono) los necesitan de verdad, como PostgREST.
+  let filtroIlike: [string, RegExp] | null = null;
   const filtradas = (): Array<Record<string, unknown>> => {
     let todas = (raw().data ?? []) as Array<Record<string, unknown>>;
     for (const [col, val] of filtros) todas = todas.filter((f) => f[col] === val);
+    if (filtroIlike) {
+      const [col, re] = filtroIlike;
+      todas = todas.filter((f) => re.test(String(f[col] ?? '')));
+    }
     return todas;
   };
   const b: Record<string, unknown> = {};
   b.order = () => b; // el orden lo simula el fixture: se declara ya ordenado
   b.eq = (col: string, val: unknown) => { filtros.push([col, val]); return b; };
   b.limit = (n: number) => { tope = n; return b; };
+  // `%texto%` → regex que exige contener "texto" (mismo comodín que LIKE).
+  b.ilike = (col: string, patron: string) => {
+    const cuerpo = patron.split('%').map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*');
+    filtroIlike = [col, new RegExp(`^${cuerpo}$`, 'i')];
+    return b;
+  };
+  b.maybeSingle = () => {
+    const r = raw();
+    if (r.error) return Promise.resolve({ data: null, error: r.error });
+    const todas = filtradas();
+    return Promise.resolve({ data: todas[0] ?? null, error: null });
+  };
   b.select = (_cols?: unknown, opts?: { count?: string; head?: boolean }) => {
     if (opts?.count === 'exact') pidioConteo = true;
     if (opts?.head) esHead = true;
@@ -135,6 +155,7 @@ vi.mock('@/lib/supabase/admin', () => ({
 const {
   getResumenNegocio, getCostoPorFaseModelo, getConversacionesActivas,
   contarConversacionesActivas, TOPE_CONVERSACIONES,
+  buscarConversaciones, getConversacion, CONVERSACIONES_POR_PAGINA,
   getConteosPlataforma, getCorridasRecientes, getUltimaCorridaPorAgente, AGENTES_BITACORA,
   getCorridasFallidas, getLiquidacionesEnRevisar, contarLiquidacionesEnRevisar, LIMITE_LIQUIDACIONES_REVISAR,
   costoIaMesActual, costoIaDeTenant, SEGUNDOS_CACHE_CONSOLA,
@@ -526,6 +547,79 @@ describe('getConversacionesActivas', () => {
   it('si el conteo falla devuelve null, nunca cero', async () => {
     respuestas.set('wa_conversacion', { data: null, error: { message: 'caída' }, count: null });
     expect(await contarConversacionesActivas()).toBeNull();
+  });
+});
+
+// ADM-1: `getConversacionesActivas` es un TOPE de 20 sin filtro. Con
+// cientos de choferes activos, Javier necesita poder ENCONTRAR la
+// conversación de un teléfono concreto — de ahí `buscarConversaciones`
+// (filtro + `count exact`, nunca `filas.length`) y `getConversacion`
+// (detalle por tenant+teléfono, para la URL propia).
+describe('buscarConversaciones', () => {
+  beforeEach(() => { respuestas.clear(); rangos.clear(); });
+
+  function fila(telefono: string, tenantId = 't-1') {
+    return { telefono, tenant_id: tenantId, updated_at: '2026-08-02T20:00:00Z', estado: { turns: [] }, tenant: { nombre: 'Flota Demo' } };
+  }
+
+  it('filtra por teléfono (dígitos) y el total viene de count exact, no de filas.length', async () => {
+    respuestas.set('wa_conversacion', {
+      data: [fila('529991110001'), fila('529991110002'), fila('529992220003')],
+      error: null,
+    });
+    const r = await buscarConversaciones({ q: '9991', pagina: 1 });
+    expect(r.total).toBe(2); // count exact sobre las filtradas, no 3 (todas)
+    expect(r.filas.map((f) => f.telefono)).toEqual(['529991110001', '529991110002']);
+    expect(r.paginas).toBe(1);
+  });
+
+  it('normaliza el texto de búsqueda a solo dígitos antes de armar el ilike', async () => {
+    respuestas.set('wa_conversacion', { data: [fila('529991110001')], error: null });
+    const r = await buscarConversaciones({ q: '+52 999 111 0001', pagina: 1 });
+    expect(r.total).toBe(1);
+  });
+
+  it('pagina de verdad: con más filas que CONVERSACIONES_POR_PAGINA, la página 2 trae el resto', async () => {
+    const muchas = Array.from({ length: CONVERSACIONES_POR_PAGINA + 3 }, (_, i) => fila(`52999111${String(i).padStart(4, '0')}`));
+    respuestas.set('wa_conversacion', { data: muchas, error: null });
+    const p1 = await buscarConversaciones({ pagina: 1 });
+    const p2 = await buscarConversaciones({ pagina: 2 });
+    expect(p1.total).toBe(CONVERSACIONES_POR_PAGINA + 3);
+    expect(p1.filas.length).toBe(CONVERSACIONES_POR_PAGINA);
+    expect(p2.filas.length).toBe(3);
+    expect(p1.paginas).toBe(2);
+  });
+
+  it('un fallo de Supabase lanza, no devuelve página vacía', async () => {
+    respuestas.set('wa_conversacion', { data: null, error: { message: 'caída' } });
+    await expect(buscarConversaciones({ q: '999' })).rejects.toThrow('caída');
+  });
+});
+
+describe('getConversacion', () => {
+  beforeEach(() => { respuestas.clear(); rangos.clear(); });
+
+  it('trae la conversación por (tenant, teléfono)', async () => {
+    respuestas.set('wa_conversacion', {
+      data: [{
+        telefono: '529991110001', tenant_id: 't-1', updated_at: '2026-08-02T20:00:00Z',
+        estado: { turns: [{ role: 'user', content: 'hola' }] }, tenant: { nombre: 'Flota Demo' },
+      }],
+      error: null,
+    });
+    const r = await getConversacion('t-1', '529991110001');
+    expect(r?.telefono).toBe('529991110001');
+    expect(r?.turns).toEqual([{ role: 'user', content: 'hola' }]);
+  });
+
+  it('null cuando no existe esa conversación (no un error)', async () => {
+    respuestas.set('wa_conversacion', { data: [], error: null });
+    expect(await getConversacion('t-1', '529990000000')).toBeNull();
+  });
+
+  it('un fallo de Supabase lanza', async () => {
+    respuestas.set('wa_conversacion', { data: null, error: { message: 'caída' } });
+    await expect(getConversacion('t-1', '529990000000')).rejects.toThrow('caída');
   });
 });
 
