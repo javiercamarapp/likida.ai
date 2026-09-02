@@ -238,7 +238,10 @@ export async function buscarViajesVivos(tenantId: string, q: string): Promise<Op
     consulta = consulta.ilike('folio', `%${texto}%`);
   }
   const { data, error } = await acotada(
-    consulta.order('created_at', { ascending: false }).limit(TOPE_BUSCADOR_VIAJES),
+    // Desempate por `id`: sin él, un top-20 sobre un empate en `created_at`
+    // (viajes creados en el mismo import por lote) no es determinista entre
+    // dos corridas — el mismo bug de fondo que `pg.ts`/`traerTodo` evita.
+    consulta.order('created_at', { ascending: false }).order('id', { ascending: false }).limit(TOPE_BUSCADOR_VIAJES),
     'repo_paginado.buscar_viajes_folio',
   );
   if (error) throw new Error(error.message);
@@ -255,6 +258,7 @@ export async function buscarViajesVivos(tenantId: string, q: string): Promise<Op
         .in('estatus', VIVOS)
         .ilike('operador.nombre', `%${texto}%`)
         .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
         .limit(TOPE_BUSCADOR_VIAJES - filas.length),
       'repo_paginado.buscar_viajes_operador',
     );
