@@ -869,6 +869,19 @@ export async function correrRunner(
     if (AGENTES_EXITO_CLIENTE.includes(a.id)) {
       if (a.id === 'atencion_faq') {
         try {
+          // AUDITORÍA 24, ARQ-2 / AGB-9 (ALTO, reincidente 22→23→24): `faq.ts`
+          // anota `costo_usd = NULL` cuando el proveedor omite `usage`, y
+          // `gastoDelDiaUsd` SOLO suma lo medido — así que 30 llamadas/día con
+          // el proveedor callado leían $0.00 contra $1.00 y el techo nunca
+          // cortaba. Un costo no medido no es cero: si hay corridas de hoy sin
+          // medir, el gasto real del día es desconocido y no se despacha contra
+          // un techo que no se puede verificar (mismo candado que
+          // `contenido_fiscal`, más abajo).
+          const sinMedir = await corridasSinCostoMedidoHoy(a.id);
+          if (sinMedir > 0) {
+            agentes.push({ agente: a.id, resultado: 'saltado', motivo: `${sinMedir} corrida(s) de hoy con costo NO MEDIDO: el gasto real del día es desconocido y un costo desconocido no es cero — no se despacha contra un techo que no se puede verificar` });
+            continue;
+          }
           const gastado = await gastoDelDiaUsd(a.id);
           if (gastado >= a.presupuesto_dia_usd) {
             agentes.push({ agente: a.id, resultado: 'saltado', motivo: `techo diario alcanzado (${gastado.toFixed(2)} de ${a.presupuesto_dia_usd} USD)` });
