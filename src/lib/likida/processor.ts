@@ -68,6 +68,7 @@ import {
 } from '@/lib/likida/repo';
 import {
   resolveOperador, getOpenViaje, viajeAbiertoDesdeMs, liquidacionRecienteDe, getTenantContext, type ResolvedOperador,
+  sellarEntregaLiquidacion, type LiquidacionReciente,
   loadConversation, saveConversation, claimMessage,
   acquireViajeLock, intentarLockViaje, TTL_LOCK_CIERRE_MS,
   releaseViajeLock, releaseMessageClaim, completarMessageClaim,
@@ -970,6 +971,92 @@ function causaDeFondo(e: unknown): unknown {
 const COLOFON_NO_CERRE = 'Todavía *NO* cerré tu liquidación: tu viaje sigue abierto. En un momento vuelve a escribirme *listo* y la cierro.';
 const COLOFON_SIN_PRESUPUESTO = 'Hoy tu flota ya agotó su cupo de IA, así que todavía *NO* cerré tu liquidación: tu viaje sigue abierto y tus comprobantes quedan guardados. Mañana escríbeme *listo* otra vez, o pídele a tu contralor que suba el tope hoy.';
 
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUDITORÍA 24 · AGEN-4 (ALTO) — TODA muerte posterior al commit del cierre
+// aterriza en la rama «sin viaje abierto» del siguiente «listo». Antes esa
+// rama decía «pídeselo a tu contralor» sin mandar el PDF que existe ni avisar
+// al jefe. Ahora lee los dos sellos de la 0279 y ENTREGA lo que falte: el PDF
+// del operador si nunca salió, el aviso a la oficina si nunca salió. Lo
+// sellado no se repite. Best-effort en cada pata, nunca lanza.
+// ═══════════════════════════════════════════════════════════════════════════
+type EntregaPendiente = {
+  pdf: 'mandado' | 'ya_entregado' | 'sin_pdf' | 'fallo';
+  jefe: 'avisado' | 'ya_avisado' | 'fallo';
+};
+
+async function entregarCierrePendiente(op: ResolvedOperador, telefono: string, liq: LiquidacionReciente): Promise<EntregaPendiente> {
+  const admin = supabaseAdmin();
+  const ctx = { tenant: op.tenantId, viaje: liq.viajeId, liq: liq.liquidacionId, reentrega: true };
+
+  let pdf: EntregaPendiente['pdf'];
+  if (!liq.pdfUrl) {
+    pdf = 'sin_pdf';
+  } else if (liq.entregadaOperadorEn) {
+    pdf = 'ya_entregado';
+  } else {
+    try {
+      // El ejemplar del OPERADOR (`tools.ts`), igual que el camino feliz.
+      const firma = await acotada(admin.storage.from('liquidaciones').createSignedUrl(`${op.tenantId}/${liq.viajeId}-operador.pdf`, TTL_FIRMA_PDF_SEGUNDOS), 'createSignedUrl.reentrega');
+      if (firma.error || !firma.data?.signedUrl) throw new Error(firma.error?.message ?? 'storage no devolvió URL firmada');
+      const r = await sendDocument(telefono, firma.data.signedUrl, 'liquidacion.pdf', 'Aquí está tu liquidación 📄');
+      if (!r.ok) {
+        logger.error('pdf.no_entregado', { ...ctx, codigo: r.codigo, error: r.error });
+        pdf = 'fallo';
+      } else {
+        await registrarCostoWhatsApp(op.tenantId, liq.viajeId);
+        await sellarEntregaLiquidacion(op.tenantId, liq.liquidacionId, 'entregada_operador_en');
+        pdf = 'mandado';
+      }
+    } catch (e) {
+      logger.error('pdf.no_entregado', { ...ctx, err: e instanceof Error ? e.message : String(e), codigo: codigoDeError(e) });
+      pdf = 'fallo';
+    }
+  }
+
+  let jefe: EntregaPendiente['jefe'];
+  if (liq.avisadaOficinaEn) {
+    jefe = 'ya_avisado';
+  } else {
+    try {
+      let urlPdfJefe: string | null = null;
+      if (liq.pdfUrl) {
+        const firma = await acotada(admin.storage.from('liquidaciones').createSignedUrl(`${op.tenantId}/${liq.viajeId}.pdf`, TTL_FIRMA_PDF_SEGUNDOS), 'createSignedUrl.contralor');
+        if (firma.error || !firma.data?.signedUrl) logger.warn('cierre.pdf_jefe_sin_url', { ...ctx, err: firma.error?.message ?? 'storage no devolvió URL firmada' });
+        else urlPdfJefe = firma.data.signedUrl;
+      }
+      const rj = await avisarCierreAlJefe({ tenantId: op.tenantId, viajeId: liq.viajeId, urlPdf: urlPdfJefe, telefonoOperador: telefono });
+      if (rj.enviado) {
+        await sellarEntregaLiquidacion(op.tenantId, liq.liquidacionId, 'avisada_oficina_en');
+        jefe = 'avisado';
+      } else {
+        logger.warn('cierre.jefe_no_avisado', { ...ctx, motivo: rj.motivo });
+        jefe = 'fallo';
+      }
+    } catch (e) {
+      logger.error('cierre.aviso_jefe_falló', { ...ctx, err: e instanceof Error ? e.message : String(e) });
+      jefe = 'fallo';
+    }
+  }
+  return { pdf, jefe };
+}
+
+/** Lo que se le dice al chofer según lo que de verdad pasó con su PDF. Ninguna
+ *  frase afirma una entrega que Meta no aceptó. */
+function mensajeCierreConfirmado(e: EntregaPendiente): string {
+  const cabeza = 'Tu último viaje ya quedó liquidado ✅ — no tienes ninguno abierto ahorita.';
+  switch (e.pdf) {
+    case 'mandado': return `${cabeza} Te acabo de mandar tu PDF 📄`;
+    case 'ya_entregado': return `${cabeza} Tu PDF ya te lo había mandado; si no lo ves, pídeselo a tu contralor: él ya lo tiene en el panel. 👍`;
+    case 'sin_pdf': return `${cabeza} El PDF de esa liquidación no se generó; avísale a tu contralor para que la revise en el panel.`;
+    case 'fallo': return `${cabeza} El PDF no se te pudo entregar por el chat; pídeselo a tu contralor: él ya lo tiene en el panel. 🙏`;
+  }
+}
+
+/** TTL de las URLs firmadas de los PDF (segundos). Ver AGEN-9: el outbox
+ *  reintenta a ≥ 5 min, así que una firma de 60 s nacía muerta. */
+const TTL_FIRMA_PDF_SEGUNDOS = 60;
+
 /**
  * LA BASE ES LA AUTORIDAD sobre si un viaje cerró.
  *
@@ -1768,7 +1855,11 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
         const reciente = await liquidacionRecienteDe(op.tenantId, op.operadorId);
         if (reciente) {
           logger.info('sin_viaje.cierre_confirmado', { tenant: op.tenantId, operador: op.operadorId, viaje: reciente.viajeId, liq: reciente.liquidacionId });
-          await sendText(msg.from, 'Tu último viaje ya quedó liquidado ✅ — no tienes ninguno abierto ahorita. Si no te llegó tu PDF, pídeselo a tu contralor: él ya lo tiene en el panel. 👍');
+          // AGEN-4: se ENTREGA lo que ese cierre dejó pendiente (PDF al
+          // chofer, aviso al jefe) y se narra lo que de verdad pasó.
+          const entrega = await entregarCierrePendiente(op, msg.from, reciente);
+          logger.info('sin_viaje.cierre_entregado', { tenant: op.tenantId, viaje: reciente.viajeId, liq: reciente.liquidacionId, ...entrega });
+          await sendText(msg.from, mensajeCierreConfirmado(entrega));
           return;
         }
       } catch (e) {
@@ -3914,9 +4005,9 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
       // que ya usa `pdf.no_entregado` dos líneas abajo para el caso gemelo
       // del operador.
       const pdfContralorGenerado = Boolean((guardado?.result as { pdf_contralor_generado?: boolean } | undefined)?.pdf_contralor_generado);
+      const liqIdCerrada = (guardado?.result as { liquidacion_id?: string } | undefined)?.liquidacion_id;
       if (!pdfContralorGenerado) {
-        const liqId = (guardado?.result as { liquidacion_id?: string } | undefined)?.liquidacion_id;
-        logger.error('pdf.contralor_no_generado', { tenant: op.tenantId, viaje: viajeId, liqId });
+        logger.error('pdf.contralor_no_generado', { tenant: op.tenantId, viaje: viajeId, liqId: liqIdCerrada });
       }
       try {
         if (!pdfGenerado) throw new Error('la tool reportó pdf_generado=false');
@@ -3968,6 +4059,9 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
           await sendText(msg.from, 'Tu liquidación ya quedó cerrada ✅, pero el PDF no se te entregó por un problema del chat. Pídeselo a tu contralor: él ya lo tiene en el panel. 🙏').catch(() => {});
         } else {
           await registrarCostoWhatsApp(op.tenantId, viajeId);
+          // AGEN-4: sello de entrega — el reintento de un «listo» no vuelve a
+          // mandar este PDF.
+          await sellarEntregaLiquidacion(op.tenantId, liqIdCerrada, 'entregada_operador_en');
         }
 
       } catch (e) {
@@ -4038,6 +4132,8 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
         }
         const rj = await avisarCierreAlJefe({ tenantId: op.tenantId, viajeId, urlPdf: urlPdfJefe, telefonoOperador: msg.from });
         if (!rj.enviado) logger.warn('cierre.jefe_no_avisado', { viaje: viajeId, motivo: rj.motivo });
+        // AGEN-4: sello — el reintento de un «listo» no vuelve a avisar.
+        else await sellarEntregaLiquidacion(op.tenantId, liqIdCerrada, 'avisada_oficina_en');
       } catch (e) {
         logger.error('cierre.aviso_jefe_falló', { viaje: viajeId, err: e instanceof Error ? e.message : String(e) });
       }

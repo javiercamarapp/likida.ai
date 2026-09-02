@@ -199,7 +199,44 @@ export async function getOpenViaje(tenantId: string, operadorId: string): Promis
 }
 
 /** Lo que se sabe de la última liquidación reciente de un operador. */
-export interface LiquidacionReciente { viajeId: string; liquidacionId: string }
+export interface LiquidacionReciente {
+  viajeId: string;
+  liquidacionId: string;
+  /** Ruta del PDF del contralor en Storage (`${tenant}/${viaje}.pdf`), o null
+   *  si el cierre no generó papel. */
+  pdfUrl: string | null;
+  /** Sellos de entrega (0279, AGEN-4): null = falta hacerlo. */
+  entregadaOperadorEn: string | null;
+  avisadaOficinaEn: string | null;
+}
+
+/** Los dos sellos de entrega de `liquidacion` (0279). */
+export type SelloEntrega = 'entregada_operador_en' | 'avisada_oficina_en';
+
+/**
+ * Marca que la entrega ocurrió (AGEN-4). Escribe SOLO si el sello está en
+ * null: es idempotente y una segunda entrega no reescribe la hora de la
+ * primera. Best-effort y nunca lanza: la liquidación ya está cerrada y el PDF
+ * ya salió; perder el sello cuesta a lo sumo un reenvío, no un cierre.
+ */
+export async function sellarEntregaLiquidacion(tenantId: string, liquidacionId: string | null | undefined, sello: SelloEntrega): Promise<boolean> {
+  if (!liquidacionId) return false;
+  try {
+    const { error } = await acotada(supabaseAdmin()
+      .from('liquidacion')
+      .update({ [sello]: new Date().toISOString() })
+      .eq('tenant_id', tenantId).eq('id', liquidacionId)
+      .is(sello, null), 'sellarEntregaLiquidacion');
+    if (error) {
+      logger.warn('liquidacion.sello_entrega', { tenant: tenantId, liq: liquidacionId, sello, err: error.message });
+      return false;
+    }
+    return true;
+  } catch (e) {
+    logger.warn('liquidacion.sello_entrega', { tenant: tenantId, liq: liquidacionId, sello, err: e instanceof Error ? e.message : String(e) });
+    return false;
+  }
+}
 
 /** Ventana en la que un cierre cuenta como "reciente" para el reintento. */
 const VENTANA_LIQUIDACION_RECIENTE_MS = 24 * 60 * 60 * 1000;
@@ -226,7 +263,9 @@ export async function liquidacionRecienteDe(tenantId: string, operadorId: string
     .from('liquidacion')
     // Anclado a `viaje_id` (regla de embeds del repo): `liquidacion` no trae
     // operador, se filtra por el del viaje embebido.
-    .select('id, viaje_id, viaje:viaje_id!inner(operador_id)')
+    // Con `pdf_url` y los dos sellos (0279, AGEN-4): el reintento del «listo»
+    // entrega lo que falte en vez de afirmar «pídeselo a tu contralor».
+    .select('id, viaje_id, pdf_url, entregada_operador_en, avisada_oficina_en, viaje:viaje_id!inner(operador_id)')
     .eq('tenant_id', tenantId)
     .eq('viaje.operador_id', operadorId)
     .gte('created_at', desde)
@@ -239,7 +278,14 @@ export async function liquidacionRecienteDe(tenantId: string, operadorId: string
     return null;
   }
   if (!data) return null;
-  return { viajeId: data.viaje_id as string, liquidacionId: data.id as string };
+  const f = data as { id: unknown; viaje_id: unknown; pdf_url?: unknown; entregada_operador_en?: unknown; avisada_oficina_en?: unknown };
+  const texto = (v: unknown) => (v == null ? null : String(v));
+  return {
+    viajeId: String(f.viaje_id), liquidacionId: String(f.id),
+    pdfUrl: texto(f.pdf_url),
+    entregadaOperadorEn: texto(f.entregada_operador_en),
+    avisadaOficinaEn: texto(f.avisada_oficina_en),
+  };
 }
 
 /**

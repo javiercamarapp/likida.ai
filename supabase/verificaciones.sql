@@ -15349,3 +15349,38 @@ begin
   raise exception E'WA_CONVERSACION_TEL_NORM_0274  variante-choca=%  otro-numero=%  otra-flota=%   (esperado t / t / t)',
     choca_variante, otro_numero_ok, otra_flota_ok;
 end $$;
+
+-- ── 226. La liquidación lleva los dos sellos de entrega, nulos de fábrica (mig. 0279) ──
+--
+-- AUDITORÍA 24, AGEN-4 (ALTO). Toda muerte posterior al commit del cierre
+-- aterrizaba en «pídeselo a tu contralor» sin mandar el PDF que existe ni avisar
+-- al jefe, porque la entrega no dejaba marca en la base. Se asevera lo que la
+-- base puede demostrar: las dos columnas existen, son timestamptz NULLABLES
+-- (null = «falta entregar»; el reintento del «listo» decide por ellas), nacen
+-- en null sin default (un default now() diría «entregado» sobre un PDF que
+-- nadie mandó), y el índice parcial del barrido existe.
+-- Esperado: LIQUIDACION_SELLOS_ENTREGA_0279 col-operador=t col-oficina=t nulables=t sin-default=t idx-parcial=t
+do $$
+declare
+  col_operador boolean; col_oficina boolean; nulables boolean; sin_default boolean; idx_parcial boolean;
+begin
+  select exists(select 1 from information_schema.columns
+                where table_schema = 'public' and table_name = 'liquidacion'
+                  and column_name = 'entregada_operador_en' and data_type = 'timestamp with time zone') into col_operador;
+  select exists(select 1 from information_schema.columns
+                where table_schema = 'public' and table_name = 'liquidacion'
+                  and column_name = 'avisada_oficina_en' and data_type = 'timestamp with time zone') into col_oficina;
+  select coalesce(bool_and(is_nullable = 'YES'), false) from information_schema.columns
+    where table_schema = 'public' and table_name = 'liquidacion'
+      and column_name in ('entregada_operador_en', 'avisada_oficina_en') into nulables;
+  select coalesce(bool_and(column_default is null), false) from information_schema.columns
+    where table_schema = 'public' and table_name = 'liquidacion'
+      and column_name in ('entregada_operador_en', 'avisada_oficina_en') into sin_default;
+  select exists(select 1 from pg_indexes
+                where schemaname = 'public' and tablename = 'liquidacion'
+                  and indexname = 'liquidacion_entrega_pendiente_idx'
+                  and indexdef ilike '%where%entregada_operador_en is null%') into idx_parcial;
+
+  raise exception E'LIQUIDACION_SELLOS_ENTREGA_0279  col-operador=%  col-oficina=%  nulables=%  sin-default=%  idx-parcial=%   (esperado t / t / t / t / t)',
+    col_operador, col_oficina, nulables, sin_default, idx_parcial;
+end $$;
