@@ -1,0 +1,52 @@
+[
+  {
+    "id": "c8bf49e2-fd2a-411a-8379-b92f1d46ba3f",
+    "empresa": "Coordinadora Fma, S.A. de C.V.",
+    "ciudad": "Altamira, Tamaulipas",
+    "correo": "vibarra@ipmaltamira.com.mx",
+    "telefono": "8332604440",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Fletes · 11 a 50 personas · Calle Recinto Fiscal Portuario Sn Int Na, Colonia Puerto Industrial, CP 89608\nUbicación aproximada 17-ago: centroide de 176 establecimientos DENUE en Altamira, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "1ffbeec6-230b-423d-b376-e25328c0bd5a",
+    "empresa": "Corporacion Transgodmex, S.A. de C.V.",
+    "ciudad": "León, Guanajuato",
+    "correo": "direccion@transgodmex.com",
+    "telefono": "4774750656",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Camino Presa del Salto 309 Int Sn, Colonia Ejido Jesus Maria, CP 37538\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b20baa55-e264-4847-a3bf-0c73d6bb105e",
+    "empresa": "Corporativo Cien Nuevo Laredo, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "juliocienfuegos@gpocien.com",
+    "telefono": "8677182972",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Lazo 502 Int Na, Colonia el Caporal, CP 88293\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (el correo del registro, juliocienfuegos@gpocien.com, insinúa el apellido Cienfuegos, pero ninguna fuente pública lo confirma con cargo) · fuente: CANACAR 17-ago-2026\nENCAJE: alto — socio CANACAR fronterizo, 11-50 personas, correo nominal directo",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3f785835-340e-45f2-a544-18c60cca3549",
+    "empresa": "Correcaminos Intercontinentales, S.A. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "ctpat@transportescorrecaminos.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Tomate 231 Int Na, Colonia Granjas Cecilia, CP 21386\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "06e2694d-c1fd-4da8-a706-6ead2bf02932",
+    "empresa": "Corsa Transportes, S.A. de C.V.",
+    "ciudad": "General Escobedo, Nuevo León",
+    "correo": "hescamilla@corsatransportes.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Federal · 11 a 50 personas · Avenida Libramiento a Saltillo Km 34.5 Sn Int D, Colonia Libramiento Norte, CP 66050\nUbicación aproximada 17-ago: centroide de 199 establecimientos DENUE en General Escobedo, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN PROFUNDA 20-ago-2026: Alejandro Villarreal, Director General. Oscar Mario González Esparza, key principal/dueño. Alfredo Rodríguez, Presidente. Víctor Daniel Reyes, Director de Administración y Finanzas.",
+    "fuente": "canacar"
+  }
+]

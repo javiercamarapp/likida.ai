@@ -1,0 +1,102 @@
+[
+  {
+    "id": "22d83357-497b-4799-9d09-230bbd748055",
+    "empresa": "OROZCO AGRICOLA",
+    "ciudad": "Tijuana, Baja California",
+    "telefono": null,
+    "correo": null,
+    "notas": "UNIVERSO DENUE 05/2026: Almacenamiento de productos agrícolas que no requieren refrigeración · 11 a 30 personas · establecimiento: BODEGA DE OROZCO AGRICOLA\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "22d927e0-94d8-443a-b136-fe47f0e6e48e",
+    "empresa": "Kelly",
+    "ciudad": null,
+    "telefono": null,
+    "correo": null,
+    "notas": "2 anuncios en el censo · señal: carta porte · último anuncio: Hace 5 día · liga: https://mx.computrabajo.com/ofertas-de-trabajo/oferta-de-trabajo-de-analista-de-comercio-exterior-hable-ingles-tlalnepantla-estado-de-mexico-en-tlalnepantla-de-baz-C04C24061A28FC9561373E686DCF3405#lc=ListOffers-Score3-11",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "22d95b5d-e09d-45ca-9993-36484f640dc6",
+    "empresa": "CABO SEASON",
+    "ciudad": "Los Cabos, Baja California Sur",
+    "telefono": null,
+    "correo": "ycadena@caboseasons.com",
+    "notas": "UNIVERSO DENUE 05/2026: Transporte turístico por tierra · 51 a 100 personas · sitio: www.caboseasons.com.mx · establecimiento: CABO SEASONS",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "22d977e4-c701-4ec6-9e4d-9d3cb5e35384",
+    "empresa": "Transvelocity, S.A. de C.V.",
+    "ciudad": "Cuauhtémoc, Ciudad de México",
+    "telefono": "5552647028",
+    "correo": "edith.paz@trasnvelocity.mx",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicios de Transportación Terrestre de Carga General, de Materiales y Residuos Peligrosos · 0 a 10 personas · Calle Aguascalientes 199 Int 101, Colonia Hipodromo Condesa, CP 6170\nUbicación aproximada 17-ago: centroide de 267 establecimientos DENUE en Cuauhtémoc, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "22da9b22-3e25-4cfa-9f58-7e3b43040a06",
+    "empresa": "LAUSANT COMERCIO EXTERIOR MANZANILLO",
+    "ciudad": "Altamira, Tamaulipas",
+    "telefono": null,
+    "correo": null,
+    "notas": "UNIVERSO DENUE 05/2026: Servicios de agencias aduanales · 0 a 5 personas · establecimiento: LAUSANT COMERCIO EXTERIOR MANZANILLO\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: Lausant Comercio Exterior Manzanillo, titular (la razón social del censo es su nombre; cargo no verificado en otra fuente) · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "22dc92ea-2f3c-4cee-a5fb-ac22d1b6dfc6",
+    "empresa": "GALDISA",
+    "ciudad": "Meoqui, Chihuahua",
+    "telefono": null,
+    "correo": "gloria.cruz@galdisa.com",
+    "notas": "UNIVERSO DENUE 05/2026: Comercio al por mayor de semillas y granos alimenticios, especias y chiles secos · 51 a 100 personas · sitio: www.galdisa.com · establecimiento: GALDISA",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "22ddf961-615c-4dc8-ba2c-03ccc7f683d7",
+    "empresa": "VIAJES EXPRESS EL CORRECAMINOS",
+    "ciudad": "Cedral, San Luis Potosí",
+    "telefono": "4881360441",
+    "correo": null,
+    "notas": "UNIVERSO DENUE 05/2026: Transporte colectivo urbano y suburbano de pasajeros en autobuses de ruta fija · 0 a 5 personas\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "22de27bc-3d90-4921-acb9-5a616141fc5f",
+    "empresa": "Lucio Valenzuela Zamora",
+    "ciudad": "Matamoros, Tamaulipas",
+    "telefono": "8688128733",
+    "correo": null,
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 0 a 10 personas · Calle Profesor Manuel Romero 218 Int Na, Colonia Industrial, CP 87350\nUbicación aproximada 17-ago: centroide de 181 establecimientos DENUE en Matamoros, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: Lucio Valenzuela Zamora, titular (la razón social del censo es su nombre; cargo no verificado en otra fuente) · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "22e0f8fa-7e7b-4888-ba33-e0f3e7514c87",
+    "empresa": "EL GUERO BETANIA",
+    "ciudad": "Tecuala, Nayarit",
+    "telefono": null,
+    "correo": null,
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo de productos agrícolas sin refrigeración · 0 a 5 personas · establecimiento: EL GUERO BETANIA\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: El Guero Betania, titular (la razón social del censo es su nombre; cargo no verificado en otra fuente) · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "22e0ff59-6467-457c-a2fc-f5ae6463da86",
+    "empresa": "TRANSPORTES HERRERA AVIÑA",
+    "ciudad": "Toluca, México",
+    "telefono": "7225718548",
+    "correo": "transportesherreraavina@prodigy.net.mx",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga general · 51 a 100 personas · establecimiento: TRANSPORTES HERRERA AVIÑA\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  }
+]

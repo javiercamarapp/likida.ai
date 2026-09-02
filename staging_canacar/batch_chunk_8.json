@@ -1,0 +1,52 @@
+[
+  {
+    "id": "95f2c54d-9f55-4b59-a343-f91592178c7d",
+    "empresa": "Mlh Transporte, S.A. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "ventas@mlhtransporte.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Carga de Servicio Publico Federal · 51 a 250 personas · Calle Crecimiento Lt 9 Mz 8 Int Na, Colonia Parke 2000, CP 91808",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ad128277-3947-41d3-bbf4-e19f7b01f5cf",
+    "empresa": "Movilconteiner, S.A. de C.V.",
+    "ciudad": "Ecatepec de Morelos, México",
+    "correo": "tperales@movilconteiner.com",
+    "telefono": "5557902407",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 51 a 250 personas · Avenida Dr. Vicente Lombardo Toledano 117 Int Na, Colonia Miguel Hidalgo, CP 55490\nUbicación aproximada 17-ago: centroide de 186 establecimientos DENUE en Ecatepec de Morelos, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2e405b83-c97a-47a3-b7d1-9de353bcd274",
+    "empresa": "Moz Cargo, S.A. de C.V.",
+    "ciudad": "Boca del Río, Veracruz",
+    "correo": "garaujo@mozcargo.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Carga de Servicio Publico Federal · 51 a 250 personas · Calzada Reyes Catolicos 247 Int 4, Fraccionamiento de Las Americas, CP 94299",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ab43a198-f25b-4be4-8ef4-46c953311086",
+    "empresa": "Muebles y Mudanzas Amado, S.A. de C.V.",
+    "ciudad": "Cuautitlán Izcalli, México",
+    "correo": "jcontabilidad@mudanzasamado.com.mx",
+    "telefono": "5558706000",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportes de Mercancias · 51 a 250 personas · Calle Carpinteros 23 Int Na, Parque Industrial Xhala, CP 54714\nUbicación aproximada 17-ago: centroide de 171 establecimientos DENUE en Cuautitlán Izcalli, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0ba4af55-112d-4fb3-9970-339391c0b706",
+    "empresa": "Multienlaces Logísticos Terrestres, S.A. de C.V.",
+    "ciudad": "Tampico, Tamaulipas",
+    "correo": "ventas.alt@mltransportes.mx",
+    "telefono": "8332130450",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Terrestre · 51 a 250 personas · Calle Rubí 126 a Int Na, Fraccionamiento Chairel Seccion 33, CP 89219\nUbicación aproximada 17-ago: centroide de 121 establecimientos DENUE en Tampico, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

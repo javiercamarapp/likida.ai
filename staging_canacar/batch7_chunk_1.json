@@ -1,0 +1,52 @@
+[
+  {
+    "id": "033f43f6-4605-4a77-b269-2d0d46dc67c8",
+    "empresa": "Tsm División Trucking, S.A. de C.V.",
+    "ciudad": "Tepotzotlán, México",
+    "correo": "ptrujillo@tsm.com.mx",
+    "telefono": "4422219011",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 51 a 250 personas · Carretera Libramiento Norte 30 Int Na, Colonia Tlacateco, CP 54605\nUbicación aproximada 17-ago: centroide de 77 establecimientos DENUE en Tepotzotlán, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "bff05b78-94c2-4ecc-8171-45394f57ed11",
+    "empresa": "Tt Servicios Especializados, S.A.P.I. de C.V.",
+    "ciudad": "Matehuala, San Luis Potosí",
+    "correo": "armando.puente@ttse.mx",
+    "telefono": "4888821667",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Especializada Servicio Publico Federal · 51 a 250 personas · Carretera Central 57 Km 615 Sn Int Na, Colonia Republica, CP 78740\nUbicación aproximada 17-ago: centroide de 25 establecimientos DENUE en Matehuala, San Luis Potosí — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · correo ya en base (armando.puente@ttse.mx) sugiere posible negocio familiar 'Puente' (mismo apellido que marlene.puente@ttse.mx en el registro DENUE id bda1cde6, posible duplicado del mismo grupo) — no se escribe como decisor sin confirmar cargo · CANACAR: Transporte de Carga Especializada Servicio Público Federal, 51 a 250 personas — la operación más grande de esta tanda, Matehuala · fuente: CANACAR directorio de socios (ya en base)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b5d78ac6-3e75-41f0-b968-eced624ea6aa",
+    "empresa": "Ttu",
+    "ciudad": "León, Guanajuato",
+    "correo": "contabilidad@ttupaqueteria.com",
+    "telefono": "4774757175",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte · 51 a 250 personas · Boulevard Timoteo Lozano 101 Int J, Ciudad Leon, CP 37390\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (correo ya en base es de contabilidad, rol no nombre; dominio ttupaqueteria.com sugiere que operan paquetería) · CANACAR: Autotransporte, 51 a 250 personas — la operación más grande de esta tanda, León · fuente: CANACAR directorio de socios (ya en base)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "515e221a-2282-4a02-a431-54df8471dc2d",
+    "empresa": "Tympsa Logistics, S.A. de C.V.",
+    "ciudad": "Toluca, México",
+    "correo": "gerencia@tympsa.com",
+    "telefono": "7222156082",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga en General · 51 a 250 personas · Calle Niños Heroes 223 Int 1,2,3, Colonia Geovillas Independencia, CP 50228\nUbicación aproximada 17-ago: centroide de 256 establecimientos DENUE en Toluca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "95826cad-8e6e-4b3b-a3aa-554a14c34781",
+    "empresa": "Unitrans, S.A. de C.V.",
+    "ciudad": "Altamira, Tamaulipas",
+    "correo": "alemus@grucas.com",
+    "telefono": "8332641723",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Carretera Al Puerto Industrial de Altamira 1800 Int Na, Colonia Valle Verde, CP 89602\nUbicación aproximada 17-ago: centroide de 176 establecimientos DENUE en Altamira, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

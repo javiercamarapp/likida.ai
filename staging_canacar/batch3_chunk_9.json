@@ -1,0 +1,52 @@
+[
+  {
+    "id": "8955c379-06ac-4632-8d3c-30d200d14fa4",
+    "empresa": "Transervicios Logísticos del Norte, S.A. de C.V.",
+    "ciudad": "Pesquería, Nuevo León",
+    "correo": "bmacias@tln.mx",
+    "telefono": "8122829400",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Calle Lateral 1000 Int Na, Colonia la Arena, CP 66679\nUbicación aproximada 17-ago: centroide de 14 establecimientos DENUE en Pesquería, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "fe3149be-282f-4ffd-a429-24a2d75c1d3f",
+    "empresa": "Transferencias Blindadas, S.A. de C.V.",
+    "ciudad": "Azcapotzalco, Ciudad de México",
+    "correo": "egarcia@armor.com.mx",
+    "telefono": "5553555555",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Auto Transporte de Carga · 51 a 250 personas · Avenida Cuitlahuac 3435 Int Na, Colonia Nueva Santa Maria, CP 2800\nUbicación aproximada 17-ago: centroide de 174 establecimientos DENUE en Azcapotzalco, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3c000ef3-20d1-4ba4-a69f-a21330952b7a",
+    "empresa": "Transinternacional, S.A. de C.V.",
+    "ciudad": "Castaños, Coahuila",
+    "correo": "agarcia@transinternacional.com",
+    "telefono": "8666976008",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 51 a 250 personas · Boulevard Gustavo Galaz 114 Int Na, Colonia Castaños, CP 25870\nPROSPECCIÓN 19-ago-2026: score fit 1/5 · sin decisor público · LinkedIn: — · viajes/mes: no público · historia: fundada 1981, carga foránea exp/imp desde Castaños; clientes Daimler, Metalsa y Ternium; USDOT 676839 · fuente: transinternacional.com, carriersource.io",
+    "fuente": "canacar"
+  },
+  {
+    "id": "29307e09-7444-4c41-a134-2a84011a16a0",
+    "empresa": "Transliquidos Especializados del Golfo, S.A. de C.V.",
+    "ciudad": "Centro, Tabasco",
+    "correo": "transliquidos_mina@hotmail.com",
+    "telefono": "9222417474",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 51 a 250 personas · Avenida Paseo Tabasco 1203 Int Na, Colonia Centro, CP 86050\nUbicación aproximada 17-ago: centroide de 165 establecimientos DENUE en Centro, Tabasco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4e18523a-e63e-409d-80da-4d46d1b04c88",
+    "empresa": "Transliquidos Vázquez, S.A. de C.V.",
+    "ciudad": "Tepatitlán de Morelos, Jalisco",
+    "correo": "direccion@tlvazquez.com",
+    "telefono": "3787815660",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Liquidos Grado Alimenticio · 51 a 250 personas · Avenida Biodiversidad 2455 Int Na, Colonia Frente a Inafap, CP 47601\nUbicación aproximada 17-ago: centroide de 46 establecimientos DENUE en Tepatitlán de Morelos, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

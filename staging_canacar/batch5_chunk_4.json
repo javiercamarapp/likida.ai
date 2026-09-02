@@ -1,0 +1,52 @@
+[
+  {
+    "id": "cf4e7aea-6fd0-4912-9b34-d761d6899a65",
+    "empresa": "Transportes de Carga Saltillo Monterrey, S.A. de C.V.",
+    "ciudad": "Ramos Arizpe, Coahuila",
+    "correo": "luis.duron@transportestsm.com.mx",
+    "telefono": "8444886100",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Carretera Libramiento Oscar Flores Tapia Km 0.5 Sn Int Na, Corredor Industrial Oscar Flores Tapia, CP 25900",
+    "fuente": "canacar"
+  },
+  {
+    "id": "56917bf8-7a89-4c3f-93b4-89583c26cce6",
+    "empresa": "Transportes de Carga Santoyo, S.A. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "rh@santoyotransport.com",
+    "telefono": "6868416101",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Boulevard Abelardo L Rodriguez 829 Int Na, Colonia Compuertas, CP 21218\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0e2a5401-2c11-4e03-bf7e-1f73f4735cac",
+    "empresa": "Transportes de Carga Vegeta, S.A. de C.V.",
+    "ciudad": "Toluca, México",
+    "correo": "juve@transvegsa.com",
+    "telefono": "7221685256",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga en General · 51 a 250 personas · Calle Jose Ramon Albarran Sn Int Sn, Pueblo Santa Creuz Atzcapotzaltongo, CP 50290\nUbicación aproximada 17-ago: centroide de 256 establecimientos DENUE en Toluca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a0b07027-61b0-4515-b800-deda501641cf",
+    "empresa": "Transportes Don Trucking, S.A. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "agarcia@dontrucking.com.mx",
+    "telefono": "2299801709",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Federal de Carga · 51 a 250 personas · Calle 2 Lote 2 Mz 3 Int Na, Colonia Rio Medio, CP 91809\nPROSPECCIÓN 2026-08-19: sin decisor público (razón social corporativa SA de CV, no persona física; correo agarcia@ sugiere apellido García, no confirmado) · no se localizó sitio oficial (dontrucking.com.mx no verificable por búsqueda) · socio CANACAR, autotransporte federal de carga, operación grande (51-250 personas), Veracruz · fuente: búsqueda web",
+    "fuente": "canacar"
+  },
+  {
+    "id": "08ab6998-deca-4072-9864-b2db387c8c9e",
+    "empresa": "Transportes el Olvido, S.A. de C.V.",
+    "ciudad": "Córdoba, Veracruz",
+    "correo": "www.transportes_elolvido@hotmail.com",
+    "telefono": "2717124100",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga General · 51 a 250 personas · Calle 19 320 Int Na, Colonia Centro, CP 94500",
+    "fuente": "canacar"
+  }
+]

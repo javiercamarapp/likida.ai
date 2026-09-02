@@ -1,0 +1,52 @@
+[
+  {
+    "id": "55dadecf-fbf8-466e-986b-4a6a9b70814a",
+    "empresa": "L & G Translog",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "martha_lizzet@hotmail.com",
+    "telefono": "6644401045",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Fletes de Carga · 11 a 50 personas · Calle Cañada Lt-1 Mz-27 Int C, Colonia Rio Tijuana Tercera Etapa, CP 22226\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f85f7aed-2024-4dcc-911a-ed78e9cb632b",
+    "empresa": "Lam Transportaciones Ap",
+    "ciudad": "Toluca, México",
+    "correo": "jaqueline.ortiz@lamtransportaciones.com.mx",
+    "telefono": "7297253470",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Federal de Carga General · 11 a 50 personas · Calle Emiliano Zapata 15 Int Na, Colonia la Trinidad, San Cristobal Huichochitlan, CP 50200\nUbicación aproximada 17-ago: centroide de 256 establecimientos DENUE en Toluca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "39b58147-6cc7-4c39-90d2-220196f98382",
+    "empresa": "Laporta Logistic de Mexico S de Rl de Cv",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "paulrosales@laportaintegral.com",
+    "telefono": "4423676272",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportacion de Mercancias · 11 a 50 personas · Periférico Periferico 596 Int Na, Colonia Republica de Colombia, CP 21210\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a2f91112-40ff-477e-8cdc-d8ff1148cfcd",
+    "empresa": "Las Higueras Trucking, S. de R. L .De C.V.",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "jvalera@lashigueras.com",
+    "telefono": "6646475154",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Carga en General, Cruces Fronterizos · 11 a 50 personas · Calle de la Troje 7 Int Na, Colonia Granja Familiares Matamoros, CP 22203\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (correo jvalera@ sugiere apellido Valera, no confirmado) · no se localizó sitio oficial · socio CANACAR, cruces fronterizos, Tijuana · fuente: búsqueda web",
+    "fuente": "canacar"
+  },
+  {
+    "id": "573a6391-8333-403c-af4f-0f1cd27b9e30",
+    "empresa": "Laura Estela Estrada Garza",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "rialo68@hootmail.com",
+    "telefono": "8677108740",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Jaumave 7205 Int Na, Colonia Fraccionamiento la Fe, CP 88187\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

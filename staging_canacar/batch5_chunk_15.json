@@ -1,0 +1,52 @@
+[
+  {
+    "id": "3f33eada-ee2f-4614-909d-fa81eb036903",
+    "empresa": "Acarreos Mineros Capricornio, S.A. de C.V.",
+    "ciudad": "Guanajuato, Guanajuato",
+    "correo": null,
+    "telefono": "4737345013",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Otro Autotransporte Foraneo de Carga Especializada · 51 a 250 personas · Calle Perafan Ii Int 22, Colonia Yerbabuena, CP 36250\nUbicación aproximada 17-ago: centroide de 37 establecimientos DENUE en Guanajuato, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f0908282-90b8-4150-8970-7b0e981c927c",
+    "empresa": "Alesso, S.A. de C.V.",
+    "ciudad": "Cuautitlán Izcalli, México",
+    "correo": null,
+    "telefono": "5558994800",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Comercio Al Por Mayor · 51 a 250 personas · Carretera Autopista Mexico Queretaro Km 39.85 Int Sn, Colonia Parque Industrial, la Luz, CP 54716\nUbicación aproximada 17-ago: centroide de 171 establecimientos DENUE en Cuautitlán Izcalli, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 19-ago-2026: sin decisor público · sin sitio oficial localizado · fuente: búsqueda web limitada (sin WebSearch disponible en la sesión)\nENCAJE: medio — socio CANACAR, plantilla grande, giro mixto comercio/transporte",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4b19049b-4c34-42e0-b564-f900f2872b6f",
+    "empresa": "Auto Express Saldivar, S.A. de C.V.",
+    "ciudad": "Matamoros, Tamaulipas",
+    "correo": null,
+    "telefono": "8688171224",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 51 a 250 personas · Avenida Pedro Cardenas Gutierrez 2050 Int C, Colonia Central Mercado de Abastos, CP 87399\nUbicación aproximada 17-ago: centroide de 181 establecimientos DENUE en Matamoros, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nHISTORIA: socia registrada de CANACAR (directorio de socios, 17-ago-2026): Auto Express Saldívar, S.A. de C.V., Transporte de Carga, 51 a 250 personas — el rango más alto del directorio, y de las operaciones más grandes de todo el carril. Domicilio: Avenida Pedro Cárdenas Gutiérrez 2050, Col. Central Mercado de Abastos, Matamoros, Tamaulipas (CP 87399) — zona del mercado de abastos, consistente con reparto de perecederos además de carga fronteriza. El dominio autoexpresssaldivar.com no resuelve en DNS.\nUNIDADES: sin conteo de tractocamiones publicado — null (CANACAR reporta 51-250 PERSONAS, no unidades; no se infiere).\nENCAJE: alto — socia CANACAR, de las operaciones más grandes del directorio, en Matamoros.\nPROSPECCIÓN 2026-08-20: sin decisor público · LinkedIn: no hallado · fuente: directorio de socios CANACAR 17-ago-2026 (no publica nombres de representantes); dominio autoexpresssaldivar.com sin DNS. WebSearch agotado en la sesión.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "52401a11-4f06-4eba-8f87-769db47bd907",
+    "empresa": "Converto Sps Sa de Cv",
+    "ciudad": "León, Guanajuato",
+    "correo": null,
+    "telefono": "4774019338",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Compra Venta de Refacciones Automotrices · 51 a 250 personas · Boulevard Juan José Torres Landa 4704 Int B, Parque Industrial Poligono Industrial Jerez, CP 37530\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "80346e4a-3dab-46c7-ab06-47be512ecdf9",
+    "empresa": "Grupo Aldama, S.A. de C.V.",
+    "ciudad": "Juan Aldama, Zacatecas",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Calle Altamirano 108 Int Na, Colonia Centro, CP 98300\nUbicación aproximada 17-ago: centroide de 8 establecimientos DENUE en Juan Aldama, Zacatecas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

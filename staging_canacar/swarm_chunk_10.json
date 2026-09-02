@@ -1,0 +1,102 @@
+[
+  {
+    "id": "225b1b30-e61f-47ab-9456-2dc0ed855619",
+    "empresa": "TRANSPORTES PEÑON BLANCO",
+    "ciudad": "Guadalupe, Nuevo León",
+    "telefono": "8110291649",
+    "correo": "aux_contavilidad@tpb.com.mx",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga general · 101 a 250 personas · sitio: www.tpb.mx · establecimiento: TRANSPORTES PEÑON BLANCO",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "225b384d-b995-4d51-adcb-009d83586b48",
+    "empresa": "Eco mensajería logística y servicios",
+    "ciudad": "Centro, Querétaro",
+    "telefono": null,
+    "correo": "eco_admo@hotmail.com",
+    "notas": "1 anuncio en el censo · señal: rutas, carta porte · último anuncio: 2026-05-08 · liga: https://mx.indeed.com/viewjob?jk=7ec348687eca192b\nDENUE 05/2026: «ECO MENSAJERIA Y LOGISTICA» (Querétaro, Querétaro), score 1.06",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "225c56a3-7f24-441a-a391-b1f6600c137b",
+    "empresa": "PENSION DE CAMIONES SIN NOMBRE",
+    "ciudad": "León, Guanajuato",
+    "telefono": "4776351270",
+    "correo": null,
+    "notas": "UNIVERSO DENUE 05/2026: Transporte colectivo foráneo de pasajeros de ruta fija · 0 a 5 personas\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "225f6728-41b2-45e6-8a9c-b758558af5dd",
+    "empresa": "Efren Flores Frias",
+    "ciudad": "León, Guanajuato",
+    "telefono": "4442163379",
+    "correo": "aflores@ffesa.mx",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Londres 612 Int Na, Colonia Andrade, CP 37020\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: Efren Flores Frias, titular (la razón social del censo es su nombre; cargo no verificado en otra fuente) · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "22634344-ef54-418f-9d24-d980ba6d329a",
+    "empresa": "TRANSPORTES KEPAR",
+    "ciudad": "Morelia, Michoacán de Ocampo",
+    "telefono": null,
+    "correo": "clientes.kepar@auda.com",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga especializado · 0 a 5 personas · sitio: www.kepar.auda.mx · establecimiento: TRANSPORTES KEPAR",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "2263d62b-eab4-4c22-b5dd-310b7b4f0a2b",
+    "empresa": "TRANSPORTE TAOSA",
+    "ciudad": "Ocotlán, Jalisco",
+    "telefono": null,
+    "correo": "contabilidadtaosa@hotmail.com",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga general · 31 a 50 personas · establecimiento: TRANSPORTE TAOSA\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "22643134-5306-4bb1-8c3f-66cc0357d890",
+    "empresa": "UNION DE MOTOTAXIS MI ULTIMA ESPERA",
+    "ciudad": "Villa de Tututepec, Oaxaca",
+    "telefono": "9545599560",
+    "correo": null,
+    "notas": "UNIVERSO DENUE 05/2026: Otro transporte terrestre de pasajeros · 51 a 100 personas · establecimiento: UNION DE MOTOTAXIS MI ULTIMA ESPERA\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "22648ce9-1d25-446a-bc5e-e3f324263bb9",
+    "empresa": "OVA ORTEGA VALLS ASOCIADOS",
+    "ciudad": "Venustiano Carranza, Ciudad de México",
+    "telefono": "5674289537",
+    "correo": "contacto@ova.com.mx",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga especializado · 6 a 10 personas · establecimiento: OVA ORTEGA VALLS ASOCIADOS\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: Ova Ortega Valls Asociados, titular (la razón social del censo es su nombre; cargo no verificado en otra fuente) · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "2268f30e-5c50-4ef9-8245-d886217535bb",
+    "empresa": "JESUS HERNANDEZPERALES",
+    "ciudad": "Guadalupe, Nuevo León",
+    "telefono": null,
+    "correo": null,
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo con refrigeración · 6 a 10 personas · establecimiento: AUTOTRANSPORTES REFRIGERADOS JESHER\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "22691aa7-12a0-420b-976c-e19306579021",
+    "empresa": "AUTOBUSES INDIGENAS S. DE C.V",
+    "ciudad": "San Felipe Orizatlán, Hidalgo",
+    "telefono": "8119895922",
+    "correo": null,
+    "notas": "UNIVERSO DENUE 05/2026: Transporte colectivo urbano y suburbano de pasajeros en autobuses de ruta fija · 0 a 5 personas · establecimiento: VIAJES CERVANTES S.A DE C.V. SUCURSAL HUITZITZILINGO\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  }
+]

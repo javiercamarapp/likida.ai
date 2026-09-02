@@ -1,0 +1,52 @@
+[
+  {
+    "id": "9c1aeca9-ebe8-4b81-9d08-e48ef85763c2",
+    "empresa": "Transportadora Zeta, S.A. de C.V.",
+    "ciudad": "Zinacantepec, México",
+    "correo": "contabilidad.tz@ultragasmexico.com",
+    "telefono": "7222785907",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Publico Federal · 11 a 50 personas · Carretera Almoloya de Juarez Km 4.5 Sn Int Na, Colonia Nuevo Cerraton, CP 51355\nUbicación aproximada 17-ago: centroide de 14 establecimientos DENUE en Zinacantepec, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "58ea9b54-10d5-4f4e-ad21-1edcdfbb6b0d",
+    "empresa": "Transporte de Carga Grupo Mym, S.A. de C.V.",
+    "ciudad": "Gustavo A. Madero, Ciudad de México",
+    "correo": "jefedenomina@mym.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Insurgentes Norte 1290 Int Sn, Colonia Capultitlan, CP 7370\nUbicación aproximada 17-ago: centroide de 268 establecimientos DENUE en Gustavo A. Madero, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "661c9a50-392a-4897-8338-6afd90604940",
+    "empresa": "Transporte de Líquidos Combustibles, S.A. de C.V.",
+    "ciudad": "Morelia, Michoacán",
+    "correo": "tlc_gasagra@hotmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Morelia-Guadalajara Km 13.4 Sn Int B, Colonia Localidad Cuto la Esperanza, CP 58330",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c6a38690-bc47-40a0-b0a9-c29cd20d2b79",
+    "empresa": "Transporte Especializado Explosivos, S.A. de C.V.",
+    "ciudad": "Guadalajara, Jalisco",
+    "correo": "rcortes@gruponitro.mx",
+    "telefono": "3336163081",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Federal Especializada · 11 a 50 personas · Calle Juana de Arco 22 Int Na, Colonia Vallarta Norte, CP 44690\nUbicación aproximada 17-ago: centroide de 508 establecimientos DENUE en Guadalajara, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nTransporte Especializado Explosivos, S.A. de C.V.: socia CANACAR (17-ago-2026), giro \"Transporte de Carga Federal Especializada\", 11 a 50 personas, Calle Juana de Arco 22, Col. Vallarta Norte, Guadalajara — MISMA DIRECCIÓN que \"Explotransportes Especializados\" (prospecto c4593ef5, ya trabajado en tanda anterior de esta sesión): son razones sociales relacionadas del mismo grupo especializado en transporte de explosivos. Correo de negocio rcortes@gruponitro.mx (\"Grupo Nitro\", nombre coherente con el giro de explosivos).\nPROSPECCIÓN 2026-08-20: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (dirección y grupo coinciden con prospecto ya trabajado en esta sesión)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f7d76059-5673-4642-8d86-af0721944f6f",
+    "empresa": "Transporte Express Bortoni, S.A. de C.V.",
+    "ciudad": "Castaños, Coahuila",
+    "correo": "jgbortoni@prodigy.net.mx",
+    "telefono": "8666910770",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Boulevard Gustavo Galaz 360 Int Na, Colonia California, CP 25870",
+    "fuente": "canacar"
+  }
+]

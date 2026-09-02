@@ -1,0 +1,52 @@
+[
+  {
+    "id": "2ebbc76e-214c-48ad-ad12-d6c78ad490ce",
+    "empresa": "Transtell, S.A. de C.V.",
+    "ciudad": "Pachuca de Soto, Hidalgo",
+    "correo": "efrain.calderon@transtell.com.mx",
+    "telefono": "7717170909",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Cargaautotransporte Foráneo de Carga Especializado · 11 a 50 personas · Boulevard Felipe Angeles 1604 Int Na, Colonia Santa Julia, CP 42080\nUbicación aproximada 17-ago: centroide de 79 establecimientos DENUE en Pachuca de Soto, Hidalgo — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b690abf3-0a14-4dc3-b257-22860a260baa",
+    "empresa": "Trc Carrier Logistics, S.A. de C.V.",
+    "ciudad": "Tampico, Tamaulipas",
+    "correo": "rchavez@trclogistics.com.mx",
+    "telefono": "8336093712",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga General · 11 a 50 personas · Calle Agustin Melgar 404 Int A, Colonia Niños Heroes, CP 89359\nUbicación aproximada 17-ago: centroide de 121 establecimientos DENUE en Tampico, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: CANACAR 17-ago-2026",
+    "fuente": "canacar"
+  },
+  {
+    "id": "055ab1f5-5a88-4d24-a292-9b65eb6b132e",
+    "empresa": "Tres Guepardos, S.A. de C.V.",
+    "ciudad": "Celaya, Guanajuato",
+    "correo": "denis.sauz@stlsadecv.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Prolongación Laureles 501 Int 410, Colonia el Junco Residencial, CP 38020\nUbicación aproximada 17-ago: centroide de 79 establecimientos DENUE en Celaya, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "775198a2-1474-4274-be02-1802bc9ad857",
+    "empresa": "Tresca Jorullo, S.A. de C.V.",
+    "ciudad": "Lázaro Cárdenas, Michoacán",
+    "correo": "jennifer.escobar@tresca.com.mx",
+    "telefono": "4432041225",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Volcan Ajusco 234 Int Na, Colonia Isla del Cayacal, CP 60950\n\nPROSPECCIÓN 19-ago-2026: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (autotransporte de carga general, 11 a 50 personas, Calle Volcán Ajusco 234, Col. Isla del Cayacal, Lázaro Cárdenas, Michoacán), sin sitio · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  },
+  {
+    "id": "55900fc4-26e6-4c71-9f29-a63c1da3784b",
+    "empresa": "Tresguerras",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "julioga@tresguerras.com.mx",
+    "telefono": "6649694360",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Federal y Paqueteria · 11 a 50 personas · Avenida Francisco Villa Km 29.5 Sn Int Na, Colonia Maclovio Rojas, CP 22254 · 2 sucursales registradas en CANACAR (Manzanillo, Colima)\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

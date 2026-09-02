@@ -1,0 +1,52 @@
+[
+  {
+    "id": "3b305199-666c-4f83-a3d2-82c3ab3ac004",
+    "empresa": "Transportes Especializados Almu, S.A. de C.V.",
+    "ciudad": "Celaya, Guanajuato",
+    "correo": "angeles.moreno@almu.com.mx",
+    "telefono": "4611882037",
+    "estado": "contactado",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 51 a 250 personas · Carretera Industrial Celaya-Villagran Km 2.8 Sn Int Na, Colonia Localidad Cucus, CP 38020\nUbicación aproximada 17-ago: centroide de 79 establecimientos DENUE en Celaya, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0fd73cb9-01f8-41a3-896f-c7fb0fc69331",
+    "empresa": "Transportes Especializados Costa Verde, S. de R.L. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "jesus.bravo@tecove.com.mx",
+    "telefono": "2291665013",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 51 a 250 personas · Boulevard Adolfo Ruiz Cortinez 5256 Int Na, Colonia Jardines de Mocambo, CP 94299\nPROSPECCIÓN 2026-08-19: decisor Humberto Bravo Guzmán, Director General (fundador: Juan Humberto Bravo Torra) · LinkedIn: no hallado público · viajes/mes: no público · historia: fundada hace ~40 años (≈1981), especializada en bebidas (Grupo Modelo, Pepsi, Garci Crespo, Alpura), ~200 tractocamiones en 2021, hubs Veracruz y Puebla, cubre el sureste · fuente: T21 12-oct-2021 (t21.com.mx) · score fit 2/5 (decisor nombrado +1, flota de carga publicada +1) -> urgencia trimestre",
+    "fuente": "canacar"
+  },
+  {
+    "id": "64ad69b3-048f-44bd-934d-d1ee899642ef",
+    "empresa": "Transportes Especializados de Cordoba, S.A. de C.V.",
+    "ciudad": "Córdoba, Veracruz",
+    "correo": "david.flores@carus-abella.com.mx",
+    "telefono": "2717126155",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Autotransporte de Carga en General · 51 a 250 personas · Avenida Central Sn Int Na, Ciudad Cordoba, CP 94542\nPROSPECCIÓN 2026-08-19: sin decisor público · LinkedIn: no hallado · viajes/mes: no público · historia: no pública · sitio carus-abella.com.mx responde 403 al robot (existe pero no verificable) · fuente: directorio CANACAR y DNS de carus-abella.com.mx · score fit: 1/5 (rúbrica pública) → urgencia: explorando",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0f50b388-2c93-47ac-8244-44f798b36ab8",
+    "empresa": "Transportes Especializados Gal, S.A. de C.V.",
+    "ciudad": "Mérida, Yucatán",
+    "correo": "jose.duran@grupogal.com",
+    "telefono": "9991441590",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Fletes · 51 a 250 personas · Periférico Km 46 Tablaje Catastral 18980 Int Na, Ampliación Tixcacal Opichen, CP 97249\nUbicación aproximada 17-ago: centroide de 302 establecimientos DENUE en Mérida, Yucatán — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN PROFUNDA 21-ago-2026: Armando Cantú, Director General (Revista TyT). También José Gaspar Herrera Díaz asociado a la dirección, rol exacto no confirmado.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9c84b4a7-4558-49d5-ad43-f542a2a72508",
+    "empresa": "Transportes Especializados Lucero, S.A. de C.V.",
+    "ciudad": "Gómez Palacio, Durango",
+    "correo": "gerentets@transportedeservicios.com",
+    "telefono": "8711370740",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Prestacion de Servicio Publico Federal de Autotransporte de Carga General y Especializada · 51 a 250 personas · Calle Nazas 421 Int Sn, Colonia Parque Ind. Carlos a Herrera Araluece, CP 35079\nUbicación aproximada 17-ago: centroide de 111 establecimientos DENUE en Gómez Palacio, Durango — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

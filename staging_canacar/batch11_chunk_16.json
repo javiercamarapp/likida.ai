@@ -1,0 +1,52 @@
+[
+  {
+    "id": "b017f5ad-e9b5-4f01-adc2-4610d7e0667c",
+    "empresa": "Marisol Paredez Cantarey",
+    "ciudad": "Toluca, México",
+    "correo": "facturacion.mpc1@gmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga General · 11 a 50 personas · Calle Niños Heroes 223 Int Lote 1, Colonia Geovillas Independencia, CP 50208\nUbicación aproximada 17-ago: centroide de 256 establecimientos DENUE en Toluca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: decisor Marisol Paredez Cantarey, titular (el registro CANACAR está a nombre de persona física) · LinkedIn: no hallado · fuente: CANACAR 17-ago-2026\nENCAJE: alto — socia CANACAR, carga general foránea, 11-50 personas",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8486864f-6578-46ae-947e-ce57ec1f7b01",
+    "empresa": "Mc Transportes S.A. de C.V.",
+    "ciudad": "Valle de Santiago, Guanajuato",
+    "correo": "mctransportes@prodigy.net.mx",
+    "telefono": "4566437915",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Fletes · 11 a 50 personas · Boulevard Niños Heroes 50 Int Na, Colonia 20 de Noviembre, CP 38400\nUbicación aproximada 17-ago: centroide de 11 establecimientos DENUE en Valle de Santiago, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "544056a2-09d8-45c2-89b0-f34b59de0639",
+    "empresa": "Mcd Transporte Internacional, S. de R.L. de C.V.",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "cumplimiento@mcdtranslog.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Aeropuerto 1009 Int Na, Colonia Garita de Otay, CP 22430\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c91a3339-0463-4c85-a902-e59e4aafa596",
+    "empresa": "Mega Asfaltos, S.A. de C.V.",
+    "ciudad": "Salamanca, Guanajuato",
+    "correo": "transporte@megaasfaltos.com.mx",
+    "telefono": "4646471418",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Compra, Venta y Distribucion de Asfalto · 11 a 50 personas · Carretera Federal Salamanca-Celaya Km 85.1 Int Na, Rancho Valtierrilla, CP 36883\nUbicación aproximada 17-ago: centroide de 60 establecimientos DENUE en Salamanca, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-20: sin decisor público — sitio oficial (megaasfaltos.com.mx) revisado en nosotros/contacto, sin nombres de directivos ni dueños. Teléfono del sitio (464 647 1418) coincide con el de la base. · fuente: megaasfaltos.com.mx",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e934836e-1641-414b-a1e2-c93854c302b6",
+    "empresa": "Mega Transportadora de Gasolinas, S.A. de C.V.",
+    "ciudad": "León, Guanajuato",
+    "correo": "amiranda.metga@logistik.solutions",
+    "telefono": "4771019900",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Otro Transporte Foraneo de Carga Especializado · 11 a 50 personas · Boulevard Adolfo López Mateos 103 Int 203, Colonia Centro, CP 37000\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-20: sin decisor publico · LinkedIn: no localizado (sin presupuesto de busqueda disponible en esta sesion para verificar perfil) · fuente: metga.com.mx (sitio oficial, verificado 2026-08-20; direccion Camino a Ibarrilla 218.1, El Peluchan, Leon, Guanajuato, coincide con la ciudad del prospecto). Transporta gasolina, gas LP y carga general; sin cifra de flota publicada.",
+    "fuente": "canacar"
+  }
+]

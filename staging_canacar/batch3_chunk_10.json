@@ -1,0 +1,52 @@
+[
+  {
+    "id": "bc0117ca-f3dc-46ec-ab21-742f7f97d573",
+    "empresa": "Transnoel, S.A. de C.V.",
+    "ciudad": "Abasolo, Guanajuato",
+    "correo": "jfernandez@transnoel.com.mx",
+    "telefono": "4296931726",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Especializada · 51 a 250 personas · Carretera Irapuato la Piedad Km 26 Sn Int Na, Ciudad Abasalo, CP 36970\nUbicación aproximada 17-ago: centroide de 17 establecimientos DENUE en Abasolo, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (correo ya en base, jfernandez@transnoel.com.mx, sugiere posible nombre 'J. Fernández' en dominio propio, sin confirmar cargo) · CANACAR: Autotransporte de Carga Especializada, 51 a 250 personas — la operación más grande de esta tanda, Abasolo · fuente: CANACAR directorio de socios (ya en base)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "048cc0ce-5959-4911-8829-0bdc482a0576",
+    "empresa": "Transpac, S.A. de C.V.",
+    "ciudad": "Tula de Allende, Hidalgo",
+    "correo": "angeles.briceno@unne.com.mx",
+    "telefono": "7737329204",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Otro Autotransporte Foraneo de Carga General · 51 a 250 personas · Carretera Tula-Refineria Km 3 25 Int Na, Colonia el Llano 1Era Seccion, CP 42803\nUbicación aproximada 17-ago: centroide de 31 establecimientos DENUE en Tula de Allende, Hidalgo — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e76b0b62-2207-4ca2-b0f7-7ca96e52dcef",
+    "empresa": "Transportadora Aton, S.A. de C.V.",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "juan.candelaria@windstarlpg.com",
+    "telefono": "6566600258",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga General · 51 a 250 personas · Avenida Adolfo Lopez Mateos 1091 Int Na, Colonia la Playa 1, CP 32317\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a9c571f4-42e1-4189-8937-34e83f773053",
+    "empresa": "Transportadora de Granos",
+    "ciudad": "Allende, Nuevo León",
+    "correo": "facturas@transportadoradegranos.com",
+    "telefono": "8286881473",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Calle Brecha Acueducto Sn Int Na, Colonia Los Sabinos, CP 67353\nUbicación aproximada 17-ago: centroide de 123 establecimientos DENUE en Allende, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ebea2174-bd01-47bc-8634-896bdbbdccb9",
+    "empresa": "Transportadora Fuentes, S.A. de C.V.",
+    "ciudad": "Gómez Palacio, Durango",
+    "correo": "rtrejo@gi.plus",
+    "telefono": "8717191005",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 51 a 250 personas · Calle Canatlan Norte 455 Int Na, Parque Industrial Carlos a Herrera Araluce, CP 35079\nUbicación aproximada 17-ago: centroide de 111 establecimientos DENUE en Gómez Palacio, Durango — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

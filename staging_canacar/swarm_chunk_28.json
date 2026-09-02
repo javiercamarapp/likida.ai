@@ -1,0 +1,102 @@
+[
+  {
+    "id": "22634344-ef54-418f-9d24-d980ba6d329a",
+    "empresa": "TRANSPORTES KEPAR",
+    "ciudad": "Morelia, Michoacán de Ocampo",
+    "telefono": null,
+    "correo": "clientes.kepar@auda.com",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga especializado · 0 a 5 personas · sitio: www.kepar.auda.mx · establecimiento: TRANSPORTES KEPAR",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "2263d62b-eab4-4c22-b5dd-310b7b4f0a2b",
+    "empresa": "TRANSPORTE TAOSA",
+    "ciudad": "Ocotlán, Jalisco",
+    "telefono": null,
+    "correo": "contabilidadtaosa@hotmail.com",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga general · 31 a 50 personas · establecimiento: TRANSPORTE TAOSA\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "22643134-5306-4bb1-8c3f-66cc0357d890",
+    "empresa": "UNION DE MOTOTAXIS MI ULTIMA ESPERA",
+    "ciudad": "Villa de Tututepec, Oaxaca",
+    "telefono": "9545599560",
+    "correo": null,
+    "notas": "UNIVERSO DENUE 05/2026: Otro transporte terrestre de pasajeros · 51 a 100 personas · establecimiento: UNION DE MOTOTAXIS MI ULTIMA ESPERA\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "22648ce9-1d25-446a-bc5e-e3f324263bb9",
+    "empresa": "OVA ORTEGA VALLS ASOCIADOS",
+    "ciudad": "Venustiano Carranza, Ciudad de México",
+    "telefono": "5674289537",
+    "correo": "contacto@ova.com.mx",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga especializado · 6 a 10 personas · establecimiento: OVA ORTEGA VALLS ASOCIADOS\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: Ova Ortega Valls Asociados, titular (la razón social del censo es su nombre; cargo no verificado en otra fuente) · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "2268f30e-5c50-4ef9-8245-d886217535bb",
+    "empresa": "JESUS HERNANDEZPERALES",
+    "ciudad": "Guadalupe, Nuevo León",
+    "telefono": null,
+    "correo": null,
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo con refrigeración · 6 a 10 personas · establecimiento: AUTOTRANSPORTES REFRIGERADOS JESHER\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "22691aa7-12a0-420b-976c-e19306579021",
+    "empresa": "AUTOBUSES INDIGENAS S. DE C.V",
+    "ciudad": "San Felipe Orizatlán, Hidalgo",
+    "telefono": "8119895922",
+    "correo": null,
+    "notas": "UNIVERSO DENUE 05/2026: Transporte colectivo urbano y suburbano de pasajeros en autobuses de ruta fija · 0 a 5 personas · establecimiento: VIAJES CERVANTES S.A DE C.V. SUCURSAL HUITZITZILINGO\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "226bc4a8-3934-4772-91df-0a47a59aff51",
+    "empresa": "Transportes Carranza",
+    "ciudad": "Guadalajara, Jalisco",
+    "telefono": "3310115200",
+    "correo": "transportes.carranza@hotmail.com",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Calle Nuevo Mundo 2931 Int Na, Colonia Jardines de la Cruz, CP 44950\nUbicación aproximada 17-ago: centroide de 508 establecimientos DENUE en Guadalajara, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "226c9c88-8a67-4bbe-9aee-93d91987acbe",
+    "empresa": "LINEA DE TRANSPORTES ORBIT LOGISTIC",
+    "ciudad": "Apodaca, Nuevo León",
+    "telefono": null,
+    "correo": "contacto@orbimx.com",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte local de carga especializado · 0 a 5 personas · establecimiento: ORBIT\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "2272276e-0abf-4fae-8a61-86a28a9ac231",
+    "empresa": "DURAN TRUCKING",
+    "ciudad": "Ensenada, Baja California",
+    "telefono": null,
+    "correo": "facturasdtrucking@hotmail.com",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte local de productos agrícolas sin refrigeración · 0 a 5 personas · establecimiento: DURAN TRUCKING\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: Duran Trucking, titular (la razón social del censo es su nombre; cargo no verificado en otra fuente) · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": null,
+    "unidades": null
+  },
+  {
+    "id": "2272b96f-80d9-4999-a681-278ddafa8f91",
+    "empresa": "TRANSMAR",
+    "ciudad": "Las Pintitas Centro, Jalisco",
+    "telefono": null,
+    "correo": null,
+    "notas": "1 anuncio en el censo · señal: viajes · último anuncio: 2026-04-28 · liga: https://mx.indeed.com/viewjob?jk=eb94fe9375dc86b1",
+    "num_unidades": null,
+    "unidades": null
+  }
+]

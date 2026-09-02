@@ -1,0 +1,102 @@
+[
+  {
+    "id": "f3065409-4d2d-4b32-96d7-89862c2c3264",
+    "empresa": "ZAUDY SAHAMANTA VALDEZ VALDEZ",
+    "ciudad": "Nogales, Sonora",
+    "correo": "transporamirez@outlook.com",
+    "telefono": "6312999239",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Transporte escolar y de personal · 11 a 30 personas · establecimiento: TRASPORTES RAMIREZ\nPROSPECCION 2026-08-20: decisor Zaudy Sahamanta Valdez Valdez, titular (la razon social del registro DENUE es persona fisica, sin prefijo de giro/marca antepuesto, el titular ES el decisor por la misma regla aplicada a CANACAR/AAAG) · LinkedIn: no localizado · fuente: DENUE 05/2026. Giro transporte escolar y de personal — NO es autotransporte de carga. DESCARTAR sin mensaje pese a decisor identificado: no encaja con el ciclo de viaje de carga (anticipo/casetas/diesel por flete) del producto. Flota NO publicada — unidades sin dato. ENCAJE: bajo — transporte escolar/personal, titular identificado pero giro fuera del producto",
+    "fuente": "denue"
+  },
+  {
+    "id": "f33b208a-afcc-482f-9bea-1494fd48bc59",
+    "empresa": "AUTO TRANSPORTES URBANOS DEL PUERTO",
+    "ciudad": "Veracruz, Veracruz de Ignacio de la Llave",
+    "correo": null,
+    "telefono": "2292648764",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Transporte colectivo urbano y suburbano de pasajeros en autobuses de ruta fija · 11 a 30 personas · establecimiento: CAMIONES\nPROSPECCIÓN 2026-08-19: sin decisor público (sin sitio propio localizado, sin registro CANACAR — es transporte de pasajeros, no de carga, por lo que no aplica a ese padrón). No se localizó sitio ni correo oficial · fuente: búsqueda pública sin resultado",
+    "fuente": "denue"
+  },
+  {
+    "id": "9d7f380d-65ee-46d5-ae39-acd52729dc6d",
+    "empresa": "COMPASS SOLUTIONS",
+    "ciudad": "Benito Juárez, Ciudad de México",
+    "correo": null,
+    "telefono": "5541668470",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otros servicios de intermediación para el transporte de carga · 11 a 30 personas · sitio: contactocompasssolution.com.mx · establecimiento: COMPASS SOLUTIONS\n\nPROSPECCIÓN 20-ago-2026: sin decisor público · LinkedIn: no hallado · fuente: ficha DENUE 05/2026. OJO POSIBLE DUPLICADO: existe otro registro en el censo ('Compass Solutions, S.A. de C.V.', id 9aff55b4, vía CANACAR) con mismo nombre, misma ciudad exacta y teléfono casi idéntico (5541668478 vs 5541668470) — casi con certeza la MISMA empresa. NO se manda mensaje a este registro para no duplicar el outreach; el mensaje se mandó al registro de CANACAR (9aff55b4), con clasificación de transporte más fuerte.; WebSearch agotado en la sesión (200/200), investigación solo por WebFetch a dominios conocidos. scian=488.",
+    "fuente": "denue"
+  },
+  {
+    "id": "68a7ebe6-86cf-450c-9681-c8519e6c73be",
+    "empresa": "TRAFRAMEX",
+    "ciudad": "Zacatecas, Zacatecas",
+    "correo": null,
+    "telefono": "4929216900",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo de materiales para la construcción · 11 a 30 personas\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  },
+  {
+    "id": "9902dc67-7c43-461f-8513-40b9002b133f",
+    "empresa": "Autotransportes 4 On The Go",
+    "ciudad": "Oscar Flores Tapia, Nuevo León",
+    "correo": "elias.estrada@4onthego.com",
+    "telefono": "8441009573",
+    "estado": "nuevo",
+    "notas": "1 anuncio en el censo · señal: rutas, operadores, viaje, viajes, unidades · último anuncio: 2026-06-10 · liga: https://mx.indeed.com/viewjob?jk=cdb4d3202d064da5\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono y correo\n\nINVESTIGACION-LOTE-4A8 18-ago-2026 (agentes sonnet, aplica=true): APLICA fuerte: FMCSA DOT 01811553 activo desde 2008, JIT automotriz (Magna, Stellantis, Schneider, KSR). Bases en Saltillo/Arteaga, Nuevo Laredo, Puebla. Puesto interno \"Encargado de Liquidaciones\" — senal perfecta. CORREGIR CORREO: ventas@4onthego.com (el sitio Wix tiene una pagina con placeholder info@mysite.com sin editar).\n\nHISTORIA (investigación previa ya en notas): FMCSA DOT 01811553 activo desde 2008, operación JIT automotriz para Magna, Stellantis, Schneider y KSR, bases en Saltillo/Arteaga, Nuevo Laredo y Puebla; puesto interno de 'Encargado de Liquidaciones' detectado en esa misma investigación (señal directa de dolor).\nENCAJE: alto — operación JIT automotriz multi-estado con puesto interno de liquidaciones — el mejor lead del carril hasta ahora.\nPROSPECCIÓN 20-ago-2026: sin decisor público · LinkedIn: no hallado · fuente: investigación previa del censo (LOTE-4A8, 18-ago-2026) + vacante 'Seguidor de Tráfico' ya registrada (Indeed, 10-jun-2026); el correo de la base (elias.estrada@4onthego.com) sugiere un nombre pero ninguna fuente pública lo nombra con cargo → NO se declara decisor; WebSearch agotado en la sesión (200/200), investigación solo por WebFetch a dominios conocidos. unidades: null (no hay conteo publicado, solo el giro y las bases). Mensajes generados — el mejor priorizado de la tanda por la señal de 'Encargado de Liquidaciones'.",
+    "fuente": "censo"
+  },
+  {
+    "id": "643dc9dc-b751-48df-b217-13e0d9d5d552",
+    "empresa": "B2 SERVICES",
+    "ciudad": "Xalapa, Veracruz de Ignacio de la Llave",
+    "correo": "baruc@b2services.mx",
+    "telefono": "5576884939",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Servicios de mensajería y paquetería foránea · 6 a 10 personas · sitio: www.b2services.mx · establecimiento: B2 SERVICES\nCANACAR (directorio de socios) 17-ago-2026: rellena correo",
+    "fuente": "denue"
+  },
+  {
+    "id": "4cb55177-f2a7-4147-bc89-c63ca5708b00",
+    "empresa": "GLOBAL GATE MEXICO S. DE R.L. DE C.V",
+    "ciudad": "Centro, Tabasco",
+    "correo": "jesus@globalgatemexico.com",
+    "telefono": "8184213307",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo de materiales y residuos peligrosos · 6 a 10 personas · establecimiento: GLOBAL GATE MEXICO\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono y correo\nHISTORIA: DENUE 05/2026: GLOBAL GATE MEXICO, autotransporte foráneo de materiales y RESIDUOS PELIGROSOS, 6 a 10 personas; también aparece como socio en el directorio CANACAR (17-ago-2026). Discrepancia geográfica: el registro ubica la empresa en Centro, Tabasco, pero el teléfono (818...) tiene lada de Monterrey/área metropolitana de Nuevo León, no de Tabasco — se declara sin resolver. Sitio oficial globalgatemexico.com verificado y coincide con el giro: se presenta como 'Global Gate Mexico | Dangerous Goods Logistics & Compliance', consistente con el registro de materiales y residuos peligrosos. Correo: jesus@globalgatemexico.com (nominal, sin apellido confirmado).\nPROSPECCIÓN 2026-08-20: sin decisor público (correo nominal 'jesus@' sin apellido) · LinkedIn: no hallado · fuente: DENUE 05/2026; directorio de socios CANACAR 17-ago-2026; globalgatemexico.com (sitio_verificado=true). WebSearch agotado en la sesión.",
+    "fuente": "denue"
+  },
+  {
+    "id": "9c8d1522-450c-4a75-97ae-c3581dbe1ddc",
+    "empresa": "GRUAS MW",
+    "ciudad": "San Juan del Río, Querétaro",
+    "correo": "anabell.galvan@gruasmw.com",
+    "telefono": "4271084970",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Servicios de grúa · 6 a 10 personas · establecimiento: GRUAS MW\nCANACAR (directorio de socios) 17-ago-2026: rellena correo",
+    "fuente": "denue"
+  },
+  {
+    "id": "7ecafcbb-9714-4e5e-b8ec-79b05ff984b9",
+    "empresa": "INTEGRADORES DE CARGA AEREA",
+    "ciudad": "Los Cabos, Baja California Sur",
+    "correo": "rodmendiola@integracargo.com",
+    "telefono": "5520522874",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Transporte aéreo regular en líneas aéreas nacionales · 6 a 10 personas · establecimiento: VOLARIS CARGO\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono y correo",
+    "fuente": "denue"
+  },
+  {
+    "id": "ea8aefb3-65f1-420a-9f36-418a952a6e75",
+    "empresa": "REGIOMONTANA DE CAMIONES DG",
+    "ciudad": "San Pedro Garza García, Nuevo León",
+    "correo": "sofia@regiomontanadecamiones.com",
+    "telefono": "8182537576",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Transporte por ductos de productos refinados del petróleo · 6 a 10 personas · establecimiento: GRUPO RODE\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono y correo",
+    "fuente": "denue"
+  }
+]

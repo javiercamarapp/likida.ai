@@ -1,0 +1,52 @@
+[
+  {
+    "id": "efa86c19-51ef-4ef5-b6f9-6f394b81611a",
+    "empresa": "Transportes de Carga Santa Lucía, S.A. de C.V.",
+    "ciudad": "Ensenada, Baja California",
+    "correo": "juliocortez@tcsl.mx",
+    "telefono": "6461015890",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Especializada · 51 a 250 personas · Calle el Sauzal Mz 3 Lt 2 Int Na, Colonia el Sauzal, CP 22760\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Ensenada, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 2026-08-21: DECISOR CONFIRMADO (confianza media) — Juan Tomás Figueroa Meza, listado como \"key principal\" en Dun & Bradstreet para Transportes de Carga Santa Lucía. Existe también una cuenta LinkedIn de la empresa con el rótulo \"Director general\" (mx.linkedin.com/in/direccion-santa-lucia-750527220), pero es una cuenta genérica de la empresa (no un perfil personal), así que no confirma el nombre — de ahí confianza media, no alta. El sitio oficial tcsl.mx/quienes-somos no nombra directivos (solo dice que la empresa la fundaron '4 hermanos' en 1990). Coherente con la fila duplicada 'TRANSPORTES DE CARGA SANTA LUCIA' (id 06044008, ya marcada duplicado_de esta fila): 220+ tractocamiones, 4 plazas (Ensenada/Tijuana/Mexicali/Hermosillo). OJO: muchas empresas homónimas 'Santa Lucía' en el censo (destilería, grúas, transporte de pasajeros, etc.) que NO son esta — no confundir.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "56917bf8-7a89-4c3f-93b4-89583c26cce6",
+    "empresa": "Transportes de Carga Santoyo, S.A. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "rh@santoyotransport.com",
+    "telefono": "6868416101",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Boulevard Abelardo L Rodriguez 829 Int Na, Colonia Compuertas, CP 21218\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0e2a5401-2c11-4e03-bf7e-1f73f4735cac",
+    "empresa": "Transportes de Carga Vegeta, S.A. de C.V.",
+    "ciudad": "Toluca, México",
+    "correo": "juve@transvegsa.com",
+    "telefono": "7221685256",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga en General · 51 a 250 personas · Calle Jose Ramon Albarran Sn Int Sn, Pueblo Santa Creuz Atzcapotzaltongo, CP 50290\nUbicación aproximada 17-ago: centroide de 256 establecimientos DENUE en Toluca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a0b07027-61b0-4515-b800-deda501641cf",
+    "empresa": "Transportes Don Trucking, S.A. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "agarcia@dontrucking.com.mx",
+    "telefono": "2299801709",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Federal de Carga · 51 a 250 personas · Calle 2 Lote 2 Mz 3 Int Na, Colonia Rio Medio, CP 91809\nPROSPECCIÓN 2026-08-19: sin decisor público (razón social corporativa SA de CV, no persona física; correo agarcia@ sugiere apellido García, no confirmado) · no se localizó sitio oficial (dontrucking.com.mx no verificable por búsqueda) · socio CANACAR, autotransporte federal de carga, operación grande (51-250 personas), Veracruz · fuente: búsqueda web",
+    "fuente": "canacar"
+  },
+  {
+    "id": "08ab6998-deca-4072-9864-b2db387c8c9e",
+    "empresa": "Transportes el Olvido, S.A. de C.V.",
+    "ciudad": "Córdoba, Veracruz",
+    "correo": "www.transportes_elolvido@hotmail.com",
+    "telefono": "2717124100",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga General · 51 a 250 personas · Calle 19 320 Int Na, Colonia Centro, CP 94500",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,102 @@
+[
+  {
+    "id": "e5fa2939-bf9a-4d3b-95a0-5e35d761749a",
+    "empresa": "Unidos Transport & Logistic México, S.A. de C.V.",
+    "ciudad": "Hermosillo, Sonora",
+    "correo": "mrodriguez@unidostransport.com.mx",
+    "telefono": "6621100201",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Carretera a Sahuaripa 1015 Int Na, Parque Industrial Hermosillo, CP 83299\nUbicación aproximada 17-ago: centroide de 285 establecimientos DENUE en Hermosillo, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 2026-08-19: sin decisor público con cargo (correo con dominio propio unidostransport.com.mx, coherente con el nombre; el sitio no se localizó activo) · LinkedIn: no hallado · fuente: CANACAR 17-ago-2026.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "707a775c-3a84-47e4-aafa-c24eeb3d8c07",
+    "empresa": "Utoexpress 70",
+    "ciudad": "Allende, Nuevo León",
+    "correo": "autoexpress70@hotmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Ervicio de Fletes en la Republica Mexicana · 0 a 10 personas · Carretera Carretera Allende Cadereyta Km 5 Km 5 Int Na, Colonia Los Sabinos, CP 67353\nUbicación aproximada 17-ago: centroide de 123 establecimientos DENUE en Allende, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts). · PROSPECCIÓN 19-ago-2026: sin decisor público (cupo de WebSearch agotado en esta sesión; solo WebFetch disponible) · sin sitio oficial localizado; domicilio en Carretera Allende-Cadereyta km 5, Allende, Nuevo León · ENCAJE: medio — flota carretera micro, volumen bajo pero encaja",
+    "fuente": "canacar"
+  },
+  {
+    "id": "371cb628-48a3-4073-95ae-0fc6e30c1b9a",
+    "empresa": "V & B Metalogística, S.A. de C.V.",
+    "ciudad": "León, Guanajuato",
+    "correo": "mfuentes@metaexpress.com.mx",
+    "telefono": "4776493222",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Privada Privada San Gerardo 107 Int Na, Colonia Los Carcamos, CP 37170\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "cddde08d-e49c-45ea-b0d8-501f3b755e8a",
+    "empresa": "Vafa Holdings, S. de R.L. de C.V.",
+    "ciudad": "Manzanillo, Colima",
+    "correo": "comercial_mzo@vafaholdings.com",
+    "telefono": "3141185254",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 0 a 10 personas · Boulevard Miguel de la Madrid Hurtado 362 Int 9, Colonia Tapeixtles, CP 28239\nUbicación aproximada 17-ago: centroide de 551 establecimientos DENUE en Manzanillo, Colima — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "53f073d5-553d-4362-b6e5-5a6a56bd5761",
+    "empresa": "Velbus del Oriente",
+    "ciudad": "Miguel Hidalgo, Ciudad de México",
+    "correo": "mxcarlos@live.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Federal · 0 a 10 personas · Calle Gauss 12 Int Sn, Colonia Anzures, CP 11590\nUbicación aproximada 17-ago: centroide de 253 establecimientos DENUE en Miguel Hidalgo, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5b16a8c7-b468-4f22-bdcb-69f70adaa3cf",
+    "empresa": "Velmen Solutions, S.A. de C.V.",
+    "ciudad": "San Pedro Tlaquepaque, Jalisco",
+    "correo": "guille@velmen.com.mx",
+    "telefono": "3336010694",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Mariano Jimenez 123 Int Na, Colonia Las Liebres, CP 45623\nUbicación aproximada 17-ago: centroide de 219 establecimientos DENUE en San Pedro Tlaquepaque, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b656672b-4063-44dd-9746-b812a389ed0b",
+    "empresa": "Venpol Global Trade",
+    "ciudad": "Querétaro, Querétaro",
+    "correo": "renepoletti@venpol.com.mx",
+    "telefono": "4422742565",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Logistica y Asesoria en Trasporte · 0 a 10 personas · Avenida Frayluisdeleon 8071 Int Na, Colonia Centro Sur, CP 70090\nDENUE API 17-ago (cruce CANACAR→DENUE): «VENPOL GLOBAL TRADE», score 1.06\nPROSPECCIÓN 2026-08-19: sin decisor público · correo ya en base (renepoletti@venpol.com.mx) sugiere fuertemente el nombre 'René Poletti' (formato nombre.apellido en dominio propio de la empresa) pero no se confirmó cargo en una página que lo nombre — no se escribe como decisor sin esa confirmación · CANACAR: Logística y Asesoría en Transporte, 0 a 10 personas, Querétaro · fuente: CANACAR directorio de socios (ya en base)\nPROSPECCIÓN 2026-08-19 (complemento): sitio oficial verificado venpol.com.mx — fletes terrestres e importación/exportación, rutas CDMX↔Querétaro↔Manzanillo hacia cualquier estado, GPS con actualización cada 10s, patios en Edo. Méx., Manzanillo y Querétaro; Av. Fray Luis de León 8071-503, Col. Centro Sur, Querétaro (coincide con el domicilio ya en base) · teléfono público 4427212158 y correo ventas@venpol.com.mx (no sobrescriben los datos ya en base) · fuente: venpol.com.mx",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7ec1933c-ca59-4352-a4e5-bd79a7250add",
+    "empresa": "Ventura Covarrubias Treviño",
+    "ciudad": "Reynosa, Tamaulipas",
+    "correo": "venturact@hotmail.com",
+    "telefono": "8991276164",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Rio Bravo 822 Int Na, Colonia Las Fuentes Seccion Lomas, CP 88703\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Reynosa, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: decisor Ventura Covarrubias Treviño, titular/permisionario (persona física en directorio CANACAR) · LinkedIn: no hallado · viajes/mes: no público · historia: no pública · fuente: directorio público de socios CANACAR · score fit: 1/5 (+1 decisor verificable)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5715b81a-7981-46ac-97be-066f1227b4aa",
+    "empresa": "Verlogistics, S.A. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "gcomercial@verlogistics.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Calle Ernesto Dominguez 20 Int Altos, Colonia Reforma, CP 91919\n\nPROSPECCIÓN 2026-08-21: DECISOR CONFIRMADO por LinkedIn — Antonio Fernández Rodríguez, General Manager / Gerente General de Verlogistics (linkedin.com/in/antonio-fernandez-rodriguez-ab70ba8a). Empresa con presencia en 4 puertos (Altamira, Lázaro Cárdenas, Veracruz, Manzanillo).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c183a6fb-c671-48ad-abdd-5b3b7068d8c8",
+    "empresa": "Verónica de Los Santos Herrera",
+    "ciudad": "Amatlán de los Reyes, Veracruz",
+    "correo": "transportadora_santos@hotmail.com",
+    "telefono": "2717154290",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportista · 0 a 10 personas · Calle Pio Lopez 12 Int Na, Colonia Nueva Florida, CP 94945\nLa razón social del directorio CANACAR ES una persona física: Verónica de los Santos Herrera, socia titular, giro \"Transportista\", 0 a 10 personas, Calle Pío López 12, Col. Nueva Florida, Amatlán de los Reyes, Veracruz. Opera bajo el alias comercial \"Transportadora Santos\" (correo transportadora_santos@hotmail.com). Zona de caña, café y agroindustria de la cuenca del Papaloapan.\nENCAJE: alto — socia CANACAR en zona agroindustrial veracruzana, titular identificada\nPROSPECCIÓN 2026-08-19: decisora Verónica de los Santos Herrera, titular/socia registrada (persona física en el padrón) · LinkedIn: no localizado · fuente: directorio de socios CANACAR 17-ago-2026",
+    "fuente": "canacar"
+  }
+]

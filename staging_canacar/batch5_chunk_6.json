@@ -1,0 +1,52 @@
+[
+  {
+    "id": "38477e3b-d5a6-4835-9ad8-d973dbc533b2",
+    "empresa": "Transportes Especializados Mura, S.A. de C.V.",
+    "ciudad": "San Pedro Garza García, Nuevo León",
+    "correo": "monica.cano@sdo.com.mx",
+    "telefono": "8116429288",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 51 a 250 personas · Avenida Lazaro Cardenas 2470 Int Oficina 17, Colonia Villas de San Agustin, CP 66266\nUbicación aproximada 17-ago: centroide de 113 establecimientos DENUE en San Pedro Garza García, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "40a1b61e-caac-4f59-8713-6d09f9312b76",
+    "empresa": "Transportes Especializados Robles, S.A. de C.V.",
+    "ciudad": "Zapopan, Jalisco",
+    "correo": "ramires@corp-rl.com",
+    "telefono": "3339684311",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Material Peligroso (Gasolina y Diesel) · 51 a 250 personas · Avenida Aviacion 1000 Int Na, Colonia San Juan de Ocotan, CP 45019\nUbicación aproximada 17-ago: centroide de 205 establecimientos DENUE en Zapopan, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN PROFUNDA 20-ago-2026: mismo grupo/empresa que la ficha principal (id 0bc0b37d-a982-4581-8bf8-4574ad9a3e8a) — ver esa ficha para decisor. Sin mensaje propio aquí.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "113c1a4f-8d41-4abf-aa15-d83d6f0b1081",
+    "empresa": "Transportes Express del Norte, S.A. de C.V.",
+    "ciudad": "Apodaca, Nuevo León",
+    "correo": "jfpenalver@expressdelnorte.com",
+    "telefono": "8183854430",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 51 a 250 personas · Calle Eulalio Gutierrez 204 Int Na, Colonia Santa Rosa, CP 66610\nUbicación aproximada 17-ago: centroide de 300 establecimientos DENUE en Apodaca, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN PROFUNDA 21-ago-2026: Eric Peñalver Serna, Director General del grupo (Revista T21).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e74dcc52-9869-4091-b099-265326af1608",
+    "empresa": "Transportes Galbo del Norte, S.A. de C.V.",
+    "ciudad": "Gómez Palacio, Durango",
+    "correo": "contabilidad@transportesgalbo.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Calle Cuencame 183 Int Na, Colonia Zona Industrial, CP 35070\nUbicación aproximada 17-ago: centroide de 111 establecimientos DENUE en Gómez Palacio, Durango — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "dcdb3fee-ca41-4d98-b871-a23a5241cfb9",
+    "empresa": "Transportes Garza Leal, S.A. de C.V.",
+    "ciudad": "Lerdo, Durango",
+    "correo": "tgarzaleal@prodigy.net.mx",
+    "telefono": "8711750600",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 51 a 250 personas · Carretera Carretera Periferico Km 14.5 Sn Int Na, Colonia Centro, CP 35150\nUbicación aproximada 17-ago: centroide de 23 establecimientos DENUE en Lerdo, Durango — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

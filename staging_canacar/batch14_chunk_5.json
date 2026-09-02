@@ -1,0 +1,52 @@
+[
+  {
+    "id": "8aff3f3c-2a15-4362-b39b-db6af343ed43",
+    "empresa": "Servicios de Transportación Especializada Express Lemava, S.A. de C.V.",
+    "ciudad": "Frontera, Coahuila",
+    "correo": "logistica@grupoimix.mx",
+    "telefono": "8666343270",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Residuos Peligrosos · 11 a 50 personas · Calle el Pidio Barrera 107 Int E, Colonia Morelos, CP 25626",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2f661646-7713-4f0d-8103-32501ec33794",
+    "empresa": "Servicios Globales de Logística Maya, S.A. de C.V.",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "diana.palma@grupopalco.mx",
+    "telefono": "6566111032",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Eje Vial Juan Gabriel 1820 Int Na, Colonia Melchor Ocampo, CP 32380\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9cc6eb20-57ab-40ca-9d62-69d494e3603e",
+    "empresa": "Servicios Logísticos de Querétaro, S.A. de C.V.",
+    "ciudad": "Querétaro, Querétaro",
+    "correo": "recursos.humanos@slbmx.com",
+    "telefono": "4541145236",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio Publico Federal de Carga · 11 a 50 personas · Calle Anillo Vial Fray Junipero Serra Km 17 Sn Int 2, Colonia el Salitre, CP 76127\nUbicación aproximada 17-ago: centroide de 266 establecimientos DENUE en Querétaro, Querétaro — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "eeda11dc-22d3-4b85-8685-86ee1557c6b8",
+    "empresa": "Servicios Logisticos del Pacifico",
+    "ciudad": "Hermosillo, Sonora",
+    "correo": "claudia.flores@slplogistica.com",
+    "telefono": "6621492904",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicios de Intermediacion Al Transporte de Carga · 11 a 50 personas · Calle Quiroga Entre Colosio 150 B Int 302, Colonia Na, CP 83243\nUbicación aproximada 17-ago: centroide de 285 establecimientos DENUE en Hermosillo, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b5d1c5c2-c7a2-4c30-af78-d8fb38b07b67",
+    "empresa": "Servicios Logisticos Especializados Marquez, S.A. de C.V.",
+    "ciudad": "Acolman, México",
+    "correo": "imarquez@transportesmarquez.mx",
+    "telefono": "5543638400",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Peligrosa · 11 a 50 personas · Callejón Miguel Aleman Valdez Sn Int Na, Colonia Anahuac 2Da Seccion, CP 55884\nUbicación aproximada 17-ago: centroide de 42 establecimientos DENUE en Acolman, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (el correo del registro, imarquez@transportesmarquez.mx, insinúa el apellido Márquez, sin confirmar con cargo) · fuente: CANACAR 17-ago-2026",
+    "fuente": "canacar"
+  }
+]

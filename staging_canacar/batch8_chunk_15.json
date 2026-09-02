@@ -1,0 +1,52 @@
+[
+  {
+    "id": "5b25db0e-7faa-4984-9695-2bca864cf64a",
+    "empresa": "Enlaces Terrestres Asociados de Morelos S. de R.L. de C.V.",
+    "ciudad": "Cuautla, Morelos",
+    "correo": "enlacesmorelos@outlook.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga en General · 11 a 50 personas · Carretera Mexico Cuautla Km 95 Sn Int Na, Colonia Santa Barbara, CP 62767\nUbicación aproximada 17-ago: centroide de 63 establecimientos DENUE en Cuautla, Morelos — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6ab620be-00d9-4035-82ce-3053ce22384b",
+    "empresa": "Entregas Puntuales, S. de R.L. de C.V.",
+    "ciudad": "Mazatlán, Sinaloa",
+    "correo": "jeestrada@pmm.com.mx",
+    "telefono": "6699854811",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Calle Francisco Serrano 2316 Int 306, Colonia Centro, CP 82000\nUbicación aproximada 17-ago: centroide de 131 establecimientos DENUE en Mazatlán, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-19: sin decisor publico - fuente: CANACAR directorio de socios 17-ago-2026, correo (jeestrada@pmm.com.mx) de dominio de grupo mayor, sin cargo declarado. WebSearch agotado en la sesion (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3ac0fd2e-899f-4ddc-aef8-45493ea28dc7",
+    "empresa": "Epy Servicios Domesticos, S. de R.L. de C.V.",
+    "ciudad": "Toluca, México",
+    "correo": "direccion.epy@grupoyaco.net",
+    "telefono": "7226205239",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Manuel Buendia Tellez Giron 307 Int Na, Barrio San Salvador, CP 50020\nUbicación aproximada 17-ago: centroide de 256 establecimientos DENUE en Toluca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7644d568-b669-4014-a34b-65d6eab3f54c",
+    "empresa": "Especializados en Estructuras Metalicas Lober, S.A. de C.V.",
+    "ciudad": "Castaños, Coahuila",
+    "correo": "rociogtz@translober.com",
+    "telefono": "8666971620",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Federal · 11 a 50 personas · Carretera 57 Km 178 400 Int Na, Colonia California, CP 25870\n\nPROSPECCIÓN 19-ago-2026: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (autotransporte de carga federal, 11 a 50 personas, Carretera 57 Km 178+400, Col. California, Castaños, Coahuila) · el correo del censo pertenece al dominio translober.com, probablemente su nombre comercial real (\"TransLober\") · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  },
+  {
+    "id": "61b9c62a-f405-4161-9076-9d2a83fc4339",
+    "empresa": "Eva Lara Patiño",
+    "ciudad": "Celaya, Guanajuato",
+    "correo": "xptransporte@prodigy.net.mx",
+    "telefono": "4611180275",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Aurelio Bonilla 106 Int Na, Ampliación Emiliano Zapata, CP 38030\nUbicación aproximada 17-ago: centroide de 79 establecimientos DENUE en Celaya, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

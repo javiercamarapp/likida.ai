@@ -1,0 +1,52 @@
+[
+  {
+    "id": "ae5f1d68-cf74-427d-9906-99672fae87ca",
+    "empresa": "Acarrealiquidos, S.A. de C.V.",
+    "ciudad": "Amatlán de los Reyes, Veracruz",
+    "correo": "fernandoarreola@acarrealiquidos.com",
+    "telefono": "2717128316",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Cordoba-Potrero Km 2 Sn Int Na, Paraje Nuevo, CP 94940\n\nINVESTIGACION LOTE-35 18-ago-2026 (agentes, aplica=true): CORREGIR SITIO: acarrealiquidos.com.mx (el .com es solo un redirect de Google). Veracruz, fundada 1981. Hibrido alimentario+peligroso (aceites, melaza, alcoholes). Su propia pagina dice que YA bajan datos de la computadora de abordo al regreso — el gasto sigue en papel.\n\nPROSPECCIÓN 2026-08-21: DECISOR CONFIRMADO — Fernando Arreola Trimmer, Director General, hijo del fundador Don Alejandro Arreola Luna (empresa familiar, 1981). Confirmado por Revista Alianza Flotillera (\"Acarrealíquidos: Seguridad y eficiencia para el transporte especializado\") y coincide con el correo ya presente en la base (fernandoarreola@acarrealiquidos.com).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ef653bdb-f65c-4fb8-8624-9d184c0c823e",
+    "empresa": "Acero Transporte, S.A. de C.V.",
+    "ciudad": "Tultitlán, México",
+    "correo": "contabilidad@acerotransporte.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Carga General de Autotransporte Foraneo de Carga · 11 a 50 personas · Avenida General Anaya 5 Int Na, Colonia Mariano Escobedo, CP 54946\nUbicación aproximada 17-ago: centroide de 127 establecimientos DENUE en Tultitlán, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b11d5149-53cf-4e53-9309-c76726a57ff4",
+    "empresa": "Actuar Sustentable, S.A. de C.V.",
+    "ciudad": "Tlajomulco de Zúñiga, Jalisco",
+    "correo": "sandra@highpower.com.mx",
+    "telefono": "3336190160",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte · 11 a 50 personas · Avenida Lopez Mateos Sur 1450 Int Sn, Colonia Las Villas, CP 45643\nUbicación aproximada 17-ago: centroide de 131 establecimientos DENUE en Tlajomulco de Zúñiga, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (correo ya en base, sandra@highpower.com.mx, sugiere posible nombre 'Sandra' en una empresa relacionada 'Highpower', sin confirmar) · CANACAR: Transporte, 11 a 50 personas, Tlajomulco de Zúñiga · fuente: CANACAR directorio de socios (ya en base)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5f9bb32d-32ff-4e27-954b-ffb0b3ac303a",
+    "empresa": "Adn Transporte",
+    "ciudad": "San Pedro Garza García, Nuevo León",
+    "correo": "jmier@adnenergia.com",
+    "telefono": "8182542710",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte · 11 a 50 personas · Avenida Lazaro Cardenas 2400 Int A13, Colonia Lazaro Cardenas, CP 66260\nUbicación aproximada 17-ago: centroide de 113 establecimientos DENUE en San Pedro Garza García, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (sitio no lo nombra) · LinkedIn: no público · viajes/mes: no público · historia: no pública · adnenergia.com verificado: comercializadora de combustibles sólidos y carburantes para calera, cementera, acero y minería, con transporte especializado propio en todo México; grupo CLISA · socio CANACAR 11-50 personas · fuente: adnenergia.com + directorio CANACAR · score fit 1/5",
+    "fuente": "canacar"
+  },
+  {
+    "id": "eaa84fe6-acd8-43c2-96ff-b2ea940a645d",
+    "empresa": "Adrh Logistics, S.A. de C.V.",
+    "ciudad": "San Juan del Río, Querétaro",
+    "correo": "ariadna.a@truiz.com.mx",
+    "telefono": "4271214440",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Prolongación 5 de Mayo 44 Int Na, Colonia Centro, CP 76800\nUbicación aproximada 17-ago: centroide de 87 establecimientos DENUE en San Juan del Río, Querétaro — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor con cargo confirmado — el sitio truiz.com.mx (mismo teléfono 427 121 4440, misma ciudad San Juan del Río, más sede en Tijuana) opera como \"Transportes Ruíz\": transporte de carga terrestre nacional para marcas como Nivea, Maruchan, Labello y Mattel, cajas secas de 53', GPS/ADAS, 15+ años de operación. Contacto publicado: Diego (diego@truiz.com.mx), sin cargo especificado — no calificado como decisor. Fuente: sitio oficial truiz.com.mx. Sitio agregado a la base (estaba vacío). Mensaje hiperpersonalizado redactado (ver likida-marketing-cola/prospeccion/2026-08-19-adrh-logistics.md).",
+    "fuente": "canacar"
+  }
+]

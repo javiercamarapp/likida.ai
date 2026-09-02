@@ -1,0 +1,52 @@
+[
+  {
+    "id": "e7a64f06-7e73-4544-9ef1-1dee82a0fef8",
+    "empresa": "Transportes Azalem, S. de R.L. de C.V.",
+    "ciudad": "Guadalajara, Jalisco",
+    "correo": "avaladez@azalem.mx",
+    "telefono": "3334407088",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Federal · 51 a 250 personas · Avenida Mar Adriatico 2199 Int Na, Ciudad Industrial Country Club, CP 44610\nUbicación aproximada 17-ago: centroide de 508 establecimientos DENUE en Guadalajara, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7b100d2d-7eec-4676-a957-b276236893b2",
+    "empresa": "Transportes Baeza, S.A. de C.V.",
+    "ciudad": "Celaya, Guanajuato",
+    "correo": "rhumanos@gonie.com.mx",
+    "telefono": "4616138516",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Camino a Santa Teresita 322 Int Na, Colonia Las Insurgentes, CP 38080\nUbicación aproximada 17-ago: centroide de 79 establecimientos DENUE en Celaya, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "eea4a2ca-d1d8-441d-a1c9-814a0ee643f0",
+    "empresa": "Transportes Barajas y Asociados, S.A. de C.V.",
+    "ciudad": "Comalcalco, Tabasco",
+    "correo": "transportes_barajas@yahoo.com.mx",
+    "telefono": "9331039979",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga Especializada y Carga General · 51 a 250 personas · Carretera Comalcalco-Cardenas Km 153.3 Sn Int Na, Ranchería Oriente 1Ra Seccion, CP 86650\nUbicación aproximada 17-ago: centroide de 43 establecimientos DENUE en Comalcalco, Tabasco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7880b21e-b809-4e15-9034-62e817f53311",
+    "empresa": "Transportes Blindados Tameme",
+    "ciudad": "Cuauhtémoc, Ciudad de México",
+    "correo": "jnoguez@mailtameme.com.mx",
+    "telefono": "5522410489",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Traslado de Valores · 51 a 250 personas · Calle Arenal 41 Int Na, Colonia Esperanza, CP 6840\nDENUE API 17-ago (cruce CANACAR→DENUE): «TRANSPORTES BLINDADOS TAMEME», score 1.06",
+    "fuente": "canacar"
+  },
+  {
+    "id": "146e661c-020c-40d0-baef-c7351fce7ace",
+    "empresa": "Transportes Bonampak, S.A. de C.V.",
+    "ciudad": "Huiloapan de Cuauhtémoc, Veracruz",
+    "correo": "michel.cosmez@bonampak.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga General · 51 a 250 personas · Calle Duraznal 28 Int Sn, Colonia San Cristobal, CP 94780",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "908cf8df-bf34-4468-aaf1-86ddd881a54f",
+    "empresa": "GRUPO MTA",
+    "ciudad": "Santiago, Nuevo León",
+    "correo": "grupomta@hotmail.com",
+    "telefono": "8122853434",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo de materiales y residuos peligrosos · 51 a 100 personas · establecimiento: TRANSPORTES GRUPO MTA\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono y correo",
+    "fuente": "denue"
+  },
+  {
+    "id": "33896be2-acdd-4d5a-a9c0-5d45976389e4",
+    "empresa": "LAZCANO EXPRESS DE MONCLOVA",
+    "ciudad": "El Carmen, Nuevo León",
+    "correo": "ventas@lemva.com.mx",
+    "telefono": "8113127113",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga especializado · 51 a 100 personas · sitio: www.lemva.com.mx · establecimiento: LAZCANO EXPRESS DE MONCLOVA\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  },
+  {
+    "id": "f5ff03c4-61b3-46bb-b50a-5099e661c977",
+    "empresa": "LINEA DE TRANSPORTES CASA",
+    "ciudad": "Allende, Nuevo León",
+    "correo": "rh@ltcasa.com",
+    "telefono": "8262682266",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga especializado · 51 a 100 personas · sitio: www.ltcasa.com · establecimiento: LINEA DE TRANSPORTES CASA\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  },
+  {
+    "id": "9a7e360a-b6c8-4005-b463-dfa7918af173",
+    "empresa": "MOREGAR EXPRESS",
+    "ciudad": "Colima, Colima",
+    "correo": "agueda@moregar.com",
+    "telefono": "3143365632",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga general · 51 a 100 personas · sitio: www.moregarexpress.com.mx · establecimiento: MOREGAR EXPRESS · PROSPECCIÓN 2026-08-19: sin decisor público · dominio moregarexpress.com.mx no resolvió al intentar verificarlo por WebFetch. Nota: hay otro prospecto en la base (id 90b0616d, mismo teléfono 3143365632) que parece ser la misma empresa por CANACAR — no se fusiona, se trabaja cada uno por separado según reglas del carril. Mensaje hiperpersonalizado generado con evidencia DENUE.",
+    "fuente": "denue"
+  },
+  {
+    "id": "bca51399-6336-4918-9dee-1fa4ebfaba43",
+    "empresa": "NOEMI ROMERO",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "finanzas@totalcargo.com",
+    "telefono": "6197553466",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga general · 51 a 100 personas · establecimiento: TRAANSPORTES TOTAL CARGO\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  }
+]

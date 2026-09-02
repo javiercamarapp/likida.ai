@@ -1,0 +1,52 @@
+[
+  {
+    "id": "758a27dc-e751-46c9-938a-d6d0511f2fcd",
+    "empresa": "Cargo Merchandise Logistics Mexico",
+    "ciudad": "Benito Juárez, Ciudad de México",
+    "correo": "direccion@cmlogistics.com.mx",
+    "telefono": "5526079204",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte de Carga · 11 a 50 personas · Avenida Insurgentes Sur 1392 Int 1, Colonia Actipan, CP 3230\nUbicación aproximada 17-ago: centroide de 171 establecimientos DENUE en Benito Juárez, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 19-ago-2026: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (servicio de transporte de carga, 11 a 50 personas, Av. Insurgentes Sur 1392, Col. Actipan, Benito Juárez, CDMX) · el correo del censo es de dirección general (direccion@cmlogistics.com.mx) · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  },
+  {
+    "id": "555dd249-51e1-4412-ba10-6b7fe694b287",
+    "empresa": "Caronte Logística Integral, S.A de C.V.",
+    "ciudad": "Soledad de Graciano Sánchez, San Luis Potosí",
+    "correo": "contacto@grupocaronte.com.mx",
+    "telefono": "4442982644",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga General · 11 a 50 personas · Cerrada de Milan 116 Int Na, Fraccionamiento San Lorenzo, CP 78433\nUbicación aproximada 17-ago: centroide de 71 establecimientos DENUE en Soledad de Graciano Sánchez, San Luis Potosí — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c31a2233-2516-4d8b-8754-27ea8809e18a",
+    "empresa": "Carryall Logistics , S.A de C.V.",
+    "ciudad": "San Pedro Tlaquepaque, Jalisco",
+    "correo": "gisela.davila@carryall.com.mx",
+    "telefono": "3316138822",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 11 a 50 personas · Calle San Lucas 2 Int Na, Colonia Los Puestos, CP 45638\nUbicación aproximada 17-ago: centroide de 219 establecimientos DENUE en San Pedro Tlaquepaque, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nSocia CANACAR (17-ago-2026): Transporte de Carga General, 11 a 50 personas, Calle San Lucas 2, Col. Los Puestos, San Pedro Tlaquepaque, Jalisco, CP 45638. Correo de negocio gisela.davila@carryall.com.mx (contacto nombrado: Gisela Dávila, sin cargo declarado — razón social es persona moral \"Carryall Logistics, S.A. de C.V.\").\nENCAJE: alto — carga general de 11-50 personas en Guadalajara, contacto de negocio nombrado\nPROSPECCIÓN 2026-08-20: sin decisor público confirmado con cargo (contacto de negocio: Gisela Dávila) · fuente: directorio de socios CANACAR 17-ago-2026",
+    "fuente": "canacar"
+  },
+  {
+    "id": "513396c6-6583-43aa-a6a0-e8ff6342844b",
+    "empresa": "Centauro del Norte Autotransporte, S.A. de C.V.",
+    "ciudad": "San Pedro Garza García, Nuevo León",
+    "correo": "aflores@grupomenora.com",
+    "telefono": "7828255955",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Roble 300 Int Na, Colonia Valle del Campestre, CP 66265\nUbicación aproximada 17-ago: centroide de 113 establecimientos DENUE en San Pedro Garza García, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d9390a2b-ae36-43e8-97f9-b14cb51de943",
+    "empresa": "Central de Fletes Atlante, S.A. de C.V.",
+    "ciudad": "León, Guanajuato",
+    "correo": "marco.miranda@fuentes7.com.mx",
+    "telefono": "4777116636",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Libramiento Norte Km 4.5 Sn Int Na, Colonia Maravillas, CP 37000\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

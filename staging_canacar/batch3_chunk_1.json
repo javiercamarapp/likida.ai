@@ -1,0 +1,52 @@
+[
+  {
+    "id": "942ec290-c330-44ae-9123-8497b6afbfca",
+    "empresa": "Ready Soluciones",
+    "ciudad": "Ciénega de Flores, Nuevo León",
+    "correo": "alexis.m@readysolutions.com.mx",
+    "telefono": "8117614203",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Calle Mariano Matamoros, Sereafin Pena y Juan Aldama 584 Int 1002, Parque Industrial Santiago Vidaurri # 16, CP 64000\nUbicación aproximada 17-ago: centroide de 19 establecimientos DENUE en Ciénega de Flores, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6b9de017-c393-411d-bece-2cec899479e5",
+    "empresa": "Regio Translados",
+    "ciudad": "San Nicolás de los Garza, Nuevo León",
+    "correo": "egarzav@gsi.com.mx",
+    "telefono": "8119949907",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Traslado y Servicio de Valores · 51 a 250 personas · Calle Ignacio Allende Sur 304 Int Na, Colonia San Nicolas de Los Garza Centro, CP 66400\nDENUE API 17-ago (cruce CANACAR→DENUE): «REGIO TRANSLADOS», score 1.06\nHISTORIA: socio de CANACAR, Traslado y Servicio de Valores (transporte blindado), 51 a 250 personas, San Nicolas de los Garza (17-ago-2026). Cruce CANACAR-DENUE confirma nombre coincidente (buen match, a diferencia de otros cruces de baja confianza vistos antes). Correo dominio gsi.com.mx (posible Grupo GSI, distinto del nombre comercial).\nPROSPECCION 2026-08-19: sin decisor publico - fuente: CANACAR directorio de socios 17-ago-2026. WebSearch agotado en la sesion (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "47c791fe-82ba-4719-b04d-528535ba2ef7",
+    "empresa": "Regio Transportes Montemayor, S.A. de C.V.",
+    "ciudad": "Apodaca, Nuevo León",
+    "correo": "regiomty@regiotransportes.com",
+    "telefono": "8180085777",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Autotransporte de Carga · 51 a 250 personas · Carretera Monterrey-Nuevo Laredo Km 18 Sn Int Na, Colonia Sin Nombre, CP 66609\nUbicación aproximada 17-ago: centroide de 300 establecimientos DENUE en Apodaca, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nHISTORIA: socia registrada de CANACAR (directorio de socios, 17-ago-2026): Regio Transportes Montemayor, S.A. de C.V., Servicio de Autotransporte de Carga, 51 a 250 personas, Carretera Monterrey-Nuevo Laredo Km 18, Apodaca, Nuevo León — sobre la carretera federal hacia la frontera. El sitio regiotransportes.com no se pudo verificar (el certificado SSL no corresponde al dominio, apunta a un servidor de terceros — 'dns4.sysop4.com'). Correo: regiomty@regiotransportes.com.\nPROSPECCIÓN 2026-08-20: sin decisor público · LinkedIn: no hallado · fuente: directorio de socios CANACAR 17-ago-2026; regiotransportes.com con certificado no correspondiente. WebSearch agotado en la sesión.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7cff4463-d99d-416d-b8c9-e45155472f27",
+    "empresa": "Rocío Karina Gutiérrez de Hoyos",
+    "ciudad": "Reynosa, Tamaulipas",
+    "correo": "leningro@borderfreight.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Boulevard Luis D Colosio 105 Int Na, Colonia Nuevo Reynosa, CP 88780\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Reynosa, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ea3b364a-2686-4ac0-a184-764969a1adb0",
+    "empresa": "Rodrigo Alberto González García",
+    "ciudad": "Arteaga, Coahuila",
+    "correo": "rodrigo@tisaonline.com",
+    "telefono": "8444144611",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General Local y Foranea · 51 a 250 personas · Boulevard Fundadores 736 Int Na, Colonia Sc, CP 25016",
+    "fuente": "canacar"
+  }
+]

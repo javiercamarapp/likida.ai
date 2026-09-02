@@ -1,0 +1,52 @@
+[
+  {
+    "id": "677a633e-cee4-42c0-b962-cb9397e381cc",
+    "empresa": "Auto Transportes Ilhuilcamina, S.A. de C.V.",
+    "ciudad": "Atenco, México",
+    "correo": "mhernandez@ilhuilcamina.com.mx",
+    "telefono": "5949576037",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Calle 1 Sn Int Na, Colonia Ejidos de Tequisistlan, CP 56300\nUbicación aproximada 17-ago: centroide de 3 establecimientos DENUE en Atenco, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "1b9e2cd5-a44f-480e-ab8b-053e34bc5ded",
+    "empresa": "Auto Transportes Refrigerados Verdugo, S.A. de C.V.",
+    "ciudad": "Culiacán, Sinaloa",
+    "correo": "jrverdugo@arv.com.mx",
+    "telefono": "6677186016",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Periférico Libramiento Benito Juarez 988 Int Na, Colonia Las Flores, CP 80104\nUbicación aproximada 17-ago: centroide de 265 establecimientos DENUE en Culiacán, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3aee138b-58cd-41d6-83ff-6eb1ad2a48d3",
+    "empresa": "Auto Transportes Tres Sonidos, S.A. de C.V.",
+    "ciudad": "Culiacán, Sinaloa",
+    "correo": "dacosta@tresonidos.com.mx",
+    "telefono": "6678464170",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Culiacan-Novolato Km 13 Sn Int Na, Colonia Aguaruto Viejo, CP 80308\nUbicación aproximada 17-ago: centroide de 265 establecimientos DENUE en Culiacán, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "fef8ec59-ef59-4a2c-93e4-498c7eebe241",
+    "empresa": "Autoexpress el Rosario, S.A. de C.V.",
+    "ciudad": "Jocotitlán, México",
+    "correo": "agustin.enriquez@yahoo.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Carga General de Mercancias a Terceros · 11 a 50 personas · Camino Mavoro a Santa Clara Sn Int Na, Pueblo Santa Clara, CP 50736\nUbicación aproximada 17-ago: centroide de 7 establecimientos DENUE en Jocotitlán, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c9929995-8afa-429d-87a2-84931211fdd0",
+    "empresa": "Autofletes Quesería, S.A. de C.V.",
+    "ciudad": "Tlajomulco de Zúñiga, Jalisco",
+    "correo": "autofletesqueseria@gmail.com",
+    "telefono": "3339686479",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Carretera Circuito Metropolitano Sur 815 Int A, Zona Federal San Miguel Cuyutlan, CP 45660\nUbicación aproximada 17-ago: centroide de 131 establecimientos DENUE en Tlajomulco de Zúñiga, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · sin sitio oficial localizado tras búsqueda pública · CANACAR confirma giro Transporte de Carga, 11-50 personas, domicilio en San Miguel Cuyutlán (ya en base) · fuente: búsqueda pública, sin hallazgo nuevo",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "89822ca7-4b78-468f-9c0c-493a77108208",
+    "empresa": "Raúl Barrera Auld",
+    "ciudad": "Guanajuato, Guanajuato",
+    "correo": "raulbarreraauld@hotmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Hacienda Purisima 3 Int Na, Colonia Marfil, CP 36250\nUbicación aproximada 17-ago: centroide de 37 establecimientos DENUE en Guanajuato, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d45cb8b7-5758-4f36-96ae-edab97c3d292",
+    "empresa": "Raul Garcia Ovalle",
+    "ciudad": "Santa Catarina, Nuevo León",
+    "correo": "fletes_fama@prodigy.net.mx",
+    "telefono": "8183363904",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 11 a 50 personas · Avenida Circunvalacion 300 Int Na, Colonia Protexa, CP 66170\nUbicación aproximada 17-ago: centroide de 110 establecimientos DENUE en Santa Catarina, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nDECISOR: registro CANACAR a nombre de persona física Raúl García Ovalle — el titular ES el decisor. El correo fletes_fama@prodigy.net.mx sugiere el nombre comercial \"Fletes Fama\", pero ninguna fuente pública lo confirma con certeza, así que se declara solo el nombre del registro CANACAR.\nUNIDADES: sin dato — CANACAR reporta 11 a 50 personas (personal, no unidades); sin conteo de flota publicado.\nENCAJE: alto — carga general, socio CANACAR, plantilla mediana.\nPROSPECCIÓN 2026-08-19: decisor Raúl García Ovalle, titular persona física · LinkedIn: no localizado · fuente: directorio de socios CANACAR 17-ago-2026 · WebSearch agotado en la sesión (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0381c830-35e4-410c-b123-469b90986ab4",
+    "empresa": "Rayo Sl Trucking, S.A. de C.V.",
+    "ciudad": "Guasave, Sinaloa",
+    "correo": "rorozcovalenzuela@gmail.com",
+    "telefono": "6871921762",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Exportacion E Importacion de Legumbres · 11 a 50 personas · Calle Miguel Hidalgo y Avenida 1 Sn Int Sn, Colonia Sin Colonia, CP 81149\nUbicación aproximada 17-ago: centroide de 50 establecimientos DENUE en Guasave, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN 20-ago-2026: sin presencia pública identificable con este nombre exacto — los resultados de 'Rayo Trucking' son de EUA, no coinciden.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e722d165-5646-4246-a77c-d85b603abc76",
+    "empresa": "Rbx, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "guadalupe.mendoza@rbx.mx",
+    "telefono": "8677155777",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Boulevard Adolfo Ruiz Cortinez 3140 Int A, Colonia Ribera del Bravo, CP 88240\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a8629382-6d67-4d0e-a87b-e48e898a6da8",
+    "empresa": "Reco Cero, S.A. de C.V.",
+    "ciudad": "Tuxpan, Veracruz",
+    "correo": "recocero@live.com",
+    "telefono": "7838395206",
+    "estado": "contactado",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Materiales y Residuos Peligrosos · 11 a 50 personas · Carretera Tierra Blanca-Frijolillo 210 Metros Int Na, Colonia Tierra Blanca, CP 92770",
+    "fuente": "canacar"
+  }
+]

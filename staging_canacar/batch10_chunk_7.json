@@ -1,0 +1,52 @@
+[
+  {
+    "id": "a632753f-d5c9-4ee8-86dc-a3b7c83d520a",
+    "empresa": "Gruas y Servicios Aguirre",
+    "ciudad": "Chapala, Jalisco",
+    "correo": "contacto@corporativogysa.com",
+    "telefono": "3767655555",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Federal y Paqueteria · 11 a 50 personas · Avenida Francisco I Madero 236 Int Na, Colonia Chapala Centro, CP 45900\nUbicación aproximada 17-ago: centroide de 8 establecimientos DENUE en Chapala, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nHISTORIA: opera como CORPORATIVO GYSA, 'más de 50 años de experiencia' (desde 1960), cubriendo 'más del 70% del estado de Jalisco' con depósitos en Chapala, Ixtlahuacán de los Membrillos, El Salto y Jocotepec. Clientes citados por nombre: Banorte, Pepsi, GNP, BMW, Mercedes-Benz, Bancomer, Qualitas, Mapfre, AXA, HDI (perfil de contratos de aseguradoras y bancos para arrastre). Tels (376) 765 5555 / 5252 / 4242 y (333) 809 9999, contacto@corporativogysa.com (fuente: corporativogysa.com, consultado 2026-08-20).\nPROSPECCIÓN 2026-08-20: sin decisor público · el sitio no nombra directivos, solo clientes · fuente: CANACAR directorio de socios 17-ago-2026 (transporte de carga federal y paquetería, 11 a 50 personas) + corporativogysa.com.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "19015095-a4a9-4a4b-8c5e-7d7093e390bd",
+    "empresa": "Gruas Zarate",
+    "ciudad": "Soledad de Graciano Sánchez, San Luis Potosí",
+    "correo": "juridico@gruaszarate.com",
+    "telefono": "4448312080",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Anillo Periferico Oriente Km 21.800 7600 Int Na, Fraccionamiento Rivera, CP 78430\nDENUE API 17-ago (cruce CANACAR→DENUE): «GRUAS ZARATE», score 1.06",
+    "fuente": "canacar"
+  },
+  {
+    "id": "02cb1ba7-1f7d-401b-aa9a-42ef418f958c",
+    "empresa": "Grupo Empresarial Rodríguez Alvarez, S. de R.L. de C.V.",
+    "ciudad": "San José Iturbide, Guanajuato",
+    "correo": "contacto@roaltransportes.com",
+    "telefono": "4422499691",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Bicentenario 52 Int Na, Colonia Centro, CP 37980\nUbicación aproximada 17-ago: centroide de 15 establecimientos DENUE en San José Iturbide, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "dfc65da1-62f1-4296-aa50-58930237fdb3",
+    "empresa": "Grupo Experto Logístico Enma, S.A. de C.V.",
+    "ciudad": "Guadalupe, Nuevo León",
+    "correo": "vchavez@enma.com.mx",
+    "telefono": "8120658567",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte · 11 a 50 personas · Avenida Paseo de Las Americas 2101 Int C-16, Colonia Country Sol, CP 67174\nUbicación aproximada 17-ago: centroide de 170 establecimientos DENUE en Guadalupe, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e3426ea3-642f-4547-8492-e40370ac451f",
+    "empresa": "Grupo Transpormex, S.A. de C.V.",
+    "ciudad": "Querétaro, Querétaro",
+    "correo": "lolvera@transpormex.com",
+    "telefono": "4422111829",
+    "estado": "contactado",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Avenida Constituyentes 107 Int 6, Colonia Carretas, CP 76050\nUbicación aproximada 17-ago: centroide de 266 establecimientos DENUE en Querétaro, Querétaro — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público confirmado por nombre (rutas /nosotros y /quienes-somos no existen en el sitio; linkedin.com/company/transpormex y /grupo-transpormex no resuelven) · sitio oficial confirmado transpormex.com — 58 años de operación, más de 500 unidades motrices, carga especializada (refrigerada, químicos a granel, contenerizada, automotriz), 3PL multimodal aéreo/marítimo/ferroviario/terrestre, rutas México-EU-Canadá, ubicaciones Querétaro/CDMX/Nuevo Laredo/Monterrey · fuente: transpormex.com",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "5cc6d6bc-fd92-4f63-81df-84aabe0e42a5",
+    "empresa": "Covalco, S.A. de C.V.",
+    "ciudad": "Tlalnepantla de Baz, México",
+    "correo": "fabiola.briseno@covalco.mx",
+    "telefono": "5521288073",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Berlin 19 Int Na, Colonia Jardines de Bellavista, CP 54054\nUbicación aproximada 17-ago: centroide de 187 establecimientos DENUE en Tlalnepantla de Baz, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0131d70d-65d4-4244-8109-307e2ec0cfa1",
+    "empresa": "Cryogenic Trucking Mx, S. de R.L. de C.V.",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "cryogenictruckingmx@gmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte · 11 a 50 personas · Calle Cañon del Cobre 9350 Int Na, Colonia Villa Residencial del Real, CP 32550\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN 20-ago-2026 (2a pasada): sin nombre de director/dueño público tras dos búsquedas distintas. Empresa real, especialista en materiales peligrosos criogénicos transfronterizos (2015, El Paso-Cd. Juárez + 2 cruces más), pero genuinamente sin decisor identificable en fuentes públicas.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "cb959ed1-965f-4946-87a0-6140a9ed822e",
+    "empresa": "Dagal Autotransportes, S.A. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "gcalderas@dagal.com.mx",
+    "telefono": "6865616531",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Boulevard Adolfo Lopez Mateos 2201 Int F, Colonia Sanchez Taboada, CP 21360\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f92b70fc-9125-4e60-847b-862673397b90",
+    "empresa": "Dam Soluciones Logísticas, S. de R.L. de C.V.",
+    "ciudad": "Monterrey, Nuevo León",
+    "correo": "rvega@damlogistica.com",
+    "telefono": "8180221359",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte y Logistica · 11 a 50 personas · Calle Antonia Gonzalez 2581 Int Na, Colonia Ancon del Huajuco, CP 64820\nUbicación aproximada 17-ago: centroide de 442 establecimientos DENUE en Monterrey, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "764a647a-ba0d-4e9e-8892-be646e237e7d",
+    "empresa": "Daniel Felgueres Linares",
+    "ciudad": "Zapopan, Jalisco",
+    "correo": "transportesfelgueres@outlook.com",
+    "telefono": "3316664966",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 11 a 50 personas · Camino Real a Colima 50 Int Na, Colonia Los Cajetes, CP 45234\nUbicación aproximada 17-ago: centroide de 205 establecimientos DENUE en Zapopan, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 19-ago-2026: decisor Daniel Felgueres Linares, titular (la razón social del directorio de socios CANACAR es la persona física, así que el registrante ES el titular; el correo del censo (transportesfelgueres@) confirma el mismo apellido en dominio propio) · LinkedIn: no hallado · fuente: directorio de socios CANACAR 17-ago-2026 (transporte de carga general, 11 a 50 personas, Camino Real a Colima 50, Col. Los Cajetes, Zapopan, Jalisco) · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "ddb2c65a-6ed0-41b9-a924-31008104395f",
+    "empresa": "Interlogistics de Mexico, S. de R.L. de C.V.",
+    "ciudad": "Piaxtla, Puebla",
+    "correo": "administracion@interlogistics.mx",
+    "telefono": "5641831410",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Otro Autotransporte Foraneo de Carga General · 11 a 50 personas · Calle 14 Sur 2543 Int 1 Despacho B, Colonia Bella Vista, CP 72500\nUbicación aproximada 17-ago: centroide de 1 establecimiento DENUE en Piaxtla, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4968460e-79db-470f-a7a7-8972891d3f4a",
+    "empresa": "Ir Transportaciones, S.A. de C.V.",
+    "ciudad": "San Nicolás de los Garza, Nuevo León",
+    "correo": "cobranza@irtransportaciones.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Autotransporte · 11 a 50 personas · Avenida Casa Blanca 1716 Int Na, Colonia Villa de San Cristobal, CP 66478\nUbicación aproximada 17-ago: centroide de 150 establecimientos DENUE en San Nicolás de los Garza, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b168d88a-a502-4022-b74f-c7036b9348c3",
+    "empresa": "Irene Yañez Marquez",
+    "ciudad": "Acatlán, Hidalgo",
+    "correo": "irenemarquez.017@gmail.com",
+    "telefono": "7751062009",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Morelos Na Int Na, Colonia Centro, CP 43540\nPROSPECCIÓN 2026-08-19: decisor Irene Yáñez Márquez, titular (el registro CANACAR está a nombre de persona física) · LinkedIn: no hallado · fuente: CANACAR 17-ago-2026\nENCAJE: alto — socia CANACAR con 11-50 personas, titular identificada, tel y correo",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8e4a4bde-1b5b-45d6-9db5-d34812517bdf",
+    "empresa": "Jalo Transportes, S.A. de C.V.",
+    "ciudad": "Saltillo, Coahuila",
+    "correo": "jlopez@jalo.com.mx",
+    "telefono": "8444897872",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Boulevard Jose Lopez Portillo Km 12 Sn Int Na, Colonia Rural Ag Ote, CP 25016",
+    "fuente": "canacar"
+  },
+  {
+    "id": "904a77b8-2209-44fd-9b30-2def5be156a4",
+    "empresa": "Javier Alejandro González Martínez",
+    "ciudad": "Tulancingo de Bravo, Hidalgo",
+    "correo": "pegasso_autofletes@hotmail.com",
+    "telefono": "7751589966",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Hidalgo Poniente 312 Int 9, Colonia Centro, CP 43720\nUbicación aproximada 17-ago: centroide de 47 establecimientos DENUE en Tulancingo de Bravo, Hidalgo — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

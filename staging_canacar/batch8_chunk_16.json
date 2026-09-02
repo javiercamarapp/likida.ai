@@ -1,0 +1,52 @@
+[
+  {
+    "id": "216dd274-68d0-4aec-b72c-0cd55ed4e81b",
+    "empresa": "Expedite Logistics de Mexico, S.A. de C.V.",
+    "ciudad": "Juárez, Nuevo León",
+    "correo": "logistica@expedite.mx",
+    "telefono": "8661317219",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportacion y Logistica · 11 a 50 personas · Calle Paseo de Las Azucenas 816 Int Na, Colonia Paseo del Prado, CP 67275\nUbicación aproximada 17-ago: centroide de 30 establecimientos DENUE en Juárez, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9405b113-0801-4bfa-804a-b7177bfd9573",
+    "empresa": "Expedited Infinity Mx, S. de R.L. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "jose.sanchez@infinitylogistics.mx",
+    "telefono": "8671000712",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transprotes de Mercancias · 11 a 50 personas · Calle Carretera (Carr.) 1002 Int 1002, Colonia America 1, CP 88293\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f562fb01-f57f-4b96-894e-b6d185a47039",
+    "empresa": "Expedited Specialized Logistic, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "valentin.bernabe@sti.com.mx",
+    "telefono": "8677111700",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Piedras Negras Km 17 Mas 777 35 Sn Int Na, Colonia Ejido San Francisco, CP 88176\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e7375eaf-aa82-4d97-845a-3e4875b37c5d",
+    "empresa": "Expres Cantu",
+    "ciudad": "General Escobedo, Nuevo León",
+    "correo": "debanhi.ce@exprescantu.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte · 11 a 50 personas · Calle Eulalio Villareal 1955 Int Na, Ciudad General Escobedo, CP 66080\nUbicación aproximada 17-ago: centroide de 199 establecimientos DENUE en General Escobedo, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "54628b61-dacc-4719-8b1d-de625412156f",
+    "empresa": "Express Anáhuac, S.A. de C.V.",
+    "ciudad": "Monterrey, Nuevo León",
+    "correo": "avargas@exan.com.mx",
+    "telefono": "8183518098",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Platon Sanchez 2000 Int D, Colonia del Norte, CP 64500\nUbicación aproximada 17-ago: centroide de 442 establecimientos DENUE en Monterrey, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

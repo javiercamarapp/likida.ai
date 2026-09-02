@@ -1,0 +1,52 @@
+[
+  {
+    "id": "8ac10185-5664-4947-8163-0fe77138ae17",
+    "empresa": "Ceramistas Unidos, S.A. de C.V.",
+    "ciudad": "León, Guanajuato",
+    "correo": null,
+    "telefono": "4772643653",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · más de 250 personas · Calle Est Ffcc la Trinidad Camino Sta Ana del Conde Int Na, Colonia Los Lopez, CP 37680\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "bb212efa-611d-4241-bd94-29ff0bdb37bf",
+    "empresa": "Eglopez",
+    "ciudad": "Apodaca, Nuevo León",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · más de 250 personas · Callejón Mezquital 1107 Int Na, Colonia Mezquital, CP 66630\nUbicación aproximada 17-ago: centroide de 300 establecimientos DENUE en Apodaca, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7dff0fcb-5e54-471a-9ebd-4e6a9d402860",
+    "empresa": "Movicarga Bajio, S.A. de C.V.",
+    "ciudad": "León, Guanajuato",
+    "correo": null,
+    "telefono": "8007113607",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicios Media y Ultima Milla · más de 250 personas · Calle Blvd. Jose Maria Morelos 2712 Int Sn, Condominio Prado Hermoso, CP 37238\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d8bf4dba-1a3a-4047-8b62-49c346ed7cfa",
+    "empresa": "Línea de Autotransportes San Julián, S.A. de C.V.",
+    "ciudad": "Purísima del Rincón, Guanajuato",
+    "correo": "transportes_sanjulian@hotmail.com",
+    "telefono": "3477181281",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Gardenia Mz 1 Lt 72 Int Na, Ejido Dolores, CP 36408\nUbicación aproximada 17-ago: centroide de 12 establecimientos DENUE en Purísima del Rincón, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público con nombre localizado (sin sitio oficial propio) · aviso: existe otra empresa de nombre muy similar, \"Transportes San Julián\" en San Julián, Jalisco (sitio transportes-sanjulian.com.mx), que es un negocio DISTINTO y de mayor tamaño (60+ unidades, 101-250 personas) — verificado que no es este prospecto; este registro corresponde al domicilio CANACAR en Ejido Dolores, Purísima del Rincón, Guanajuato · fuente: CANACAR (ya en base) + verificación de no-coincidencia por WebFetch",
+    "fuente": "canacar"
+  },
+  {
+    "id": "39e621f5-1af9-43f7-84cb-8d5038134fa0",
+    "empresa": "PETRO ASFALTOS DEL SURESTE",
+    "ciudad": "Atitalaquia, Hidalgo",
+    "correo": "tesoreria@santafedelsureste.com.mx",
+    "telefono": "5586175023",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo de materiales y residuos peligrosos · 101 a 250 personas · establecimiento: PETRO ASFALTOS DEL SURESTE\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono y correo",
+    "fuente": "denue"
+  }
+]

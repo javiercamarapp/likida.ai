@@ -1,0 +1,52 @@
+[
+  {
+    "id": "1cde68db-95d2-43aa-9370-771648e3faf2",
+    "empresa": "Lubricantes del Bajío, S.A. de C.V.",
+    "ciudad": "León, Guanajuato",
+    "correo": "rosy.godinez@lubbajio.com",
+    "telefono": "4771523400",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 51 a 250 personas · Avenida Los Lechugueros 107 Int Na, Colonia Los Pinos, CP 37490\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8fffcd91-7802-4da3-a720-5e0d2c04225f",
+    "empresa": "Mateo Alejandro, S.A. de C.V.",
+    "ciudad": "Miguel Hidalgo, Ciudad de México",
+    "correo": "agr01@prodigy.net.mx",
+    "telefono": "5550250761",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 51 a 250 personas · Calle Rio Jurua 21 Int Ms-3, Colonia Argentina Poniente, CP 11230\nUbicación aproximada 17-ago: centroide de 253 establecimientos DENUE en Miguel Hidalgo, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9e31429e-a749-4d7f-a38e-7ab79ba3f67c",
+    "empresa": "Mega Global Express, S.A. de C.V.",
+    "ciudad": "San Pedro Garza García, Nuevo León",
+    "correo": "contabilidad@megaexpressinc.us",
+    "telefono": "8671168917",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 51 a 250 personas · Avenida David Alfaro Biqueiros 106 Int Na, Colonia Valle Oriente|, CP 66269\nUbicación aproximada 17-ago: centroide de 113 establecimientos DENUE en San Pedro Garza García, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2288fb85-9a80-47fe-ba0c-082ea48c6b4b",
+    "empresa": "Megalogistics Transportes y Servicios, S.A. de C.V.",
+    "ciudad": "El Carmen, Nuevo León",
+    "correo": "arnulfo.mejia@logisticamega.com",
+    "telefono": "8115003414",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 51 a 250 personas · Calle Escobedo 610 Int Na, Colonia Centro, CP 66550\nUbicación aproximada 17-ago: centroide de 16 establecimientos DENUE en El Carmen, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "fuente": "canacar"
+  },
+  {
+    "id": "bf4b0145-20f6-4b80-acbd-f60a9c1acc2e",
+    "empresa": "Miller Freigth de México, S. de R.L. de C.V.",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "amiller@millerfreight.com",
+    "telefono": "6646475451",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Boulevard Manuel J. Clouthier 114 Int Z11, Fraccionamiento Campestre Murua, CP 22465\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

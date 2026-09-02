@@ -1,0 +1,52 @@
+[
+  {
+    "id": "397454f4-7eff-4665-a674-8c4ef8e67cdf",
+    "empresa": "Th Especial, S.A. de C.V.",
+    "ciudad": "Anáhuac, Nuevo León",
+    "correo": "jtrevino@thespecial.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle China 100 Int Na, Colonia Colombia, CP 65000\nUbicación aproximada 17-ago: centroide de 4 establecimientos DENUE en Anáhuac, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e9075cc3-d1bb-45af-b764-8b7f41b8ab00",
+    "empresa": "Thermo Transportes Muñoz L y T, S.A. de C.V.",
+    "ciudad": "Venustiano Carranza, Ciudad de México",
+    "correo": "letylc2000@yahoo.com",
+    "telefono": "5557026065",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Cfc Interoceanico 96 Int 2, Colonia Morelos, CP 15270\nUbicación aproximada 17-ago: centroide de 454 establecimientos DENUE en Venustiano Carranza, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3852643a-6d19-4ed5-ad8d-d86f9afbf60c",
+    "empresa": "Ths Transport, S.A. de C.V.",
+    "ciudad": "Querétaro, Querétaro",
+    "correo": "luis@thstransport.mx",
+    "telefono": "4422460623",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte de Carga Nacional · 11 a 50 personas · Avenida Peñuelas 125 Int Sn, Colonia Industrial San Pedrito Peñuela, CP 76148\nUbicación aproximada 17-ago: centroide de 266 establecimientos DENUE en Querétaro, Querétaro — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9a64efb4-d37a-4f4d-ab37-36e9b0da046e",
+    "empresa": "Tonko Transportes, S.A. de C.V.",
+    "ciudad": "Toluca, México",
+    "correo": "iztapalapa.cecy@othec.com",
+    "telefono": "5556014770",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Norte 7 112 Int Na, Parque Industrial Toluca 2000, CP 50233\nUbicación aproximada 17-ago: centroide de 256 establecimientos DENUE en Toluca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c76d1d16-5f91-4f2c-8a60-ea7d4f0d7faf",
+    "empresa": "Tracto Servicios Garza, S. de R.L. de C.V.",
+    "ciudad": "Linares, Nuevo León",
+    "correo": "tsg@tsgenlinea.com.mx",
+    "telefono": "8212121413",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 11 a 50 personas · Carretera a Galeana Km 3 Sn Int Na, Colonia Porfirio Diaz, CP 67770\nUbicación aproximada 17-ago: centroide de 7 establecimientos DENUE en Linares, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

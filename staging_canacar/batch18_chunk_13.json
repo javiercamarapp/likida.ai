@@ -1,0 +1,52 @@
+[
+  {
+    "id": "ae16fa22-f1e8-4596-afee-21ccfc647a4e",
+    "empresa": "Apoyo Logisticos Tlt",
+    "ciudad": "Hermosillo, Sonora",
+    "correo": null,
+    "telefono": "8624715314",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte · 11 a 50 personas · Carretera Sahuaripa Km 2.5 Int Na, Colonia Parque Industrial, CP 83299\nDENUE API 17-ago (cruce CANACAR→DENUE): «APOYOS LOGISTICOS TLT», score 1.04",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3ef70f27-a552-4289-b124-0c8492446143",
+    "empresa": "Arturo Teran Valencia",
+    "ciudad": "Hermosillo, Sonora",
+    "correo": null,
+    "telefono": "6621159740",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 11 a 50 personas · Avenida Sostenes Rocha 455 Int Ninguno, Colonia Jardines, CP 83113\nUbicación aproximada 17-ago: centroide de 285 establecimientos DENUE en Hermosillo, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "121ff357-db3e-4433-9bdc-75eb7d037d72",
+    "empresa": "Ati Logistic, S.A. de C.V.",
+    "ciudad": "León, Guanajuato",
+    "correo": null,
+    "telefono": "5558704719",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte de Carga Publica · 11 a 50 personas · Avenida del Curtidor 316 Int Na, Colonia Industrial Julian de Obregon, CP 37290\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ada6263f-3e3e-455c-a0c3-87acc8ee777a",
+    "empresa": "Auto Lineas Peña, S.A. de C.V.",
+    "ciudad": "Arteaga, Coahuila",
+    "correo": null,
+    "telefono": "444812199",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte de Carga · 11 a 50 personas · Boulevard Fundadores 12.5 Int Sn, Colonia Arteaga, CP 25350\nPROSPECCIÓN 2026-08-20: sin decisor público · sin sitio ni correo público identificados (búsqueda pública) · nota de calidad de dato: el teléfono tiene LADA 444 (San Luis Potosí) pese a que el domicilio CANACAR registrado es Blvd. Fundadores 12.5, Colonia Arteaga, Coahuila, CP 25350 — confirmar ciudad real al contactar.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "54064ca3-607a-4f94-b8b9-f549399f3758",
+    "empresa": "Auto Lineas Tamez, S.A. de C.V.",
+    "ciudad": "Monterrey, Nuevo León",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Camino Real a Villa Juarez 863 Int Na, Colonia Huinala, CP 66640\nUbicación aproximada 17-ago: centroide de 442 establecimientos DENUE en Monterrey, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

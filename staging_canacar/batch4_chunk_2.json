@@ -1,0 +1,52 @@
+[
+  {
+    "id": "80ad7026-07d2-4cce-8068-0a1ad6062e81",
+    "empresa": "Transportes Águila de Ciudad Juárez, S.A. de C.V.",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "jmaguilatransportes@hotmail.com",
+    "telefono": "6566113443",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga en General · 51 a 250 personas · Avenida Margaritas 961 Int Na, Colonia Margaritas, CP 32300\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ac396a3d-c09c-4b44-bc7e-ad60296897fd",
+    "empresa": "Transportes Aliano, S.A. de C.V.",
+    "ciudad": "Puebla, Puebla",
+    "correo": "fernando_bardales@laitaliana.com.mx",
+    "telefono": "2225772426",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Carga en General · 51 a 250 personas · Prolongación de la 27 Norte 8027 Int Na, Ciudad Na, CP 72010\nUbicación aproximada 17-ago: centroide de 496 establecimientos DENUE en Puebla, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público con cargo confirmado (correo institucional ya registrado, fernando_bardales@laitaliana.com.mx, sin cargo publicado) · fuente: laitaliana.com.mx/nosotros/ — Transportes Aliano opera como flota de carga de Grupo Industrial La Italiana (Molino Harinero San Blas, Galletas Gisa, Italgrani).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e7a64f06-7e73-4544-9ef1-1dee82a0fef8",
+    "empresa": "Transportes Azalem, S. de R.L. de C.V.",
+    "ciudad": "Guadalajara, Jalisco",
+    "correo": "avaladez@azalem.mx",
+    "telefono": "3334407088",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Federal · 51 a 250 personas · Avenida Mar Adriatico 2199 Int Na, Ciudad Industrial Country Club, CP 44610\nUbicación aproximada 17-ago: centroide de 508 establecimientos DENUE en Guadalajara, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7b100d2d-7eec-4676-a957-b276236893b2",
+    "empresa": "Transportes Baeza, S.A. de C.V.",
+    "ciudad": "Celaya, Guanajuato",
+    "correo": "rhumanos@gonie.com.mx",
+    "telefono": "4616138516",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Camino a Santa Teresita 322 Int Na, Colonia Las Insurgentes, CP 38080\nUbicación aproximada 17-ago: centroide de 79 establecimientos DENUE en Celaya, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "eea4a2ca-d1d8-441d-a1c9-814a0ee643f0",
+    "empresa": "Transportes Barajas y Asociados, S.A. de C.V.",
+    "ciudad": "Comalcalco, Tabasco",
+    "correo": "transportes_barajas@yahoo.com.mx",
+    "telefono": "9331039979",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga Especializada y Carga General · 51 a 250 personas · Carretera Comalcalco-Cardenas Km 153.3 Sn Int Na, Ranchería Oriente 1Ra Seccion, CP 86650\nUbicación aproximada 17-ago: centroide de 43 establecimientos DENUE en Comalcalco, Tabasco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

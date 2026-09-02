@@ -1,0 +1,52 @@
+[
+  {
+    "id": "3d011eb3-1d7e-4f1d-b2c7-d440f4d79a85",
+    "empresa": "EXPRESS TAMEZ",
+    "ciudad": "Apodaca, Nuevo León",
+    "correo": "luis.tamez@expresstamez.com",
+    "telefono": "8187998399",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga general · 51 a 100 personas · sitio: www.expresstamez.com · establecimiento: EXPRESS TAMEZ\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono\nPROSPECCIÓN 19-ago-2026: score fit 1/5 · sin decisor público · LinkedIn: — · viajes/mes: no público · historia: 27 años de autotransporte federal nacional; rabón, mudanza y tortón; C-TPAT y monitoreo satelital 24/7; 51–100 personas · fuente: expresstamez.com, directorio CANACAR",
+    "fuente": "denue"
+  },
+  {
+    "id": "7451e548-ba6a-4422-a92a-b453e9c42728",
+    "empresa": "FLETES FRIAS EXPRESS",
+    "ciudad": "Villa de Pozos SLP, San Luis Potosí",
+    "correo": "aflores@ffesa.mx",
+    "telefono": "4441309581",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga general · 51 a 100 personas · establecimiento: FLETES FRIAS EXPRESS\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono\nPROSPECCIÓN 2026-08-19: sin decisor público · LinkedIn: no hallado · viajes/mes: no público · historia: transporte terrestre y distribución en México y la franja comercial de EU, +12 años, base San Luis Potosí, pickups 1 ton, thortons y tráilers; contactofrias@ffesa.mx · fuente: fletesfriasexpress.com.mx · score fit 0/5",
+    "fuente": "denue"
+  },
+  {
+    "id": "5e366d4c-9414-4ef7-99ed-69306bddb938",
+    "empresa": "FLETES SOTELO",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "nominas@fletessotelo.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga general · 51 a 100 personas · establecimiento: FLETES SOTELO\nPROSPECCIÓN 2026-08-21: mismo grupo que fila principal CANACAR (id e32ce66c-9ee6-45e3-83ef-9310f4386319) — decisor confirmado ahí (Manuel Sotelo Suárez, Director General). No se manda mensaje duplicado desde esta fila.",
+    "fuente": "denue"
+  },
+  {
+    "id": "fb51ffde-99cc-48e3-86df-a9735d50a655",
+    "empresa": "G TRANSPORT",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "eyna.hernandez@g-global.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga general · 51 a 100 personas · establecimiento: G GLOBAL\nCANACAR (directorio de socios) 17-ago-2026: rellena correo",
+    "fuente": "denue"
+  },
+  {
+    "id": "c5b56acc-f833-420e-8832-fb6d39eac853",
+    "empresa": "GRUPO CORDERO TRANSPORTE A GRANEL",
+    "ciudad": "Tlalnepantla de Baz, México",
+    "correo": "contacto@gcor.mx",
+    "telefono": "5549559361",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga general · 51 a 100 personas · sitio: www.gcor.com.mx\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono · PROSPECCIÓN 2026-08-19: sin decisor público (teléfono ya verificado vía CANACAR por otra pasada) · sitio gcor.com.mx no resolvió · ENCAJE: alto — flota grande (51-100p), foráneo a granel, dato de contacto ya verificado",
+    "fuente": "denue"
+  }
+]

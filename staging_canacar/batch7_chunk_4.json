@@ -1,0 +1,52 @@
+[
+  {
+    "id": "8dc7661d-fbd0-4fa7-bf67-5d1797445689",
+    "empresa": "Ameei Servicios Electricos de Potencia Sa de Cv",
+    "ciudad": "Cajeme, Sonora",
+    "correo": "direxctorhmab@ameei.com.mx",
+    "telefono": "6444472193",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicos de Asesoria y Mantenimiento a Equipo Electrico Industrial · 11 a 50 personas · Calle Zacatecas 521 Int Na, Ciudad Obregón, CP 85000\nUbicación aproximada 17-ago: centroide de 140 establecimientos DENUE en Cajeme, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3eb3272c-c6d8-4cb8-b8d7-1b57688236c9",
+    "empresa": "Anita Alegría González",
+    "ciudad": "Centro, Tabasco",
+    "correo": "gayja03@hotmail.com",
+    "telefono": "9931567608",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio Publico Federal de Autotransporte · 11 a 50 personas · Calle Francisco I Madero 336 Int Na, Ciudad Villahermosa, CP 86100\nUbicación aproximada 17-ago: centroide de 165 establecimientos DENUE en Centro, Tabasco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-19: decisor = titular del permiso (persona fisica, dato del registro CANACAR) · contacto_nombre llenado: Anita Alegria Gonzalez, cargo Titular/Propietaria · contexto: servicio publico federal de autotransporte, 11 a 50 personas, Calle Francisco I Madero 336, Villahermosa · fuente: CANACAR (directorio de socios) 17-ago-2026\nENCAJE: medio — flota mediana en operacion de transporte con diesel",
+    "fuente": "canacar"
+  },
+  {
+    "id": "fb613932-8aff-4333-9f3e-c1244827ddad",
+    "empresa": "Anuar Renaud Torres García",
+    "ciudad": "Altamira, Tamaulipas",
+    "correo": "araceli@transportesmundiales.mx",
+    "telefono": "8334543480",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Estación Colonias Km 2 Na Int Na, Colonia Tres Marias, CP 89650\nUbicación aproximada 17-ago: centroide de 176 establecimientos DENUE en Altamira, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "45439f44-5ea2-4270-89ec-08259ee264bf",
+    "empresa": "Apr Cargo Group, S.A. de C.V.",
+    "ciudad": "Puebla, Puebla",
+    "correo": "david.lozano@aprcargo.com.mx",
+    "telefono": "2222300090",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle 25 Sur 3302 Int Na, Colonia Benito Juarez, CP 72410\nUbicación aproximada 17-ago: centroide de 496 establecimientos DENUE en Puebla, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (correo CANACAR sugiere a David Lozano pero ningún cargo verificable en fuente pública) · LinkedIn: no encontrado · viajes/mes: no público · historia: logística integral multimodal (marítima, terrestre, aérea; carga sobredimensionada y peligrosa, despacho aduanal) con sedes en Puebla (matriz, San Andrés Cholula), Guadalajara, Mérida y Monterrey · fuente: sitio oficial aprcargo.com.mx + directorio CANACAR. · score fit: 1/5",
+    "fuente": "canacar"
+  },
+  {
+    "id": "eeed171a-82a3-4ddd-901a-5fbfe3a828a7",
+    "empresa": "Arturo Trejo Rubio",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "contabilidad@transportestrejo.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Pesada · 11 a 50 personas · Calle Via Botteghelle 2611 Int Na, Colonia Fracc Canto de Calabria, CP 32540\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

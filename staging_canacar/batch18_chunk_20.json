@@ -1,0 +1,52 @@
+[
+  {
+    "id": "64385347-dd32-4166-952c-2d2fa09cc4a2",
+    "empresa": "Ramiro Cosio Urias",
+    "ciudad": "Tecate, Baja California",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Tecate Mexicali Kilometro 122 Int Na, Colonia San Pablo, CP 21478\nUbicación aproximada 17-ago: centroide de 45 establecimientos DENUE en Tecate, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "876da99f-f26b-4a54-b74d-40dbc45d1ad3",
+    "empresa": "Rapid Transport Logistics, S.A. de C.V.",
+    "ciudad": "Reynosa, Tamaulipas",
+    "correo": null,
+    "telefono": "8999029189",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera a Matamoros Km 87 Sn Int Na, Colonia la Escondida, CP 88770\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Reynosa, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ab207ac4-56f8-4be6-822d-37fec5f31c26",
+    "empresa": "Regio Transportacion",
+    "ciudad": "Matamoros, Tamaulipas",
+    "correo": null,
+    "telefono": "8681680770",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Fletes de Carga Especializada · 11 a 50 personas · Calle Ocho Entre Diagonal Cuauhtemoc y Rio Conchos 8 Int B, Ciudad Matamoros Tamaulipas, CP 87350\nUbicación aproximada 17-ago: centroide de 181 establecimientos DENUE en Matamoros, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "90636550-ee26-4519-9f36-6063e66d55da",
+    "empresa": "Rfc Transportes",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": null,
+    "telefono": "6566829051",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Mamey 6205 Int Na, Colonia el Granjero, CP 32590\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "872285e2-a4ca-4661-86f4-6afc4e05b372",
+    "empresa": "Rocio Salazar Salinas",
+    "ciudad": "Allende, Nuevo León",
+    "correo": null,
+    "telefono": "8262683957",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Calle Derecho Paso Sur 312 Int Na, Colonia Talleres, CP 67350\nUbicación aproximada 17-ago: centroide de 123 establecimientos DENUE en Allende, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

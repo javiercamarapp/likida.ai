@@ -1,0 +1,52 @@
+[
+  {
+    "id": "4c88ff5f-dc5b-4364-9274-faa920cde2ed",
+    "empresa": "Multiservicios Express del Noreste",
+    "ciudad": "Reynosa, Tamaulipas",
+    "correo": "facturacion@multiserviciosexpress.com.mx",
+    "telefono": "8999252262",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Brecha 101 Sn Int Na, Colonia Ejido el Guerrero, CP 88783\nDENUE API 17-ago (cruce CANACAR→DENUE): «MULTISERVICIOS EXPRESS DEL NORESTE SA DE CV», score 1.06\nPROSPECCIÓN 2026-08-19: decisor: sin decisor público (sin sitio web; búsqueda web no disponible esta tanda) · LinkedIn: no público · viajes/mes: no público · historia: no pública · fuente: directorio de socios CANACAR (autotransporte de carga general, 11-50 personas, Reynosa; cruce DENUE confirma SA de CV). Score fit 1/5 → urgencia 'explorando'.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "419a0b2e-9220-452c-a5c3-28784fd30b72",
+    "empresa": "Mv Moving, S.A. de C.V.",
+    "ciudad": "León, Guanajuato",
+    "correo": "amedina@logisticavillamed.com",
+    "telefono": "4771554405",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Camino la Presa 434 Int Na, Colonia San Jeronimo 1Era Seccion, CP 37226\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a553b013-620c-47dd-b974-83361e0cdf0e",
+    "empresa": "Mx Carriers, S.A. de C.V.",
+    "ciudad": "Apodaca, Nuevo León",
+    "correo": "ivanrivera@transinternacional.com",
+    "telefono": "8666976013",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Antonio E. Marcos Sn Int Na, Parque Industrial Zona Industrial, CP 66604\nUbicación aproximada 17-ago: centroide de 300 establecimientos DENUE en Apodaca, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nHISTORIA: opera como Transinternacional, S.A. de C.V., fundada en 1981, con base en Blvd. Gustavo Galaz 114, Col. California, Castaños, Coahuila (corredor Saltillo–Monclova). Clientes citados por nombre en su sitio: CH Robinson, Melton, Maxion, Metalsa, Regiopytsa, Ternium, Rymco y Daimler — perfil automotriz/acerero de exportación. Tel +52 866 697 6008 (el registro CANACAR trae 866 697 6013, misma central), info@transinternacional.com (fuente: transinternacional.com, consultado 2026-08-20).\nENCAJE: alto — 44 años operando, clientes de peso (Daimler, Ternium), 11 a 50 personas.\nPROSPECCIÓN 2026-08-20: sin decisor público · el sitio no nombra directivos, solo clientes · fuente: CANACAR directorio de socios 17-ago-2026 (autotransporte de carga, 11 a 50 personas) + transinternacional.com.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "73806424-932e-4466-9d69-112ca118f3a2",
+    "empresa": "Namai Comercio, S.A. de C.V.",
+    "ciudad": "León, Guanajuato",
+    "correo": "gestoria@servicasa.mx",
+    "telefono": "4778300641",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Boulevard Torres Landa 4608 Int Na, Colonia Las Huertas, CP 37430\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nENCAJE: alto — carga en León, socio CANACAR, 11 a 50 personas\nPROSPECCIÓN 19-ago-2026: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (autotransporte de carga, 11 a 50 personas, Blvd. Torres Landa 4608, Col. Las Huertas, León, Guanajuato) · el correo del censo es de una gestoría externa (servicasa.mx) · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8187e747-3a57-4e30-b87c-f150d71b6944",
+    "empresa": "Naro'S Express, S.A. de C.V.",
+    "ciudad": "Allende, Nuevo León",
+    "correo": "contacto@naros.com.mx",
+    "telefono": "8120012944",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Jose Cavazos Morales 203 Int Na, Colonia Los Ebanos, CP 67350\nUbicación aproximada 17-ago: centroide de 123 establecimientos DENUE en Allende, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

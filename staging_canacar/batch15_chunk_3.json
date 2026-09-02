@@ -1,0 +1,52 @@
+[
+  {
+    "id": "08e50068-648e-4386-ad09-1acd4c766aa6",
+    "empresa": "Tracto Termos del Sureste",
+    "ciudad": "Macuspana, Tabasco",
+    "correo": "administracion@tractotermosdelsureste.com",
+    "telefono": "9366881042",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Otro Autotransportes Foraneo de Carga Especializado · 11 a 50 personas · Carretera Federal Villahermosa-Escarcega Km 46.5 Int Sn, Colonia Monte Adentro, CP 86703\nUbicación aproximada 17-ago: centroide de 24 establecimientos DENUE en Macuspana, Tabasco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d6b74261-6b61-492c-af4c-502d242fb92c",
+    "empresa": "Trailers Técnicos, S.A. de C.V.",
+    "ciudad": "Puebla, Puebla",
+    "correo": "julia.arroyo@estrellaroja.com.mx",
+    "telefono": "5558766898",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Especializada · 11 a 50 personas · Avenida de la Pradera 3520 Int Na, Colonia Las Cuatillas, CP 72050\nUbicación aproximada 17-ago: centroide de 496 establecimientos DENUE en Puebla, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nENCAJE bajo: el correo del socio CANACAR (julia.arroyo@estrellaroja.com.mx) usa el dominio de Grupo Estrella Roja, gran corporativo mexicano de autobuses ya establecido, lo que sugiere que Trailers Técnicos opera como unidad de carga dentro de ese grupo grande. No encaja con el perfil de \"primeras flotas\", análogo a Tufesa/Flecha Amarilla/Traxion ya descartados en esta sesión. No se generó mensaje.\nPROSPECCIÓN 2026-08-19: sin decisor público · descartado por indicios de pertenecer a Grupo Estrella Roja · fuente: directorio de socios CANACAR 17-ago-2026 · WebSearch agotado en la sesión (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d3a1093d-5463-4aac-839d-9edb077a5c13",
+    "empresa": "Trainsa",
+    "ciudad": "Salinas Victoria, Nuevo León",
+    "correo": "contabilidad@trainsaexpress.com",
+    "telefono": "8125861032",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Federal · 11 a 50 personas · Carretera Colombia Km 12 Int Na, Colonia Sin Colonia, CP 65516\nUbicación aproximada 17-ago: centroide de 41 establecimientos DENUE en Salinas Victoria, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nHISTORIA (sitio oficial trainsaexpress.com, 19-ago-2026): se describe como transporte de carga especializado para el sector industrial, con logística internacional México-Estados Unidos. El sitio no publica flota, directivos, teléfono ni vacantes. Sitio localizado por el dominio del correo (contabilidad@trainsaexpress.com) y registrado en `sitio`.\nUNIDADES: sin dato — el sitio no publica conteo; CANACAR reporta 11 a 50 personas (personal, no unidades).\nENCAJE: alto — carga federal especializada con cruce a Estados Unidos.\nPROSPECCIÓN 2026-08-19: sin decisor público · el sitio no nombra directivos · fuente: directorio de socios CANACAR 17-ago-2026 + sitio oficial trainsaexpress.com · WebSearch agotado en la sesión (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7597e3d0-76d5-46c5-9fe5-cfb17b3a0c22",
+    "empresa": "Trakk de México, S.A. de C.V.",
+    "ciudad": "Tlajomulco de Zúñiga, Jalisco",
+    "correo": "coordinacion@trakk.com.mx",
+    "telefono": "3335798105",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Prolongación Niños Heroes 1300 Int Na, Colonia San Agustin Poniente, CP 45645\nUbicación aproximada 17-ago: centroide de 131 establecimientos DENUE en Tlajomulco de Zúñiga, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 19-ago-2026: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (autotransporte de carga general, 11 a 50 personas, Prolongación Niños Héroes 1300, Col. San Agustín Poniente, Tlajomulco de Zúñiga, Jalisco) · correo del censo de coordinación, en dominio propio (trakk.com.mx) · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  },
+  {
+    "id": "1d756482-3c6b-4cae-bfee-525a3a8d0cea",
+    "empresa": "Tranapac, S.A. de C.V.",
+    "ciudad": "Ahome, Sinaloa",
+    "correo": "ramon.bojorquez@veneranda.biz",
+    "telefono": "6688182478",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Callejón Pino Suarez 526 Pte Int Na, Colonia Centro, CP 81200\nUbicación aproximada 17-ago: centroide de 140 establecimientos DENUE en Ahome, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

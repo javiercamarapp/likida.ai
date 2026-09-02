@@ -1,0 +1,52 @@
+[
+  {
+    "id": "b9233452-7ade-49c9-ae6e-f5cbb8c6655a",
+    "empresa": "Gustavo Gaona Sanchez",
+    "ciudad": "Jojutla, Morelos",
+    "correo": null,
+    "telefono": "7772189760",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 11 a 50 personas · Calle Andador Mitla 12 Int Na, Colonia Unidad Habitacional Jose Maria Morelos y Pavon, CP 62909\nUbicación aproximada 17-ago: centroide de 24 establecimientos DENUE en Jojutla, Morelos — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f48e4709-64a7-4326-adfc-31185051fac3",
+    "empresa": "Ijp Logistica Movil Sa de Cv",
+    "ciudad": "León, Guanajuato",
+    "correo": null,
+    "telefono": "4778801963",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Terrestre de Mercancías · 11 a 50 personas · Calle Lagodecuquio 171 Int Na, Colonia Brisas del Lago, CP 37207\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-20: sin decisor publico · LinkedIn: no localizado · fuente: CANACAR directorio de socios 17-ago-2026 (11-50 personas; sin sitio ni correo, solo telefono). Flota NO publicada — num_unidades sin dato.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "76e15087-5a28-435d-91bc-2eac54367232",
+    "empresa": "Jose Eduardo Fernandez Casillas",
+    "ciudad": "Manzanillo, Colima",
+    "correo": null,
+    "telefono": "3141744448",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Publico Federal de Carga · 11 a 50 personas · Avenida Lopez Mateos Sn Int Sn, Colonia Arturo Noriega Pizano, CP 8800\nUbicación aproximada 17-ago: centroide de 551 establecimientos DENUE en Manzanillo, Colima — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 19-ago-2026: decisor José Eduardo Fernández Casillas, titular (la razón social del directorio de socios CANACAR es la persona física, así que el registrante ES el titular) · LinkedIn: no hallado · fuente: directorio de socios CANACAR 17-ago-2026 (transporte público federal de carga, 11 a 50 personas, Av. López Mateos, Col. Arturo Noriega Pizano, Manzanillo, Colima) · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a9dc28e5-2c7b-4e91-8005-f79ba15c9921",
+    "empresa": "Juan Humberto Gutierrez Coronado",
+    "ciudad": "Múzquiz, Coahuila",
+    "correo": null,
+    "telefono": "8641059085",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Carretera Palau Rosita Sn Int Sn, Colonia Tiro 4, CP 26350",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0d626f3e-a79c-4c59-9cb5-6df38cd8de48",
+    "empresa": "Logística de Carga Best, S.A. de C.V.",
+    "ciudad": "Zapopan, Jalisco",
+    "correo": null,
+    "telefono": "3336064699",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Federal · 11 a 50 personas · Calzada Camichines 2790 Int 4, Colonia Ciudad Granja, CP 45010\nUbicación aproximada 17-ago: centroide de 205 establecimientos DENUE en Zapopan, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

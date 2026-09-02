@@ -1,0 +1,52 @@
+[
+  {
+    "id": "db4563bb-384d-4fc0-bdde-e06dc5c3a70a",
+    "empresa": "Autotanques Cja",
+    "ciudad": "Cosoleacaque, Veracruz",
+    "correo": "gerencla@autotanquesja.com.mx",
+    "telefono": "9222224986",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General y Material Peligroso · 11 a 50 personas · Calle Raul R Perez 19 Int Na, Pueblo 7 de Mayo, CP 96340",
+    "fuente": "canacar"
+  },
+  {
+    "id": "af413f59-a6a3-48dc-9fcc-f3caaac624e0",
+    "empresa": "Autotanques Especializados Arias, S.A. de C.V.",
+    "ciudad": "Minatitlán, Veracruz",
+    "correo": "irasema@esparsa.org",
+    "telefono": "9222210185",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Berlin 8 Int Na, Colonia Nuevo Minatitlan, CP 96760",
+    "fuente": "canacar"
+  },
+  {
+    "id": "bb979020-5543-4a63-839d-792d74d220fb",
+    "empresa": "Autotransporte Hergola",
+    "ciudad": "Tuxtla Gutiérrez, Chiapas",
+    "correo": "luis.gordillo@hergola.mx",
+    "telefono": "9612333223",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foráneo de Carga General · 11 a 50 personas · Calle Toluca 180 Int Na, Ciudad Tuxtla Gutierrez, CP 29030\nDENUE API 17-ago (cruce CANACAR→DENUE): «AUTO TRANSPORTE HERGOLA», score 1.04",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a80df6fd-1e5c-4633-a289-851d021ca7ce",
+    "empresa": "Autotransporte Nacional de Carga Tnc, S.A. de C.V.",
+    "ciudad": "Gustavo A. Madero, Ciudad de México",
+    "correo": "admin@atnc.com.mxistracion",
+    "telefono": "5510893686",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Pernambuco 941 Int A, Colonia Lindavista Norte, CP 7300\nUbicación aproximada 17-ago: centroide de 268 establecimientos DENUE en Gustavo A. Madero, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0e12bb01-013c-4088-9bd0-36c0b1cc09a9",
+    "empresa": "Autotransportes Balcazar, S.A. de C.V.",
+    "ciudad": "Manzanillo, Colima",
+    "correo": "autotransportes.balcazar@hotmail.com",
+    "telefono": "3143366398",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Manzanillo-Minatitlan 60 Int Na, Colonia Tepeixtles, CP 28239\nUbicación aproximada 17-ago: centroide de 551 establecimientos DENUE en Manzanillo, Colima — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN 21-ago-2026: sin decisor público. Registrada 2010.",
+    "fuente": "canacar"
+  }
+]

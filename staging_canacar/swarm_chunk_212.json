@@ -1,0 +1,102 @@
+[
+  {
+    "id": "e5300c5c-25db-48b3-863c-b1e9a81a8efd",
+    "empresa": "Express Mca",
+    "ciudad": "Allende, Nuevo León",
+    "correo": null,
+    "telefono": "8266881467",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 0 a 10 personas · Calle Lerdo de Tejada 330 Int Sn, Colonia Centro, CP 67350\nUbicación aproximada 17-ago: centroide de 123 establecimientos DENUE en Allende, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nENCAJE: alto — socio CANACAR con flota chica en Allende, N.L.\nPROSPECCIÓN 2026-08-19: sin decisor público · LinkedIn: no hallado · fuente: CANACAR 17-ago-2026 (sin correo ni sitio; WebSearch agotado). Flota sin conteo publicado → unidades null.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7711c349-d943-4f5c-ba6f-ca7314c00dd8",
+    "empresa": "Express Monterrey",
+    "ciudad": "Monterrey, Nuevo León",
+    "correo": null,
+    "telefono": "8150005353",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Calle Arturo B de la Garza 700 Int Na, Colonia Sin Colonia, CP 66460\nUbicación aproximada 17-ago: centroide de 442 establecimientos DENUE en Monterrey, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 19-ago-2026: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (autotransporte de carga, 0 a 10 personas, Calle Arturo B. de la Garza 700, Monterrey, Nuevo León), sin sitio · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  },
+  {
+    "id": "fa567325-f22a-432d-82bd-4b7023a8a6e5",
+    "empresa": "Felipe Abraham Jiménez Ruíz",
+    "ciudad": "Tijuana, Baja California",
+    "correo": null,
+    "telefono": "6644475474",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 0 a 10 personas · Avenida Alcala 4860 Int 23, Colonia Alcala, CP 22106\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "741e6202-a054-443f-b35e-465b619533d1",
+    "empresa": "Ferkar Transportes",
+    "ciudad": "Naucalpan de Juárez, México",
+    "correo": null,
+    "telefono": "5510900656",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Compra Venta de Envases Metalico y Desp Inds · 0 a 10 personas · Avenida Morelos 221 Int Na, Colonia Valle Dorado, CP 53690\nUbicación aproximada 17-ago: centroide de 118 establecimientos DENUE en Naucalpan de Juárez, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · LinkedIn: no hallado · viajes/mes: no público · historia: no pública · fuente: directorio público CANACAR · score fit 0/5",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e7107ba9-b0f0-47d6-985c-7a634ad97f0b",
+    "empresa": "Fernando Ramirez Vazquez",
+    "ciudad": "Soyaniquilpan de Juárez, México",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Camino el Jazmin Sn Int Na, Colonia San Agustin Buenavista, CP 54284",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a8481ce8-dbf2-44d6-ab75-84a9727242a2",
+    "empresa": "Fletes Linea Azul",
+    "ciudad": "Tonalá, Jalisco",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Camino Camino a San Nicolas 918 Int Na, Colonia Colinas de Tonala, CP 45402\nUbicación aproximada 17-ago: centroide de 73 establecimientos DENUE en Tonalá, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ab86c59a-23f1-469c-be42-43a1886ed55d",
+    "empresa": "Fletes Mineros Mareli",
+    "ciudad": "Cadereyta Jiménez, Nuevo León",
+    "correo": null,
+    "telefono": "8281000853",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Flete · 0 a 10 personas · Calle Monterrey Reynosa Km 34+100 Int Sn, Colonia Sin Colonia, CP 67483\nUbicación aproximada 17-ago: centroide de 40 establecimientos DENUE en Cadereyta Jiménez, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a2ee5d5c-97f6-451b-8789-bcd6dd72d68b",
+    "empresa": "Flm200213Gu7",
+    "ciudad": "Sabinas, Coahuila",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte General de Carga · 0 a 10 personas · Calle Paseo de Los Leones Sn Int Na, Colonia Reyneras, CP 26730",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9c1c3541-5e6f-48a8-911b-609117d2d78c",
+    "empresa": "Fm. Gold Logistic",
+    "ciudad": "Venustiano Carranza, Ciudad de México",
+    "correo": null,
+    "telefono": "5557716462",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Coordinacion Transporte, Fletes, Asesoria Administracion de Riesgos · 0 a 10 personas · Calle Calle 28 20 Int Na, Colonia Federal, CP 15700\nUbicación aproximada 17-ago: centroide de 454 establecimientos DENUE en Venustiano Carranza, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "552d9381-9376-42b8-b43a-74f0ea2f72a0",
+    "empresa": "Francisco Cerda Pineda",
+    "ciudad": "Valle Hermoso, Tamaulipas",
+    "correo": null,
+    "telefono": "8941082919",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte · 0 a 10 personas · Carretera Arr 120 Km 83.625 Sn Int Na, Colonia Yescas, CP 87500\nUbicación aproximada 17-ago: centroide de 24 establecimientos DENUE en Valle Hermoso, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: decisor Francisco Cerda Pineda, permisionario/dueño (persona física, socio CANACAR) · LinkedIn: no público · viajes/mes: no público · historia: no pública · rúbrica fit: 1/5 (+1 decisor con cargo verificable) · fuente: directorio público de socios CANACAR",
+    "fuente": "canacar"
+  }
+]

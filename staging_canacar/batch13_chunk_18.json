@@ -1,0 +1,52 @@
+[
+  {
+    "id": "1262878c-5106-41d3-9e9f-453d76840c0e",
+    "empresa": "Silvia Margarita Hernandez Luna",
+    "ciudad": "Coyoacán, Ciudad de México",
+    "correo": "transfast.segura@gmail.com",
+    "telefono": "5517294872",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Andador 26 26 D Int 32, Unidad Habitacional Fovissste, CP 4800\nUbicación aproximada 17-ago: centroide de 75 establecimientos DENUE en Coyoacán, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e1420b28-30c9-4ea3-8e30-4320eed7cb8f",
+    "empresa": "Sinaloa Express, S.A. de C.V.",
+    "ciudad": "Culiacán, Sinaloa",
+    "correo": "sinaloaexpress@prodigy.net.mx",
+    "telefono": "6677586700",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Jesus Manuel Sarabia 2458 Int Na, Colonia Desarrollo Urbano Tres Rios, CP 80027\nUbicación aproximada 17-ago: centroide de 265 establecimientos DENUE en Culiacán, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: búsqueda web limitada (cupo de WebSearch de la sesión agotado), sin sitio oficial accesible",
+    "fuente": "canacar"
+  },
+  {
+    "id": "57bbd846-b8c5-4716-8d50-119c672213e8",
+    "empresa": "Sloga Transportacion",
+    "ciudad": "Celaya, Guanajuato",
+    "correo": "contabilidad@sloga.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicios de Transporte de Carga · 11 a 50 personas · Calle Manuel Orozco y Berra 1075 Int Na, Colonia Residencial Tecnologico, CP 38010\nUbicación aproximada 17-ago: centroide de 79 establecimientos DENUE en Celaya, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "496f591b-7785-448e-a631-e9d9b58faf9e",
+    "empresa": "Smart Vector, S. de R.L. de C.V.",
+    "ciudad": "Cuauhtémoc, Ciudad de México",
+    "correo": "ricardoramirez@vectormexico.com",
+    "telefono": "5523595044",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Venustiano Carranza 39 Int 205, Colonia Centro de la Ciudad de Mexico Area 1, CP 6000\nUbicación aproximada 17-ago: centroide de 267 establecimientos DENUE en Cuauhtémoc, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "51bdd3b7-476b-47b0-a712-7099f46ff37e",
+    "empresa": "Sociedad de Autotransportes Durán, S.A. de C.V.",
+    "ciudad": "Mérida, Yucatán",
+    "correo": "jonathan.emdur@gmail.com",
+    "telefono": "9991392054",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Federal · 11 a 50 personas · Calle 19 689 Int Na, Ciudad Causel, CP 97314\nUbicación aproximada 17-ago: centroide de 302 establecimientos DENUE en Mérida, Yucatán — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

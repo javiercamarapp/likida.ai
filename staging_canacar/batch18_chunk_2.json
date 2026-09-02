@@ -1,0 +1,52 @@
+[
+  {
+    "id": "9d09726a-297d-42a4-9a6e-a4d98defa8cf",
+    "empresa": "Transportes Ramos Hermanos, S. de R.L. de C.V.",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "contabilidad@ramoshermanos.net",
+    "telefono": "6566292900",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Local y Foraneo D Carga General · 11 a 50 personas · Avenida Aeronautica 6910 Int 105, Fraccionamiento Jardines del Aeropuerto, CP 32690\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9df9bd15-7913-4326-aea9-3069c7d1dc1c",
+    "empresa": "Transportes Real del Cobre de Cananea, S.A. de C.V.",
+    "ciudad": "Cananea, Sonora",
+    "correo": "trcdecananea1@gmail.com",
+    "telefono": "6453313808",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Camilo Martinez 5 Int Na, Colonia Leyes de Reforma 2, CP 84623\nUbicación aproximada 17-ago: centroide de 22 establecimientos DENUE en Cananea, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9cf8ee30-30fc-4388-b9c1-e59baa8588f2",
+    "empresa": "Transportes Refinados Mejia",
+    "ciudad": "Monterrey, Nuevo León",
+    "correo": "marvin.suarez@tramesa.mx",
+    "telefono": "8116279163",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Material y Residuos Peligrosos · 11 a 50 personas · Calle Corpus Christi 2312 Int Na, Colonia Lomas de San Francisco, CP 64710\nUbicación aproximada 17-ago: centroide de 442 establecimientos DENUE en Monterrey, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "aa6462b4-f21c-46d3-9c60-76006869dbf2",
+    "empresa": "Transportes Refrigerados Coliman, S.A. de C.V.",
+    "ciudad": "Hermosillo, Sonora",
+    "correo": "mirza.salazar@coliman.com",
+    "telefono": "6622360050",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Federal de Carga · 11 a 50 personas · Carretera a Nogales Km 2.5 Sn Int Na, Colonia San Luis, CP 83160\nUbicación aproximada 17-ago: centroide de 285 establecimientos DENUE en Hermosillo, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "29963b04-1574-4225-86ca-e559d76b5b24",
+    "empresa": "Transportes Refrigerados en Movimiento, S.A. de C.V.",
+    "ciudad": "Culiacán, Sinaloa",
+    "correo": "isabel@trmsa.com.mx",
+    "telefono": "6677605005",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Carretera Culiacan-El Dorado 4108 Int Na, Colonia No Especificada, CP 80393\nUbicación aproximada 17-ago: centroide de 265 establecimientos DENUE en Culiacán, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

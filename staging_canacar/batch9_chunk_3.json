@@ -1,0 +1,52 @@
+[
+  {
+    "id": "2cbb6a70-8a53-4bcc-9098-fd5462775673",
+    "empresa": "E P Insumos, S.A de C.V.",
+    "ciudad": "Cuautitlán Izcalli, México",
+    "correo": "ivone.guzman@epinsumos.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Compra, Venta y Comercializacion de Productos Quimicos Para la Galvanoplastia · 11 a 50 personas · Avenida Antoine Lavoiser Sin Numero Int 1 B, Colonia Complejo Industrial Cuamatla, CP 54730\nUbicación aproximada 17-ago: centroide de 171 establecimientos DENUE en Cuautitlán Izcalli, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "12108200-1b47-47de-a99b-b24202192f48",
+    "empresa": "Eba Truck Lines, S.A. de C.V.",
+    "ciudad": "Tecámac, México",
+    "correo": "daniel_ag@prodigy.net.mx",
+    "telefono": "5514193967",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Eje Oriente Pte Mz 3 Lt 9 Int Na, Colonia Zona Industrial, CP 43804\nUbicación aproximada 17-ago: centroide de 42 establecimientos DENUE en Tecámac, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f8a5b0fb-7977-4e9c-ba45-8727aea53c10",
+    "empresa": "Ecosoluciones Ambientales Logísticas y de Calidad, S.A. de C.V.",
+    "ciudad": "Puebla, Puebla",
+    "correo": "r.perez@ecosolucionesambientales.com.mx",
+    "telefono": "2225849925",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Rio Nazas 6131 Int Na, Ciudad Jardines de San Manuel, CP 72570\nUbicación aproximada 17-ago: centroide de 496 establecimientos DENUE en Puebla, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público con cargo confirmado (correo institucional ya registrado, r.perez@ecosolucionesambientales.com.mx, sin cargo publicado) · fuente: ecosolucionesambientales.com.mx (residuos de manejo especial, 11-50 empleados, fundada 2010, operación en 8+ estados, clientes OXXO/CEMEX/Holcim; el sitio redirige a ecosoluciones.com.mx).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "03b52ff2-053b-4a76-9778-ca9fe2181284",
+    "empresa": "Edianco",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "operaciones@edianco.com",
+    "telefono": "6566404361",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Otros Servicios de Intermediacion Para el Transporte de Carga · 11 a 50 personas · Calle Ramon Rayon 508 Int 1, Colonia Zaragoza, CP 32590\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "85404488-432c-4601-a644-95f64ede9aa3",
+    "empresa": "Elsa Mendoza E Hijas, S.A. de C.V.",
+    "ciudad": "Delicias, Chihuahua",
+    "correo": "facturacion@fletesmendoza.mx",
+    "telefono": "6394728470",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida 3Ra Poniente 709 Int Na, Colonia Centro, CP 33000\nUbicación aproximada 17-ago: centroide de 41 establecimientos DENUE en Delicias, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

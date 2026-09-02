@@ -1,0 +1,102 @@
+[
+  {
+    "id": "ff676160-a3e3-494b-a6a7-d1660fda53e1",
+    "empresa": "Alfredo Quintanilla Duran",
+    "ciudad": "Monclova, Coahuila",
+    "correo": "alfredoqd@prodigy.net.mx",
+    "telefono": "8686356122",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Boulevard Tecnologico 1305 Int Na, Colonia Tecnologico, CP 25716",
+    "fuente": "canacar"
+  },
+  {
+    "id": "583e6184-3bb6-4695-b861-96a3e296e23b",
+    "empresa": "Almacenadora de Occidente, S.A. de C.V.",
+    "ciudad": "Tlajomulco de Zúñiga, Jalisco",
+    "correo": "enietom@xtrapak.com.mx",
+    "telefono": "3340400400",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Camino a Presa del Ahogado 52 Int Sn, Colonia el Zapote, CP 45659\nUbicación aproximada 17-ago: centroide de 131 establecimientos DENUE en Tlajomulco de Zúñiga, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (xtrapak.com.mx no nombra directivos) · viajes/mes: no público · historia: no pública (sitio no da año de fundación) · flota publicada: transporte de carga de 1 a 22 t y renta de vehículos, sin conteo de unidades → unidades queda null · teléfono conmutador 33-40-400-400 (sitio oficial) · fuente: xtrapak.com.mx + directorio CANACAR · SCORE FIT (rúbrica pública): 2/5",
+    "fuente": "canacar"
+  },
+  {
+    "id": "96bbd96f-1f6e-4392-bd71-4a1f4e2f990a",
+    "empresa": "Altair Logistics, S.A. de C.V.",
+    "ciudad": "Monterrey, Nuevo León",
+    "correo": "arturo.sosa@minerales.com.mx",
+    "telefono": "8180191949",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte · 0 a 10 personas · Boulevard Antonio L. Rodriguez 3000 Int 1208, Colonia Santa Maria, CP 64650\nUbicación aproximada 17-ago: centroide de 442 establecimientos DENUE en Monterrey, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nENCAJE: medio — socio CANACAR chico (0-10 personas); correo en dominio de una minera, posible flota cautiva.\nPROSPECCIÓN 20-ago-2026: sin decisor público · LinkedIn: no hallado · fuente: directorio de socios CANACAR (razón social, no persona física); el correo arturo.sosa@minerales.com.mx apunta a un dominio DISTINTO al nombre de la empresa (Altair Logistics) — posible relación con una minera como cliente ancla o matriz, pero ninguna fuente pública lo confirma, así que se queda como HIPÓTESIS sin declarar; sin sitio web; WebSearch agotado en la sesión (200/200), investigación solo por WebFetch a dominios conocidos. unidades: null. Sin mensaje esta tanda: quedó fuera de los 5 mejores por tamaño frente a los 5 elegidos.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2c18019c-6cea-4e94-a378-d2df1422b3b5",
+    "empresa": "Alto Rendimiento en Transportes y Cargas, S.A. de C.V.",
+    "ciudad": "Miguel Hidalgo, Ciudad de México",
+    "correo": "luis.franco@sigm.com.mx",
+    "telefono": "7821540868",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio Publica de Autotransporte de Carga Federal · 0 a 10 personas · Calle Bahia de Ballenas 58 Int Na, Colonia Veronica Anzures, CP 11300\nUbicación aproximada 17-ago: centroide de 253 establecimientos DENUE en Miguel Hidalgo, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público con cargo; correo personal público: luis.franco@sigm.com.mx · LinkedIn: no hallado · viajes/mes: no público · historia: ligada a Solintegra del Golfo de México (sigm.com.mx): transporte de personal y administración de flotas, GPS satelital, ISO 9001:2015 · fuente: directorio CANACAR + sigm.com.mx · score fit (urgencia): 1/5 (sin dolor directo, sin flota pública numérica, sin vacante reciente, sin decisor)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "629279df-0325-4054-9d72-86a5ad3ffc11",
+    "empresa": "Alvarados Trucking, S. de R.L. de C.V.",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "vianey@alvaradostrucking.com",
+    "telefono": "6646249898",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga General · 0 a 10 personas · Carretera Aeropuerto Parcela 8 Int Na, Colonia Parcela 7, CP 22435\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "80212cba-fb6f-41d4-9bae-a1b7ce13036c",
+    "empresa": "Álvaro Dorantes Arroyo",
+    "ciudad": "Reynosa, Tamaulipas",
+    "correo": "garyrt82@gmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 0 a 10 personas · Calle San Valentin 9115 Int Sn, Colonia 88733, CP 88733\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Reynosa, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b122dd0c-9ef9-4205-b925-abd4d19f700f",
+    "empresa": "America Logistics, S.A. de C.V.",
+    "ciudad": "Ecatepec de Morelos, México",
+    "correo": "rnavarro@aaamerica.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Calle Siderurgia 124 Int Na, Colonia San Miguel Xalostoc, CP 55390\nUbicación aproximada 17-ago: centroide de 186 establecimientos DENUE en Ecatepec de Morelos, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: CANACAR 17-ago-2026\nENCAJE: medio — socio CANACAR pequeño en corredor industrial, 0-10 personas",
+    "fuente": "canacar"
+  },
+  {
+    "id": "dc83ccc0-53c9-4f97-848a-3af8ea7296be",
+    "empresa": "Anbe Transportación, S.A. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "anbetransportacion@grupojt.com.mx",
+    "telefono": "2294625039",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Avenida Sin Nombre 136 Int Na, Colonia Tarimoya Zona Urbana, CP 91855\nPROSPECCIÓN 2026-08-19: sin decisor público · sitio grupojt.com.mx (holding, página en construcción, sin contenido) · Anbe es transportista de carga federal afiliado a Grupo JT, socio CANACAR · fuente: sitio oficial del grupo (en construcción) + CANACAR",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e924abc0-c290-4a88-b7c4-069a9acfcf66",
+    "empresa": "Andrés Alberto Ortíz Romo",
+    "ciudad": "León, Guanajuato",
+    "correo": "andres.logis@outlook.es",
+    "telefono": "4772608490",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Zeus 317 Int Na, Colonia el Retiro, CP 37220\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-20: decisor Andres Alberto Ortiz Romo, dueno (persona fisica con actividad empresarial) · LinkedIn: no localizado · fuente: CANACAR (directorio de socios), 17-ago-2026.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "49b83ea5-da53-4c96-a55f-aad6fdc98d63",
+    "empresa": "Andres Lopez Leal",
+    "ciudad": "Allende, Nuevo León",
+    "correo": "lopezleal.transportes@outlook.com",
+    "telefono": "8115993604",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Allende 700 Int Na, Colonia Centro, CP 67350\nUbicación aproximada 17-ago: centroide de 123 establecimientos DENUE en Allende, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nHISTORIA: socio registrado de CANACAR (directorio de socios, consulta 17-ago-2026) en Autotransporte de Carga General, 0 a 10 personas, Calle Allende 700, Centro, Allende, Nuevo León.\nDECISOR: la razón social del registro CANACAR es el nombre completo de una persona física, Andrés López Leal, y el correo registrado (lopezleal.transportes@outlook.com) coincide exactamente con su nombre — doble confirmación de que él es el titular.\nPROSPECCIÓN 2026-08-20: decisor Andrés López Leal, titular/persona física · LinkedIn: no hallado · fuente: directorio de socios CANACAR 17-ago-2026 + razón social + correo coincidente. WebSearch agotado en la sesión.",
+    "fuente": "canacar"
+  }
+]

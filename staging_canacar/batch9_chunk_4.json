@@ -1,0 +1,52 @@
+[
+  {
+    "id": "4552a4e3-721f-49df-a62b-c788cf7a3f00",
+    "empresa": "Emulsiones y Pavimentos de Sinaloa, S.A. de C.V.",
+    "ciudad": "Culiacán, Sinaloa",
+    "correo": "emulsiones@hotmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Camino Camino a Bachoco Sur 2936 Int Na, Colonia Bachigualato, CP 80139\nUbicación aproximada 17-ago: centroide de 265 establecimientos DENUE en Culiacán, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "111b2456-5ad8-47f3-a713-293c5ad1e2d3",
+    "empresa": "Energéticos Centrifugados del Norte, S.A. de C.V.",
+    "ciudad": "San Nicolás de los Garza, Nuevo León",
+    "correo": "lmejorado@ecnorsa.com.mx",
+    "telefono": "8183294500",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Calle Ramon Treviño 101 Int Na, Colonia Centro, CP 66400\nUbicación aproximada 17-ago: centroide de 150 establecimientos DENUE en San Nicolás de los Garza, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "24062c70-f31b-433d-8c13-8fd76089db9d",
+    "empresa": "Enerpol Transportes, S.A. de C.V.",
+    "ciudad": "Benito Juárez, Ciudad de México",
+    "correo": "sergio.avila@portimex.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Materiales y Residuos Peligrosos · 11 a 50 personas · Calle Augusto Rodín 43 Int 101, Colonia Napoles, CP 3810\nUbicación aproximada 17-ago: centroide de 171 establecimientos DENUE en Benito Juárez, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "be6117ad-490e-45a6-970d-b3e3b306db6e",
+    "empresa": "Enfoque en la Eficiencia de la Logística, S.A. de C.V.",
+    "ciudad": "Ecatepec de Morelos, México",
+    "correo": "reyna.m@ee-l.com",
+    "telefono": "5557490515",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle 10 24 Int Na, Colonia Rustica Xalostoc, CP 55340\nUbicación aproximada 17-ago: centroide de 186 establecimientos DENUE en Ecatepec de Morelos, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "024f7d1a-dd81-46c9-975e-2529d6ce8cb8",
+    "empresa": "Enfriadora Bajío de San José, S.A. de C.V.",
+    "ciudad": "Encarnación de Díaz, Jalisco",
+    "correo": "enfriadora_bajio@hotmail.com",
+    "telefono": "4757412189",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Pino Suarez 210 Int Na, Colonia Bajio de San Jose, CP 47280\nUbicación aproximada 17-ago: centroide de 10 establecimientos DENUE en Encarnación de Díaz, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

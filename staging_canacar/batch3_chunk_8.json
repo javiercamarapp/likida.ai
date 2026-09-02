@@ -1,0 +1,52 @@
+[
+  {
+    "id": "75c9ebee-ae3c-4eef-987a-8035ec83b747",
+    "empresa": "Tranmaco, S.A. de C.V.",
+    "ciudad": "Atitalaquia, Hidalgo",
+    "correo": "oagraciano@coconal.com",
+    "telefono": "7787380142",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 51 a 250 personas · Calle Oriente 2 3 Int Na, Parque Industrial Atitalaquia, CP 42970\nUbicación aproximada 17-ago: centroide de 14 establecimientos DENUE en Atitalaquia, Hidalgo — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 19-ago-2026: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (autotransporte de carga, 51 a 250 personas, Calle Oriente 2 #3, Parque Industrial Atitalaquia, Hidalgo) · el correo del censo pertenece al dominio coconal.com, posible grupo mayor (\"Coconal\"); no se verificó · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ff35fcfc-bd65-4c7c-9300-edbf43e42833",
+    "empresa": "Trans Gran, S.A. de C.V.",
+    "ciudad": "San Juan de los Lagos, Jalisco",
+    "correo": "luis.reynoso@transgran.com.mx",
+    "telefono": "3957884917",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportacion de Mercancia · 51 a 250 personas · Carretera San Juan-Lagos de Moreno Km 5 Int Na, Rancho Huizache, CP 47000\nUbicación aproximada 17-ago: centroide de 21 establecimientos DENUE en San Juan de los Lagos, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (ninguna fuente pública nombra dueño/director) · sitio transgran.com.mx resuelve pero muestra plantilla de hosting sin contenido verificable (no se confirma como sitio oficial activo, no se escribe en campo sitio) · búsqueda web general sin resultados relevantes de la empresa · fuente: fetch directo a transgran.com.mx + Bing (sin resultados útiles)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "24907cda-dd82-4d53-8195-58e1836ab159",
+    "empresa": "Trans Jorge, S.A. de C.V.",
+    "ciudad": "Córdoba, Veracruz",
+    "correo": "rpozos@trans-jorge.com",
+    "telefono": "2717140503",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio Publico Federal de Carga General · 51 a 250 personas · Calle 34 1304 Int Na, Colonia Dos Caminos, CP 94550",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d6ed876c-797a-48f8-8076-70fe4ca0fbd6",
+    "empresa": "Transdraco, S.A. de C.V.",
+    "ciudad": "Atizapán de Zaragoza, México",
+    "correo": "jcavila@transdraco.mx",
+    "telefono": "5558243111",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Todo Tipo de Hidrocarburo · 51 a 250 personas · Calle 2 de Abril 2 Int Na, Colonia Atizapan Centro, CP 52910\nUbicación aproximada 17-ago: centroide de 68 establecimientos DENUE en Atizapán de Zaragoza, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nsin sitio web ni conteo de flota publicado — no se llena `num_unidades`; CANACAR reporta 51 a 250 personas (personal, no unidades, pero es un rango alto — señal de operación grande).\nPROSPECCIÓN 2026-08-19: sin decisor público · sin sitio web; correo jcavila@transdraco.mx sugiere un nombre pero ninguna fuente lo nombra ni le da cargo, así que no se escribe · fuente: directorio de socios CANACAR 17-ago-2026 · WebSearch agotado en la sesión (200/200).\n\n=== INVESTIGACIÓN PROFUNDA ANIQ 26-ago-2026 ===\nUNIDADES (ANIQ): TRACTOCAMION,\n\nPERMISOS: SICT, SETIQ, GEN. RESIDUOS PELIGROSOS\n\nRESEÑA ANIQ: EN TRANSDRACO ESTAMOS COMPROMETIDOS EN TRANSPORTAR GAS L.P. CUMPLIENDO LOS REQUERIMIENTOS NORMATIVOS Y DE NUESTROS CLIENTES, A TRAVÉS DE UN ESFUERZO DE MEJORA CONTINUA Y UN EFECTIVO SISTEMA DE CALIDAD. 2 DE ABRIL #2, COL CENTRO, ATIZAPAN DE ZARAGOZA C.P.52910 ESTADO DE MÉXICO\n\nLINKEDIN EMPRESA: no encontrado\n\nLINKEDIN DIRECTOR: no encontrado\n\nFACEBOOK: no encontrado\n\nAÑO FUNDACIÓN: no encontrado\n\nHISTORIA: no encontrado\n\nEMPLEADOS: no encontrado\n\nFLOTA: no encontrado\n\nOTROS DIRECTIVOS (ANIQ): SUB. GERENTE OPERATIVO: SR. ALBERTO ÁNGEL GARCÍA MEJÍA <>\n\nNOTAS: IMPORTANTE - limitación de la investigación: la herramienta WebSearch de esta sesión estaba en su límite (200/200 usos) antes de poder ejecutar ninguna de las búsquedas pedidas para esta empresa. Se intentó como alternativa hacer scraping directo de buscadores (Google, Bing, DuckDuckGo, Brave, Startpage, Marginalia) vía WebFetch/curl, pero todos bloquearon la solicitud con CAPTCHA/verificación anti-bot, o devolvieron resultados genéricos/irrelevantes (p.ej. Bing devolvió resultados de una tienda de mejoras para el hogar de EE.UU., sin relación alguna con \"Transdraco\"), por lo que no son datos utilizables ni verificables.\n\nÚnico hallazgo verificado de forma directa (no vía buscador): el dominio transdraco.mx existe y resuelve en DNS (coherente con el correo ya conocido jcavila@transdraco.mx), pero a 26-ago-2026 no sirve un sitio web activo — responde con un certificado TLS que no corresponde al dominio (cert emitido para \"tesodraco.mx\", indicio de hosting compartido) y, por HTTP, con la página por defecto de IIS o un error 404. Esto confirma que no hay sitio web público operativo por ahora.\n\nPor la regla de no inventar datos, todos los campos que no pude verificar con certeza razonable (LinkedIn empresa, LinkedIn director, Facebook, historia, año de fundación, empleados, flota, contactos adicionales) quedan como \"no encontrado\" en vez de adivinarse.\n\nRecomendación: reintentar esta investigación cuando se restablezca el cupo de WebSearch de la sesión (o aumentando CLAUDE_CODE_MAX_WEB_SEARCHES_PER_SESSION), o realizar manualmente la búsqueda en LinkedIn (\"Transdraco\" y \"Juan Carlos Ávila Esparza\") y en Facebook.\n\nFuente: directorio ANIQ Transportistas (id=328) + investigación profunda 26-ago-2026 (workflow multi-agente).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "bf8cda2c-25ec-4c33-8959-47b32a4d63ab",
+    "empresa": "Transdriza",
+    "ciudad": "Toluca, México",
+    "correo": "agustingonzalez@tracomex.com.mx",
+    "telefono": "5546128070",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Traslado de Vehiculos Sin Rodar · 51 a 250 personas · Calle Vialidad Toluca-Atlacomulco 1850 Int Na, Colonia Santa Cruz Atzcapotzaltongo, CP 50290\nUbicación aproximada 17-ago: centroide de 256 establecimientos DENUE en Toluca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "d61d212a-f37c-4101-b439-2a8bbe342e52",
+    "empresa": "Fletera de Las Altas Montañas",
+    "ciudad": "Córdoba, Veracruz",
+    "correo": null,
+    "telefono": "2712192509",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Carga Foraneo · 11 a 50 personas · Privada Calle 18 3104 Int Sn, Fraccionamiento Villa Real, CP 94575\nsin sitio web ni conteo de flota publicado — no se llena `num_unidades`; CANACAR reporta 11 a 50 personas (personal, no unidades).\nPROSPECCIÓN 2026-08-19: sin decisor público · sin sitio web ni correo verificado · fuente: directorio de socios CANACAR 17-ago-2026 · WebSearch agotado en la sesión (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "56a82999-8804-4f78-beb0-3456d62df99f",
+    "empresa": "Ghl Autotraslados",
+    "ciudad": "Tepotzotlán, México",
+    "correo": null,
+    "telefono": "5569175841",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Privada Libramiento Sur Na Int Na, Pueblo Tepoztlan, CP 64503\nUbicación aproximada 17-ago: centroide de 77 establecimientos DENUE en Tepotzotlán, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9c9d9d57-986c-4c14-9013-91f1f7a5048d",
+    "empresa": "Gruas Trailers y Equipos, S.A. de C.V.",
+    "ciudad": "Guadalajara, Jalisco",
+    "correo": null,
+    "telefono": "3338121022",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Maquinaria Pesada y Objetos Voluminosos · 11 a 50 personas · Calle 6 2218 Int Na, Colonia Zona Industrial de Guadalajara, CP 44940\nUbicación aproximada 17-ago: centroide de 508 establecimientos DENUE en Guadalajara, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6fd81413-d9c9-4b8d-84ef-a0d6d46a3c6f",
+    "empresa": "Grupo Castal Transporte y Logistica",
+    "ciudad": "Hermosillo, Sonora",
+    "correo": null,
+    "telefono": "6621827516",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte de Carga Terrestre · 11 a 50 personas · Boulevard Luis Donaldo Colosio 450 Int Na, Colonia Villa Satelite, CP 83200\nUbicación aproximada 17-ago: centroide de 285 establecimientos DENUE en Hermosillo, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4a62d0e9-4564-4ee8-a69d-320b19d5d8b1",
+    "empresa": "Grupo Vilopu",
+    "ciudad": "León, Guanajuato",
+    "correo": null,
+    "telefono": "4777052939",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Avenida Prolongacion Paseo de Los Insurgentes 2730 Int 404 B, Colonia Bosques del Refugio, CP 37123\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

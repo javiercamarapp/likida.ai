@@ -1,0 +1,52 @@
+[
+  {
+    "id": "0e710e39-6c4b-4879-83de-59a7f71e4c03",
+    "empresa": "Lorenza Moncada Villarreal",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "contabilidadsm@prodigy.net.mx",
+    "telefono": "8677175265",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Sarmiento 8421 Int Na, Colonia Sin Colonia, CP 88179\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b4ebf065-8e35-438b-acef-2286bf814534",
+    "empresa": "Lu Cargo Transportes, S. de R.L. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "info@lucargo.com.mx",
+    "telefono": "6469788680",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Foraneo de Carga · 11 a 50 personas · Carretera Transpeninsular Km 14 Na Int Na, Colonia Chapultepec, CP 22785\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: CANACAR 17-ago-2026",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b06d202a-0c56-448c-bde4-d77828927db7",
+    "empresa": "Luis Edmundo Grijalva Gamez",
+    "ciudad": "Hermosillo, Sonora",
+    "correo": "contraloria@grihop.com",
+    "telefono": "6622800264",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Tamaulipas 152 Int Na, Colonia 5 de Mayo, CP 83010\nUbicación aproximada 17-ago: centroide de 285 establecimientos DENUE en Hermosillo, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nSITIO OFICIAL 2026-08-19 (grihop.com): Transportes Grihop, \"empresa joven y 100% sonorense creada en el año 2007 con la idea de cubrir necesidades especificas detectadas dentro del sector maquilador\"; atiende ramos industriales, alimenticios, refrigeración, minería y material peligroso · tel 662 280 0264 · NO publica conteo de unidades → unidades queda null.\nPROSPECCIÓN 2026-08-19: decisor Luis Edmundo Grijalva Gámez, titular (el registro CANACAR está a nombre de persona física; el correo del registro es contraloria@grihop.com) · LinkedIn: no hallado · fuente: CANACAR 17-ago-2026 + sitio oficial grihop.com\nENCAJE: alto — socio CANACAR con 11-50 personas, carga para maquila desde 2007",
+    "fuente": "canacar"
+  },
+  {
+    "id": "02ca8b74-3fe1-478b-81f5-1834a27d9a4f",
+    "empresa": "Luis Santillán Chávez",
+    "ciudad": "Colima, Colima",
+    "correo": "jl.santillan@solosatracto.com",
+    "telefono": "3143347810",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Manzanillo-Minatitlan Km 5.7 Int Na, Colonia Jalipa, CP 28870\nUbicación aproximada 17-ago: centroide de 65 establecimientos DENUE en Colima, Colima — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: decisor Luis Santillán Chávez, permisionario/dueño (persona física en el directorio público CANACAR; su correo usa el dominio de SOLOSA Tracto) · LinkedIn: no encontrado · viajes/mes: no público · historia: SOLOSA Tracto — contenedores y carga suelta local/foráneo desde Manzanillo, IMO, ISO 9001:2015 y OEA (solosatracto.com) · fuente: CANACAR + solosatracto.com · score fit 1/5 (rúbrica pública)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3a62092f-d354-4aa7-bcc1-8e2e24a865ec",
+    "empresa": "Lutha Transport",
+    "ciudad": "General Escobedo, Nuevo León",
+    "correo": "esandoval@luthalogoistics.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Libramiento Noreste Km 21 Int Na, Fraccionamiento San Marcos, CP 66064\nUbicación aproximada 17-ago: centroide de 199 establecimientos DENUE en General Escobedo, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

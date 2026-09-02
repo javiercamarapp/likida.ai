@@ -1,0 +1,52 @@
+[
+  {
+    "id": "36db2107-11d3-418f-9841-8d479bd1d3e0",
+    "empresa": "Scenic Road Cargo Service, S.A de C.V.",
+    "ciudad": "Ensenada, Baja California",
+    "correo": "documentacion.ese@maniobristas.wcy.mx",
+    "telefono": "6461740919",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Avenida Castillo 390 Int Sn, Ciudad Zona Centro, CP 22800\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Ensenada, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9bc89f48-2c8d-440b-b210-4d79d90b0573",
+    "empresa": "Sea Logística Global, S.A. de C.V.",
+    "ciudad": "Altamira, Tamaulipas",
+    "correo": "ricardo.ostos@agenciaaduanal.com",
+    "telefono": "8335122464",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Agencia Aduanal Con Servicio de Transporte · 11 a 50 personas · Avenida Lazaro Cárenas 115 Int Na, Ciudad Tampico Altamira Sector 1, CP 89605\nUbicación aproximada 17-ago: centroide de 176 establecimientos DENUE en Altamira, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e74429c1-ca7f-4d85-a6ab-29cf27eb143b",
+    "empresa": "Sergio Varela Maldonado",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "trafico@t-svm.com",
+    "telefono": "6566245588",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Avenida Manuel J Clouthier 1621 Int Na, Colonia Salvacar, CP 32580\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7a134056-348d-4e88-babb-508f4d2e15f0",
+    "empresa": "Servicio de Transfer González, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "eloy@gonzalezexpress.mx",
+    "telefono": "8672055429",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Cruce Internacional · 11 a 50 personas · Carretera Nacional Nuevo Laredo-Piedras Negras Km 8.96 Int Na, Ejido el Ballito, CP 88176\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "47a3a6be-4b9b-4109-a90b-599a5de1229a",
+    "empresa": "Servicio de Transporte y Construcción de Coahuila, S.A. de C.V.",
+    "ciudad": "Castaños, Coahuila",
+    "correo": "stc_coah@hotmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera 57 Km 178.1 Sn Int Na, Colonia California, CP 25870",
+    "fuente": "canacar"
+  }
+]

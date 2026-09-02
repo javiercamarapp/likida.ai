@@ -1,0 +1,52 @@
+[
+  {
+    "id": "9bf3e649-a309-43cb-9590-0e9662c0579d",
+    "empresa": "Transportes Cepsa, S.A. de C.V.",
+    "ciudad": "Celaya, Guanajuato",
+    "correo": "contraloria@transportescepsa.com.mx",
+    "telefono": "4616139812",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Avenida Irrigación 507 Ote Int Na, Colonia Cuauhtemoc, CP 38080\nUbicación aproximada 17-ago: centroide de 79 establecimientos DENUE en Celaya, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 2026-08-21: decisor de confianza MEDIA — Miguel Ortega Chaurand aparece como principal/directivo en perfil corporativo EMIS, sin segunda fuente independiente que confirme el cargo exacto. Contexto adicional (otra fila del mismo grupo, fusionado aquí): certificada GPTW 2025, opera el corredor automotriz León-Nuevo Laredo-Laredo TX, conmutador 8671379333.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "aa5667a0-563f-4a61-a262-29c7f2ce6a3c",
+    "empresa": "Transportes Colorado, S.A. de C.V.",
+    "ciudad": "Arteaga, Coahuila",
+    "correo": "iestrada@tcolorado.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga en General · 51 a 250 personas · Boulevard Oscar Flores Tapia Km 3 Sn Int Na, Colonia Presa de Las Casas, CP 25350",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b7206e84-394e-4bb5-b0fc-e0fba69c3c1b",
+    "empresa": "Transportes Comandos del Norte, S.A. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "zulma.lizarrga@comandos.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Avenida Francisco Eusebio Kino Sn Int Na, Colonia Las Huertas del Progreso, CP 21190\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nINVESTIGACION FRONTERA 18-ago-2026 (agentes, aplica=true): BANDERA ROJA — DECISION DE JAVIER, NO ENVIAR SIN SU VISTO BUENO: cateo de la FGR (con SEDENA y Pemex) el 13-may-2026 por presunto huachicol, revisando justo \"documentacion de permisos y registros de proveedores de combustible\". Sin imputaciones anunciadas, presuncion de inocencia. MISMA CUENTA que \"Comandos Shuttle\" (RFC distinto, mismo domicilio/personal — CANACAR las premio por separado 2018). 5 terminales: Mexicali/Tijuana/Monterrey/Guadalajara/Edomex. Mensajes escritos SIN mencionar el cateo.\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: CANACAR 17-ago-2026",
+    "fuente": "canacar"
+  },
+  {
+    "id": "164beb49-63b0-4ab7-93c2-35b08607154a",
+    "empresa": "Transportes Covadonga, S.A. de C.V.",
+    "ciudad": "Tizayuca, Hidalgo",
+    "correo": "andresabascal@yahoo.com",
+    "telefono": "5557528038",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga General · 51 a 250 personas · Calle Oriente 2 Mz 3 Lte 4 Int Lote 4, Zona Industrial Tizayuca, CP 43805\nUbicación aproximada 17-ago: centroide de 31 establecimientos DENUE en Tizayuca, Hidalgo — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN 21-ago-2026: sin decisor público, solo correo genérico (felixguz@prodigy.net.mx, sin cargo). Transporte de alimentos/perecederos.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "cf4e7aea-6fd0-4912-9b34-d761d6899a65",
+    "empresa": "Transportes de Carga Saltillo Monterrey, S.A. de C.V.",
+    "ciudad": "Ramos Arizpe, Coahuila",
+    "correo": "luis.duron@transportestsm.com.mx",
+    "telefono": "8444886100",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Carretera Libramiento Oscar Flores Tapia Km 0.5 Sn Int Na, Corredor Industrial Oscar Flores Tapia, CP 25900",
+    "fuente": "canacar"
+  }
+]

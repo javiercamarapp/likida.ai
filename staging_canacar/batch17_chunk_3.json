@@ -1,0 +1,52 @@
+[
+  {
+    "id": "e949e166-109a-4c6f-9781-65b6a725eada",
+    "empresa": "Transportes Gas Uno, S.A. de C.V.",
+    "ciudad": "Zapopan, Jalisco",
+    "correo": "jhenriquez@energiko.com",
+    "telefono": "3314791785",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Carga de Gas · 11 a 50 personas · Carretera a Nogales 3750 Int Na, Colonia Nextipac, CP 45220\nUbicación aproximada 17-ago: centroide de 205 establecimientos DENUE en Zapopan, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8b372c32-fc69-49c0-8071-8733194fa84a",
+    "empresa": "Transportes Get, S. de R.L. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "gloria_peralta@transportesget.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Boulevard Abelardo L Rodriguez Lt 1 Fracc 3 Int Na, Colonia Compuertas, CP 21218\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f5a91ed7-8b55-473a-ac39-df828f6d7e79",
+    "empresa": "Transportes Grupo Gardea, S.A. de C.V.",
+    "ciudad": "Chihuahua, Chihuahua",
+    "correo": "facturacion@tgrupogardea.com",
+    "telefono": "6141760533",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle 20 2103 Int Na, Colonia Villa Juarez, CP 31064\nUbicación aproximada 17-ago: centroide de 282 establecimientos DENUE en Chihuahua, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ba3f3beb-9c5f-4485-98b9-58e2f5a37b82",
+    "empresa": "Transportes Hernie, S.A. de C.V.",
+    "ciudad": "Irapuato, Guanajuato",
+    "correo": "gerencia@hernie.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Paseo Solidaridad 14370 Int Sn, Colonia el Copalillo, CP 36800\nUbicación aproximada 17-ago: centroide de 96 establecimientos DENUE en Irapuato, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "59888d49-fa5a-450d-9591-cc7a52b588d5",
+    "empresa": "Transportes Hgt, S. de R.L. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "eelenes@bgttrucking.com",
+    "telefono": "6861217668",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Al Aeropuerto Km 9.5 Int Na, Colonia Mariano Abasolo, CP 21600\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

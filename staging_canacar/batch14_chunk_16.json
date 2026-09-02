@@ -1,0 +1,52 @@
+[
+  {
+    "id": "bfd94c37-44bc-43c3-a74d-f1870af2b37f",
+    "empresa": "Transfalcon",
+    "ciudad": "Juárez, Chiapas",
+    "correo": "transfalcon@hotmail.com",
+    "telefono": "9931904325",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Especializada · 11 a 50 personas · Carretera Juarez Reforma Km 3.2 Na Int Na, Colonia el Triunfo 1Era Seccion, CP 29510\nUbicación aproximada 17-ago: centroide de 1 establecimiento DENUE en Juárez, Chiapas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "fb15274e-7f73-46a2-9dcf-1613c1c0b139",
+    "empresa": "Transfama, S.A. de C.V.",
+    "ciudad": "Corregidora, Querétaro",
+    "correo": "ventas@transfama.com",
+    "telefono": "4422162669",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Retorno Don Jose 12 Int Na, Colonia Fracc. Industrial Balvanera, CP 76908\nUbicación aproximada 17-ago: centroide de 27 establecimientos DENUE en Corregidora, Querétaro — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 19-ago-2026: sin decisor público (el sitio transfama.com resuelve pero no entregó contenido extraíble — posible sitio en JavaScript — no se pudo confirmar nombre de dueño/director). Sitio inferido del dominio del correo ya en base (ventas@transfama.com), sin verificar contenido.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c130b08a-7aa9-4fb4-a903-1540da853c1e",
+    "empresa": "Transfevisa, S.A. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "fernando.elizondo@fevisa.com",
+    "telefono": "6869045421",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Adolfo Lopez Mateos 2170 Int Na, Colonia Sanchez Taboada, CP 21360\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nSocio CANACAR (17-ago-2026): Autotransporte de Carga General, 11 a 50 personas, Av. López Mateos 2170, Col. Sánchez Taboada, Mexicali. El correo de negocio (dominio fevisa.com) indica que Transfevisa es el brazo de transporte del grupo vidriero FEVISA de Mexicali: flota cautiva que mueve producto propio —vidrio y envase, carga pesada y frágil— más fletes a terceros. Flota cautiva de grupo industrial mexicano, NO sucursal de multinacional: sí califica como primera flota.\nENCAJE: alto — flota cautiva de grupo vidriero, 11-50 personas, viajes pesados recurrentes\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (dominio corporativo fevisa.com; sin página de equipo consultable)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ce4dfeb6-c0f9-44c3-a2cd-9a1872c4477f",
+    "empresa": "Transgumex, S.A. de C.V.",
+    "ciudad": "Torreón, Coahuila",
+    "correo": "trafico@gumex.com.mx",
+    "telefono": "8717506110",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Joaquin Serrano 131 Int Na, Ciudad Industrial Torreon, CP 27019",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5511a126-88fe-42a0-bf72-1d8a5c55991b",
+    "empresa": "Transinternacional Logística, S.A. de C.V.",
+    "ciudad": "Apodaca, Nuevo León",
+    "correo": "irivera@transinternacional.com",
+    "telefono": "8661550221",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga General · 11 a 50 personas · Calle Antonio E. Marcos Sn Int Na, Zona Industrial Santa Rosa, CP 66601\nUbicación aproximada 17-ago: centroide de 300 establecimientos DENUE en Apodaca, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

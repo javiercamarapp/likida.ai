@@ -1,0 +1,52 @@
+[
+  {
+    "id": "6fe3d4d2-34ca-4532-ae88-7f78b94ba558",
+    "empresa": "Hugo Bucio Quiroz",
+    "ciudad": "Tarímbaro, Michoacán",
+    "correo": "pagos@fleosa.com",
+    "telefono": "4433413185",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte · 11 a 50 personas · Carretera Morelia-Zinapecuaro 2650 Int Na, Colonia la Palma, CP 58880",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d8ec59b5-809b-437a-8757-8cbd5fe28305",
+    "empresa": "Hugo Martínez Pérez",
+    "ciudad": "Tampico, Tamaulipas",
+    "correo": "humar89@yahoo.com",
+    "telefono": "8331405367",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Montemorelos 110 Int Na, Colonia Ex-Country Club, CP 89218\nUbicación aproximada 17-ago: centroide de 121 establecimientos DENUE en Tampico, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "64838b32-372c-41df-be5a-45e6e0daad8b",
+    "empresa": "If Logística, S.A. de C.V.",
+    "ciudad": "Cajeme, Sonora",
+    "correo": "contador@iflogistica.com",
+    "telefono": "6446884325",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicios de Fletes a Publico en General · 11 a 50 personas · Calle Tamaulipas 475 Int A, Colonia Zona Norte, CP 85040\nUbicación aproximada 17-ago: centroide de 140 establecimientos DENUE en Cajeme, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b602b4d8-bcb1-4de5-84ad-dd07c822747a",
+    "empresa": "Igloo Transport, S. de R.L. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "esmeralda.montemayor@palosgarza.com",
+    "telefono": "8671081288",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Aeropuerto Km 3.8 Sn Int Na, Colonia America 4, CP 88299\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (el correo del registro está en dominio palosgarza.com, administración compartida) · fuente: CANACAR 17-ago-2026",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0cbed550-9d0e-44cf-aafb-ac6330e530ab",
+    "empresa": "Ilda Margarita Espronceda Cavazos",
+    "ciudad": "Allende, Nuevo León",
+    "correo": "imec_citas@hotmail.com",
+    "telefono": "8267698789",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Regular · 11 a 50 personas · Calle Felicitos Rodriguez 907 Ote Int Sn, Ciudad Allende, CP 67350\nUbicación aproximada 17-ago: centroide de 123 establecimientos DENUE en Allende, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

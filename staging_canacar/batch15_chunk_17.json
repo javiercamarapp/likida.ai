@@ -1,0 +1,52 @@
+[
+  {
+    "id": "b2bcfd89-8779-4aca-b2bf-994135b98878",
+    "empresa": "Transportes Carseco",
+    "ciudad": "Monclova, Coahuila",
+    "correo": "raul@carsecotransportes.com",
+    "telefono": "8112667378",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Fletes Locales T Foraneos · 11 a 50 personas · Boulevard Benito Juarez 798 Int Na, Colonia Los Pinos, CP 25720\nSITIO OFICIAL 2026-08-19 (carsecotransportes.com): \"logística terrestre y transporte de carga refrigerada y seca\", declara \"flota moderna y propia\" con tres tipos de unidades, atiende \"desde pequeñas y medianas empresas hasta grandes corporativos\" · sin teléfono/correo públicos en el sitio (solo formulario) · NO publica conteo exacto de unidades → unidades queda null.\nPROSPECCIÓN 2026-08-19: sin decisor público (el correo del registro es raul@carsecotransportes.com — nombre de pila sin cargo confirmado) · fuente: sitio oficial carsecotransportes.com + CANACAR 17-ago-2026\nENCAJE: alto — flota propia refrigerada y seca, socio CANACAR, 11-50 personas",
+    "fuente": "canacar"
+  },
+  {
+    "id": "55eb34a9-8da0-4e3e-98d0-5fc312de1b91",
+    "empresa": "Transportes Chilchota, S.A. de C.V.",
+    "ciudad": "Gómez Palacio, Durango",
+    "correo": "transporteschilchota@prodigy.net.mx",
+    "telefono": "8717190779",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Guanacevi 233 Int Na, Parque Industrial Carlos Herrera Araluce, CP 35079\nUbicación aproximada 17-ago: centroide de 111 establecimientos DENUE en Gómez Palacio, Durango — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "950df94b-3e0e-4c9c-82f4-e166a07367da",
+    "empresa": "Transportes Cobos, S.A. de C.V.",
+    "ciudad": "Altamira, Tamaulipas",
+    "correo": "rsanchezq@prodigy.net.mx",
+    "telefono": "8332265010",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Tampico Mante Km 14 14 Int Na, Ejido Miramar, CP 89604\nUbicación aproximada 17-ago: centroide de 176 establecimientos DENUE en Altamira, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c07b41ae-ceb4-4fdd-a2fa-5a7df4da0a0b",
+    "empresa": "Transportes Corpored, S.A. de C.V.",
+    "ciudad": "Mérida, Yucatán",
+    "correo": "noel.medina@lodemored.com.mx",
+    "telefono": "9999304656",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportación Terrestre de Carga de Materiales Peligrosos · 11 a 50 personas · Avenida Anillo Periferico Manuel Berzunza Tab Cast 13950 Int 1, Ciudad Francisco de Montejo, CP 97207\nUbicación aproximada 17-ago: centroide de 302 establecimientos DENUE en Mérida, Yucatán — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nSocio CANACAR (17-ago-2026) con el giro más exigente del padrón: Transportación Terrestre de Carga de Materiales Peligrosos, 11 a 50 personas, base sobre el Anillo Periférico de Mérida. El manejo de peligrosos obliga a documentación por viaje (carta porte con clave de residuo, pólizas, capacitación del operador) que se suma al cuadre normal de casetas y diésel. El dominio del correo de negocio (lodemored.com.mx) solo devuelve una página de redirección al 19-ago-2026.\nENCAJE: alto — materiales peligrosos, 11-50 personas, papeleo por viaje ya obligatorio\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: directorio CANACAR 17-ago-2026; WebFetch a lodemored.com.mx solo devuelve redirección sin contenido",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c9938876-f6ee-4b6b-926c-8b126defbfc8",
+    "empresa": "Transportes Das Segel, S.A. de C.V.",
+    "ciudad": "Guadalajara, Jalisco",
+    "correo": "franciscoortiz@disosa.com",
+    "telefono": "3331450555",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Especializada · 11 a 50 personas · Avenida Mariano Otero 341 Int Sn, Ciudad Industrial Jardines Plaza del Sol, CP 44510\nUbicación aproximada 17-ago: centroide de 508 establecimientos DENUE en Guadalajara, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

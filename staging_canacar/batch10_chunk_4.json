@@ -1,0 +1,52 @@
+[
+  {
+    "id": "efa06c2d-a385-4f0f-9a87-d75c0ccd01ea",
+    "empresa": "Gamo Logística, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "bsanchez@gamologistica.com",
+    "telefono": "8677182810",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Praxedis Lopez Ramos 54 Int Na, Colonia la Concordia, CP 88298\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "862f6a24-a583-45fb-9b84-573a5b294459",
+    "empresa": "Gaviota del Bajío, S.A. de C.V.",
+    "ciudad": "Irapuato, Guanajuato",
+    "correo": "gaviotabajio@hotmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calzada de Los Rincones 593 Int Na, Colonia Las Plazas, CP 36620\nUbicación aproximada 17-ago: centroide de 96 establecimientos DENUE en Irapuato, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "43e864c7-1a05-48d6-acd5-119cdd3f958f",
+    "empresa": "Genaro González Guzmán",
+    "ciudad": "Ahuazotepec, Puebla",
+    "correo": "beris3g@hotmail.com",
+    "telefono": "7767610278",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Calle Morelos 23 Int Sn, Colonia Beristain, CP 73190\nUbicación aproximada 17-ago: centroide de 22 establecimientos DENUE en Ahuazotepec, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nHISTORIA: socio registrado de CANACAR (directorio de socios, consulta 17-ago-2026) en Transporte de Carga, 11 a 50 personas, Calle Morelos 23, Colonia Beristain, Ahuazotepec, Puebla.\nDECISOR: la razón social del registro CANACAR es el nombre completo de una persona física, Genaro González Guzmán — él ES el titular. El correo (beris3g@hotmail.com) es consistente con el nombre de la colonia del domicilio ('Beristain') más una inicial, sin ser una coincidencia exacta con su nombre; se declara sobre la base de la razón social CANACAR, más sólida que el correo.\nPROSPECCIÓN 2026-08-20: decisor Genaro González Guzmán, titular/persona física · LinkedIn: no hallado · fuente: directorio de socios CANACAR 17-ago-2026 + razón social. WebSearch agotado en la sesión.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "50818bd0-b116-4599-9daa-a99b9a45ebe2",
+    "empresa": "Gerardo Alonso García Camarena",
+    "ciudad": "Morelia, Michoacán",
+    "correo": "calidad@gatradis.com",
+    "telefono": "4432730812",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Hidrocarburos/ Fletes · 11 a 50 personas · Retorno Colegio Militar 260 Int Na, Colonia Chapultepec Sur, CP 58260",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3d633e56-ff55-437c-b00f-18dd775445d2",
+    "empresa": "Gerardo Augusto Priego Lopez",
+    "ciudad": "Centro, Tabasco",
+    "correo": "gerardopriego_cont@hotmail.com",
+    "telefono": "9931399474",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Boulevard Blancas Mariposas 119 Int A, Fraccionamiento la Ceiba, CP 86127\nUbicación aproximada 17-ago: centroide de 165 establecimientos DENUE en Centro, Tabasco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-19: decisor = titular del permiso (persona fisica, dato del registro CANACAR) · contacto_nombre llenado: Gerardo Augusto Priego Lopez, cargo Titular/Propietario · contexto: autotransporte de carga general, 11 a 50 personas, Boulevard Blancas Mariposas 119, Fracc. la Ceiba, Villahermosa · fuente: CANACAR (directorio de socios) 17-ago-2026\nENCAJE: medio — flota mediana en operacion de transporte con diesel",
+    "fuente": "canacar"
+  }
+]

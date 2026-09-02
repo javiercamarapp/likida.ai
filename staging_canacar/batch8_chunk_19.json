@@ -1,0 +1,52 @@
+[
+  {
+    "id": "f471dc57-1e86-4a0f-ad2b-46eb0933c780",
+    "empresa": "Ferro Monterrey, S.A. de C.V.",
+    "ciudad": "Azcapotzalco, Ciudad de México",
+    "correo": "knieto@tubosmonterrey.com.mx",
+    "telefono": "5553683348",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Poniente 122 603 Int B2, Colonia Industrial Vallejo, CP 2300\nUbicación aproximada 17-ago: centroide de 174 establecimientos DENUE en Azcapotzalco, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-20: sin decisor publico (correo de K. Nieto, sin cargo confirmado) · LinkedIn: no localizado · fuente: CANACAR directorio de socios 17-ago-2026 (11-50 personas) + tubosmonterrey.com.mx (sitio del grupo relacionado por dominio de correo, verificado 2026-08-20): confirma 'transportes propios que se programan a rutas en todo el pais', SIN cifra de unidades. Probable brazo logistico de un distribuidor mayorista de tuberia y plomeria con cobertura nacional. Flota NO publicada — num_unidades sin dato.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b8cc156d-a0b1-4e46-9c09-505eb22fc968",
+    "empresa": "Fevisa Logística, S.A. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "antonio.elizondo@fevisa.com",
+    "telefono": "6869045421",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Adolfo Lopez Mateos 2170 Int Na, Colonia Sanchez Taboada, CP 21360\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "37b18d0e-b405-4be1-a687-e2971ebb2d93",
+    "empresa": "Fham Consultoria y Asesoria Logistica Automotriz, S.A.P.I de C.V.",
+    "ciudad": "San Andrés Cholula, Puebla",
+    "correo": "paola.deita@fham.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Local de Carga Especializado · 11 a 50 personas · Avenida Via Atlixcayotl 5208 Int 17B, Colonia Lomas de Angelopolis, CP 72830\nUbicación aproximada 17-ago: centroide de 27 establecimientos DENUE en San Andrés Cholula, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4017f8b7-54c7-44c8-8688-003e8851914e",
+    "empresa": "Fleta",
+    "ciudad": "León, Guanajuato",
+    "correo": "darredondo@fleta.com.mx",
+    "telefono": "4773807252",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Epsilon 3635 Int 125, Colonia Los Lopez, CP 37680\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "613033a1-3ac6-4766-a00a-90ac7c462f86",
+    "empresa": "Fletera Unión, S.A. de C.V.",
+    "ciudad": "Guadalajara, Jalisco",
+    "correo": "selymar@grupocalafia.com.mx",
+    "telefono": "3333432568",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Rio Alamo 2450 Int Na, Colonia el Rosario, CP 44898\nUbicación aproximada 17-ago: centroide de 508 establecimientos DENUE en Guadalajara, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "51d47928-ba0f-4bc2-9d7b-c9f43b99c6a5",
+    "empresa": "Jesús Alberto Altamirano Álvarez",
+    "ciudad": "Altamira, Tamaulipas",
+    "correo": "ventas@grupoaltamirano.com.mx",
+    "telefono": "8332640021",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Federal de Carga · 11 a 50 personas · Boulevard Primex 402 Int Na, Colonia Venustiano Carranza, CP 89603\nUbicación aproximada 17-ago: centroide de 176 establecimientos DENUE en Altamira, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e3d0b256-40bb-4329-a64b-c83a771ca4c1",
+    "empresa": "Jjae Transportaciones, S.A. de C.V.",
+    "ciudad": "San Pedro Tlaquepaque, Jalisco",
+    "correo": "jjaetransportaciones@hotmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Calle Paseo de Los Cisnes 210 Int A, Colonia Paseos Lago, CP 45619\nUbicación aproximada 17-ago: centroide de 219 establecimientos DENUE en San Pedro Tlaquepaque, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nENCAJE: alto — socio CANACAR de 11-50 personas en zona metropolitana de Guadalajara\nPROSPECCIÓN 2026-08-19: sin decisor público · LinkedIn: no hallado · fuente: CANACAR 17-ago-2026 (correo personal en hotmail pese a ser empresa socia — indicio de administración manual; WebSearch agotado). Flota sin conteo publicado → unidades null.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "218515de-2c9d-4cd8-a622-748d02e2fddb",
+    "empresa": "Jjhr Solución en Transporte, S.A. de C.V.",
+    "ciudad": "Nava, Coahuila",
+    "correo": "jaqueline.jjhr@hotmail.com",
+    "telefono": "8787853948",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Carretera 57 Km 10.300 Na Int Na, Colonia Sin Colonia, CP 26170\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d4e2c21f-e199-42cb-9c88-6eee8294ca43",
+    "empresa": "Jlm Logistica, S.A. de C.V.",
+    "ciudad": "Álvaro Obregón, Ciudad de México",
+    "correo": "eperez@jlmlogistica.com",
+    "telefono": "5555201620",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicios de Logistica, Transporte Terrestre · 11 a 50 personas · Calle Olivo 93 Int B, Colonia Florida, CP 1030\nUbicación aproximada 17-ago: centroide de 95 establecimientos DENUE en Álvaro Obregón, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nUNIDADES: sin dato — sin sitio web ni conteo de flota publicado; CANACAR reporta 11 a 50 personas (personal, no unidades).\nENCAJE: alto — servicios de logística y transporte terrestre, socio CANACAR.\nPROSPECCIÓN 2026-08-19: sin decisor público · sin sitio web; el correo eperez@jlmlogistica.com sugiere un nombre pero ninguna fuente lo nombra ni le da cargo, así que no se escribe · fuente: directorio de socios CANACAR 17-ago-2026 · WebSearch agotado en la sesión (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "11de8889-f1aa-4c86-93bd-9a828b5ee013",
+    "empresa": "Jorge Ernesto Catalino Lozano Saldaña",
+    "ciudad": "Reynosa, Tamaulipas",
+    "correo": "erikamarquez@atl.mx",
+    "telefono": "8999294468",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Primera 250 Int Na, Colonia Granjas Economicas del Norte, CP 88730\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Reynosa, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

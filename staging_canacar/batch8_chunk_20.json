@@ -1,0 +1,52 @@
+[
+  {
+    "id": "df914769-bc32-4a5f-b72b-947e1ebac912",
+    "empresa": "Fletes Borja, S.A. de C.V.",
+    "ciudad": "Frontera, Coahuila",
+    "correo": "willians.martinez@metelmex.com",
+    "telefono": "8662588408",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Acero · 11 a 50 personas · Calle Hector Bladimir 900 Int Sn, Colonia Borja de Diaz Ordaz, CP 25680",
+    "fuente": "canacar"
+  },
+  {
+    "id": "90980f79-267b-44de-9d3d-55128758b6c7",
+    "empresa": "Fletes Chalin",
+    "ciudad": "Córdoba, Veracruz",
+    "correo": "gerardo.diaz@flecha.com.mx",
+    "telefono": "2717511002",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 11 a 50 personas · Calle Calle 35 301 Int 1, Colonia Moderna, CP 94640 · PROSPECCIÓN 2026-08-19: sin decisor público · sitio flecha.com.mx presentó error SSL al intentar verificarlo por WebFetch (handshake failure), no se pudo confirmar contenido.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0b492ccb-2491-4cb0-a8fe-1b4681ccd694",
+    "empresa": "Fletes de Oriente, S.A. de C.V.",
+    "ciudad": "San Pedro Tlaquepaque, Jalisco",
+    "correo": "contabilidad@fletesdeoriente.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera a Los Altos 4985 Int Na, Colonia San Pedrito, CP 45625\nUbicación aproximada 17-ago: centroide de 219 establecimientos DENUE en San Pedro Tlaquepaque, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a7573b5d-fcc0-4cbe-8707-857ebe6880da",
+    "empresa": "Fletes Dos Hermanos S.A. de C.V.",
+    "ciudad": "Atizapán de Zaragoza, México",
+    "correo": "transporteschavira@live.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo y Local de Carga General · 11 a 50 personas · Calle Municipio Libre Manzana 21 Lt 21 Int Lt 21, Colonia Ampliacion Profesor Cristobal Higuera, CP 52940\nUbicación aproximada 17-ago: centroide de 68 establecimientos DENUE en Atizapán de Zaragoza, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nHISTORIA: socio CANACAR de autotransporte foráneo y local de carga general con 11 a 50 personas, domicilio en Calle Municipio Libre, Colonia Ampliación Profesor Cristóbal Higuera, Atizapán de Zaragoza, Estado de México.\nPROSPECCIÓN 2026-08-20: sin decisor público · fuente: CANACAR directorio de socios 17-ago-2026 (autotransporte foráneo y local de carga general, 11 a 50 personas); correo live.com sin dominio propio y WebSearch agotado en la sesión.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "186ae0f3-2c5f-4914-a18b-a7a407980664",
+    "empresa": "Fletes Estratégicos de México, S.A. de C.V.",
+    "ciudad": "Santa Catarina, Nuevo León",
+    "correo": "jsaldana@femtransportes.com",
+    "telefono": "8180591691",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Autotransporte Publico de Carga · 11 a 50 personas · Calle Jesus Treviño M 205 Int Na, Colonia Puerta del Sol, CP 66358\nUbicación aproximada 17-ago: centroide de 110 establecimientos DENUE en Santa Catarina, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

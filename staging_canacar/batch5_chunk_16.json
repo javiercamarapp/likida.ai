@@ -1,0 +1,52 @@
+[
+  {
+    "id": "d17955aa-0178-450d-ab17-977678260530",
+    "empresa": "Ingoy Logistica",
+    "ciudad": "Culiacán, Sinaloa",
+    "correo": null,
+    "telefono": "6677172737",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Fabricación de Carrocerías de Autobuses, Servicios de Fletes de Mercancía Refrigerados · 51 a 250 personas · Avenida Fernando Cuen 2500 Int Na, Colonia Pemex, CP 80180\nUbicación aproximada 17-ago: centroide de 265 establecimientos DENUE en Culiacán, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 19-ago-2026: sin decisor público — sin correo ni sitio propio localizados; solo teléfono en el censo. Nota: doble actividad (fabricación de carrocerías + fletes refrigerados) según CANACAR.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4368ae79-1546-4687-8253-96ac7bd8a28a",
+    "empresa": "Linea Ic de Mexico S.A. de C.V.",
+    "ciudad": "General Escobedo, Nuevo León",
+    "correo": null,
+    "telefono": "8121410010",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 51 a 250 personas · Carretera Libramiento Noreste Km 28+1095 Sn Int Na, Colonia Nueva Castilla, CP 66052\nUbicación aproximada 17-ago: centroide de 199 establecimientos DENUE en General Escobedo, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nHISTORIA: socia registrada de CANACAR (directorio de socios, 17-ago-2026): Línea IC de México, S.A. de C.V., Autotransporte de Carga, 51 a 250 personas, Carretera Libramiento Noreste Km 28+1095, Nueva Castilla, General Escobedo, Nuevo León. Sin sitio ni correo registrado en la base.\nPROSPECCIÓN 2026-08-20: sin decisor público · LinkedIn: no hallado · fuente: directorio de socios CANACAR 17-ago-2026 (sin sitio ni correo). WebSearch agotado en la sesión.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4d93df25-1455-47f9-aba9-ff9a3dc6ab1d",
+    "empresa": "Martin Francisco Campos Perez",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": null,
+    "telefono": "6566200048",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Federal de Carga en General · 51 a 250 personas · Calle Fuente de David 184 Int 1, Colonia Jardin de Los Lagos, CP 32650\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "830d687d-c1d4-4b7b-ab3d-a79de8de0e02",
+    "empresa": "Quimica Mineral",
+    "ciudad": "Santa Catarina, Nuevo León",
+    "correo": null,
+    "telefono": "8182898821",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Comercio Al Por Mayor de Productos Quiicos Para Uso Industrial, Autotransporte Foraneo y Local de Materiales Peligrosos · 51 a 250 personas · Avenida Luis Donaldo Colosio 265 Int Sn, Colonia San Francisco, CP 66368\nUbicación aproximada 17-ago: centroide de 110 establecimientos DENUE en Santa Catarina, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ca668d35-58fe-4d9b-aba5-e85126d41795",
+    "empresa": "Rajo Transportes",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": null,
+    "telefono": "8671291817",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 51 a 250 personas · Calle Amado Nervo 1812 Int Na, Colonia Matamoros, CP 88210\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

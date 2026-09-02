@@ -1,0 +1,52 @@
+[
+  {
+    "id": "e6d1df3f-e217-4435-921a-7ce28afb1263",
+    "empresa": "Transportes Lozmar, S.A. de C.V.",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "administracion@transporteslozmar.com.mx",
+    "telefono": "6562150958",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle de la Cascada 7312 Int Na, Colonia Fuentes del Valle, CP 32500\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 2026-08-19: sin decisor público con cargo (dominio propio transporteslozmar.com.mx en el correo; sitio no localizado activo) · LinkedIn: no hallado · fuente: CANACAR 17-ago-2026.\nINVESTIGACIÓN PROFUNDA 20-ago-2026: mismo grupo/empresa que la ficha principal (id 8fc16403-3c4d-4a26-a46a-aea3055cda1e) — sin decisor confirmado en ninguna.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "1ad11abb-fc34-415b-aae3-60cb76ce1a4e",
+    "empresa": "Transportes Lti, S. de R.L. de C.V.",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "paul@logisticslti.com",
+    "telefono": "6643839094",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Boulevard de Las Bellas Artes 20370 Int A, Colonia Ciudad Industrial, CP 22444\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6adf1eee-6fc7-4903-808b-6d887fc70a40",
+    "empresa": "Transportes Maeda, S.A. de C.V.",
+    "ciudad": "Córdoba, Veracruz",
+    "correo": "compras@maeda.mx",
+    "telefono": "2292173000",
+    "estado": "contactado",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle 1 514 Int Altos 3, Colonia Centro, CP 94500",
+    "fuente": "canacar"
+  },
+  {
+    "id": "53f0ce15-14f9-4a59-afc9-2a4ae7cdfd77",
+    "empresa": "Transportes Margot, S. de R.L. de C.V.",
+    "ciudad": "Hermosillo, Sonora",
+    "correo": "transportesmargot14@hotmail.com",
+    "telefono": "6622167360",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Avenida Dr. Aguilar 210 Int Na, Colonia Los Arcos, CP 83250\nUbicación aproximada 17-ago: centroide de 285 establecimientos DENUE en Hermosillo, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "10f3daf1-b40b-4bb5-bc1d-9ce5465a0798",
+    "empresa": "Transportes Marroquin Alanis, S.A. de C.V.",
+    "ciudad": "Allende, Nuevo León",
+    "correo": "tma9001@hotmail.com",
+    "telefono": "8261017459",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Allende-Cadereyta Km 2 Sn Int Na, Colonia Talleres, CP 67350\nUbicación aproximada 17-ago: centroide de 123 establecimientos DENUE en Allende, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN 21-ago-2026: sin decisor público. OJO — distinta de 'Fletes Marroquín' (César Marroquín) y de 'Flores Marroquín' — tres empresas con apellido Marroquín, no confundir.",
+    "fuente": "canacar"
+  }
+]

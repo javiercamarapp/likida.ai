@@ -1,0 +1,52 @@
+[
+  {
+    "id": "00be5700-9d55-45a2-96d5-e0a50d36394c",
+    "empresa": "Transportes Robledo & Co del Bajio Sa de Cv",
+    "ciudad": "León, Guanajuato",
+    "correo": null,
+    "telefono": "4772245854",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga y Transporte de Personal · 51 a 250 personas · Calle Noria Alta Sn Int Sn, Colonia Loza de Los Padres, CP 37680\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d6aa7a02-46e8-4ebd-a136-766c530cb253",
+    "empresa": "Transportes Terrestres Valdez, S.A. de C.V.",
+    "ciudad": "Tijuana, Baja California",
+    "correo": null,
+    "telefono": "6644042085",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Camino Vecinal 10202 Int Na, Colonia Cuenca Lechera, CP 22254\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nsin sitio web ni conteo de flota publicado — no se llena `num_unidades`; CANACAR reporta 51 a 250 personas (personal, no unidades, pero es un rango alto — señal de operación grande).\nPROSPECCIÓN 2026-08-19: sin decisor público · sin sitio web ni correo verificado · fuente: directorio de socios CANACAR 17-ago-2026 · WebSearch agotado en la sesión (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "31b57368-67f1-4b3d-81fd-97c9337166d0",
+    "empresa": "A. Martínez Transportaciones",
+    "ciudad": "Altamira, Tamaulipas",
+    "correo": "administracion@amartineztransportaciones.com",
+    "telefono": "8332272279",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga general · 51 a 100 personas · establecimiento: A MARTINEZ TRANSPORTACIONES\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono\n\nINVESTIGACION-LOTE-A 18-ago-2026 (agentes sonnet, aplica=true): APLICA: SCIAN 484 (autotransporte foraneo carga general). Opera contenedores propios Puerto Altamira/Tampico, patio propio, rastreo satelital 24/365. Duplicada en el censo bajo dos nombres (A MARTINEZ TRANSPORTACIONES / A. Martínez Transportaciones S.A. de C.V.) — misma empresa. Correo real: administracion@amartineztransportaciones.com (dominio activo M365, sin sitio publico).",
+    "fuente": "denue"
+  },
+  {
+    "id": "0aa0154c-0a1a-4dab-a17a-e436b9764200",
+    "empresa": "Auto Express Aguila, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "miguel@aguilanet.com",
+    "telefono": "8677180396",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Al Aeropuerto Km .120 Sn Int Na, Colonia la Concordia, CP 88298\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN 20-ago-2026: sin decisor público. 51-100 empleados, registrada 2010.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "325947d7-0f34-4db4-bebd-743cf57d64f3",
+    "empresa": "AUTOLINEAS CR",
+    "ciudad": "Allende, Nuevo León",
+    "correo": "trafico@naros.com.mx",
+    "telefono": "8120012944",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte local de carga general · 51 a 100 personas · establecimiento: AUTOLINEAS CR\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "8bcb423d-86c5-4230-ae13-4d04543479cd",
+    "empresa": "Giracero, S.A. de C.V.",
+    "ciudad": "Jocotitlán, México",
+    "correo": "transportes.giracero@hotmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General Local y Foranea · 11 a 50 personas · Carretera Toluca Atlacomulco Km 37 Sn Int Sn, Colonia Los Reyes, CP 50727\nUbicación aproximada 17-ago: centroide de 7 establecimientos DENUE en Jocotitlán, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d60206d0-7b1f-446a-b571-ffce770a54bc",
+    "empresa": "Glip(Grupo Logistico Inteligente Pineda)",
+    "ciudad": "Manzanillo, Colima",
+    "correo": "uriel.pineda@gliplogistica.com",
+    "telefono": "3141743460",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Logistica y Transporte · 11 a 50 personas · Camino Carretera Manzanillo  Minatitlan Km.4.8 Z1 Int Na, Ranchería Jalipa, CP 28870\nUbicación aproximada 17-ago: centroide de 551 establecimientos DENUE en Manzanillo, Colima — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nsin sitio web ni conteo de flota publicado — no se llena `num_unidades`; CANACAR reporta 11 a 50 personas (personal, no unidades).\nPROSPECCIÓN 2026-08-19: sin decisor público · el correo uriel.pineda@gliplogistica.com sugiere un apellido Pineda (coincide con el nombre del grupo) pero ninguna fuente pública lo confirma con cargo, así que no se escribe · fuente: directorio de socios CANACAR 17-ago-2026 · WebSearch agotado en la sesión (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "82630127-f5ed-4366-9994-c1cf73cfc1b7",
+    "empresa": "Golden West Transport, S.A. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "roxanamorales@goldenwesttransport.com",
+    "telefono": "6869056472",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Al Aeropuerto Km 9.5 Sn Int Na, Colonia Mariano Abasolo, CP 21600\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "55808584-e67a-4aba-8826-3e12ad80ad36",
+    "empresa": "Gonzalo Ramírez Arias",
+    "ciudad": "Manzanillo, Colima",
+    "correo": "operaciones@grupodagoya.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Federal de Carga · 11 a 50 personas · Avenida Elias Zamora Verduzco 368 Int Sn, Colonia Sin Colonia, CP 28219\nUbicación aproximada 17-ago: centroide de 551 establecimientos DENUE en Manzanillo, Colima — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0ee2c5e1-6fd4-4864-b461-63cdb8ea5d40",
+    "empresa": "Gopa Logistics, S.A. de C.V.",
+    "ciudad": "León, Guanajuato",
+    "correo": "agzz81@hotmail.com",
+    "telefono": "4777741016",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Isaac Newton 112 Int Na, Colonia Las Aguilas, CP 37118\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN 21-ago-2026: perfil del director general descrito (Ing. Industrial y de Sistemas, finanzas Imperial College London, ex-Tesorería CEMEX, ex-Grupo SENDA) pero SIN NOMBRE en la fuente — no se escribe como decisor sin el nombre. Fundada 2010, GOPA Logistics & Transliner del Bajío.",
+    "fuente": "canacar"
+  }
+]

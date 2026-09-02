@@ -1,0 +1,52 @@
+[
+  {
+    "id": "c30a658d-06f9-4a38-b1fb-161d952495ab",
+    "empresa": "Madison Transport, S.A de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "jgalvan@casduana.com",
+    "telefono": "8677115000",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Donato Guerra 1320 Int B, Colonia Centro, CP 88000\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nSocia CANACAR (17-ago-2026): Autotransporte de Carga, 11 a 50 personas, Calle Donato Guerra 1320, Colonia Centro, Nuevo Laredo, Tamaulipas, CP 88000. Correo de negocio jgalvan@casduana.com — dominio que sugiere vínculo con una casa de despacho aduanal (\"Casduana\"); el sitio casduana.com no resolvió DNS al 20-ago-2026, no se pudo verificar la relación.\nENCAJE: alto — carga de 11-50 personas en Nuevo Laredo, posible vínculo con agencia aduanal propia\nPROSPECCIÓN 2026-08-20: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026; WebFetch a casduana.com falló (dominio sin DNS)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f0a708bd-92ef-437c-846f-dbd48cb68c9e",
+    "empresa": "Maeda Logistics, S.A. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "isela.sosa@maeda.mx",
+    "telefono": "2299315789",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Constitucion 266 Int B, Colonia Centro, CP 91700\nPROSPECCIÓN 19-ago-2026: sin decisor público (sitio no lista nombres) · sitio oficial confirmado: maeda.mx (100% mexicana, 25+ años de experiencia en autotransporte de carga general) · fuente: maeda.mx\nENCAJE: alto — 25+ años, 100% mexicana, puerto de Veracruz activo",
+    "fuente": "canacar"
+  },
+  {
+    "id": "52a49a61-82f9-482c-aa2d-f3e6100df92e",
+    "empresa": "Manuel Flores Torrero",
+    "ciudad": "Altamira, Tamaulipas",
+    "correo": "transportes.tft@gmail.com",
+    "telefono": "8882646817",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Bahia Adair 507 Int Na, Parque Industrial Altamira, CP 89603\nUbicación aproximada 17-ago: centroide de 176 establecimientos DENUE en Altamira, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "858a475a-de0f-4ff6-ad83-f859ee44010e",
+    "empresa": "Maquinaria y Fletes, S.A. de C.V.",
+    "ciudad": "General Escobedo, Nuevo León",
+    "correo": "acarrizales@grupominco.com",
+    "telefono": "8150004060",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Fletes de Materiales Para Construccion · 11 a 50 personas · Calle Camino a Las Pedreras 1250 Int Na, Colonia Union Agropecuarios Lazaro Cardenas del Norte, CP 66084\nUbicación aproximada 17-ago: centroide de 199 establecimientos DENUE en General Escobedo, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "fe2b50e0-931a-4b03-a3bf-ed85e44cf3aa",
+    "empresa": "María Eugenia Huerta Mendoza",
+    "ciudad": "Reynosa, Tamaulipas",
+    "correo": "maru.huerta@serviciosmegatrans.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Privada Villas San Lucas 101 Int Na, Fraccionamiento San Jose, CP 88748\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Reynosa, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "bf6817e2-1840-4a7a-9e05-5eabc5de89a0",
+    "empresa": "Tranesla, S.A. de C.V.",
+    "ciudad": "Atlixco, Puebla",
+    "correo": "ignacio.huerta@disposur.com",
+    "telefono": "2444451828",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Prestacion de Servicio de Transporte de Carga · 11 a 50 personas · Calle 31 Oriente 602 Int Na, Colonia Francisco I Madero, CP 74290\nUbicación aproximada 17-ago: centroide de 62 establecimientos DENUE en Atlixco, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · sitio disposur.com no resuelve (DNS) · correo ya en base (ignacio.huerta@disposur.com) sugiere posible nombre 'Ignacio Huerta' en una empresa relacionada (Disposur), sin confirmar — no se escribe como decisor sin verificar · CANACAR: Prestación de Servicio de Transporte de Carga, 11 a 50 personas · fuente: CANACAR directorio de socios (ya en base)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6f0b1cfc-ae47-4134-af3c-18d4391fb375",
+    "empresa": "Trans Delta, S.A. de C.V.",
+    "ciudad": "Teoloyucan, México",
+    "correo": "comprastd@qdelta.com.mx",
+    "telefono": "5558999400",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Teoloyucan-Huehuetoca 259 Int Area02, Colonia Barrio Santa Cruz Caliacac, CP 54783\nUbicación aproximada 17-ago: centroide de 12 establecimientos DENUE en Teoloyucan, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 2026-08-19: sin decisor público · LinkedIn: no hallado · viajes/mes: no público · historia: rama de autotransporte de químicos de Química Delta creada en 1994 (grupo fundado en 1974) · fuente: qdelta.com.mx/nosotros · score fit: 1/5 (rúbrica pública; urgencia dominio textual: mapeo 1-2 explorando, 3 trimestre, 4-5 inmediata)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7b8e73fa-7222-4994-919b-8cbd086046fb",
+    "empresa": "Trans Estrella, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "p.herrera@estrellaexpress.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Lecherias 102 Int Sn, Ejido Burocratas, CP 26020\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "66b48efd-c0f7-4c87-9308-07a8dfc6eb6e",
+    "empresa": "Trans Mexico Cefa Sa de Cv",
+    "ciudad": "San Pedro Garza García, Nuevo León",
+    "correo": "daniela@transmexico.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga de Residuos Peligrosos en Pipa y Ferrocarril · 11 a 50 personas · Avenida Ricardo Margain Zozaya 335 Int A, Colonia Na, CP 66265\nUbicación aproximada 17-ago: centroide de 113 establecimientos DENUE en San Pedro Garza García, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b6ed523c-16bd-43d0-a064-3e1ba48dba82",
+    "empresa": "Trans Piramide, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "rguajardo@casaduana.com",
+    "telefono": "8677123000",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Cruce Fronterizo · 11 a 50 personas · Calle Donato Guerra 1320 Int A, Colonia Casa Aduana, CP 88000\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (el correo del registro está en dominio casaduana.com) · fuente: CANACAR 17-ago-2026",
+    "fuente": "canacar"
+  }
+]

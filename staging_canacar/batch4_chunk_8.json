@@ -1,0 +1,52 @@
+[
+  {
+    "id": "dcdb3fee-ca41-4d98-b871-a23a5241cfb9",
+    "empresa": "Transportes Garza Leal, S.A. de C.V.",
+    "ciudad": "Lerdo, Durango",
+    "correo": "tgarzaleal@prodigy.net.mx",
+    "telefono": "8711750600",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 51 a 250 personas · Carretera Carretera Periferico Km 14.5 Sn Int Na, Colonia Centro, CP 35150\nUbicación aproximada 17-ago: centroide de 23 establecimientos DENUE en Lerdo, Durango — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d34cfec3-10a3-4f9d-a154-2139c110d90b",
+    "empresa": "Transportes Herca de Ocozocoautla, S.A. de C.V.",
+    "ciudad": "Ocozocoautla de Espinosa, Chiapas",
+    "correo": "countgrupoavimarca@hotmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Fletes de Materia Prima · 51 a 250 personas · Calle 2Da Oriente Sur 22 Int Na, Colonia Centro, CP 29140\nUbicación aproximada 17-ago: centroide de 24 establecimientos DENUE en Ocozocoautla de Espinosa, Chiapas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 19-ago-2026: sin decisor público — correo ya registrado sugiere posible vínculo con 'Grupo Avimarca' (dominio distinto), sin nombre de dueño/director. ENCAJE: alto — flota grande (51-250 personas) especializada en materia prima, viajes recurrentes.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ad93c586-81f6-42ed-8e05-0df3eaee5ec6",
+    "empresa": "Transportes Hrg E Hijos, S.A. de C.V.",
+    "ciudad": "Tultitlán, México",
+    "correo": "contabilidad@thr.com.mx",
+    "telefono": "5558991390",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte · 51 a 250 personas · Avenida Recursos Hidraulicos 126 Int Na, Colonia Lazaro Cardenas, CP 54916\nUbicación aproximada 17-ago: centroide de 127 establecimientos DENUE en Tultitlán, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "eb07c087-2f15-4029-a309-d176a06eaa8f",
+    "empresa": "Transportes Industriales Sotomex, S.A. de C.V.",
+    "ciudad": "Torreón, Coahuila",
+    "correo": "aministracion@sotomex.com.mx",
+    "telefono": "8717506156",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Calle Adolfo Aymes 111 Int Na, Ciudad Industrial Ciudad Industrial, CP 27019",
+    "fuente": "canacar"
+  },
+  {
+    "id": "07be1440-943a-446a-81a9-9dd0152eb557",
+    "empresa": "Transportes Industriales Vita, S.A. de C.V.",
+    "ciudad": "Chihuahua, Chihuahua",
+    "correo": "juanmanuel.talamas@transportesvita.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Calle Barton 10802 Int Na, Colonia Los Nogales, CP 31380\nUbicación aproximada 17-ago: centroide de 282 establecimientos DENUE en Chihuahua, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN PROFUNDA 20-ago-2026: Juan Manuel Talamas Rohana, key principal (D&B). Eduardo Ponce, contacto (correo eduardo.ponce@trasportesvita.com confirmado).",
+    "fuente": "canacar"
+  }
+]

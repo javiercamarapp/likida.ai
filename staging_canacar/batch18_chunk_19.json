@@ -1,0 +1,52 @@
+[
+  {
+    "id": "0a7648ea-54f1-474a-9d8c-33d08d99bea9",
+    "empresa": "Mvd Logistics, S.A. de C.V.",
+    "ciudad": "Zapopan, Jalisco",
+    "correo": null,
+    "telefono": "4525244186",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Fletes de Mercacias · 11 a 50 personas · Avenida de Los Novelistas 7054 Int Na, Colonia Lomas Universidad, CP 45016\nUbicación aproximada 17-ago: centroide de 205 establecimientos DENUE en Zapopan, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "fa99a3c8-14a8-49f6-85ff-51d3e651def1",
+    "empresa": "Patan Especializados Treviño, S.A. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": null,
+    "telefono": "2292650110",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Fed Poza R T P Na Int Na, Ciudad Na, CP 91690\nPROSPECCIÓN 2026-08-19: sin decisor público (el directorio CANACAR no nombra representante para esta S.A. de C.V., sin sitio propio localizado). No se localizó sitio ni correo oficial · fuente: directorio de socios CANACAR",
+    "fuente": "canacar"
+  },
+  {
+    "id": "912929f1-59b8-408a-a54b-eb340250d833",
+    "empresa": "Petrolynk Logistics, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": null,
+    "telefono": "9563247654",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Calle Riva Palacio 1309 Int Altos, Colonia Juarez, CP 88209\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e2d575c4-b0de-44b3-a448-7bd26e4c8c82",
+    "empresa": "Praxton Logistics, S.A de C.V.",
+    "ciudad": "Arteaga, Coahuila",
+    "correo": null,
+    "telefono": "4850447454",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Calle Libramiento Oscar Flores Tapia 3100 Int Na, Colonia Rural, CP 25350\n\nENCAJE: alto — socio CANACAR, carga en corredor automotriz Saltillo-Arteaga\nPROSPECCIÓN 2026-08-19: sin decisor público · LinkedIn: no hallado · fuente: CANACAR 17-ago-2026 (sin sitio en el registro; WebSearch agotado en la sesión). Flota sin conteo publicado → unidades null.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "56c1ebdc-0ec9-47f4-bc34-8bfb0af79548",
+    "empresa": "Quality Carriers de Mexico",
+    "ciudad": "Tampico, Tamaulipas",
+    "correo": null,
+    "telefono": "8332740678",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Dr. Gochicoa 621 Int Na, Ciudad Tampico de Tamaulipas, CP 89190\nUbicación aproximada 17-ago: centroide de 121 establecimientos DENUE en Tampico, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

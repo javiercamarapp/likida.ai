@@ -1,0 +1,102 @@
+[
+  {
+    "id": "318d8335-baee-40e7-81e8-e27d85b82965",
+    "empresa": "SUPERLAG, S.A. DE C.V. AIDEE GONZALEZ / MARCO ANTONIO LUCERO QUINTERO",
+    "ciudad": "MEXICO, D.F.",
+    "correo": null,
+    "telefono": "5553531830",
+    "estado": "nuevo",
+    "notas": "MUESTRA CANACAR (Scribd, padrón gremial — antigüedad por verificar): contacto del afiliado\n\nPROSPECCIÓN 2026-08-21: DECISOR CONFIRMADO (confianza media) — el padrón CANACAR lista DOS contactos del afiliado sin distinguir cargo: Aidee González y Marco Antonio Lucero Quintero. No se pudo determinar cuál es el decisor principal; se registran ambos.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2c337453-7146-4e43-abb2-47d50115fbc7",
+    "empresa": "TRANSCARGA MEXICANA, S.A. DE C.V. (SUC. TEPOTZOTLAN) ANTONIO DE ALBA /EDUARDO GOU SHERER",
+    "ciudad": "ESTADO DE MEXICO",
+    "correo": null,
+    "telefono": "5558760265",
+    "estado": "nuevo",
+    "notas": "MUESTRA CANACAR (Scribd, padrón gremial — antigüedad por verificar): contacto del afiliado\n\nPROSPECCIÓN 2026-08-21: DECISOR CONFIRMADO (confianza media) — el padrón CANACAR lista DOS contactos del afiliado para la sucursal Tepotzotlán, sin distinguir cargo: Antonio de Alba y Eduardo Gou Sherer. No se pudo determinar cuál es el decisor principal; se registran ambos.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d0821a3c-ed4a-4b03-83dc-aec3ee5d12b1",
+    "empresa": "TRANSPORTES BLINDADOS TAMEME, S.A. DE C.V. OSCAR BARRAGAN JEFE DE INFRAESTRUCTURA / JOSE LUIS DONCE ENCARGADO / JACOBO NAZAR VOLIVAR",
+    "ciudad": "MEXICO, D.F.",
+    "correo": null,
+    "telefono": "5551320409",
+    "estado": "nuevo",
+    "notas": "MUESTRA CANACAR (Scribd, padrón gremial — antigüedad por verificar): contacto del afiliado\nPROSPECCIÓN 19-ago-2026: sin decisor con cargo dueño/DG/director de administración confirmado — se usa como contacto principal a Oscar Barragán, Jefe de Infraestructura (cargo más cercano a flota/combustible), registrado en el mismo padrón junto con José Luis Donce (Encargado) y Jacobo Nazar Bolívar · fuente: muestra CANACAR (Scribd, padrón gremial). No se llena contacto_nombre por no cumplir la definición estricta de decisor.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e5d82f0d-90d0-469d-a859-e5928eb74f85",
+    "empresa": "TRANSPORTES CUSTRAVAL, S.A. DE C.V. JAVIER MENDOSA FUENTES",
+    "ciudad": "MEXICO, D.F.",
+    "correo": null,
+    "telefono": "5557859165",
+    "estado": "nuevo",
+    "notas": "MUESTRA CANACAR (Scribd, padrón gremial — antigüedad por verificar): contacto del afiliado\n\nPROSPECCIÓN 2026-08-19: contacto Javier Mendosa Fuentes, nombrado explícitamente como «contacto del afiliado» en el padrón gremial CANACAR (muestra vía Scribd) — cargo exacto (dueño/representante/administrativo) no especificado por la fuente, se trata como contacto, no se asume titularidad · LinkedIn: no hallado · fuente: padrón CANACAR (Scribd), antigüedad del documento por verificar.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "dfa615f5-96b4-4865-9bf0-8b9f97d8480b",
+    "empresa": "TRANSPORTES ESPECIALIZADOS EL IGLU, S.A. DE C.V. JOSÉ MANUEL MOCTEZUMA RODRÍGUEZ",
+    "ciudad": "ESTADO DE MEXICO",
+    "correo": null,
+    "telefono": "5553913205",
+    "estado": "nuevo",
+    "notas": "MUESTRA CANACAR (Scribd, padrón gremial — antigüedad por verificar): contacto del afiliado\n\nPROSPECCIÓN 2026-08-21: DECISOR CONFIRMADO (confianza media) — José Manuel Moctezuma Rodríguez, contacto del afiliado en padrón CANACAR (cargo exacto no confirmado por segunda fuente). Fuente: padrón gremial CANACAR (Scribd, antigüedad por verificar). Filas 'TEIGLU' y 'TE IGLU' del censo son la misma empresa (abreviatura de 'Transportes Especializados El Iglu'); se marcan como duplicado_de esta fila.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "cda0af20-8e79-43d9-9653-0dc70bc41b11",
+    "empresa": "TRANSPORTES FARIMAL",
+    "ciudad": "Veracruz, Veracruz de Ignacio de la Llave",
+    "correo": null,
+    "telefono": "2293033024",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo de materiales para la construcción · 0 a 5 personas\nPROSPECCIÓN 2026-08-19: sin decisor público (sin sitio propio localizado, sin registro CANACAR encontrado bajo este nombre). No se localizó sitio ni correo oficial · fuente: búsqueda pública sin resultado",
+    "fuente": "denue"
+  },
+  {
+    "id": "f4057cd6-93eb-4440-a0f1-10f82b459cd1",
+    "empresa": "TRANSPORTES FRAYLESCANOS, S.A. DE C.V. CARLOS MORENO COUTIÑO",
+    "ciudad": "MEXICO, D.F.",
+    "correo": null,
+    "telefono": "5555262220",
+    "estado": "nuevo",
+    "notas": "MUESTRA CANACAR (Scribd, padrón gremial — antigüedad por verificar): contacto del afiliado\n\nPROSPECCIÓN 2026-08-21: DECISOR CONFIRMADO (confianza media) — Carlos Moreno Coutiño, contacto del afiliado en padrón CANACAR (cargo exacto no confirmado). Fuente: padrón gremial CANACAR (Scribd, antigüedad por verificar). OJO: existen otras dos filas del censo 'TRANSPORTES FRAYLESCANOS' y 'TRANSPORTES FRAYLESCANOS DEL SURESTE' con correos de contacto distintos (gmail/hotmail personales) — no se fusionaron por no poder confirmar que sea la misma empresa/dueño (posible caso tipo 'Marroquín': varias empresas con nombre parecido).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "748312a3-6d8b-4f74-a0c4-027afafc1243",
+    "empresa": "TRANSPORTES GRIJALVA, S.A. DE C.V. HUMBERTO PULIDO VILLAR",
+    "ciudad": "MEXICO, D.F.",
+    "correo": null,
+    "telefono": "5555373636",
+    "estado": "nuevo",
+    "notas": "MUESTRA CANACAR (Scribd, padrón gremial — antigüedad por verificar): contacto del afiliado\n\nENCAJE: medio — carga general en CDMX, contacto nombrado en muestra gremial CANACAR (antigüedad de la fuente por verificar)\nPROSPECCIÓN 19-ago-2026: decisor Humberto Pulido Villar (el campo de empresa embebe el nombre del contacto tal como lo trae la muestra CANACAR vía Scribd, con la nota \"contacto del afiliado\" — se declara con la salvedad de que la antigüedad exacta del padrón fuente no está verificada) · LinkedIn: no hallado · fuente: muestra CANACAR (Scribd, padrón gremial), Transportes Grijalva S.A. de C.V., México D.F. · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4d16f52b-b02a-4741-924a-3c3602985093",
+    "empresa": "TRANSPORTES REFRIGERADOS ALAMILLA, S.A. DE C.V. GERMAN ALAMILLA MATA",
+    "ciudad": "ESTADO DE MEXICO",
+    "correo": null,
+    "telefono": "5555692730",
+    "estado": "nuevo",
+    "notas": "MUESTRA CANACAR (Scribd, padrón gremial — antigüedad por verificar): contacto del afiliado\n\nPROSPECCIÓN 2026-08-21: DECISOR CONFIRMADO (confianza media) — Germán Alamilla Mata, contacto del afiliado CANACAR (cargo exacto no confirmado — no aparece como 'director general' explícito en ninguna fuente). Fuente: padrón gremial CANACAR (Scribd, antigüedad por verificar) ya presente en esta fila. Ojo: una búsqueda web encontró un aviso legal que menciona a 'Carlos Alamilla Mata' asociado a 'Transportes Refrigerados Alamilla SA de CV' — mismo apellido, nombre distinto; no se pudo confirmar si son la misma persona, familiares, o si la fuente legal aplica a otra época/representación de la empresa. No se descarta, pero verificar antes de contactar.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "dc42e409-16a7-4817-b40d-d8b1d189f1c3",
+    "empresa": "TRANSPORTES RINOCERONTE",
+    "ciudad": "Tultitlán",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "DOLOR DIRECTO: la vacante nombra la liquidación · 1 anuncio en el censo · señal: operador, operadores, viaje · último anuncio: Hace 4 hor · liga: https://mx.computrabajo.com/ofertas-de-trabajo/oferta-de-trabajo-de-auxiliar-de-liquidaciones-liquidaciones-en-tultitlan-4013410273E0564961373E686DCF3405#lc=ListOffers-Score3-15\nPROSPECCIÓN 18-ago-2026: sin decisor público y sin conmutador verificable — los dos dominios que se le atribuyen (transportesrinoceronte.com.mx y trinoceronte.com) no resuelven DNS; su ficha en CANACAR no publica contacto propio. Los teléfonos que circulan son de directorios agregadores, no de fuente oficial: no los escribo. Contexto: 28 años en el sector, Tultitlán Edomex, afiliada CANACAR, carga general y especializada, proyectos retail y corporativos. SEÑAL CALIENTE: el anuncio de «Auxiliar de liquidaciones» se publicó hace horas.",
+    "fuente": "censo"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "2f70f568-27dd-414f-9547-d54f98f10b2d",
+    "empresa": "Auto Transportes Gale",
+    "ciudad": "Cosoleacaque, Veracruz",
+    "correo": "autotransportesgale@prodigy.net.mx",
+    "telefono": "9222640345",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportes de Carga · 11 a 50 personas · Carretera Carretera Mina Jaltipan Km 34.5 Sn Int Na, Colonia Cosoleacaque, CP 96340",
+    "fuente": "canacar"
+  },
+  {
+    "id": "677a633e-cee4-42c0-b962-cb9397e381cc",
+    "empresa": "Auto Transportes Ilhuilcamina, S.A. de C.V.",
+    "ciudad": "Atenco, México",
+    "correo": "mhernandez@ilhuilcamina.com.mx",
+    "telefono": "5949576037",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Calle 1 Sn Int Na, Colonia Ejidos de Tequisistlan, CP 56300\nUbicación aproximada 17-ago: centroide de 3 establecimientos DENUE en Atenco, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "1b9e2cd5-a44f-480e-ab8b-053e34bc5ded",
+    "empresa": "Auto Transportes Refrigerados Verdugo, S.A. de C.V.",
+    "ciudad": "Culiacán, Sinaloa",
+    "correo": "jrverdugo@arv.com.mx",
+    "telefono": "6677186016",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Periférico Libramiento Benito Juarez 988 Int Na, Colonia Las Flores, CP 80104\nUbicación aproximada 17-ago: centroide de 265 establecimientos DENUE en Culiacán, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3aee138b-58cd-41d6-83ff-6eb1ad2a48d3",
+    "empresa": "Auto Transportes Tres Sonidos, S.A. de C.V.",
+    "ciudad": "Culiacán, Sinaloa",
+    "correo": "dacosta@tresonidos.com.mx",
+    "telefono": "6678464170",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Culiacan-Novolato Km 13 Sn Int Na, Colonia Aguaruto Viejo, CP 80308\nUbicación aproximada 17-ago: centroide de 265 establecimientos DENUE en Culiacán, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "fef8ec59-ef59-4a2c-93e4-498c7eebe241",
+    "empresa": "Autoexpress el Rosario, S.A. de C.V.",
+    "ciudad": "Jocotitlán, México",
+    "correo": "agustin.enriquez@yahoo.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Carga General de Mercancias a Terceros · 11 a 50 personas · Camino Mavoro a Santa Clara Sn Int Na, Pueblo Santa Clara, CP 50736\nUbicación aproximada 17-ago: centroide de 7 establecimientos DENUE en Jocotitlán, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

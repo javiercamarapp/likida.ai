@@ -1,0 +1,52 @@
+[
+  {
+    "id": "a145b891-9252-4c79-8253-e0d062b6bef8",
+    "empresa": "Autolineas Nuevomex, S.A. de C.V.",
+    "ciudad": "San Nicolás de los Garza, Nuevo León",
+    "correo": "bgarcia@zinergia.com",
+    "telefono": "8183058222",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · más de 250 personas · Carretera Antigua Carretera a Roma 202 Int Na, Colonia Lagrange, CP 64140\nUbicación aproximada 17-ago: centroide de 150 establecimientos DENUE en San Nicolás de los Garza, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (correo bgarcia@zinergia.com sugiere apellido García, posiblemente de un despacho/gestor 'Zinergia', no confirmado) · no se localizó sitio oficial · socio CANACAR, operación grande (250+ personas) · fuente: búsqueda web\nINVESTIGACIÓN PROFUNDA 20-ago-2026: Julio García (Director General de Desarrollo Corporativo (Zinergia)) · contexto:  — zinergia · huecos: - Nombre completo de \"bgarcia\" — **no confirmado**, no usarlo como nombre propio. - Cargo de Luis Morales confirmado por tres notas de prensa del 50 aniversario, pero   **no verificado que siga en el puesto** (las notas son del cambio de nombre). - Nombres de pila de la familia Cavazos Treviño — no",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a0f6883c-dcd9-4acf-8215-356401219f00",
+    "empresa": "TRANSLIQUIDOS DEL NORTE",
+    "ciudad": "Apodaca, Nuevo León",
+    "correo": "contabilidad@transliquidos.com.mx",
+    "telefono": "8113670836",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo de materiales y residuos peligrosos · 251 y más personas · establecimiento: TRANSLIQUIDOS DEL NORTE\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono\nPROSPECCIÓN 2026-08-19: sin decisor público · no se localizó sitio oficial ni nombre de directivo · operación grande (251+ personas), materiales y residuos peligrosos, Apodaca, Nuevo León (corredor industrial de Monterrey) · fuente: búsqueda web",
+    "fuente": "denue"
+  },
+  {
+    "id": "34833a9e-3136-474a-a3d9-383083924f42",
+    "empresa": "Transportadores Unidos Tusa, S.A. de C.V.",
+    "ciudad": "Cuauhtémoc, Ciudad de México",
+    "correo": "lhuaracha@grupotransportes.com.mx",
+    "telefono": "5555613699",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotranporte de Materiales Peligrosos · más de 250 personas · Avenida Paseo de la Reforma 383 Int Na, Colonia Cuauhtemoc, CP 6500\nUbicación aproximada 17-ago: centroide de 267 establecimientos DENUE en Cuauhtémoc, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "fc190f0e-ed4a-4ab9-8df8-771a2d92bbfa",
+    "empresa": "Transportes Monroy Schiavon, S.A. de C.V.",
+    "ciudad": "Cuautitlán Izcalli, México",
+    "correo": "lmdiaz@tms.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Federal · más de 250 personas · Calle Michael Faraday 3 Int Na, Parque Industrial Cuamatla, CP 54730\nUbicación aproximada 17-ago: centroide de 171 establecimientos DENUE en Cuautitlán Izcalli, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3d48ae32-7ec8-40bf-a767-d190f18de0b8",
+    "empresa": "Transportes Urgentes Nuevo León, S.A. de C.V.",
+    "ciudad": "San Nicolás de los Garza, Nuevo León",
+    "correo": "bgarcia@zinergia.com",
+    "telefono": "8183058222",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · más de 250 personas · Carretera Antigua Carretera a Roma 202 Int Na, Colonia la Grange, CP 66490\nUbicación aproximada 17-ago: centroide de 150 establecimientos DENUE en San Nicolás de los Garza, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 19-ago-2026: score fit 1/5 · sin decisor público · LinkedIn: — · viajes/mes: no público · historia: carga general, 250+ personas; parte del grupo Zinergia (fundado 1973; +950 unidades motrices a nivel grupo) · fuente: zinergia.com, directorio CANACAR",
+    "fuente": "canacar"
+  }
+]

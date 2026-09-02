@@ -1,0 +1,52 @@
+[
+  {
+    "id": "f9e5641c-1d9c-41b1-8af3-720f29e491d1",
+    "empresa": "Transportes Don Juanito, S.A. de C.V.",
+    "ciudad": "Ensenada, Baja California",
+    "correo": "tdjuanit@prodigy.net.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Transpeninsular Km 171.9 Sn Int B, Colonia Vicente Guerrero, CP 22920\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Ensenada, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e201cdf4-0745-41ae-82e6-bf93751aa956",
+    "empresa": "Transportes Duarte Lozada, S.A. de C.V.",
+    "ciudad": "Singuilucan, Hidalgo",
+    "correo": "trans_duarte121@yahoo.com.mx",
+    "telefono": "7757610305",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Pachuca-Tulancingo Km 33.5 Sn Int Na, Colonia el Susto, CP 43700\nUbicación aproximada 17-ago: centroide de 1 establecimiento DENUE en Singuilucan, Hidalgo — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: búsqueda web limitada, sin sitio oficial · ENCAJE: medio — registro CANACAR, 11 a 50 personas, carga general en Hidalgo",
+    "fuente": "canacar"
+  },
+  {
+    "id": "04c5f618-6dee-4077-8bbb-0e1d0c7567e2",
+    "empresa": "Transportes el 26, S.A. de C.V.",
+    "ciudad": "Cuauhtémoc, Chihuahua",
+    "correo": "contabilidad@tve.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Los Maizales 19 Int Na, Colonia Campo 15, CP 31607\nUbicación aproximada 17-ago: centroide de 95 establecimientos DENUE en Cuauhtémoc, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "89422788-4eb6-4802-b538-d3ce51485498",
+    "empresa": "Transportes Eme, S.A. de C.V.",
+    "ciudad": "Guadalajara, Jalisco",
+    "correo": "gerencia@transportadoraeme.com",
+    "telefono": "3328128818",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Ramal del Ferrocarril 560 Int Na, Colonia la Nogalera, CP 44470\nUbicación aproximada 17-ago: centroide de 508 establecimientos DENUE en Guadalajara, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "70c1beab-f93b-49df-b93a-d84b1c6a793e",
+    "empresa": "Transportes Especiales Mex, S.A. de C.V.",
+    "ciudad": "Toluca, México",
+    "correo": "operaciones@tremexlogistics.com",
+    "telefono": "7222149923",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Boulevard Isidro Fabela Sur 511 Int 3, Ampliación America, CP 50130\nUbicación aproximada 17-ago: centroide de 256 establecimientos DENUE en Toluca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts). · PROSPECCIÓN 19-ago-2026: sin decisor público (cupo de WebSearch agotado en esta sesión; solo WebFetch disponible) · también opera como Tremex Logistics (dominio del correo tremexlogistics.com); con base en Toluca, Estado de México; sin sitio activo localizado · ENCAJE: medio — flota carretera chica pero con viajes recurrentes",
+    "fuente": "canacar"
+  }
+]

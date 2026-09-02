@@ -1,0 +1,102 @@
+[
+  {
+    "id": "a47cfc76-6e15-4f85-8b78-3ab5b259ef06",
+    "empresa": "TRANSPORTES ELIZARRARAZ",
+    "ciudad": "Silao de la Victoria, Guanajuato",
+    "correo": "4he.transport@gmail.com",
+    "telefono": "4622519161",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte local de carga general · 11 a 30 personas\nCANACAR (directorio de socios) 17-ago-2026: rellena correo\nHISTORIA: autotransporte local de carga general en Silao de la Victoria, Guanajuato, con 11 a 30 personas, confirmado por dos fuentes independientes (DENUE 05/2026 y directorio de socios CANACAR 17-ago-2026). Silao es plaza automotriz del Bajío (GM, complejo industrial).\nENCAJE: alto — doble fuente (DENUE+CANACAR), carga local en plaza automotriz de Silao.\nPROSPECCIÓN 2026-08-20: sin decisor público · fuente: DENUE 05/2026 (otro autotransporte local de carga general, 11 a 30 personas) + CANACAR directorio de socios 17-ago-2026; correo gmail sin dominio propio y WebSearch agotado en la sesión.",
+    "fuente": "denue"
+  },
+  {
+    "id": "99028498-db93-419e-bd98-970233ae1813",
+    "empresa": "TRANSPORTES GONZALEZ LOZANO TGL",
+    "ciudad": "Castaños, Coahuila de Zaragoza",
+    "correo": "oficina.transportestgl@gmail.com",
+    "telefono": "8661834970",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga general · 11 a 30 personas · establecimiento: TRANSPORTES GONZALEZ LOZANO TGL\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono y correo",
+    "fuente": "denue"
+  },
+  {
+    "id": "a5dfe386-e426-4bca-bcb2-86a9c9ba4f55",
+    "empresa": "TRANSPORTES JOSE EDWIGES VARGAS JIMENEZ",
+    "ciudad": "Tepatitlán de Morelos, Jalisco",
+    "correo": "bettytransportesvargas@hotmail.com",
+    "telefono": "3781088294",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo de productos agrícolas sin refrigeración · 11 a 30 personas\nHISTORIA: autotransporte foráneo de productos agrícolas sin refrigeración en Tepatitlán de Morelos, Jalisco, con 11 a 30 personas (DENUE 05/2026). Tepatitlán es plaza avícola y de Los Altos de Jalisco.\nPROSPECCIÓN 2026-08-20: sin decisor público · el nombre comercial incorpora el nombre del probable dueño, pero DENUE no lo marca explícitamente como razón social persona física (a diferencia del formato usado por CANACAR), así que no se declara decisor sin esa confirmación · fuente: DENUE 05/2026 (autotransporte foráneo de productos agrícolas sin refrigeración, 11 a 30 personas); correo hotmail sin dominio propio y WebSearch agotado en la sesión.",
+    "fuente": "denue"
+  },
+  {
+    "id": "25a45e50-9856-4b8b-a811-31f4d8074e06",
+    "empresa": "TRANSPORTES OMA",
+    "ciudad": "Querétaro, Querétaro",
+    "correo": "o.rojas@omamexico.com",
+    "telefono": "4426305710",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga especializado · 11 a 30 personas · establecimiento: TRANSPORTES OMA\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono y correo",
+    "fuente": "denue"
+  },
+  {
+    "id": "5616b84d-3946-43f0-9c1d-2e37a9d9d114",
+    "empresa": "TRANSPORTES PAPANOA",
+    "ciudad": "Iztapalapa, Ciudad de México",
+    "correo": "trafico@transportespapanoa.mx",
+    "telefono": "5574518848",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga general · 11 a 30 personas · establecimiento: TRANSPORTES PAPANOA\n\nPROSPECCIÓN 2026-08-21: DECISOR CONFIRMADO (confianza media) — Raúl Garduño Velásquez, contacto del afiliado en padrón CANACAR (cargo exacto no confirmado). Se consolida aquí la fila del censo 'TRANSPORTES PAPANOA, S.A. DE C.V. RAULGARDUÑO VELASQUEZ' como duplicado_de esta fila.",
+    "fuente": "denue"
+  },
+  {
+    "id": "bae492cd-0c24-4d52-9681-434632c32d57",
+    "empresa": "TRANSPORTES RALI",
+    "ciudad": "Acuña, Coahuila de Zaragoza",
+    "correo": "transportes@aarali.com",
+    "telefono": "8000117254",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Servicios de agencias aduanales · 11 a 30 personas · sitio: aarali.com · establecimiento: TRANSPORTE RALI\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  },
+  {
+    "id": "fd0ee0e9-1e63-4e76-bc14-2ffacd33fcb7",
+    "empresa": "TRANSPORTES RIVERA V",
+    "ciudad": "Coyotepec, México",
+    "correo": "trans_rivera@hotmail.com",
+    "telefono": "5939150967",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga especializado · 11 a 30 personas · establecimiento: TRANSPORTES RIVERA V\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  },
+  {
+    "id": "eb0c4090-a92f-43e2-8028-f42e77b19a3a",
+    "empresa": "TRANSPORTES Y DISTRIBUCIONES NACIONALES",
+    "ciudad": "Centro, Tabasco",
+    "correo": "tradina@hotmail.com",
+    "telefono": "9933607877",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga general · 11 a 30 personas · establecimiento: TRANSPORTES Y DISTRIBUCIONES NACIONALES, SA DE CV\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  },
+  {
+    "id": "d8871728-f2a6-43c9-b6bb-35cd6d43445e",
+    "empresa": "TRUER LOGISTIC AND TRAFFIC SERVICES",
+    "ciudad": "Puebla, Puebla",
+    "correo": "contacto@truer.com.mx",
+    "telefono": "2222320683",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otros servicios de intermediación para el transporte de carga · 11 a 30 personas · sitio: truer.com.mx · establecimiento: TRUER LOGISTIC AND TRAFFIC SERVICES\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono\n\nPROSPECCIÓN 2026-08-19: sin decisor público hallado (truer.com.mx y LinkedIn corporativo mx.linkedin.com/company/truer-logistic-and-traffic-and-services-sa-de-cv no publican nombres de directivos) · confirmado: forwarder internacional con 15+ años, marítimo/aéreo/terrestre/multimodal, rastreo GPS, atiende exportadores/importadores · fuente: truer.com.mx, búsqueda web pública.",
+    "fuente": "denue"
+  },
+  {
+    "id": "3ce35db0-322a-4fcd-b314-d2ffc6c69bbd",
+    "empresa": "ULISES GONZALEZ",
+    "ciudad": "Isla Mujeres, Quintana Roo",
+    "correo": "contabilidad@tpicu.com",
+    "telefono": "9983730951",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Transporte colectivo urbano y suburbano de pasajeros en autobuses de ruta fija · 11 a 30 personas · sitio: islenusbus.com · establecimiento: TRANSPORTADORA ISLENIUS\nPROSPECCION 2026-08-19: sin decisor publico (sitio islenusbus.com no resuelve por DNS al momento de la busqueda) · contexto: TRANSPORTADORA ISLENIUS, transporte colectivo urbano/suburbano de pasajeros de ruta fija, Isla Mujeres, 11 a 30 personas · fuente: DENUE + intento WebFetch\nPROSPECCION 2026-08-19 (correccion): persona fisica — el nombre del establecimiento en DENUE es el titular del permiso, se llena contacto_nombre con el mismo nombre (fuente: registro DENUE/CANACAR, dato publico ya presente en la ficha) · cargo: Titular / Propietario\nENCAJE: medio — flota mediana en operacion de transporte con diesel",
+    "fuente": "denue"
+  }
+]

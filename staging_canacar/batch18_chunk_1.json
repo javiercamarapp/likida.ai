@@ -1,0 +1,52 @@
+[
+  {
+    "id": "ea5f860e-2bac-409f-8f95-1e779ed6391c",
+    "empresa": "Transportes Navi, S.A. de C.V.",
+    "ciudad": "Zapopan, Jalisco",
+    "correo": "monica.c@transnavi.mx",
+    "telefono": "3336660755",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Federal · 11 a 50 personas · Calle Felipe Zetter 3112 Int 13, Colonia Paseos del Sol, CP 45079\nUbicación aproximada 17-ago: centroide de 205 establecimientos DENUE en Zapopan, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a96b48f4-8315-411f-b414-f52dfd0ce8d0",
+    "empresa": "Transportes Octano, S.A. de C.V.",
+    "ciudad": "Tepic, Nayarit",
+    "correo": "nayeli.carrillo@logisticacombustibles.com",
+    "telefono": "3112181030",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportacion de Combustible · 11 a 50 personas · Avenida Tecnologico 4728 Int Na, Colonia Puente de San Cayetano, CP 63194\nUbicación aproximada 17-ago: centroide de 89 establecimientos DENUE en Tepic, Nayarit — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9eaefac1-6e3f-42b3-a432-20c0b03450b6",
+    "empresa": "Transportes Omti",
+    "ciudad": "León, Guanajuato",
+    "correo": "samuel.padron@t-elroi.com",
+    "telefono": "5531882575",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Logistica · 11 a 50 personas · Boulevard Adolfo Lopez Mateos 2408 Int Na, Unidad Elroi Logistica, CP 37180\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "68dd54ef-2d8c-44c8-a035-6d2f4595ecdc",
+    "empresa": "Transportes Petrocalidos, S.A. de C.V.",
+    "ciudad": "Tlajomulco de Zúñiga, Jalisco",
+    "correo": "jorgecab58@gmail.com",
+    "telefono": "8998737940",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera a el Salto Km 3.5 Sn Int Na, Colonia Alameda, CP 45679 · 2 sucursales registradas en CANACAR (Silao de la Victoria, Guanajuato)\nUbicación aproximada 17-ago: centroide de 131 establecimientos DENUE en Tlajomulco de Zúñiga, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (CANACAR registra la razón social sin nombrar titular; buscador sin resultados) · LinkedIn: no hallado · viajes/mes: no público · historia: no pública · fuente: directorio CANACAR · fit 1/5",
+    "fuente": "canacar"
+  },
+  {
+    "id": "366b7000-0eb9-41b0-ad79-60730a88564d",
+    "empresa": "Transportes Pitic, S.A. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "contactomexicali@tpitic.com.mx",
+    "telefono": "6865920438",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Federal de Carga · 11 a 50 personas · Carretera San Felipe Km 1.7 Sn Int Na, Colonia Rivera Campestre, CP 21600 · 31 sucursales registradas en CANACAR (Ahome, Sinaloa; Benito Juárez, Quintana Roo; Cajeme, Sonora; Centro, Tabasco; Chihuahua, Chihuahua; Cuautlancingo, Puebla; Culiacán, Sinaloa; Ecatepec de Morelos, México, …)\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

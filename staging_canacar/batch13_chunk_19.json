@@ -1,0 +1,52 @@
+[
+  {
+    "id": "6b5864f8-85ba-4b6d-b6f1-119c4ab168cf",
+    "empresa": "Soluciones Liv, S.A. de C.V.",
+    "ciudad": "Ecatepec de Morelos, México",
+    "correo": "solucioneslivsadecv@gmail.com",
+    "telefono": "5517035785",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportacion de Mercancias · 11 a 50 personas · Calle Bugambilias Mz 17 Int Lt 35, Colonia Ecatepec de Morelos, CP 55400\nUbicación aproximada 17-ago: centroide de 186 establecimientos DENUE en Ecatepec de Morelos, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0b95dfbd-df55-40d4-bf27-0b7010357104",
+    "empresa": "Soluciones Logisticas del Pacifico Jft, S. de R.L. de C.V.",
+    "ciudad": "Manzanillo, Colima",
+    "correo": "administracion@jftlogistic.com",
+    "telefono": "3141243876",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicios de Tranporte · 11 a 50 personas · Calle Lazaro Cardenas 1214 Int Na, Colonia Morelos, CP 28217\nUbicación aproximada 17-ago: centroide de 551 establecimientos DENUE en Manzanillo, Colima — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "51068c7d-2417-4b37-baff-6fe0b3acc29a",
+    "empresa": "Soluciones Sever, S.A. de C.V.",
+    "ciudad": "Guadalajara, Jalisco",
+    "correo": "administracion@s-sever.com",
+    "telefono": "3317287405",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Logistica en Transporte · 11 a 50 personas · Calle Ignacio L. Vallarta 6503 Int Na, Privada Na, CP 45010\nUbicación aproximada 17-ago: centroide de 508 establecimientos DENUE en Guadalajara, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "68ebfc26-c30b-443f-9618-6a9647251eb3",
+    "empresa": "Sonora Logistics, S.A. de C.V.",
+    "ciudad": "Guaymas, Sonora",
+    "correo": "manuel.duenas@vejar.mx",
+    "telefono": "6221655273",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Federal · 11 a 50 personas · Calle 23 32 Int Na, Colonia Centro, CP 85400\nUbicación aproximada 17-ago: centroide de 55 establecimientos DENUE en Guaymas, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "222e88c4-1df9-41ac-9d11-eeae160a957d",
+    "empresa": "Sp Transporte & Logística, S.A. de C.V.",
+    "ciudad": "Ciudad Madero, Tamaulipas",
+    "correo": "administracion@sptransportes.com",
+    "telefono": "8333063300",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Alvaro Obregon 1204 Int 3, Colonia Vicente Guerrero, CP 89580\nUbicación aproximada 17-ago: centroide de 33 establecimientos DENUE en Ciudad Madero, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "fuente": "canacar"
+  }
+]

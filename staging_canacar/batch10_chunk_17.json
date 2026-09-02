@@ -1,0 +1,52 @@
+[
+  {
+    "id": "8076f31c-7429-454c-a6a8-df1bbb7d8a3a",
+    "empresa": "Lausant Transportes, S.A. de C.V.",
+    "ciudad": "Altamira, Tamaulipas",
+    "correo": "direccion@lstransportes.com.mx",
+    "telefono": "8333594794",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Armenta 96 Int Na, Colonia la Pedrera, CP 89603\nUbicación aproximada 17-ago: centroide de 176 establecimientos DENUE en Altamira, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nINVESTIGACION CARRIL8 19-ago-2026: lstransportes.com.mx NO resuelve DNS - sin sitio propio verificable. El correo registrado direccion@lstransportes.com.mx es buzon de DIRECCION (canal directo al decisor, aunque no lo nombra). Se sostiene la evidencia CANACAR: socio del directorio, autotransporte de carga en Altamira Tamps, 11-50 personas, Calle Armenta 96 Col. La Pedrera CP 89603 - polo petroquimico y portuario. Sin conteo de unidades: unidades queda null.\nENCAJE: alto - socio CANACAR en Altamira, tamano en rango, buzon de direccion.\nPROSPECCION 2026-08-19: sin decisor publico con nombre - el buzon direccion@ confirma el canal pero no la persona; sitio caido y WebSearch agotado en la sesion.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "19de94c3-e526-4af9-8d2c-1458ad0419e5",
+    "empresa": "Leticia del Socorro Lesher Arguello",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "rhtrucking2013@hotmail.com",
+    "telefono": "8677159165",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Nuevo Leon 1710 Int Na, Colonia Guerrero, CP 88240\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "94931f3b-fa53-4736-83b9-25b50e4b2d6e",
+    "empresa": "Líneas del Centro de Occidente, S.A. de C.V.",
+    "ciudad": "Guadalajara, Jalisco",
+    "correo": "lespinoza@clo.com.mx",
+    "telefono": "3321826785",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Lope de Vega 255 Int 39, Colonia Arcos Sur, CP 44150\nUbicación aproximada 17-ago: centroide de 508 establecimientos DENUE en Guadalajara, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6c61676f-aee4-437c-97b6-d864aec49b30",
+    "empresa": "Logistic Cargo Services México, S.A. de C.V.",
+    "ciudad": "Manzanillo, Colima",
+    "correo": "administracion@cargoservices.com.mx",
+    "telefono": "3331262935",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Algodon Sn Int Na, Colonia Tapeixtles, CP 28239\nUbicación aproximada 17-ago: centroide de 551 establecimientos DENUE en Manzanillo, Colima — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8f369996-d31d-4145-b25d-b4289b1619f7",
+    "empresa": "Logistic International Mlt, S.A. de C.V.",
+    "ciudad": "Tecate, Baja California",
+    "correo": "cpmarthagilbert@hotmail.com",
+    "telefono": "6651017130",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Cuchuma 1401 Int Na, Colonia Bellavista, CP 21440\nUbicación aproximada 17-ago: centroide de 45 establecimientos DENUE en Tecate, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "8ea52392-55e4-4086-b90e-90dc1b886e66",
+    "empresa": "Transportes Millenium, S.A. de C.V.",
+    "ciudad": "Piedras Negras, Coahuila",
+    "correo": "jazteca@prodigy.net.mx",
+    "telefono": "6787881039",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Boulevard Republica 892 Int Na, Colonia Villas del Carmen, CP 26080",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8e254157-9452-4e05-a1c4-1f3d789cc267",
+    "empresa": "Transportes Pérez Álvarez, S.A. de C.V.",
+    "ciudad": "Cajeme, Sonora",
+    "correo": "cobranza.tpa@grupogpa.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Carga Federal de Material y Residuos Peligros · 51 a 250 personas · Avenida Circuito Interior 2155 Int Na, Colonia Parque Industrial, CP 85065\nUbicación aproximada 17-ago: centroide de 140 establecimientos DENUE en Cajeme, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "01fe7438-3e8b-4414-8ed3-a60d5c53b41f",
+    "empresa": "Transportes Pigasa, S.A. de C.V.",
+    "ciudad": "Apodaca, Nuevo León",
+    "correo": "victor.chavez@transportespigasa.com.mx",
+    "telefono": "8147372401",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Local y Foraneo de Carga Refrigerada y Carga General · 51 a 250 personas · Carretera Autopista Anillo Pereferico 37+800 Sn Int Na, Colonia Moises Saenz, CP 66613\nUbicación aproximada 17-ago: centroide de 300 establecimientos DENUE en Apodaca, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "995f06fb-0de2-49a5-949a-a5520ff397d4",
+    "empresa": "Transportes Polanco, S.A. de C.V.",
+    "ciudad": "Altamira, Tamaulipas",
+    "correo": "operativo@transportespolanco.com.mx",
+    "telefono": "8332644956",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 51 a 250 personas · Calle Victoria 830 Int Na, Colonia Alejandro Briones, CP 89603\nUbicación aproximada 17-ago: centroide de 176 establecimientos DENUE en Altamira, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "142e9318-fb21-4d20-9da1-bb5ce91a0f79",
+    "empresa": "Transportes Prisa, S.A. de C.V.",
+    "ciudad": "La Paz, México",
+    "correo": "juan.espino@grupogondi.com",
+    "telefono": "5515550200",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportes Publico Federal de Carga · 51 a 250 personas · Calle de Las Flores 42 Int Na, Colonia Los Reyes Acaquilpan, CP 56400\nUbicación aproximada 17-ago: centroide de 25 establecimientos DENUE en La Paz, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN PROFUNDA 21-ago-2026: Juan Carlos Espino Hernández, Director General (RocketReach). Lucía Pérez Mercado, Controlador. Carina Olivares León, Gerente de RH.",
+    "fuente": "canacar"
+  }
+]

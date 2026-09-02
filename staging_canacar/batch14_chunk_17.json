@@ -1,0 +1,52 @@
+[
+  {
+    "id": "1bc0fd97-02cb-4abf-b1b2-a97bfe0789dd",
+    "empresa": "Transmaner, S.A. de C.V.",
+    "ciudad": "Cuernavaca, Morelos",
+    "correo": "cmancilla@trsnamaner.com.mx",
+    "telefono": "7773993252",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Rio Uzumacinta 211 Int Na, Colonia Vista Hermosa, CP 62290\nUbicación aproximada 17-ago: centroide de 71 establecimientos DENUE en Cuernavaca, Morelos — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e7210b04-18da-4a21-b325-7085af399275",
+    "empresa": "Transpais Cargo",
+    "ciudad": "Victoria, Tamaulipas",
+    "correo": "cperez@transpais.com.mx",
+    "telefono": "8331231163",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte · 11 a 50 personas · Calle Alberto Carrera Torres 2315 Int Na, Colonia Dos Mil, CP 87099\nUbicación aproximada 17-ago: centroide de 55 establecimientos DENUE en Victoria, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nHISTORIA (sin confirmar): el correo del directorio (cperez@transpais.com.mx) usa el dominio del grupo Transpais; «Transpais Cargo» parece ser la división de carga, distinta de la marca de autobuses de pasajeros del mismo grupo — no se confirmó por fuente pública adicional.\nPROSPECCIÓN 2026-08-19: sin decisor público con cargo · LinkedIn: no hallado · fuente: CANACAR 17-ago-2026 (registro específico de carga, no de pasaje).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a9666f21-5523-45e5-baef-0d5e6853b018",
+    "empresa": "Transpoempaques, S.A. de C.V.",
+    "ciudad": "Santiago, Nuevo León",
+    "correo": "direccion@transpormpaques.com.mx",
+    "telefono": "8122854072",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Local de Carga General · 11 a 50 personas · Carretera Nacional Km 243 Int Na, Colonia el Cercado, CP 67320\nUbicación aproximada 17-ago: centroide de 42 establecimientos DENUE en Santiago, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "941201f7-4aec-4072-972d-d9db7bfedd5f",
+    "empresa": "Transport Driver Fleet, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "traficotdf@gmail.com",
+    "telefono": "8677350790",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera México Ii Sn Int Sn, Colonia Ejido el Progreso, CP 88123\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "41f4cd7e-7b2e-4405-b0cc-c51030a4c9a7",
+    "empresa": "Transportación Ecológica de Occidente, S.A. de C.V.",
+    "ciudad": "Guadalajara, Jalisco",
+    "correo": "transportacioneco@prodigy.net.mx",
+    "telefono": "3331616042",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Calle Cedro 30 Int Sn, Colonia Los Laureles, CP 45870\nUbicación aproximada 17-ago: centroide de 508 establecimientos DENUE en Guadalajara, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

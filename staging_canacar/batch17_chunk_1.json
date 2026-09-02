@@ -1,0 +1,52 @@
+[
+  {
+    "id": "3b2073fd-e1f3-4553-ba45-0bbf5094bcd4",
+    "empresa": "Transportes Especializados Arca, S.A. de C.V.",
+    "ciudad": "San Pedro Tlaquepaque, Jalisco",
+    "correo": "direccion@petroarca.com",
+    "telefono": "3337976526",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Traslado de Combustible · 11 a 50 personas · Avenida de Jesus 1220 Int Na, Colonia Valle de la Misericordia, CP 45615\nUbicación aproximada 17-ago: centroide de 219 establecimientos DENUE en San Pedro Tlaquepaque, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "08db5bf6-12fa-42ca-b4dd-527db06266c4",
+    "empresa": "Transportes Especializados Cavazos Lopez",
+    "ciudad": "Allende, Nuevo León",
+    "correo": "dianak_lopez@hotmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Al Fraile Km 1.5 Na Int Na, Sección Buenavista, CP 67350\nUbicación aproximada 17-ago: centroide de 123 establecimientos DENUE en Allende, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0d43fd53-71a3-4187-b4b9-890491626d9d",
+    "empresa": "Transportes Especializados del Golfo Cavazos Lopez",
+    "ciudad": "Allende, Nuevo León",
+    "correo": "sergiocvz@tegc.com.mx",
+    "telefono": "8261716601",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 11 a 50 personas · Carretera Libre Municipal Buena Vista Al Fraile Km 1.5 Int Na, Colonia Buenavista, CP 67350\nUbicación aproximada 17-ago: centroide de 123 establecimientos DENUE en Allende, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "bac77a88-d2cb-4151-b07d-f5de88d4b404",
+    "empresa": "Transportes Especializados del Nayar, S.A. de C.V.",
+    "ciudad": "Acaponeta, Nayarit",
+    "correo": "eeavilaa@grupo-sierra.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Internacional 15 Int Km 136, Colonia Sin Colonia, CP 63400\nUbicación aproximada 17-ago: centroide de 11 establecimientos DENUE en Acaponeta, Nayarit — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "95fa2158-048f-4015-ad59-f67f676341e0",
+    "empresa": "Transportes Especializados Pedro Cavazos Leal, S.A. de C.V.",
+    "ciudad": "Allende, Nuevo León",
+    "correo": "pedrocavazosleal@prodigy.net.mx",
+    "telefono": "8262686394",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportacion de Productos Perecederos · 11 a 50 personas · Carretera Allende-Cadereyta Km 2 Sn Int Na, Colonia Talleres, CP 67350\nUbicación aproximada 17-ago: centroide de 123 establecimientos DENUE en Allende, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "01532211-ef8c-4bec-ac81-c96f7739a42b",
+    "empresa": "Transportes Martínez López, S.A. de C.V.",
+    "ciudad": "Irapuato, Guanajuato",
+    "correo": "antonio.cano@transportesml.com.mx",
+    "telefono": "4621485850",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Camino Camino Vecinal de Ote. a Pte. de Solidaridad L Poblado de Arandas 403 Int Na, Ejido Lo de Juarez, CP 36620\nUbicación aproximada 17-ago: centroide de 96 establecimientos DENUE en Irapuato, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ab64cfca-e84e-4001-8337-f77bfab18fc0",
+    "empresa": "Transportes Martínez Ortíz, S.A. de C.V.",
+    "ciudad": "Salamanca, Guanajuato",
+    "correo": "tramosacv@hotmail.com",
+    "telefono": "4646481842",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Estado de Puebla 510 Int Na, Colonia 18 de Marzo, CP 36786\nUbicación aproximada 17-ago: centroide de 60 establecimientos DENUE en Salamanca, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-20: sin decisor público — no se localizó sitio oficial ni perfil público con nombre de dueño o director; motores de búsqueda bloqueados/CAPTCHA en esta sesión · fuente: búsqueda web + CANACAR/DENUE (censo, ya en notas).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b3091b50-e0a7-43de-a4cb-a1d018637952",
+    "empresa": "Transportes Mazatlán, S.A. de C.V.",
+    "ciudad": "Mazatlán, Sinaloa",
+    "correo": "lucy.acosta@tramasa.com.mx",
+    "telefono": "6699170404",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Internacional Km 1192.5 Sn Int Na, Colonia Niños Heroes, CP 82190\nUbicación aproximada 17-ago: centroide de 131 establecimientos DENUE en Mazatlán, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: CANACAR 17-ago-2026\nENCAJE: alto — socio CANACAR de carga, 11-50 personas, correo de dominio propio",
+    "fuente": "canacar"
+  },
+  {
+    "id": "cc612a19-2eeb-4351-a1ed-8a7aef001548",
+    "empresa": "Transportes Mec, S. de R.L. de C.V.",
+    "ciudad": "Tlalnepantla de Baz, México",
+    "correo": "carmen_ramirez@grupotanya.com.mx",
+    "telefono": "5553936964",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida del Cristo 2 Int Na, Colonia Vista Hermosa, CP 54080\nUbicación aproximada 17-ago: centroide de 187 establecimientos DENUE en Tlalnepantla de Baz, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "088516f2-3efa-4d5a-a3b4-acdd0b0ca556",
+    "empresa": "Transportes Medorios, S.A. de C.V.",
+    "ciudad": "Huiloapan de Cuauhtémoc, Veracruz",
+    "correo": "transportes_medorios@hotmail.com",
+    "telefono": "2721183611",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga en General · 11 a 50 personas · Calle Emiliano Zapata 5 Int Na, Colonia Donato Guerra, CP 94794",
+    "fuente": "canacar"
+  }
+]

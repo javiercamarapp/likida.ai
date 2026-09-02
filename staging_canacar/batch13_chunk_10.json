@@ -1,0 +1,52 @@
+[
+  {
+    "id": "0360ce16-10f5-4cc7-8ff2-473728235feb",
+    "empresa": "Roberto Márquez Rodríguez",
+    "ciudad": "Río Bravo, Tamaulipas",
+    "correo": "vacamar3121@hotmail.com",
+    "telefono": "8991424133",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Novena 204 Int Na, Colonia Hijos de Ejidatarios, CP 88920\nUbicación aproximada 17-ago: centroide de 24 establecimientos DENUE en Río Bravo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "1be05314-94a3-4acd-8644-e5de30cba02c",
+    "empresa": "Rodar de Baja, S. de R.L. de C.V.",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "marli.ochoa@sonictransportation.com",
+    "telefono": "6643787924",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle San Miguel 20837 Int Na, Colonia Magisterial, CP 22470\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "de94ec0f-1200-4388-bd46-ee3be7f16f9c",
+    "empresa": "Rodolfo Martín Salinas Gutiérrez",
+    "ciudad": "El Salto, Jalisco",
+    "correo": "rodolfo.salinas@salitrans.com",
+    "telefono": "3316100048",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Fletes · 11 a 50 personas · Carretera el Salto 35 Int Na, Colonia el Castillo, CP 45680\nUbicación aproximada 17-ago: centroide de 68 establecimientos DENUE en El Salto, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c430470c-7c0c-4c15-bccc-7ad21f6f65bb",
+    "empresa": "Rojas Trailers",
+    "ciudad": "General Escobedo, Nuevo León",
+    "correo": "guillermo.pancardo@rojastrailers.mx",
+    "telefono": "8331591204",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Prestacion de Servicio de Fletes · 11 a 50 personas · Calle Janiro Caballero 210 Int Sn, Condominio Andres Caballero Moreno Agrop, CP 66080\nUbicación aproximada 17-ago: centroide de 199 establecimientos DENUE en General Escobedo, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nRojas Trailers: socia CANACAR (17-ago-2026), giro específico \"Prestación de Servicio de Fletes\", 11 a 50 personas, Calle Janiro Caballero 210, Condominio Andrés Caballero Moreno, General Escobedo, Nuevo León — cinturón industrial de Monterrey. Correo de negocio: guillermo.pancardo@rojastrailers.mx (contacto nombrado: Guillermo Pancardo, sin cargo declarado). El sitio rojastrailers.mx devolvió HTTP 404 al 20-ago-2026.\nENCAJE: alto — fletes de 11-50 personas en cinturón industrial de Monterrey, contacto nombrado\nPROSPECCIÓN 2026-08-20: sin decisor público confirmado con cargo (contacto de negocio: Guillermo Pancardo) · fuente: directorio de socios CANACAR 17-ago-2026; WebFetch a rojastrailers.mx devolvió 404",
+    "fuente": "canacar"
+  },
+  {
+    "id": "16bf0fc5-ecc1-4752-8b87-621c3232096c",
+    "empresa": "Rosalva Morales Ramirez",
+    "ciudad": "Atizapán de Zaragoza, México",
+    "correo": "rosalvamor@prodigy.net.mx",
+    "telefono": "5510214803",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Quetzales 27 Int Na, Colonia Las Alamedas, CP 52970\nUbicación aproximada 17-ago: centroide de 68 establecimientos DENUE en Atizapán de Zaragoza, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

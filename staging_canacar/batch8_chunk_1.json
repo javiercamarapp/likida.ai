@@ -1,0 +1,52 @@
+[
+  {
+    "id": "2eb78e3c-acc5-4b2c-8fe3-1fa2244506ea",
+    "empresa": "Autotransportes de Carga Unión Leonesa",
+    "ciudad": "León, Guanajuato",
+    "correo": "unionleo11@hotmail.com",
+    "telefono": "4777122784",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporate de Calzado · 11 a 50 personas · Privada Prolongacion Juarez 101 Int Na, Colonia Plaza de Toros, CP 37450\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "98bea82f-92ee-4a9d-8e67-ecdf13e92c33",
+    "empresa": "Autotransportes Drakkar, S.A. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "azayas@tvikingo.com",
+    "telefono": "2299328290",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Foraneo de Carga General · 11 a 50 personas · Calle Hernandez y Hernandez 409 Int 3, Colonia Faros, CP 91709 · PROSPECCIÓN 2026-08-19: sin decisor público confirmado · sitio tvikingo.com (dominio del correo ya en base) devolvió 403 al intentar verificarlo por WebFetch, no se pudo confirmar contenido ni nombre. El local-part 'azayas' del correo es indicio, no confirmación pública independiente. Mensaje hiperpersonalizado generado con evidencia CANACAR.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a1010d5a-d1d4-4f82-b3e1-e5af3c10c400",
+    "empresa": "Autotransportes Especializados Grúas y Maniobras López, S.A. de C.V.",
+    "ciudad": "Iztapalapa, Ciudad de México",
+    "correo": "uriel_lopez@tralo.com.mx",
+    "telefono": "5556003930",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle 22 de Diciembre de 1860 46 B Int Na, Colonia Leyes de Reforma, CP 9310\nUbicación aproximada 17-ago: centroide de 359 establecimientos DENUE en Iztapalapa, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público confirmado — indicio fuerte pero no fuente independiente: razón social incluye 'López' y correo uriel_lopez@tralo.com.mx sugiere que el decisor podría llamarse Uriel López, pero no hay fuente pública que lo nombre con cargo explícito, así que no se llenó contacto_nombre · sitio tralo.com.mx no cargó contenido — pendiente de reintentar · socio CANACAR, grúas y maniobras especializadas · fuente: búsqueda web",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8f8b3ba7-5382-44f4-9550-79f6cf2dc58f",
+    "empresa": "Autotransportes Guadalajara Bajio",
+    "ciudad": "Tonalá, Jalisco",
+    "correo": "direccion@transgb.com.mx",
+    "telefono": "3312947259",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Camino Real 179 Int Na, Colonia San Francisco de la Soledad, CP 45424\nUbicación aproximada 17-ago: centroide de 73 establecimientos DENUE en Tonalá, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "099e283a-a56f-4b50-9d8a-93f8d1bb7bbd",
+    "empresa": "Autotransportes Internacionales, S. de R.L. de C.V.",
+    "ciudad": "Azcapotzalco, Ciudad de México",
+    "correo": "r.rangel@ati.com.mx",
+    "telefono": "5550622600",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Mudanzas · 11 a 50 personas · Calle Nuevo Santo Domingo 149 Int Na, Fraccionamiento Industrial San Antonio, CP 2760\nUbicación aproximada 17-ago: centroide de 174 establecimientos DENUE en Azcapotzalco, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "4764c415-9100-4638-84c6-3b9a672d7f6d",
+    "empresa": "Transportes Unidos a Su Servicio, S.A. de C.V.",
+    "ciudad": "Gustavo A. Madero, Ciudad de México",
+    "correo": "traussa@hotmail.com",
+    "telefono": "5522070906",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Servicio Publico Federal · 11 a 50 personas · Calle Centro Escolar Mz 21 Lt 12 Int Na, Colonia Centro Escolar, CP 7230\nUbicación aproximada 17-ago: centroide de 268 establecimientos DENUE en Gustavo A. Madero, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b626a27f-ff7f-42ba-ad57-f9585032331a",
+    "empresa": "Transportes Unidos Mad, S.A. de C.V.",
+    "ciudad": "Altamira, Tamaulipas",
+    "correo": "awoyvela@tumad.com.mx",
+    "telefono": "8332266260",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 11 a 50 personas · Calle Mariano Matamoros 1800 Int Na, Colonia Justo Sierra, CP 89604\nUbicación aproximada 17-ago: centroide de 176 establecimientos DENUE en Altamira, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: CANACAR 17-ago-2026",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9bc1b969-f538-4c25-8232-b26a1e9f40a8",
+    "empresa": "Transportes Valbo y Asociados, S.A. de C.V.",
+    "ciudad": "Tizayuca, Hidalgo",
+    "correo": "albinohernandezg@hotmail.com",
+    "telefono": "5526030592",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Avenida de Las Diligencias 42 Int Na, Colonia Tepojaco, CP 43810\nUbicación aproximada 17-ago: centroide de 31 establecimientos DENUE en Tizayuca, Hidalgo — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "94184493-4305-4830-bb42-5dfd514fb4ee",
+    "empresa": "Transportes Valpre, S.A. de C.V.",
+    "ciudad": "Cajeme, Sonora",
+    "correo": "transportesvalpre@gmail.com",
+    "telefono": "6444136479",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Materiales y Residuos Peligrosos · 11 a 50 personas · Calle Idelfonso de la Peña 827 Int Na, Colonia Bellavista, CP 85130\nUbicación aproximada 17-ago: centroide de 140 establecimientos DENUE en Cajeme, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "cf58ec2b-6752-4e61-9e02-21e27efdc40b",
+    "empresa": "Transportes y Grúas Barrera, S.A. de C.V.",
+    "ciudad": "Azcapotzalco, Ciudad de México",
+    "correo": "tygbarrera@prodigy.net.mx",
+    "telefono": "5553531621",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Especializada · 11 a 50 personas · Privada Tepanecos 11 Int Na, Colonia San Esteban, CP 2040\nUbicación aproximada 17-ago: centroide de 174 establecimientos DENUE en Azcapotzalco, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

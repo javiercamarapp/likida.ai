@@ -1,0 +1,102 @@
+[
+  {
+    "id": "22c1fb67-0631-4ec4-ab8a-a905ec4f29e1",
+    "empresa": "OPERADORA DE TRAFICOS TERRESTRES",
+    "ciudad": "Zapopan, Jalisco",
+    "telefono": "3333793651",
+    "correo": "psandoval@imi.com.mx",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga especializado · 6 a 10 personas · sitio: www.imi.com.mx · establecimiento: IMI CONTAINER PARK",
+    "num_unidades": 24,
+    "unidades": "5-30"
+  },
+  {
+    "id": "225ad807-54f8-42ae-aeb3-dd5a1efbb61e",
+    "empresa": "SUPER SERVICIO BUENOS AIRES",
+    "ciudad": "Lázaro Cárdenas, Michoacán de Ocampo",
+    "telefono": null,
+    "correo": "pachecomercadoazucena@gmail.com",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga especializado · 51 a 100 personas · establecimiento: PATIO SUPER SERVICIO BUENOS AIRES\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": 20,
+    "unidades": "5-30"
+  },
+  {
+    "id": "22da9b22-3e25-4cfa-9f58-7e3b43040a06",
+    "empresa": "LAUSANT COMERCIO EXTERIOR MANZANILLO",
+    "ciudad": "Altamira, Tamaulipas",
+    "telefono": null,
+    "correo": null,
+    "notas": "UNIVERSO DENUE 05/2026: Servicios de agencias aduanales · 0 a 5 personas · establecimiento: LAUSANT COMERCIO EXTERIOR MANZANILLO\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: Lausant Comercio Exterior Manzanillo, titular (la razón social del censo es su nombre; cargo no verificado en otra fuente) · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": 20,
+    "unidades": "5-30"
+  },
+  {
+    "id": "234813e1-7b81-4bc0-ba14-a93ff260ed88",
+    "empresa": "Transportes Refrigerados de Berries, S.A de C.V.",
+    "ciudad": "Tangancícuaro, Michoacán",
+    "telefono": null,
+    "correo": "trberries@gmail.com",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo Con Refrigeracion · 0 a 10 personas · Calle Agustin de Iturbide 30 Int Na, Colonia Centro, CP 59750\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": 14,
+    "unidades": "5-30"
+  },
+  {
+    "id": "21cf5f59-b573-48ed-a40f-3e129bb6ad12",
+    "empresa": "AGUILAS DEL DESIERTO DE BAJA CALIFORNIA",
+    "ciudad": "Mexicali, Baja California",
+    "telefono": null,
+    "correo": "mexloginf@gmail.com",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga especializado · 11 a 30 personas · sitio: www.mexlog.com · establecimiento: AGUILAS DEL DESIERTO DE BAJA CALIFORNIA",
+    "num_unidades": 8,
+    "unidades": "5-30"
+  },
+  {
+    "id": "2237c84f-2ef3-428b-8222-dd2fd96b7971",
+    "empresa": "TURISMO AUTOCLASS",
+    "ciudad": "Aguascalientes, Aguascalientes",
+    "telefono": "4491985402",
+    "correo": "gerencia@autoclass.com.mx",
+    "notas": "UNIVERSO DENUE 05/2026: Alquiler de autobuses con chofer · 11 a 30 personas · establecimiento: AUTOCLASS\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": 6,
+    "unidades": "5-30"
+  },
+  {
+    "id": "21a9a588-74d8-4aff-812a-2c1c96d4117e",
+    "empresa": "Maria Denise Perez Trejo",
+    "ciudad": "Reynosa, Tamaulipas",
+    "telefono": "8994233322",
+    "correo": "documentador11@transportesods.com",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte · 0 a 10 personas · Calle Cerro de la Silla 245 Int Na, Ciudad Industrial Almaguer, CP 88780\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Reynosa, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": 5,
+    "unidades": "5-30"
+  },
+  {
+    "id": "21eb93a0-e3e3-432f-84ea-9c31012e4abf",
+    "empresa": "ARRASTRES Y MANIOBRAS MEXIQUENSES",
+    "ciudad": "Tultitlán, México",
+    "telefono": null,
+    "correo": "gmexiquenses@hotmail.com",
+    "notas": "UNIVERSO DENUE 05/2026: Servicios de grúa · 0 a 5 personas · sitio: www.gruasmexiquenses.com · establecimiento: ARRASTRES Y MANIOBRAS MEXIQUENSES",
+    "num_unidades": 5,
+    "unidades": "5-30"
+  },
+  {
+    "id": "22b4e4f4-bc43-4cf3-b9bc-fc8863db8d42",
+    "empresa": "Distribucion Internacional Kronos Logistics de Mexico",
+    "ciudad": "Saltillo, Coahuila",
+    "telefono": "8672458909",
+    "correo": "booking@kronos-logistics.com",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General Pesada · 0 a 10 personas · Calle Playa la Ropa 115 Int Na, Colonia Valle Las Palmas, CP 25210\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": 3,
+    "unidades": null
+  },
+  {
+    "id": "22de27bc-3d90-4921-acb9-5a616141fc5f",
+    "empresa": "Lucio Valenzuela Zamora",
+    "ciudad": "Matamoros, Tamaulipas",
+    "telefono": "8688128733",
+    "correo": null,
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 0 a 10 personas · Calle Profesor Manuel Romero 218 Int Na, Colonia Industrial, CP 87350\nUbicación aproximada 17-ago: centroide de 181 establecimientos DENUE en Matamoros, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: Lucio Valenzuela Zamora, titular (la razón social del censo es su nombre; cargo no verificado en otra fuente) · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "num_unidades": 3,
+    "unidades": null
+  }
+]

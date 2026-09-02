@@ -1,0 +1,52 @@
+[
+  {
+    "id": "f3e7b1e2-02e4-41fc-860e-16f985188480",
+    "empresa": "Store And Go S.A.P.I. de C.V.",
+    "ciudad": "Cuauhtémoc, Ciudad de México",
+    "correo": "asist.direccion@storeandgo.mx",
+    "telefono": "5610196242",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte · 11 a 50 personas · Avenida Amsterdam 240 Int Na, Colonia Hipodromo, CP 6100\nUbicación aproximada 17-ago: centroide de 267 establecimientos DENUE en Cuauhtémoc, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-20: sin decisor publico (aparece 'Jorge' como contacto pero SIN apellido ni cargo formal, insuficiente para contacto_nombre) · LinkedIn: no localizado · fuente: storeandgo.mx (sitio oficial, verificado 2026-08-20) + CANACAR directorio de socios 17-ago-2026 (Transporte, 11-50 personas). Operacion logistica diversificada: refrigerado, seco, aereo, forwarding, farmaceutica. Flota NO publicada — num_unidades sin dato (tipos de unidad descritos sin cifra).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ea1d83a1-04ee-4d60-8238-e245e473ee00",
+    "empresa": "Sue Servicios de Transporte, Distribución y Logística, S.A. de C.V.",
+    "ciudad": "Zapopan, Jalisco",
+    "correo": "david.acevedo@suetransportes.com.mx",
+    "telefono": "3338844700",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Avenida Lopez Mateos Sur 4321 Int 221, Colonia la Calma, CP 45070\nUbicación aproximada 17-ago: centroide de 205 establecimientos DENUE en Zapopan, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sitio oficial confirmado sue.mx (teléfono coincide exacto: 33 3884 4700) · empresa fundada 1982, transporte de carga a granel grado alimenticio, intermodal a puertos (Manzanillo/Altamira/Tuxpan/Veracruz), operación Jalisco-Zacatecas-Michoacán-Colima-Guanajuato · decisor: sin cargo público confirmado para David Acevedo (correo personal ya en base, sin LinkedIn/prensa que lo nombre con puesto) · fuente: sue.mx\nINVESTIGACIÓN PROFUNDA 20-ago-2026: sin decisor público confirmado · contexto: 1982 (44 años) — sue servicios de transporte · huecos: - Sin decisor confirmado (búsqueda completa, EMIS requiere compra). - David Acevedo: nombre inferido del correo, cargo no confirmado. - Flota: no publicada en ninguna fuente. - Viajes/mes: no publicado.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "997d2803-21b8-4d27-b509-a3aec4fb37e3",
+    "empresa": "Suga Express, S.A. de C.V.",
+    "ciudad": "Castaños, Coahuila",
+    "correo": "jh_suarez63@hotmail.com",
+    "telefono": "8666364038",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Boulevard Gustavo Galaz 105 Int Na, Colonia California, CP 25870\n\nPROSPECCIÓN 2026-08-21: DECISOR CONFIRMADO (confianza media) — Juan Hermilo Suárez Soria, listado como \"key principal\" en Dun & Bradstreet para Suga Express, S.A. de C.V. (dirección Blvd. Gustavo Galaz 105, coincide exacto). Cargo exacto no confirmado. Se consolida la fila duplicada del censo 'SUGA EXPRESS' (id dba854d7, sitio sugaexpress.com.mx) como duplicado_de esta fila. OJO: hay una persona física 'Alma Leticia Suárez Soria' en el mismo municipio (Castaños) con el mismo apellido compuesto — probable familiar, pero es una fila de censo distinta (persona física suelta), no se fusiona.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0219b569-1640-4b25-89bb-793789176f73",
+    "empresa": "Súper Ágil Refrigerados, S.A. de C.V.",
+    "ciudad": "Tangancícuaro, Michoacán",
+    "correo": "transportesduarte_sa@hotmail.com",
+    "telefono": "3553535509",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Refrigerada · 11 a 50 personas · Carretera Libre Tangancicuaro Chilchota 88 Int Na, Pueblo Tangancicuaro, CP 59750",
+    "fuente": "canacar"
+  },
+  {
+    "id": "54dda8b6-be68-4630-9214-e5225c287e1d",
+    "empresa": "Super Express de Carga Federal, S.A. de C.V.",
+    "ciudad": "Venustiano Carranza, Ciudad de México",
+    "correo": "avaldez@abcsc.mx",
+    "telefono": "5599505400",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Norte 180 612 Int Na, Colonia Pensador Mexicano, CP 15510\nUbicación aproximada 17-ago: centroide de 454 establecimientos DENUE en Venustiano Carranza, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,102 @@
+[
+  {
+    "id": "7fe98a3e-93ab-4687-84d7-6309a6e914dc",
+    "empresa": "Transportes Cascor",
+    "ciudad": "San Nicolás de los Garza, Nuevo León",
+    "correo": "e.castaneda@oveja.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Traslado de Materiales Ferrosos · 0 a 10 personas · Calle Linea de Gas Sn Int Sn, Colonia Bosques del Nogalar, CP 66480\nUbicación aproximada 17-ago: centroide de 150 establecimientos DENUE en San Nicolás de los Garza, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6030f608-f208-48b3-9204-312d4e2ea83a",
+    "empresa": "Transportes Caseli, S.A. de C.V.",
+    "ciudad": "Río Blanco, Veracruz",
+    "correo": "carmen@transportesgama.com.mx",
+    "telefono": "2727280202",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transportes Publico Federal · 0 a 10 personas · Avenida Camino Nacional 38 Int D, Colonia Rio Blanco, CP 94732",
+    "fuente": "canacar"
+  },
+  {
+    "id": "73ab53da-3390-42f2-8123-f5421bc7d9e8",
+    "empresa": "Transportes Chahena, S. de R.L. de C.V.",
+    "ciudad": "Uruapan, Michoacán",
+    "correo": "maralova@hotmail.com",
+    "telefono": "4525192270",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 0 a 10 personas · Calle Tejeda 48 Int Na, Colonia Bellavista, CP 60050\n\nENCAJE: medio — transporte de carga en Uruapan, socio CANACAR, 0 a 10 personas\nPROSPECCIÓN 19-ago-2026: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (transporte de carga, 0 a 10 personas, Calle Tejeda 48, Col. Bellavista, Uruapan, Michoacán) · el correo del censo (maralova@) no es un nombre completo verificable — NO se declara contacto_nombre · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  },
+  {
+    "id": "fe0c0e46-b6e6-4a22-b79f-7a9edf12255b",
+    "empresa": "Transportes Cml",
+    "ciudad": "Manzanillo, Colima",
+    "correo": "transportescmlmanzanillo@gmail.com",
+    "telefono": "3141622276",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Independencia 10 Int Na, Colonia Tapeixtles, CP 28239\nUbicación aproximada 17-ago: centroide de 551 establecimientos DENUE en Manzanillo, Colima — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e9e3b908-7f9b-4921-b121-bc10d07b3751",
+    "empresa": "Transportes Crugar, S.A de C.V.",
+    "ciudad": "Apodaca, Nuevo León",
+    "correo": "enriquecruz@transportescrugar.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Federal · 0 a 10 personas · Privada Los Sabinos 129 Int Na, Colonia Privada del Parque, CP 66633\nUbicación aproximada 17-ago: centroide de 300 establecimientos DENUE en Apodaca, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9a170d31-d0bb-4c89-baa2-3edbfbcc8b9e",
+    "empresa": "Transportes Daj",
+    "ciudad": "León, Guanajuato",
+    "correo": "andres@transportesdaj.com",
+    "telefono": "4771582425",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Via Palatino 431 Int Na, Colonia Villa Magna, CP 37208\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ded9199f-8c68-4597-98e7-0cabba10e32f",
+    "empresa": "Transportes de Energéticos de Veracruz, S.A. de C.V.",
+    "ciudad": "Cuauhtémoc, Ciudad de México",
+    "correo": "paty_tsb@hotmail.com",
+    "telefono": "5552643203",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Terrestre de Materiales y Residuos Peligrosos · 0 a 10 personas · Calle Rio Lerma 198 Int 101, Colonia Cuauhtemoc, CP 6500\nUbicación aproximada 17-ago: centroide de 267 establecimientos DENUE en Cuauhtémoc, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3c9d84d5-9356-4710-a439-f5fdf1ea18bd",
+    "empresa": "Transportes de Occidente Mafra",
+    "ciudad": "Manzanillo, Colima",
+    "correo": "transportesdeoccidente.mafra@gmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Mercacias · 0 a 10 personas · Calle Vista Hermosa 22 Int Na, Colonia Peninsula de Santiago, CP 28867\nUbicación aproximada 17-ago: centroide de 551 establecimientos DENUE en Manzanillo, Colima — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8063fdde-cd48-4d78-a6b5-94fa5de3227d",
+    "empresa": "Transportes Dimarc, S.A. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "adiaz@dimarc.org",
+    "telefono": "2299808682",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Arrayanes Sn Int Na, Colonia Bruno Pagliai, CP 91697\n\nINVESTIGACION CARRIL8 19-ago-2026: dimarc.org responde con certificado de dominio estacionado de GoDaddy (instant-page.secureserver.net) - no hay sitio real publicado. Se sostiene solo la evidencia CANACAR: socio del directorio, autotransporte de carga general en Veracruz, 0-10 personas, Calle Arrayanes s/n Col. Bruno Pagliai CP 91697. Sin conteo de unidades: unidades queda null.\nENCAJE: medio - carga general chica en puerto de Veracruz, socio CANACAR.\nPROSPECCION 2026-08-19: sin decisor publico - dominio estacionado; el directorio CANACAR solo trae razon social (persona moral). WebSearch agotado en la sesion.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3c15e1e6-f0e2-49f3-92a7-229de1d597e3",
+    "empresa": "Transportes Emma, S. de R.L. de C.V.",
+    "ciudad": "Culiacán, Sinaloa",
+    "correo": "gbarrantes@fb.com.mx",
+    "telefono": "6677602826",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Boulevard Jesus Kumate Rodriguez Sur 4267 Int Na, Colonia Rincon del Valle, CP 80155\nUbicación aproximada 17-ago: centroide de 265 establecimientos DENUE en Culiacán, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 19-ago-2026: score fit 1/5 · sin decisor público · LinkedIn: — · viajes/mes: no público · historia: paquetería y distribución de mercancía en Sinaloa con entrega al día siguiente y destinos nacionales; socio CANACAR · fuente: guiatel.com.mx, infoisinfo, directorio CANACAR",
+    "fuente": "canacar"
+  }
+]

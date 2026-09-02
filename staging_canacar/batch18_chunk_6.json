@@ -1,0 +1,52 @@
+[
+  {
+    "id": "a8c4b222-95ae-4565-9ff7-c124c25b83b4",
+    "empresa": "Transportes Tamul, S.A. de C.V.",
+    "ciudad": "San Luis Potosí, San Luis Potosí",
+    "correo": "ventas@melazasygranos.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera 57 Km 185 Sn Int Sn, Colonia la Pila, CP 78422\nUbicación aproximada 17-ago: centroide de 259 establecimientos DENUE en San Luis Potosí, San Luis Potosí — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ceb5c4bc-602a-4b3e-85f3-92b9b948a5b4",
+    "empresa": "Transportes Temperaturas Controladas, S.A. de C.V.",
+    "ciudad": "Zapopan, Jalisco",
+    "correo": "administracion@transportesttc.com.mx",
+    "telefono": "3310258109",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Publico Federal · 11 a 50 personas · Calle San Antonio 125 Int Na, Colonia Las Fuentes, CP 45070\nUbicación aproximada 17-ago: centroide de 205 establecimientos DENUE en Zapopan, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4190594a-6bad-419d-bb15-61c9045216c7",
+    "empresa": "Transportes Tenusa, S.A. de C.V.",
+    "ciudad": "Apodaca, Nuevo León",
+    "correo": "sonia.martinez@tenusa.com.mx",
+    "telefono": "8183418242",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Paseo de San Luis 500 Int Na, Colonia la Encarnación, CP 66633\nUbicación aproximada 17-ago: centroide de 300 establecimientos DENUE en Apodaca, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nHISTORIA: socia registrada de CANACAR (directorio de socios, 17-ago-2026): Transportes Tenusa, S.A. de C.V., Autotransporte de Carga General, 11 a 50 personas, Calle Paseo de San Luis 500, La Encarnación, Apodaca, Nuevo León. Correo sonia.martinez@tenusa.com.mx — coincide con el dominio de la empresa (personal, no genérico), consistente con ser empleada de la empresa aunque sin cargo confirmado.\nPROSPECCIÓN 2026-08-20: sin decisor público (correo personalizado del dominio propio, pero sin cargo confirmado por fuente) · LinkedIn: no hallado · fuente: directorio de socios CANACAR 17-ago-2026. WebSearch agotado en la sesión.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6fd7f18a-8e84-41b5-921b-5bdf8bec895e",
+    "empresa": "Transportes Terrestres Las Cabras, S.A. de C.V.",
+    "ciudad": "Escuinapa, Sinaloa",
+    "correo": "davidtoledo@agricolalascabras.mx",
+    "telefono": "6951129500",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Escuinapa-Teacapan Km 14 Sn Int Na, Ejido Isla del Bosque, CP 82530\nUbicación aproximada 17-ago: centroide de 15 establecimientos DENUE en Escuinapa, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-19: sin decisor publico - fuente: CANACAR directorio de socios 17-ago-2026, correo (davidtoledo@agricolalascabras.mx) confirma que es brazo de transporte del grupo agricola, sin cargo declarado para David Toledo. WebSearch agotado en la sesion (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7551d207-f9f1-4783-af77-eabb82910d4b",
+    "empresa": "Transportes Tiny, S.A. de C.V.",
+    "ciudad": "Mazatlán, Sinaloa",
+    "correo": "hugo.sanchez@tiny.com.mx",
+    "telefono": "6699170404",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Materiales y Residuos Peligrosos · 11 a 50 personas · Carretera Internacional Km 1192.5 Sn Int Na, Colonia Niños Heroes, CP 82190\nUbicación aproximada 17-ago: centroide de 131 establecimientos DENUE en Mazatlán, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 19-ago-2026: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (autotransporte de materiales y residuos peligrosos, 11 a 50 personas, Carretera Internacional Km 1192.5, Col. Niños Héroes, Mazatlán, Sinaloa) · el correo del censo (hugo.sanchez@tiny.com.mx) usa dominio propio de la empresa, aunque no se pudo confirmar que Hugo Sánchez sea el titular o solo un contacto administrativo — NO se declara contacto_nombre por esa incertidumbre · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "4efe5523-eced-47cf-aa12-9e60dee42a4c",
+    "empresa": "Express Syp",
+    "ciudad": "Huehuetoca, México",
+    "correo": "expressyp@hotmail.com",
+    "telefono": "5939180562",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte · 11 a 50 personas · Avenida Benito Juarez Sn Int Sn, Colonia Puente Grande, CP 54680\nUbicación aproximada 17-ago: centroide de 14 establecimientos DENUE en Huehuetoca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2e066005-01f3-4f6f-bcd6-fa313a04f0ee",
+    "empresa": "Express Teran, S.A. de C.V.",
+    "ciudad": "Allende, Nuevo León",
+    "correo": "hector_calles@expressteran.com.mx",
+    "telefono": "8261104548",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Allende-Cadereyta Km 2 Sn Int Na, Colonia el Maguey, CP 67350\nUbicación aproximada 17-ago: centroide de 123 establecimientos DENUE en Allende, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6ff51392-9381-4479-8cba-e66be3538099",
+    "empresa": "Ezgo Industrial Services And Carriers, S.A. de C.V.",
+    "ciudad": "Reynosa, Tamaulipas",
+    "correo": "ezgoindustrial@hotmail.com",
+    "telefono": "8999244625",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera a Monterrey Km 208.3 Sn Int Na, Colonia Casa Bella, CP 68747\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Reynosa, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nENCAJE: alto - socio CANACAR, 11-50 personas, ligado a maquiladoras\nPROSPECCION 2026-08-19: sin decisor publico - fuente: CANACAR directorio de socios 17-ago-2026, sin sitio. WebSearch agotado en la sesion (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0fd469b9-ada6-4001-9b9c-738b203e9ea9",
+    "empresa": "Fast Links México, S.A. de C.V.",
+    "ciudad": "Zapopan, Jalisco",
+    "correo": "jfacio@fastlinksmexico.com",
+    "telefono": "3338156409",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Volcan Cofre de Perote 4116 Int Na, Colonia el Colli Urbano 2Da Seccion, CP 45070\nUbicación aproximada 17-ago: centroide de 205 establecimientos DENUE en Zapopan, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5db90c44-aa5d-4aa7-beaa-0cd8c9207b01",
+    "empresa": "Felipe de Jesús Elizarraraz",
+    "ciudad": "Irapuato, Guanajuato",
+    "correo": "transeli08@live.com.mx",
+    "telefono": "8181242582",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga en General · 11 a 50 personas · Avenida Jacarandas 2134 Int Na, Colonia San Pedro, CP 36520\nUbicación aproximada 17-ago: centroide de 96 establecimientos DENUE en Irapuato, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,102 @@
+[
+  {
+    "id": "c4d0d0cb-1940-470f-bffa-137c70bff120",
+    "empresa": "Transportes Julián de Veracruz, S.A. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "omaralfo@hotmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Calle Naranja 13-14 Int Na, Colonia Rafael Diaz Serdan, CP 91963\nTransportes Julián de Veracruz, S.A. de C.V.: socia CANACAR (17-ago-2026), Autotransporte de Carga, 0 a 10 personas, Calle Naranja 13-14, Col. Rafael Díaz Serdán, Veracruz, CP 91963 — sede en el principal puerto de contenedores del Golfo de México. Correo de negocio: omaralfo@hotmail.com. Sin sitio.\nENCAJE: alto — carga con sede en el puerto de Veracruz, viajes de arrastre desde puerto\nPROSPECCIÓN 2026-08-20: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (sin sitio; WebSearch agotado en la sesión)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "cb8592d6-1c19-45bb-8c90-d58950ceba1f",
+    "empresa": "Transportes Kronos, S.A. de C.V.",
+    "ciudad": "Manzanillo, Colima",
+    "correo": "contabilidad@grupocar.com",
+    "telefono": "3141024393",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 0 a 10 personas · Calle Valle de Los Cocoteros 255 Int Na, Colonia Santiago, CP 28860\nUbicación aproximada 17-ago: centroide de 551 establecimientos DENUE en Manzanillo, Colima — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9c88f666-8298-4808-86d0-05e98aadf9da",
+    "empresa": "Transportes L.A.C., S.A. de C.V.",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "tralac@prodigy.net.mx",
+    "telefono": "6646479327",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Avenida Ferrocarril 10733 Int Na, Ciudad Tijuana, CP 22010\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f2586499-2b61-44ed-9255-023794bc5be3",
+    "empresa": "Transportes Logísticos de Castro, S.A. de C.V.",
+    "ciudad": "Atizapán de Zaragoza, México",
+    "correo": "sosnaya@transportescastro.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Avenida San Mateo 31 Int Na, Colonia San Juan Bosco, CP 52946\nUbicación aproximada 17-ago: centroide de 68 establecimientos DENUE en Atizapán de Zaragoza, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-20: sin decisor publico (el correo del registro es de sosnaya, sin cargo confirmado) · LinkedIn: no localizado · fuente: CANACAR directorio de socios 17-ago-2026; transportescastro.mx no paso verificacion TLS al 2026-08-20 (certificado invalido), sin contenido confirmado. Flota NO publicada — unidades sin dato. ENCAJE: medio — carga general CANACAR, empresa chica 0-10 personas",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5b3a1ac9-fdc0-40f3-8f6a-0f4fce345981",
+    "empresa": "Transportes Logisticos de Monterrey",
+    "ciudad": "Allende, Nuevo León",
+    "correo": "edgar@tlm.lat",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga en General · 0 a 10 personas · Calle Roberto Cavazos Tamez 411 Int Na, Colonia Hda de Arrendatarios, CP 67350\nUbicación aproximada 17-ago: centroide de 123 establecimientos DENUE en Allende, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a4ce0848-ee9a-47c0-953c-cf34d25ff5c0",
+    "empresa": "Transportes Los Sabinos División Especializada, S.A. de C.V.",
+    "ciudad": "San Nicolás de los Garza, Nuevo León",
+    "correo": "agustin.morales@sabinos.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Avenida Cinco 160 Int Na, Fracción Central de Carga, CP 66494\nUbicación aproximada 17-ago: centroide de 150 establecimientos DENUE en San Nicolás de los Garza, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nHISTORIA: socio CANACAR de autotransporte de carga, domicilio en Avenida Cinco 160, Fracción Central de Carga, San Nicolás de los Garza, Nuevo León (CP 66494) — el mismo parque de Central de Carga donde está Petrocarriers. El nombre 'División Especializada' y el dominio propio sabinos.mx sugieren que es parte de un grupo Los Sabinos más grande.\nOJO DOMINIO: sabinos.mx rechaza la conexión (ECONNREFUSED) al 2026-08-20 — no se pudo leer el sitio ni buscar directivos ahí. El correo agustin.morales@sabinos.mx puede seguir vivo.\nENCAJE: alto — división especializada de grupo transportista en Central de Carga de Monterrey.\nPROSPECCIÓN 2026-08-20: sin decisor público · el nombre del correo (agustin.morales@) podría ser un gerente, pero ninguna fuente pública lo confirma como cargo, así que no se declara · fuente: CANACAR directorio de socios 17-ago-2026 (autotransporte de carga, 0 a 10 personas) + intento fallido en sabinos.mx.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7cc452ae-0681-406a-a089-04a40684fafe",
+    "empresa": "Transportes Macsa, S.A. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "direccion@transportesmacsa.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Trasnporte de Contenedores · 0 a 10 personas · Carretera Limones Tenemex Sn Int Na, Colonia Otra No Especificada en el Catalogo, CP 91697",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ba28085d-6c35-4aab-92e6-831f67a99979",
+    "empresa": "Transportes Malintzi",
+    "ciudad": "Panotla, Tlaxcala",
+    "correo": "transportesmalintzi@gmail.com",
+    "telefono": "2464586475",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foráneo de Carga General · 0 a 10 personas · Calle Porfirio Diaz 06 Int Na, Pueblo San Jorge Tezoquipan, CP 90147\nUbicación aproximada 17-ago: centroide de 3 establecimientos DENUE en Panotla, Tlaxcala — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (búsqueda web no disponible por tope de sesión) · CANACAR: Autotransporte Foráneo de Carga General, 0 a 10 personas, Panotla · fuente: CANACAR directorio de socios (ya en base)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a8374f93-1e5e-4971-bb67-72a0ccdd3e3a",
+    "empresa": "Transportes Mar del Golfo, S.A. de C.V.",
+    "ciudad": "Altamira, Tamaulipas",
+    "correo": "contabilidad@vikingoexpress.com.mx",
+    "telefono": "8332941255",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Local de Carga General y Residuos Peligrosos · 0 a 10 personas · Corredor Urbano Luis Donaldo Colosio Km 16 Sn Int Na, Corredor Industrial Sc, CP 89603\nUbicación aproximada 17-ago: centroide de 176 establecimientos DENUE en Altamira, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8da4b8d0-06cf-43ee-9a11-bae1bafc2983",
+    "empresa": "Transportes Marina Vieja, S.A. de C.V.",
+    "ciudad": "Victoria, Tamaulipas",
+    "correo": "tmarinavieja@gmail.com",
+    "telefono": "8343182420",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Materiales Peligroso · 0 a 10 personas · Calle Gaspar de la Garza Sur 164 Int Na, Colonia Zona Centro, CP 87000\nUbicación aproximada 17-ago: centroide de 55 establecimientos DENUE en Victoria, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]
