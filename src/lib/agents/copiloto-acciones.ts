@@ -178,7 +178,11 @@ export async function ejecutarAccionCopiloto(
     // acota la vuelta a ese agente; "runner"/"todos" (o vacío) es la vuelta
     // completa, que es lo que describe `efecto`.
     const soloAgente = objetivoDelRunner(params.id);
-    const r = await correrRunner(soloAgente);
+    // AUDITORÍA 24, AGB-7: la ruta que llama esto tiene `maxDuration = 60`;
+    // sin `venceEn` el runner podía correr más de lo que la invocación
+    // aguanta y Vercel la mataba a media vuelta, sin que nada del parte se
+    // guardara. 45 s deja margen para la escritura del resultado.
+    const r = await correrRunner(soloAgente, undefined, { venceEn: Date.now() + 45_000 });
     // Se firma TAMBIÉN la vuelta que el kill switch dejó en nada: la acción
     // confirmada fue "correr el runner", y eso es lo que la bitácora audita.
     await anotarCorridaEnBitacora(userId, motivo, {
