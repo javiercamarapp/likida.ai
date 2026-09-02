@@ -52,13 +52,21 @@ async function safe<T>(fn: () => Promise<T>): Promise<T | null> {
  * POST alcanzable por su cuenta — el gateo de la página (arriba) no la
  * protege.
  */
-async function tenantYUsuarioDelAction(sufijo: string, tenantPedido?: string) {
-  const s = await requireSessionTenant('/dashboard/combustible-casetas');
+async function tenantYUsuarioDelAction(
+  sufijo: string,
+  sp: { vista?: string; tenant?: string },
+) {
+  // FE-32: sin `sp` aquí, un superadmin en `?vista=demo`/`?tenant=` resolvía
+  // esta acción contra SU tenant elegido en /admin/elegir-flota (o el
+  // selector), distinto del que `resolverTenantEfectivo` usó para LEER la
+  // página — la acción fallaba cerrado con "Esa línea ya no existe" en vez
+  // de resolver la línea que el superadmin de verdad está viendo.
+  const s = await requireSessionTenant('/dashboard/combustible-casetas', sp);
   if (!puedeVerRuta(s.rol, '/dashboard/combustible-casetas')) {
     redirect(`/dashboard/combustible-casetas${sufijo}`);
   }
-  if (s.rol === 'superadmin' && tenantPedido) {
-    const t = await resolverTenantPedido(supabaseAdmin(), s.tenantId, tenantPedido);
+  if (s.rol === 'superadmin' && sp.tenant) {
+    const t = await resolverTenantPedido(supabaseAdmin(), s.tenantId, sp.tenant);
     return { tenantId: t, userId: s.userId };
   }
   return { tenantId: s.tenantId, userId: s.userId };
@@ -136,7 +144,7 @@ export default async function CombustibleCasetasPage({
 
   async function accionResolverLinea(formData: FormData) {
     'use server';
-    const { tenantId: t, userId } = await tenantYUsuarioDelAction(sufijo, sp?.tenant);
+    const { tenantId: t, userId } = await tenantYUsuarioDelAction(sufijo, sp);
     const lineaId = String(formData.get('lineaId') ?? '');
     const eleccion = String(formData.get('eleccion') ?? '');
     if (!lineaId || !eleccion) redirect(`/dashboard/combustible-casetas${sufijo}`);
