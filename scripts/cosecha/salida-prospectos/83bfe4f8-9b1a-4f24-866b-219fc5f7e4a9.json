@@ -1,0 +1,17 @@
+{
+ "id": "83bfe4f8-9b1a-4f24-866b-219fc5f7e4a9",
+ "empresa": "TRANSPORTES FERMATT DEL BAJIO",
+ "sitio": "fermatt.com",
+ "vivo": true,
+ "dominio": "fermatt.com",
+ "cosechado": "2026-08-26T06:58:22.899Z",
+ "paginas": [
+  "https://fermatt.com"
+ ],
+ "titulo": "Fermatt",
+ "texto_muestra": "Fermatt ∫ Fermaπ 917 chars Editor Markdown + LaTeX # Welcome to Fermatt Write **Markdown** and *LaTeX* together, seamlessly. --- ## Inline Math Euler&#x27;s identity: $e^{i\\pi} + 1 = 0$ The quadratic formula gives us $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ inline. ## Block Math $$ \\int_{-\\infty}^{\\infty} e^{-x^2} \\, dx = \\sqrt{\\pi} $$ Maxwell&#x27;s equations in differential form: $$ \\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\varepsilon_0} $$ $$ \\nabla \\times \\mathbf{B} = \\mu_0 \\mathbf{J} + \\mu_0 \\varepsilon_0 \\frac{\\partial \\mathbf{E}}{\\partial t} $$ ## Mixed Content Here&#x27;s a list with math: - The **Pythagorean theorem**: $a^2 + b^2 = c^2$ - **Bayes&#x27; theorem**: $P(A|B) = \\frac{P(B|A) \\, P(A)}{P(B)}$ - A matrix: $\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$ &gt; &quot;I have discovered a truly marvelous proof of this, which this margin is too narrow to contain.&quot; — *Pierre de Fermat* ```python # Code blocks are left alone def fermatt(n): return n ** 2 ``` Preview Rendered output Welcome to Fermatt Write Markdown and LaTeX together, seamlessly. Inline Math Euler&#x27;s identity: e i π + 1 = 0 e^{i\\pi} + 1 = 0 e iπ + 1 = 0 The quadratic formula gives us x = − b ± b 2 − 4 a c 2 a x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a} x = 2 a − b ± b 2 − 4 a c ​ ​ inline. Block Math ∫ − ∞ ∞ e − x 2 d x = π \\int_{-\\infty}^{\\infty} e^{-x^2} \\, dx = \\sqrt{\\pi} ∫ − ∞ ∞ ​ e − x 2 d x = π ​ Maxwell&#x27;s equations in differential form: ∇ ⋅ E = ρ ε 0 \\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\varepsilon_0} ∇ ⋅ E = ε 0 ​ ρ ​ ∇ × B = μ 0 J + μ 0 ε 0 ∂ E ∂ t \\nabla \\times \\mathbf{B} = \\mu_0 \\mathbf{J} + \\mu_0 \\varepsilon_0 \\frac{\\partial \\mathbf{E}}{\\partial t} ∇ × B = μ 0 ​ J + μ 0 ​ ε 0 ​ ∂ t ∂ E ​ Mixed Content Here&#x27;s a list with math: The Pythagorean theorem : a 2 + b 2 = c 2 a^2 + b^2 = c^2 a 2 + b 2 = c 2 Bayes&#x27; theorem : P ( A ∣ B ) = P ( B ∣ A ) P ( A ) P ( B ) P(A|B) = \\frac{P(B|A) \\, P(A)}{P(B)} P ( A ∣ B ) = P ( B ) P ( B ∣ A ) P ( A ) ​ A matrix: ( a b c d ) \\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix} ( a c ​ b d ​ ) &quot;I have discovered a truly marvelous proof of this, which this margin is too narrow to contain.&quot; — Pierre de Fermat # Code blocks are left alone def fermatt(n): return n ** 2",
+ "correos": [],
+ "telefonos": [],
+ "candidatos_decisor": [],
+ "hallazgo_cargo": []
+}
