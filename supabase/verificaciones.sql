@@ -15411,3 +15411,63 @@ begin
     n_conv, n_envio, ev->>'wa_conversacion', ev->>'envio_mensaje',
     txt_otro = 'marca intacta del otro titular', cfg like '%extensions%';
 end $$;
+
+-- ── 235. `ultimas_posiciones_tenant` y `estado_rastreo_tenant` sondean por unidad, no barren el tenant (mig. 0287) ──
+--
+-- AUDITORÍA 24, DAT-8 / REN-3 (ALTO). El `distinct on` de la 0269 leía TODAS
+-- las posiciones de la flota para quedarse con 800 (4.5 s con 6.9 M filas).
+-- Se asevera lo que la base puede demostrar:
+--   (a) el RESULTADO es el mismo que el `distinct on`: una fila por unidad
+--       activa, la más reciente, sin la unidad inactiva ni la de otra flota;
+--   (b) el PLAN del cuerpo vigente no tiene nodo `Unique` (no hay distinct
+--       on) y sondea `posicion` con un Index Scan Backward sobre
+--       `uq_posicion_lectura` — con `enable_seqscan` apagado para que la
+--       tabla diminuta de la prueba no esconda la forma;
+--   (c) `estado_rastreo_tenant` conserva su contrato: 2 unidades con
+--       posición (una inactiva cuenta, como en la 0162) y la última fecha;
+--   (d) una lectura fechada en el futuro (reloj del GPS mal) rebota (23514).
+do $$
+declare
+  ta uuid := gen_random_uuid(); tb uuid := gen_random_uuid();
+  u1 uuid := gen_random_uuid(); u2 uuid := gen_random_uuid(); u3 uuid := gen_random_uuid(); ux uuid := gen_random_uuid();
+  n_filas int; lat_u1 double precision; con_unique boolean; con_indice boolean;
+  plan text := ''; linea text; cuerpo text; rastreo jsonb; futura_rebota boolean := false;
+begin
+  insert into public.tenant (id, nombre) values (ta, '__verif_0287_a__'), (tb, '__verif_0287_b__');
+  insert into public.unidad (id, tenant_id, numero_economico, activo) values
+    (u1, ta, 'U1', true), (u2, ta, 'U2', true), (u3, ta, 'U3-baja', false), (ux, tb, 'UX', true);
+  insert into public.posicion (tenant_id, unidad_id, lat, lng, medida_en, proveedor) values
+    (ta, u1, 19.0, -99.0, now() - interval '2 hours', 'samsara'),
+    (ta, u1, 19.5, -99.5, now() - interval '1 hour',  'samsara'),   -- la más reciente de U1
+    (ta, u2, 20.0, -100.0, now() - interval '3 days', 'samsara'),
+    (ta, u3, 21.0, -101.0, now() - interval '1 hour', 'samsara'),   -- inactiva: fuera del mapa
+    (tb, ux, 22.0, -102.0, now() - interval '1 hour', 'samsara');   -- otra flota
+
+  select count(*) into n_filas from public.ultimas_posiciones_tenant(ta);
+  select r.lat into lat_u1 from public.ultimas_posiciones_tenant(ta) r where r.unidad_id = u1;
+
+  -- La función lleva `set search_path`, así que el planificador NO la inlinea
+  -- y `explain select * from f()` solo enseña «Function Scan». Se explica el
+  -- CUERPO vigente leído de pg_proc — lo que de verdad corre en esta base.
+  select prosrc into cuerpo from pg_proc where proname = 'ultimas_posiciones_tenant'
+    and pronamespace = 'public'::regnamespace;
+  set local enable_seqscan = off;
+  for linea in execute 'explain (costs off) ' || replace(cuerpo, 'p_tenant', '$1') using ta loop
+    plan := plan || linea || E'\n';
+  end loop;
+  reset enable_seqscan;
+  con_unique := plan like '%Unique%';
+  con_indice := plan like '%Index Scan Backward using uq_posicion_lectura on posicion%';
+
+  rastreo := public.estado_rastreo_tenant(ta);
+
+  begin
+    insert into public.posicion (tenant_id, unidad_id, lat, lng, medida_en, proveedor)
+      values (ta, u1, 19.0, -99.0, now() + interval '2 hours', 'samsara');
+  exception when check_violation then futura_rebota := true;
+  end;
+
+  raise exception E'POSICIONES_LATERAL_0287  filas=%  u1-mas-reciente=%  plan-sin-unique=%  plan-por-indice=%  rastreo-unidades=%  rastreo-ultima-hoy=%  futura-rebota=%   (esperado 2 / t / t / t / 3 / t / t)',
+    n_filas, lat_u1 = 19.5, not con_unique, con_indice,
+    rastreo->>'unidadesConPosicion', (rastreo->>'ultimaPosicion')::timestamptz > now() - interval '2 hours', futura_rebota;
+end $$;
