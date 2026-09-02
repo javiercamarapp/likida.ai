@@ -103,8 +103,19 @@ export default async function PaginaAgenteCobranza({
 
     // `ignorarVentana`: el humano que aprieta ES la autorización de contactar
     // fuera de horario. Un agente pausado no corre ni a mano (lo dice el motor).
+    //
+    // FE-14: sin `venceEn` la corrida manual mandaba WhatsApp en serie a TODA
+    // la cola sin reloj de corte — con cientos de choferes en tier, la
+    // function podía cortarse a mitad (timeout de la plataforma) con
+    // `registrarCorrida` sin escribirse: la bitácora quedaba muda y el
+    // usuario veía un error genérico. `ejecutarCobranza` ya sabe cortarse
+    // sola cuando se le pasa `venceEn` (el cron global ya lo hace,
+    // `cobranza.ts:406`) y reportar cuántos quedaron fuera
+    // (`cortadosPorReloj`); solo faltaba pasárselo aquí.
     const inicio = new Date();
-    const resultado = await ejecutarCobranza(tenantId, new Date(), { ignorarVentana: true });
+    const resultado = await ejecutarCobranza(tenantId, new Date(), {
+      ignorarVentana: true, venceEn: Date.now() + 25_000,
+    });
     // La bitácora de corridas (B3). `registrarCorrida` nunca lanza.
     await registrarCorrida(tenantId, 'cobranza', {
       inicio,
