@@ -125,24 +125,16 @@ export async function guardarPerfilPatch(
   patch: Record<string, unknown>,
   actualizadoPor: string | null,
 ): Promise<void> {
-  const { data, error } = await acotada(supabaseAdmin()
-    .from('tenant')
-    .select('perfil')
-    .eq('id', tenantId)
-    .maybeSingle(), 'guardarPerfilPatch.leer');
+  // AUDITORÍA 24, H20/H21/H22: leer+mezclar+escribir en dos statements
+  // dejaba una carrera de "lost update" (dos respuestas de la entrevista de
+  // onboarding casi juntas se pisaban). `tenant_perfil_merge` (mig. 0296)
+  // hace la lectura y la escritura en el MISMO statement.
+  const { error } = await acotada(supabaseAdmin().rpc('tenant_perfil_merge', {
+    p_tenant_id: tenantId,
+    p_patch: patch,
+    p_actualizado_por: actualizadoPor,
+  }), 'guardarPerfilPatch');
   if (error) throw new Error(`perfil: ${error.message}`);
-  if (!data) throw new Error('perfil: tenant no encontrado');
-  const actual = (data.perfil && typeof data.perfil === 'object' && !Array.isArray(data.perfil))
-    ? data.perfil as Record<string, unknown>
-    : {};
-  const { error: errW } = await acotada(supabaseAdmin()
-    .from('tenant')
-    .update({
-      perfil: { ...actual, ...patch },
-      perfil_actualizado_por: actualizadoPor,
-    })
-    .eq('id', tenantId), 'guardarPerfilPatch.escribir');
-  if (errW) throw new Error(`perfil: ${errW.message}`);
 }
 
 export async function guardarDeclaracionEstimuloPeaje(

@@ -12,6 +12,7 @@ import { runAgent } from '@/lib/agents/run';
 import { guardiaCifras } from '@/lib/likida/cuadre/guardia';
 import { cuadrarDesdeDB, ventanaDesdeDB } from '@/lib/likida/cuadre/desde_db';
 import { fechaDudosa } from '@/lib/likida/cuadre/fecha_dudosa';
+import { pipelineTenantApagado } from '@/lib/likida/interruptor_tenant';
 import { etiquetaConcepto, copiasDeComprobante } from '@/lib/likida/cuadre/engine';
 import { mensajePideFechaOtraVez } from '@/lib/likida/intake/pedir_fecha';
 import { resumenCuadre } from '@/lib/likida/cuadre/resumen';
@@ -1484,6 +1485,20 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
       }
 
       await sendText(msg.from, 'Hola, no te tengo registrado como operador. Pídele a tu flota que te dé de alta en Likida. 🚛');
+      return;
+    }
+    // ── AUDITORÍA 24, ADM-6: EL INTERRUPTOR POR FLOTA (mig. 0297) ───────────
+    //
+    // `interruptor` (0110) es global — apagarlo corta a las 800 unidades de
+    // Innovativos junto con las demás flotas del piloto. Esta palanca es por
+    // (tenant, pipeline): Javier puede frenar SOLO el pipeline de whatsapp de
+    // una flota con un incidente, sin tocar a las otras. Se pregunta aquí
+    // —ya hay tenant, todavía no arrancó OCR ni cuadre— y se avisa (a
+    // diferencia del kill switch global, este SÍ contesta: solo un tenant
+    // se ve afectado, no todo el canal de WhatsApp).
+    if (await pipelineTenantApagado(op.tenantId, 'whatsapp')) {
+      logger.warn('wa.pipeline_tenant_apagado', { tenant: op.tenantId, operador: op.operadorId });
+      await sendText(msg.from, 'Tu flota puso en pausa la recepción automática por WhatsApp ahorita. Guarda tu foto o mensaje y reenvíamelo más tarde, o contacta a tu oficina.');
       return;
     }
     // ── CAPA E1: LA NOTA DE VOZ DEL CHOFER SE VUELVE TEXTO, AQUÍ Y SOLO AQUÍ ─
