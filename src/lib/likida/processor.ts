@@ -1098,7 +1098,30 @@ function mensajeCierreConfirmado(e: EntregaPendiente): string {
 
 /** TTL de las URLs firmadas de los PDF (segundos). Ver AGEN-9: el outbox
  *  reintenta a ≥ 5 min, así que una firma de 60 s nacía muerta. */
-const TTL_FIRMA_PDF_SEGUNDOS = 60;
+/**
+ * Cuánto vive la URL firmada del PDF que se le manda al chat.
+ *
+ * ── POR QUÉ YA NO SON 60 s (AUDITORÍA 24 · AGEN-9, MEDIO) ─────────────────
+ *
+ * Las rondas 5-13 lo bajaron a 60 s con un razonamiento correcto —Meta baja
+ * el `link` en segundos y el objeto es privado— y con una regla explícita:
+ * subirlo solo cuando `pdf.no_entregado` traiga un error de STORAGE, no de
+ * Meta. Esa evidencia llegó por otro lado: `sendDocument` ENCOLA el payload
+ * entero —`link` incluido— cuando el POST a Meta se cae por red, y el outbox
+ * lo reintenta a los 5 minutos (`RETRASO_AMBIGUO_SEGUNDOS = 300`) y después
+ * con backoff `15·2^n` hasta ocho veces. O sea: cada PDF que se cayó por red
+ * nacía muerto —a los 300 s la firma lleva 240 s vencida—, Meta contestaba
+ * «medio no descargable» (no reintentable), y a la octava el mensaje moría
+ * con su alerta de `salida_muerta`. Ocho intentos garantizados de fallar y
+ * una alerta operativa por cada PDF que tocó una red mala.
+ *
+ * 15 minutos cubren el reintento de los 5 y los tres siguientes del backoff.
+ * No cubren los ocho, y no se estira más por eso: lo correcto de verdad es
+ * que el outbox vuelva a firmar al enviar (anotado en CIERRE.md, toca el cron
+ * de `wa-outbox`), y este número es lo que hace que el caso normal —una red
+ * mala de diez segundos— entregue el PDF en vez de gastar una hora de cola.
+ */
+const TTL_FIRMA_PDF_SEGUNDOS = 900;
 
 /**
  * LA BASE ES LA AUTORIDAD sobre si un viaje cerró.
@@ -4127,16 +4150,11 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
         // "TTL de 7 días" heredado desde la ronda 11): se reconsideró subir
         // este número, porque `sendDocument` acepta el mensaje y Meta descarga
         // el `link` DESPUÉS, por su cuenta (`meta/client.ts`) — asíncrono, no
-        // simultáneo al POST. Aun así se deja en 60s: la ruta YA registra
-        // `pdf.no_entregado` con el código de error de Meta cuando el envío
-        // falla (auditoría 12, ALTO), y ninguna entrada de ese log documenta
-        // jamás un 403/404 de Storage — solo token vencido o documento
-        // rechazado por Meta. Subir el TTL sin esa evidencia sería inventar un
-        // riesgo para resolverlo, y reabriría en sentido contrario lo que las
-        // rondas 5-9 ya cerraron con evidencia. Si `pdf.no_entregado` empieza a
-        // traer un error de Storage (no de Meta), ESA es la señal para subirlo
-        // — no antes.
-        const { data, error } = await acotada(supabaseAdmin().storage.from('liquidaciones').createSignedUrl(path, 60), 'createSignedUrl');
+        // simultáneo al POST. Se dejó en 60s a la espera de evidencia de un
+        // fallo de Storage; la evidencia llegó en la 24 (AGEN-9) por el
+        // camino del OUTBOX, que reintenta el MISMO `link` a los 5 minutos.
+        // El porqué del número vive con la constante.
+        const { data, error } = await acotada(supabaseAdmin().storage.from('liquidaciones').createSignedUrl(path, TTL_FIRMA_PDF_SEGUNDOS), 'createSignedUrl');
         if (error || !data?.signedUrl) throw new Error(error?.message ?? 'storage no devolvió URL firmada');
         // AUDITORÍA 12, ALTO (backend, reincidente de ronda 10): `sendDocument`
         // NO lanza — devuelve { ok: false, error } cuando Meta rechaza el
@@ -4221,7 +4239,7 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
       } else try {
         let urlPdfJefe: string | null = null;
         if (pdfContralorGenerado) {
-          const firma = await acotada(supabaseAdmin().storage.from('liquidaciones').createSignedUrl(`${op.tenantId}/${viajeId}.pdf`, 60), 'createSignedUrl.contralor');
+          const firma = await acotada(supabaseAdmin().storage.from('liquidaciones').createSignedUrl(`${op.tenantId}/${viajeId}.pdf`, TTL_FIRMA_PDF_SEGUNDOS), 'createSignedUrl.contralor');
           if (firma.error || !firma.data?.signedUrl) {
             logger.warn('cierre.pdf_jefe_sin_url', { viaje: viajeId, err: firma.error?.message ?? 'storage no devolvió URL firmada' });
           } else {
