@@ -183,7 +183,7 @@ describe('un interactivo que NO es button_reply no se traga como si lo fuera', (
       list_reply: { id: 'fila_3', title: 'Diésel', description: 'Carga de combustible' },
     }));
     expect(processInbound).toHaveBeenCalledWith({
-      from: '5219990001010', waMessageId: 'wamid.LST1', timestampMs: 1714510003000, type: 'other',
+      from: '5219990001010', waMessageId: 'wamid.LST1', timestampMs: 1714510003000, type: 'other', subtipo: 'interactive',
     });
   });
 
@@ -213,14 +213,14 @@ describe('un interactivo que NO es button_reply no se traga como si lo fuera', (
       button_reply: { id: 'cerrar_si', title: 'Sí' },
     }));
     expect(processInbound).toHaveBeenCalledWith({
-      from: '5219990001014', waMessageId: 'wamid.MIX', timestampMs: 1714510003000, type: 'other',
+      from: '5219990001014', waMessageId: 'wamid.MIX', timestampMs: 1714510003000, type: 'other', subtipo: 'interactive',
     });
   });
 
   it('un interactivo sin button_reply no revienta el parseo', async () => {
     await postear(payloadInteractivo('5219990001012', 'wamid.INT1', { type: 'button_reply' }));
     expect(processInbound).toHaveBeenCalledWith({
-      from: '5219990001012', waMessageId: 'wamid.INT1', timestampMs: 1714510003000, type: 'other',
+      from: '5219990001012', waMessageId: 'wamid.INT1', timestampMs: 1714510003000, type: 'other', subtipo: 'interactive',
     });
   });
 

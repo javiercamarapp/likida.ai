@@ -26,6 +26,7 @@ import {
   mensajeAdjuntados, esAfirmacion, esNegacion,
 } from '@/lib/likida/intake/huerfanos';
 import { decidirFoto } from '@/lib/likida/intake/decidir';
+import { marcarMontoDisputado } from '@/lib/likida/gasto_correccion';
 import {
   anotarFoto, anotarIncidencia, anotarAcuse, pedirTurnoDeConfirmacion, cerrarRafaga, lineaIncidencias,
   bandejasAbiertas,
@@ -3181,10 +3182,17 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
         // NO se toca el gasto. El chofer dijo que el monto está mal, pero no dijo
         // cuál es el bueno: corregirlo a un número inventado sería peor que
         // dejarlo mal leído, y ponerlo en cero le quitaría un gasto que sí hizo.
-        // Se le pide la cifra y la corrección entra por el camino normal del
-        // agente, que ya sabe corregir un comprobante.
+        //
+        // AUDITORÍA 24 · WA-3 (ALTO): lo que faltaba era el RASTRO. Esto era un
+        // `logger.warn` que muere con la invocación y un mensaje que lo mandaba
+        // con su oficina — la cual no tenía forma de enterarse de que él había
+        // dicho nada. Ahora la fila queda marcada, y el texto solo lo afirma si
+        // la marca de verdad se escribió.
         logger.warn('acuse.rechazado', { viaje: viajeId, gasto: boton.gastoId });
-        await say(mensajeCorregir());
+        const marcado = await marcarMontoDisputado({
+          tenantId: op.tenantId, gastoId: boton.gastoId, quien: op.operadorId,
+        });
+        await say(mensajeCorregir(marcado));
       }
       return;
     }
