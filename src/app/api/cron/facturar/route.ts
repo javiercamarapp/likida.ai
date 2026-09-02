@@ -15,7 +15,8 @@ import type { PaginaConInventario, PaginaPortal } from '@/lib/likida/facturacion
 import { logger } from '@/lib/logger';
 import { codigoDeError } from '@/lib/observability/sentry';
 import { alertarOperador } from '@/lib/observability/alerta';
-import { puertaCron, registrarLatido } from '@/lib/admin/salud';
+import { puertaCron, registrarLatido, leerLatido } from '@/lib/admin/salud';
+import { appUrl } from '@/lib/env';
 import { avisar, avisarCorridasPorFlota, FalloDePlataforma } from '@/lib/likida/agentes/notificaciones';
 import { avisoColaAtorada } from '@/lib/correo/avisos';
 import { registrarCorrida, ultimasCorridas } from '@/lib/likida/agentes/corridas';
@@ -160,11 +161,43 @@ const TOPE_POR_CORRIDA = 8;
 
 /** Tickets por mensaje de QStash — o sea por navegador. */
 const LOTE_POR_FLOTA = 20;
-/** Flotas por corrida del cron (cada 15 min): 25 × 20 = 500 tickets/corrida,
- *  2,000/hora, contra ~340/día en el peor caso medido. */
-const FLOTAS_POR_CORRIDA = 25;
+/**
+ * SESIONES por corrida del cron (cada 15 min): 25 × 20 = 500 tickets/corrida.
+ *
+ * AUDITORÍA 24, REN-5: esto era «flotas por corrida» y el mensaje de QStash
+ * iba por FLOTA. ESC-5 lo diseñó para muchas flotas chicas; una flota grande
+ * (Innovativos: 15,000 viajes/mes ⇒ ~500 tickets/día) necesita paralelismo
+ * DENTRO de la flota. Con un mensaje por flota, sus 20 tickets de tres
+ * portales iban en UN navegador que abre las sesiones en serie y corta a los
+ * 150 s: 2-5 tickets reales por corrida ⇒ 192-480/día contra 500 — la cola
+ * solo crecía. Ahora el mensaje va por (flota, portal): cada uno es su
+ * propio navegador en su propia invocación, y una flota con tres portales
+ * ocupa tres sesiones en paralelo. El tope de 25 es de sesiones, no de flotas.
+ */
+const SESIONES_POR_CORRIDA = 25;
 /** Filas que se leen para armar los lotes. < 1,000: PostgREST recorta ahí. */
-const TOPE_CANDIDATOS = LOTE_POR_FLOTA * FLOTAS_POR_CORRIDA;
+const TOPE_CANDIDATOS = LOTE_POR_FLOTA * SESIONES_POR_CORRIDA;
+/** REN-5: el backlog que ya no es «una hora cargada». Dos días de la demanda
+ *  del piloto (500 tickets/día): pasar de aquí es que la cola no drena, y
+ *  eso se avisa al operador en vez de dejarlo en un número del JSON. */
+const BACKLOG_ALERTA = 1_000;
+
+/**
+ * AUDITORÍA 24, BE-6 (ALTO): UNA sola variable decidía «hay QStash» y el
+ * callback exige TRES. Con `UPSTASH_QSTASH_TOKEN` puesto y una signing key
+ * ausente o rotada, cada 15 min se publicaban 25 lotes, el latido decía `ok`
+ * y los callbacks contestaban 503: cero CFDI hasta que los tickets salían de
+ * la ventana de 45 días. La condición es la MISMA que la de `cola/route.ts`:
+ * si no está completa, no se encola — se factura aquí, síncrono.
+ */
+function qstashConfigurado(): 'completo' | 'a_medias' | 'sin' {
+  const token = process.env.UPSTASH_QSTASH_TOKEN;
+  const actual = process.env.QSTASH_CURRENT_SIGNING_KEY;
+  const siguiente = process.env.QSTASH_NEXT_SIGNING_KEY;
+  if (token && actual && siguiente) return 'completo';
+  if (token || actual || siguiente) return 'a_medias';
+  return 'sin';
+}
 /** Periodo de la cola: un ticket con más de 45 días no se factura en ningún
  *  portal (el plazo más largo es el mes natural). Mismo criterio que
  *  `DIAS_VENTANA_POR_FACTURAR` en pendientes.ts (ESC-12). */
@@ -476,7 +509,21 @@ export async function GET(req: Request) {
   const inicioLote = Date.now();
 
   try {
-    const conQstash = Boolean(process.env.UPSTASH_QSTASH_TOKEN);
+    const qstash = qstashConfigurado();
+    const conQstash = qstash === 'completo';
+    if (qstash === 'a_medias') {
+      // BE-6 (a): se dice fuerte y se cae al camino síncrono. El síncrono
+      // factura 8 por corrida — poco, pero no es cero en silencio.
+      logger.error('cron.facturar.qstash_a_medias', {
+        token: Boolean(process.env.UPSTASH_QSTASH_TOKEN),
+        current: Boolean(process.env.QSTASH_CURRENT_SIGNING_KEY),
+        next: Boolean(process.env.QSTASH_NEXT_SIGNING_KEY),
+      });
+      await alertarOperador('cron.facturar', {
+        error: 'QStash está a medio configurar (falta UPSTASH_QSTASH_TOKEN, QSTASH_CURRENT_SIGNING_KEY o QSTASH_NEXT_SIGNING_KEY): la facturación corre síncrona, a 8 tickets por corrida, hasta que estén las tres.',
+        codigo: 'qstash_config_incompleta',
+      });
+    }
     const desde = new Date(inicioLote - DIAS_VENTANA_COLA * 86_400_000).toISOString();
     /**
      * LOS FILTROS DE LA COLA, ESCRITOS UNA VEZ.
@@ -516,6 +563,14 @@ export async function GET(req: Request) {
     );
     const backlog = conteo.error || typeof conteo.count !== 'number' ? null : conteo.count;
     if (conteo.error) logger.warn('cron.facturar.backlog_sin_contar', { err: conteo.error.message });
+    if (backlog !== null && backlog > BACKLOG_ALERTA) {
+      // REN-5: la cola que no drena se avisa, no solo se mide.
+      logger.error('cron.facturar.backlog_alto', { backlog, umbral: BACKLOG_ALERTA });
+      await alertarOperador('cron.facturar', {
+        error: `La cola de autofactura trae ${backlog} tickets pendientes (umbral ${BACKLOG_ALERTA} = dos días de la demanda del piloto): no está drenando.`,
+        codigo: 'backlog_facturacion',
+      });
+    }
 
     // ── 2. Los candidatos, en el orden de la cola.
     const { data, error } = await acotada(
@@ -541,28 +596,65 @@ export async function GET(req: Request) {
     // El callback (POST /cola) procesa cada lote con su propio presupuesto;
     // esta invocación contesta en segundos. Sin token, el camino síncrono.
     if (conQstash && todos.length > 0) {
-      const porFlota = new Map<string, FilaCola[]>();
-      for (const g of todos) {
-        const lote = porFlota.get(g.tenant_id) ?? [];
-        if (lote.length < LOTE_POR_FLOTA) lote.push(g);
-        porFlota.set(g.tenant_id, lote);
+      // ── BE-6 (c): ¿EL CALLBACK PROCESÓ LO DE LA CORRIDA ANTERIOR? ──────
+      //
+      // El latido de este camino dice «encolé», y el del callback dice «procesé».
+      // Si el último latido escrito sigue siendo el de «encolé» de hace 15 min,
+      // NINGÚN callback latió desde entonces: QStash no entrega, o el callback
+      // rebota (401 por llave rotada, 503 por config) antes de trabajar. Es la
+      // muerte muda que la auditoría encontró: se cruza aquí, en el único
+      // sitio que ve las dos mitades, y esta corrida factura SÍNCRONA (8
+      // tickets, pero tickets) en vez de volver a encolar al vacío. Su latido
+      // sale `parcial` con la causa, para que /api/health deje de estar en verde.
+      let previo: Awaited<ReturnType<typeof leerLatido>> = null;
+      try { previo = await leerLatido('facturar'); } catch (e) {
+        logger.warn('cron.facturar.latido_previo_ilegible', { err: e instanceof Error ? e.message : String(e) });
       }
-      const flotas = [...porFlota.entries()].slice(0, FLOTAS_POR_CORRIDA);
+      if (previo?.detalle?.encolado === true) {
+        logger.error('cron.facturar.cola_sin_procesar', {
+          encoladoEn: previo.ultimoLatido, sesiones: previo.detalle.sesiones ?? previo.detalle.flotas, tickets: previo.detalle.tickets,
+        });
+        await alertarOperador('cron.facturar', {
+          error: `Se encoló a QStash a las ${previo.ultimoLatido} y ningún callback procesó nada desde entonces: la cola de autofactura está muda (revisa las signing keys de QStash y la URL del callback). Esta corrida factura síncrona.`,
+          codigo: 'cola_sin_procesar',
+        });
+        const lote = todos.slice(0, TOPE_POR_CORRIDA);
+        const quedaron = backlog === null ? Math.max(0, todos.length - lote.length) : Math.max(0, backlog - lote.length);
+        return procesarLoteEnCola(lote, req, hoy, inicioLote, quedaron, { parcialPor: 'cola_sin_procesar' });
+      }
+
+      // REN-5: un mensaje por (flota, portal). El portal sale de `armar()`, la
+      // MISMA función con la que `procesarLoteEnCola` y `al_vuelo.ts` reconocen
+      // el comercio — dos opiniones sobre a qué portal va un ticket mandarían
+      // el lote al navegador equivocado. Lo que no tiene portal reconocido va
+      // en su propio mensaje: se despacha sin navegador y no ocupa sesión.
+      const porSesion = new Map<string, { tenantId: string; portal: string; lote: FilaCola[] }>();
+      for (const g of todos) {
+        const portal = armar(g, hoy).comercio?.clave ?? 'sin_portal';
+        const clave = `${g.tenant_id}|${portal}`;
+        const sesion = porSesion.get(clave) ?? { tenantId: g.tenant_id, portal, lote: [] };
+        if (sesion.lote.length < LOTE_POR_FLOTA) sesion.lote.push(g);
+        porSesion.set(clave, sesion);
+      }
+      const sesiones = [...porSesion.values()].slice(0, SESIONES_POR_CORRIDA);
       // La región del token (QSTASH_URL, p. ej. https://qstash-us-east-1.upstash.io):
       // sin ella el cliente global rutearía a otra región y el publish fallaría.
       const q = new QstashClient({
         token: process.env.UPSTASH_QSTASH_TOKEN,
         baseUrl: process.env.QSTASH_URL ?? undefined,
       });
-      const base = process.env.NEXT_PUBLIC_APP_URL ?? `https://${req.headers.get('host')}`;
+      // BE-32: `appUrl()` es el ÚNICO accesor de la URL base (env.ts, guardia
+      // A2), como en `wa-pendientes/drenado.ts`; el host de la petición queda
+      // de red de seguridad para un preview sin env.
+      const base = appUrl() || `https://${req.headers.get('host')}`;
       const ranura = Math.floor(inicioLote / RANURA_DEDUP_MS);
-      const encolados: Array<{ tenantId: string; messageId: string; tickets: number }> = [];
-      const sinEncolar: Array<{ tenantId: string; tickets: number; error: string }> = [];
-      const candidatos = flotas.reduce((n, [, l]) => n + l.length, 0);
+      const encolados: Array<{ tenantId: string; portal: string; messageId: string; tickets: number }> = [];
+      const sinEncolar: Array<{ tenantId: string; portal: string; tickets: number; error: string }> = [];
+      const candidatos = sesiones.reduce((n, s) => n + s.lote.length, 0);
       // Lo que NO viaja en esta corrida, medido contra el backlog real.
       const quedaron = backlog === null ? null : Math.max(0, backlog - candidatos);
 
-      for (const [tenantId, lote] of flotas) {
+      for (const { tenantId, portal, lote } of sesiones) {
         try {
           const publicacion = await conTope(q.publishJSON({
             url: `${base}/api/cron/facturar/cola`,
@@ -570,13 +662,13 @@ export async function GET(req: Request) {
             retries: 2,
             // El MISMO presupuesto que la función que lo procesa (`cola/route.ts`).
             timeout: maxDuration,
-            deduplicationId: `facturar-${tenantId}-${ranura}`,
+            deduplicationId: `facturar-${tenantId}-${portal}-${ranura}`,
           }), TOPE_PUBLICACION_MS, 'qstash.publish');
-          encolados.push({ tenantId, messageId: publicacion.messageId, tickets: lote.length });
+          encolados.push({ tenantId, portal, messageId: publicacion.messageId, tickets: lote.length });
         } catch (e) {
           const err = e instanceof Error ? e.message : String(e);
-          logger.error('cron.facturar.encolado_fallo', { tenant: tenantId, tickets: lote.length, err });
-          sinEncolar.push({ tenantId, tickets: lote.length, error: err });
+          logger.error('cron.facturar.encolado_fallo', { tenant: tenantId, portal, tickets: lote.length, err });
+          sinEncolar.push({ tenantId, portal, tickets: lote.length, error: err });
         }
       }
 
@@ -588,20 +680,26 @@ export async function GET(req: Request) {
       }
 
       const tickets = encolados.reduce((n, m) => n + m.tickets, 0);
-      logger.info('cron.facturar.encolado', { flotas: encolados.length, tickets, backlog, quedaron, sinEncolar: sinEncolar.length });
+      const flotasEncoladas = new Set(encolados.map((m) => m.tenantId)).size;
+      logger.info('cron.facturar.encolado', { sesiones: encolados.length, flotas: flotasEncoladas, tickets, backlog, quedaron, sinEncolar: sinEncolar.length });
       if (sinEncolar.length > 0) {
-        await alertarOperador('cron.facturar', { error: `QStash no aceptó ${sinEncolar.length} de ${flotas.length} lotes`, codigo: 'encolado_parcial' });
+        await alertarOperador('cron.facturar', { error: `QStash no aceptó ${sinEncolar.length} de ${sesiones.length} lotes`, codigo: 'encolado_parcial' });
       }
       // El latido del camino encolado: la corrida del CRON terminó (encolar
       // era su trabajo); el resultado del lote lo latirá el callback de QStash
       // al procesar, por `procesarLoteEnCola`. Parcial si QStash rechazó lotes.
+      // `encolado: true` es lo que la corrida siguiente cruza (BE-6 c): si
+      // sigue ahí en 15 min, nadie procesó.
       await registrarLatido('facturar', sinEncolar.length > 0 ? 'parcial' : 'ok', {
-        encolado: true, flotas: encolados.length, tickets, sinEncolar: sinEncolar.length,
+        encolado: true, encoladoEn: new Date(inicioLote).toISOString(),
+        sesiones: encolados.length, flotas: flotasEncoladas, tickets, sinEncolar: sinEncolar.length, backlog, quedaron,
       });
       return NextResponse.json({
         corrio: true,
         encolado: true,
-        flotas: encolados.length,
+        flotas: flotasEncoladas,
+        // REN-5: sesiones de navegador encoladas — una por (flota, portal).
+        sesiones: encolados.length,
         mensajes: encolados,
         // Las que no se pudieron encolar quedan SIN marcar: el siguiente cuarto
         // de hora las vuelve a leer enteras.
@@ -662,6 +760,9 @@ export async function procesarLoteEnCola(
   hoy: string,
   inicioLote: number,
   quedaron: number,
+  /** BE-6 (c): el cron cayó al camino síncrono por una causa que el latido
+   *  tiene que decir (`parcial`, no `ok`): la cola encolada no se procesa. */
+  opts: { parcialPor?: string } = {},
 ): Promise<NextResponse> {
   // D7 (auditoría 4): el modo que se REPORTA pasa por `modoEfectivo`, no por
   // process.env a secas. Con FACTURACION_MODO=emitir y el mandato sin aceptar,
@@ -690,6 +791,10 @@ export async function procesarLoteEnCola(
    *  `corridas`: la medición por flota se cierra desde el `finally`, y una
    *  corrida que revienta a la mitad ya intentó tickets que hay que contar. */
   const resultados: Renglon[] = [];
+  /** BE-9: la flota (y sus tickets con portal) cuyo navegador está abierto.
+   *  Si la sesión revienta a media escritura, el `throw` sale del bucle y el
+   *  catch de abajo ya no sabe de quién era: esto es lo que lo nombra. */
+  let flotaEnVuelo: { tenantId: string; gastoIds: string[] } | null = null;
 
   try {
     // ── Agrupar: flota → portal → tickets. El portal sale de `armar()`, que es
@@ -906,6 +1011,7 @@ export async function procesarLoteEnCola(
       }
 
       let arranco = false;
+      flotaEnVuelo = { tenantId, gastoIds: tickets.map((g) => g.id) };
       try {
         await conNavegador(async (abrirPagina, navegador) => {
           arranco = true;
@@ -1026,9 +1132,35 @@ export async function procesarLoteEnCola(
             : undefined,
         });
         corridas.set(tenantId, null);
+        flotaEnVuelo = null;
       } catch (e) {
         const detalle = e instanceof Error ? e.message : String(e);
-        if (arranco) throw e; // el navegador sí abrió: es otro fallo, sube
+        if (arranco) {
+          // ── AUDITORÍA 24, BE-9 (ALTO): LA FLOTA CUYO PORTAL REVENTÓ NO
+          // DESAPARECE DE LOS REPORTES ───────────────────────────────────
+          //
+          // El navegador sí abrió y la sesión del portal reventó a media
+          // escritura. Este `throw` salta al catch del lote, y hasta hoy
+          // saltaba también el `corridas.set`: como TODO el circuito del
+          // cierre (`avisarCorridasPorFlota`, `medirPorFlota`,
+          // `registrarCorrida`, `avisoColaAtorada`) itera `corridas` y
+          // `bloqueadosPorFlota`, la flota T no aparecía en ningún correo,
+          // renglón de bitácora ni WhatsApp — con sus tickets ya marcados
+          // «emisión en curso» por `marcarEmisionEnCurso` (fuera de la cola
+          // automática, `reclamarIntentos` exige la columna en NULL) y quizá
+          // un CFDI vivo en el SAT sin `cfdi_uuid`. Se anota la corrida como
+          // fallida (no de plataforma: el navegador abrió) y los tickets de
+          // esta flota que NO alcanzaron a reportarse quedan como bloqueados
+          // «emisión interrumpida»: su suerte la tiene que mirar una persona,
+          // que es exactamente lo que `avisoColaAtorada` existe para pedir.
+          corridas.set(tenantId, e instanceof Error ? e : new Error(detalle));
+          const reportados = new Set(resultados.filter((r) => r.tenantId === tenantId).map((r) => r.gastoId));
+          for (const g of tickets) {
+            if (!reportados.has(g.id)) anotarBloqueo(tenantId, g.id, 'emision_interrumpida');
+          }
+          flotas.push({ tenantId, tickets: tickets.length, problemas: [`la sesión del portal reventó a media escritura: ${detalle}`] });
+          throw e; // el navegador sí abrió: es otro fallo, sube
+        }
 
         // `conNavegador` arranca Chromium ANTES de correr el cuerpo, así que si
         // el cuerpo nunca se ejecutó, lo que falló fue el arranque — o sea la
@@ -1038,6 +1170,7 @@ export async function procesarLoteEnCola(
         corridas.set(tenantId, new FalloDePlataforma(detalle));
         sinIntentar += tickets.length;
         flotas.push({ tenantId, tickets: tickets.length, falta: ['no se intentó: el navegador no arrancó'] });
+        flotaEnVuelo = null;
       }
     }
 
@@ -1099,13 +1232,16 @@ export async function procesarLoteEnCola(
     // El latido del cierre REAL (tableros al día, 28-ago-2026): la corrida
     // terminó y así le fue. `parcial` si el reloj cortó flotas — mismo
     // criterio que asistencia/runner con sus cortes.
-    await registrarLatido('facturar', sinTiempo > 0 ? 'parcial' : 'ok', {
+    await registrarLatido('facturar', sinTiempo > 0 || opts.parcialPor ? 'parcial' : 'ok', {
       modo, intentados: resultados.length, facturados, sinTiempo, quedaron,
+      ...(opts.parcialPor ? { parcialPor: opts.parcialPor } : {}),
     });
 
     return NextResponse.json({
       corrio: true,
       modo,
+      // BE-6 (c): por qué esta corrida es `parcial` aunque el lote saliera bien.
+      ...(opts.parcialPor ? { parcialPor: opts.parcialPor } : {}),
       portalesConocidos: PORTALES_CONOCIDOS,
       intentados: resultados.length,
       facturados,
@@ -1132,10 +1268,14 @@ export async function procesarLoteEnCola(
     // (arranco) throw e` propaga fuera del bucle), así que tampoco hay UN
     // tenant que emitir sin mentir sobre el alcance.
     const codigo = codigoDeError(e);
-    logger.error('cron.facturar.falló', { error, codigo });
+    // BE-9: con la flota y los tickets en vuelo, que es el único rastro que
+    // dice QUÉ mirar en el portal (¿quedó un CFDI timbrado sin uuid?).
+    logger.error('cron.facturar.falló', {
+      error, codigo, tenant: flotaEnVuelo?.tenantId ?? null, gastos: flotaEnVuelo?.gastoIds ?? null,
+    });
     await alertarOperador('cron.facturar', { error, codigo });
-    await registrarLatido('facturar', 'fallo', { codigo });
-    return NextResponse.json({ error }, { status: 500 });
+    await registrarLatido('facturar', 'fallo', { codigo, tenant: flotaEnVuelo?.tenantId ?? null });
+    return NextResponse.json({ error, tenant: flotaEnVuelo?.tenantId ?? null, gastos: flotaEnVuelo?.gastoIds ?? null }, { status: 500 });
   } finally {
     // ── EN `finally`, Y ÉSA ES LA CORRECCIÓN ────────────────────────────────
     //

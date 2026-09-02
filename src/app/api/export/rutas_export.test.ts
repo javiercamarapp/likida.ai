@@ -112,6 +112,7 @@ vi.mock('@/lib/likida/intake/desglose_peaje', () => ({
   bitacoraACsv: () => 'csv-bitacora',
 }));
 
+const { LecturaIncompleta } = await import('@/lib/likida/pg');
 const pdf = await import('./pdf/[id]/route');
 const liq = await import('./liquidaciones/route');
 const prov = await import('./facturas-proveedor/route');
@@ -390,5 +391,17 @@ describe('export/bitacora-peaje — el desglose se busca acotado al tenant', () 
 
   it('sin ?desglose= es 400', async () => {
     expect((await GET_BIT('')).status).toBe(400);
+  });
+
+  // AUDITORÍA 24, BE-24: una lectura que no puede demostrar que trajo todos
+  // los cruces salía como «Intenta de nuevo en un momento» — mandaba al
+  // contralor a reintentar un error determinista creyendo que fue mala suerte.
+  it('BE-24: `LecturaIncompleta` se nombra, no se disfraza de bache pasajero', async () => {
+    bitacoraRmf918.mockRejectedValueOnce(new LecturaIncompleta('peaje.cruces', 1_000, 1_400));
+    const r = await GET_BIT('d-9');
+    const texto = await r.text();
+    expect(r.status).toBe(500);
+    expect(texto).not.toContain('Intenta de nuevo');
+    expect(texto).toContain('más cruces de los que');
   });
 });
