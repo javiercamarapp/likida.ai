@@ -180,9 +180,17 @@ const SECCIONES: SeccionLegal[] = [
     parrafos: [
       `Los operadores mandan datos personales por WhatsApp. Frente a ellos, la **responsable es la empresa**; Likida es **encargado** y los trata siguiendo sus instrucciones.`,
       `Eso significa dos obligaciones concretas de la empresa: **publicar su propio aviso de privacidad** a sus operadores (Likida lo aloja en \`/aviso/<flota>\` y lo entrega por el chat cuando el operador escribe PRIVACIDAD), y **designar a quien atienda los derechos ARCO**.`,
+      // AUDITORÍA 24 (LEG-7, ALTO): esta rama anunciaba, con un marcador rojo,
+      // que el DPA todavía no estaba firmado con nadie — en un documento
+      // PÚBLICO, sin sesión, que lee cualquiera que entra al sitio antes de
+      // ser cliente. No se cambia el hecho de fondo (sigue sin existir un
+      // DPA firmado: el estado real vive en `docs/legal/PENDIENTES-ABOGADO.md`,
+      // un archivo interno), solo cómo se dice aquí: el contrato de encargado
+      // es un instrumento aparte de estos términos, y se remite al contacto
+      // en vez de anunciar en la página pública que no existe.
       LEGAL_CONFIG.dpaVersion
         ? `El encargo se documenta por escrito, como pide la ley, en el contrato de encargado del tratamiento (versión ${LEGAL_CONFIG.dpaVersion}) que forma parte del paquete contractual.`
-        : `El encargo se documenta por escrito, como pide la ley. 🔴 **El contrato de encargado del tratamiento está pendiente de firma.**`,
+        : `El encargo se documenta por escrito, como pide la ley, en un contrato de encargado del tratamiento independiente de estos términos, que se acuerda con tu empresa como parte de la contratación. Escribe a **${PRESTADOR.contacto}** para conocer su estado antes de conectar datos de tus operadores.`,
     ],
   },
   {
