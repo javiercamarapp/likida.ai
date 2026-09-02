@@ -15349,3 +15349,115 @@ begin
   raise exception E'WA_CONVERSACION_TEL_NORM_0274  variante-choca=%  otro-numero=%  otra-flota=%   (esperado t / t / t)',
     choca_variante, otro_numero_ok, otra_flota_ok;
 end $$;
+
+-- ── 232. Cancelar y abonar se serializan; la cobranza tiene techo (mig. 0284) ──
+--
+-- AUDITORÍA 24, BE-3 (ALTO) + DAT-7 (MEDIO). `cancelarFactura` contaba los
+-- pagos y cancelaba en dos viajes: un abono en medio dejaba un CFDI cancelado
+-- con dinero encima. Y `pago_recibido` aceptaba sobrepagos, abonos sobre
+-- canceladas y «pagada» sin pagos.
+--
+-- Se asevera lo que solo Postgres puede demostrar:
+--   (a) `cancelar_factura_tx` cancela una emitida sin pagos;
+--   (b) con un abono encima rebota CU016 motivo=con_pagos y la factura sigue
+--       `emitida`;
+--   (c) un abono sobre una cancelada rebota 23514 (pago_sobre_factura_viva);
+--   (d) un abono que rebasa el total rebota 23514 (pago_dentro_de_saldo)
+--       aunque entre por INSERT directo, sin pasar por registrar_pago_tx;
+--   (e) `update … set estatus='pagada'` sin dinero rebota 23514;
+--   (f) el camino bueno sigue: registrar_pago_tx salda y marca pagada;
+--   (g) una `pagada` no se cancela desde aquí (CU016 motivo=estatus);
+--   (h) la factura de otra flota ni se traba (CU010);
+--   (i) nada de esto se ejecuta desde internet.
+-- Esperado: CANCELAR_FACTURA_TX_0284 cancela=t con-pagos-rebota=t
+--           sobre-cancelada-rebota=t sobrepago-rebota=t pagada-sin-dinero-rebota=t
+--           salda-y-marca=t pagada-no-se-cancela=t ajena-rebota=t anon=f
+do $$
+declare
+  ta uuid; tb uuid; cli uuid;
+  f_limpia uuid; f_abonada uuid; fx uuid;
+  res jsonb;
+  cancela boolean := false;
+  con_pagos_rebota boolean := false;
+  sobre_cancelada_rebota boolean := false;
+  sobrepago_rebota boolean := false;
+  pagada_sin_dinero_rebota boolean := false;
+  salda_y_marca boolean := false;
+  pagada_no_se_cancela boolean := false;
+  ajena_rebota boolean := false;
+  anon_ok boolean := true;
+begin
+  insert into tenant (nombre) values ('ZZZ VERIF 0284 A') returning id into ta;
+  insert into tenant (nombre) values ('ZZZ VERIF 0284 B') returning id into tb;
+  insert into cliente (tenant_id, nombre, rfc) values (ta, 'ZZZ cli 0284', 'XAXX010101000') returning id into cli;
+
+  -- (a) Sin pagos: se cancela, y el RPC devuelve de dónde venía.
+  insert into factura_emitida (tenant_id, cliente_id, subtotal, iva, total, estatus)
+    values (ta, cli, 10000, 1600, 11600, 'emitida') returning id into f_limpia;
+  res := cancelar_factura_tx(ta, f_limpia);
+  cancela := (select estatus from factura_emitida where id = f_limpia) = 'cancelada'
+             and res ->> 'estatus_previo' = 'emitida';
+
+  -- (b) Con un abono encima: NO se cancela. Es el escenario de BE-3 con el
+  -- abono ya dentro; el intercalado imposible lo garantiza el `for update`.
+  insert into factura_emitida (tenant_id, cliente_id, subtotal, iva, total, estatus)
+    values (ta, cli, 10000, 1600, 11600, 'emitida') returning id into f_abonada;
+  res := registrar_pago_tx(ta, f_abonada, current_date, 10000, 'transferencia', null);
+  begin
+    res := cancelar_factura_tx(ta, f_abonada);
+  exception when sqlstate 'CU016' then
+    con_pagos_rebota := position('motivo=con_pagos' in sqlerrm) > 0
+                        and (select estatus from factura_emitida where id = f_abonada) = 'emitida';
+  end;
+
+  -- (c) Un abono sobre la cancelada de (a) rebota como violación de dominio.
+  begin
+    insert into pago_recibido (tenant_id, factura_id, monto) values (ta, f_limpia, 100);
+  exception when check_violation then sobre_cancelada_rebota := true;
+  end;
+
+  -- (d) Sobrepago por INSERT DIRECTO (saldo 1,600, abono 2,000): rebota sin
+  -- pasar por registrar_pago_tx — que es lo que DAT-7 encontró abierto.
+  begin
+    insert into pago_recibido (tenant_id, factura_id, monto) values (ta, f_abonada, 2000);
+  exception when check_violation then sobrepago_rebota := true;
+  end;
+
+  -- (e) «pagada» sin el dinero encima: rebota.
+  begin
+    update factura_emitida set estatus = 'pagada' where id = f_abonada;
+  exception when check_violation then pagada_sin_dinero_rebota := true;
+  end;
+
+  -- (f) El camino bueno no se rompió: el abono que salda marca `pagada`.
+  res := registrar_pago_tx(ta, f_abonada, current_date, 1600, 'efectivo', 'REF-0284');
+  salda_y_marca := (res ->> 'saldada')::boolean
+                   and (select estatus from factura_emitida where id = f_abonada) = 'pagada';
+
+  -- (g) Y una pagada no se cancela de un clic. El RPC cuenta los abonos ANTES
+  -- de mirar el estatus (una pagada siempre tiene dinero encima), así que el
+  -- motivo que llega es `con_pagos`; lo que se afirma es que NO se canceló.
+  begin
+    res := cancelar_factura_tx(ta, f_abonada);
+  exception when sqlstate 'CU016' then
+    pagada_no_se_cancela := position('motivo=' in sqlerrm) > 0
+                            and (select estatus from factura_emitida where id = f_abonada) = 'pagada';
+  end;
+
+  -- (h) La factura de OTRA flota ni se traba.
+  insert into factura_emitida (tenant_id, cliente_id, subtotal, iva, total, estatus)
+    values (ta, cli, 100, 16, 116, 'emitida') returning id into fx;
+  begin
+    res := cancelar_factura_tx(tb, fx);
+  exception when sqlstate 'CU010' then ajena_rebota := true;
+  end;
+
+  -- (i) Permisos.
+  select has_function_privilege('anon', 'public.cancelar_factura_tx(uuid, uuid)', 'EXECUTE')
+      or has_function_privilege('authenticated', 'public.cancelar_factura_tx(uuid, uuid)', 'EXECUTE')
+    into anon_ok;
+
+  raise exception E'CANCELAR_FACTURA_TX_0284  cancela=%  con-pagos-rebota=%  sobre-cancelada-rebota=%  sobrepago-rebota=%  pagada-sin-dinero-rebota=%  salda-y-marca=%  pagada-no-se-cancela=%  ajena-rebota=%  anon=%   (esperado t / t / t / t / t / t / t / t / f)',
+    cancela, con_pagos_rebota, sobre_cancelada_rebota, sobrepago_rebota, pagada_sin_dinero_rebota,
+    salda_y_marca, pagada_no_se_cancela, ajena_rebota, anon_ok;
+end $$;
