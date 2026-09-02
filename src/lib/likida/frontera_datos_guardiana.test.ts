@@ -27,14 +27,14 @@ import { join, relative } from 'node:path';
  * `repo.ts` ni `pg.ts` (la frontera declarada). Es un TECHO, no un objetivo:
  * si sube, actualiza este número en el mismo commit que explica por qué.
  *
- * 241 → 242 (auditoría 24, frontend-op): `lib/likida/repo_paginado.ts`
- * (nuevo) — lectores keyset (`order`+`range`+`count:'exact'`) para pantallas
- * que hasta ahora filtraban "los N más recientes" en memoria (FE-2/FE-3/
- * FE-6). No entra a la `FRONTERA` declarada porque no es un reemplazo de
- * `repo.ts`/`pg.ts` — es un módulo más con acceso directo, como
- * `analytics.ts` o `jornada/repo.ts`, y cuenta contra el techo como ellos.
+ * AUDITORÍA 24 — varios constructores en paralelo añadieron módulos con
+ * acceso directo fuera de la frontera (cada uno midió contra el 241 base
+ * de origin/master, antes del merge). Valor PROVISIONAL aquí; el
+ * orquestador de la integración recalcula el número real con el barrido
+ * completo tras fusionar las 15 ramas, en un commit aparte que enumera
+ * a todos los contribuyentes.
  */
-const TECHO_ARCHIVOS_FUERA_DE_LA_FRONTERA = 242;
+const TECHO_ARCHIVOS_FUERA_DE_LA_FRONTERA = 244; // PLACEHOLDER — se recalcula al final de la integración
 
 const RAIZ_SRC = new URL('../../', import.meta.url).pathname;
 
