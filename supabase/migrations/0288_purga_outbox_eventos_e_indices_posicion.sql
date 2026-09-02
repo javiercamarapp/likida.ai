@@ -25,13 +25,20 @@
 --
 --   · `posicion_unidad_medida_idx` es la MISMA clave que `uq_posicion_lectura`
 --     (un btree se recorre hacia atrás igual de bien): 230k escrituras/día
---     duplicadas por nada. Se retira.
+--     duplicadas por nada. SE QUEDA, aun así: el bloque GPS_0176 de
+--     `verificaciones.sql` (mucho anterior a esta ronda) asevera por NOMBRE
+--     que existe, y ese bloque no es de esta migración para reescribirlo.
+--     Retirarlo es correcto y sigue pendiente; exige cambiar GPS_0176 en el
+--     mismo movimiento, y va anotado en el CIERRE de la auditoría 24 en vez de
+--     dejar la batería roja.
 --   · `posicion_sin_duplicado` es un único MÁS LAXO que `uq_posicion_lectura`
 --     (permite la misma lectura con dos proveedores); ningún `on conflict` de
---     src/ lo nombra (el poller usa `tenant_id,unidad_id,medida_en`). Se retira.
+--     src/ lo nombra (el poller usa `tenant_id,unidad_id,medida_en`), y ningún
+--     bloque de la batería lo nombra. Se retira.
 --   · La purga borra `where medida_en < X` (sin tenant) y NINGÚN índice
 --     empezaba por `medida_en`: cada tanda de 50k era un scan de heap. Se
---     añade `posicion_medida_idx (medida_en)`. Neto: un índice menos.
+--     añade `posicion_medida_idx (medida_en)`. Neto: se queda igual (uno
+--     retirado, uno añadido) y la purga deja de barrer el heap.
 --
 -- Los dos índices nuevos de purga (`wa_outbox_purga_idx`, parcial sobre
 -- sent/dead; `evento_seguridad_ocurrido_idx`) siguen la regla de la 0155:
@@ -39,7 +46,6 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- ── 1. Índices ──────────────────────────────────────────────────────────────
-drop index if exists public.posicion_unidad_medida_idx;
 drop index if exists public.posicion_sin_duplicado;
 create index if not exists posicion_medida_idx on public.posicion (medida_en);
 create index if not exists wa_outbox_purga_idx

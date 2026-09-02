@@ -55,16 +55,27 @@
 -- ya quita todo lo que no sea dígito y colapsa el `1` de móvil mexicano, así
 -- que la regla se impone sobre la MISMA cadena que indexan
 -- `uq_operador_telefono_activo` y `uq_operador_tenant_telefono_norm`.
+--
+-- LA EXCEPCIÓN QUE NO ES UNA GRIETA: el operador ANONIMIZADO. La cancelación
+-- ARCO (`ejecutar_arco_cancelacion`, 0273/0286) deja `telefono =
+-- 'anon:<16 hex>'` a propósito —el seudónimo tiene que ocupar la columna para
+-- que el número real desaparezca y la fila siga existiendo—. Sin este brazo,
+-- imponer la forma le prohibiría a la flota ejercer el derecho de cancelación:
+-- la regla que protege el alta acabaría bloqueando el borrado. Se ancla a
+-- `anonimizado_en`, no al prefijo del texto, para que sólo valga cuando la
+-- fila está DECLARADA anónima.
 alter table public.operador drop constraint if exists operador_telefono_forma;
 alter table public.operador add constraint operador_telefono_forma
-  check (public.telefono_normalizado(telefono) ~ '^[0-9]{10,15}$') not valid;
+  check (anonimizado_en is not null
+         or public.telefono_normalizado(telefono) ~ '^[0-9]{10,15}$') not valid;
 
 -- ── 2. `operador.rfc` con el molde del SAT ────────────────────────────────
 -- Persona física (4 letras) y moral (3), homoclave incluida. Nulo sigue
 -- valiendo: no todo chofer trae RFC capturado.
 alter table public.operador drop constraint if exists operador_rfc_forma;
 alter table public.operador add constraint operador_rfc_forma
-  check (rfc is null or upper(rfc) ~ '^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$') not valid;
+  check (anonimizado_en is not null or rfc is null
+         or upper(rfc) ~ '^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$') not valid;
 
 -- ── 3. `unidad`: año, kilometraje y económico sin espacios ────────────────
 -- El techo del año es una constante y no `extract(year from now())`: un CHECK

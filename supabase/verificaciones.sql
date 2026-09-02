@@ -15451,13 +15451,26 @@ begin
   -- CUERPO vigente leído de pg_proc — lo que de verdad corre en esta base.
   select prosrc into cuerpo from pg_proc where proname = 'ultimas_posiciones_tenant'
     and pronamespace = 'public'::regnamespace;
+  -- Con las 2 filas del fixture un Seq Scan es LEGÍTIMAMENTE más barato, así
+  -- que sin esto el plan variaría con el volumen y la prueba sería una moneda
+  -- al aire. Lo que se asevera es la FORMA, no el costo.
   set local enable_seqscan = off;
   for linea in execute 'explain (costs off) ' || replace(cuerpo, 'p_tenant', '$1') using ta loop
     plan := plan || linea || E'\n';
   end loop;
   reset enable_seqscan;
+
+  -- `Unique` es la firma del `distinct on` de la 0269: barrer TODAS las
+  -- posiciones del tenant y desduplicar. Es la regresión que esto vigila.
   con_unique := plan like '%Unique%';
-  con_indice := plan like '%Index Scan Backward using uq_posicion_lectura on posicion%';
+  -- La forma `lateral`: un sondeo POR UNIDAD (`Nested Loop` + `Limit`) que
+  -- entra por índice a `posicion`. Se comprueba la forma y NO el nombre del
+  -- índice: `uq_posicion_lectura (tenant, unidad, medida_en)` y
+  -- `posicion_unidad_medida_idx (… medida_en desc)` sirven las dos, y cuál
+  -- elige el planificador depende de cuáles existan el día que corra.
+  con_indice := plan like '%Nested Loop%'
+            and plan like '%Limit%'
+            and plan like '%Index Scan%on posicion p%';
 
   rastreo := public.estado_rastreo_tenant(ta);
 
@@ -15515,8 +15528,14 @@ begin
   select count(*) into grave_400  from public.evento_seguridad_flota where tenant_id = t and evento_id_externo = 'grave-400';
   select count(*) into leve_nuevo from public.evento_seguridad_flota where tenant_id = t and evento_id_externo = 'leve-nuevo';
 
+  -- Sólo `posicion_sin_duplicado` se retira (un único MÁS LAXO que
+  -- `uq_posicion_lectura`, que ningún `on conflict` de src/ nombra).
+  -- `posicion_unidad_medida_idx` SE QUEDA aunque repita la clave de
+  -- `uq_posicion_lectura`: el bloque GPS_0176 lo asevera por nombre desde
+  -- mucho antes de esta ronda, y retirarlo exige cambiar ese bloque en el
+  -- mismo movimiento. Queda anotado en el CIERRE de la auditoría 24.
   sin_dup := not exists (select 1 from pg_indexes where schemaname = 'public' and tablename = 'posicion'
-                           and indexname in ('posicion_unidad_medida_idx', 'posicion_sin_duplicado'));
+                           and indexname = 'posicion_sin_duplicado');
   con_medida := exists (select 1 from pg_indexes where schemaname = 'public' and tablename = 'posicion'
                           and indexname = 'posicion_medida_idx');
   select count(*) into repetidos from (
@@ -15662,4 +15681,98 @@ begin
   raise exception E'OPERADOR_UNIDAD_FORMA_0290  tel-chatarra=%  tel-bueno=%  rfc-malo=%  rfc-bueno=%  anio=%  km=%  eco=%  placa-dup=%  placa-otra-flota=%  fk-ajena=%  fk-propia=%   (esperado rebota / entro / rebota / entro / rebota / rebota / rebota / rebota / entro / rebota / entro)',
     tel_chatarra, tel_bueno, rfc_malo, rfc_bueno, anio_malo, km_malo, eco_malo,
     placa_dup, placa_otra_flota, fk_ajena, fk_propia;
+end $$;
+
+-- ── 239. La sesión del contador ya no puede REESCRIBIR la liquidación (mig. 0292) ──
+--
+-- AUDITORÍA 24, SEG-2 (MEDIO). El contador tiene cookie de sesión legítima y
+-- la anon key viaja en el bundle: con `curl` hacía
+-- `PATCH /rest/v1/liquidacion` y `tenant_finanzas_update` lo dejaba pasar —204,
+-- la fila cambiaba, el PDF archivado decía otra cifra y `bitacora_auditoria`
+-- no tenía entrada. Se asevera, actuando DE VERDAD como `authenticated` con
+-- su `sub` en el JWT:
+--   (a) SIGUE LEYENDO su liquidación (no se rompió el panel);
+--   (b) el UPDATE afecta 0 filas;
+--   (c) el INSERT de un gasto rebota;
+--   (d) el DELETE de un operador afecta 0 filas;
+--   (e) no puede borrar ni reescribir la bitácora (0 filas: RLS sin policy);
+--   (f) `service_role` —el rol con el que la app escribe— sí puede.
+do $$
+declare
+  t uuid := gen_random_uuid(); conta uuid := gen_random_uuid();
+  op uuid := gen_random_uuid(); vj uuid := gen_random_uuid(); liq uuid := gen_random_uuid();
+  -- Un viaje ABIERTO aparte: el gasto se prueba contra éste para que lo que
+  -- rebote sea la RLS y no `trg_gasto_no_tras_liquidar` (que ya lo frenaría
+  -- por llegar tarde, y entonces la prueba no mediría nada).
+  vj2 uuid := gen_random_uuid(); op2 uuid := gen_random_uuid();
+  -- Un chofer SIN viajes: si se borrara el de `vj`, lo que rebota es el FK
+  -- `restrict` de `viaje`, no la RLS — y otra vez la prueba no mediría nada.
+  op3 uuid := gen_random_uuid();
+  leidas int; tocadas int; borrados int; bit_tocadas int;
+  gasto_insert text := 'no'; bit_borradas int := -1; por_admin text := 'no';
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0292__');
+  insert into public.app_user (id, tenant_id, email, rol)
+    values (conta, t, '__verif_0292@likida.test', 'contador');
+  insert into public.operador (id, tenant_id, nombre, telefono) values (op, t, 'Juan', '5299937007 91');
+  insert into public.viaje (id, tenant_id, operador_id, folio, estatus, anticipo)
+    values (vj, t, op, 'VJ-0292-0001', 'liquidado', 10000);
+  insert into public.liquidacion (id, tenant_id, viaje_id, estatus, total_anticipo, total_comprobado, diferencia)
+    values (liq, t, vj, 'cuadrada', 10000, 10000, 0);
+  insert into public.operador (id, tenant_id, nombre, telefono) values (op2, t, 'Pedro', '5299937007 92');
+  insert into public.viaje (id, tenant_id, operador_id, folio, estatus, anticipo)
+    values (vj2, t, op2, 'VJ-0292-0002', 'abierto', 0);
+  insert into public.operador (id, tenant_id, nombre, telefono) values (op3, t, 'Sin viajes', '5299937007 93');
+  insert into public.bitacora_auditoria (tenant_id, actor_id, accion, entidad, entidad_id)
+    values (t, conta, 'liquidacion.emitida', 'liquidacion', liq::text);
+
+  set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', conta)::text, true);
+
+  -- (a) el panel sigue leyendo
+  -- Por `viaje_id` y no por `id`: `liquidacion_id_del_viaje` deriva la llave
+  -- del viaje (md5), así que el id que se insertó arriba no es el que quedó.
+  select count(*) into leidas from public.liquidacion where viaje_id = vj;
+
+  -- (b) el PATCH que inventaba la cifra
+  -- La cifra inventada CUADRA con `liquidacion_diferencia_cuadra`
+  -- (diferencia = anticipo - comprobado): así lo único que puede frenarla es
+  -- la RLS, que es justo lo que se está midiendo. El PDF firmado decía 10,000
+  -- comprobados; esto dice 18,500.
+  update public.liquidacion set total_comprobado = 18500, diferencia = -8500 where viaje_id = vj;
+  get diagnostics tocadas = row_count;
+
+  -- (c) meter un gasto por la puerta de atrás
+  begin
+    insert into public.gasto (tenant_id, viaje_id, concepto, monto, fecha)
+      values (t, vj2, 'diesel', 5800, current_date);
+    gasto_insert := 'ENTRO';
+  exception when insufficient_privilege then gasto_insert := 'rebota'; end;
+
+  -- (d) borrar al chofer
+  delete from public.operador where id = op3;
+  get diagnostics borrados = row_count;
+
+  -- (e) la bitácora es constancia: ni se reescribe ni se borra
+  -- RLS niega por AUSENCIA de policy de escritura: afecta 0 filas, no truena.
+  -- (Revocar además los grants de tabla es el candado pendiente del CIERRE.)
+  begin
+    update public.bitacora_auditoria set accion = 'nada que ver' where tenant_id = t;
+    get diagnostics bit_tocadas = row_count;
+  exception when insufficient_privilege then bit_tocadas := 0; end;
+  begin
+    delete from public.bitacora_auditoria where tenant_id = t;
+    get diagnostics bit_borradas = row_count;
+  exception when insufficient_privilege then bit_borradas := 0; end;
+
+  reset role;
+
+  -- (f) el rol con el que la app SÍ escribe no se tocó
+  begin
+    update public.liquidacion set total_comprobado = 12000, diferencia = -2000 where viaje_id = vj;
+    por_admin := 'entro';
+  exception when others then por_admin := 'REBOTO: ' || sqlerrm; end;
+
+  raise exception E'POLICIES_SOLO_LECTURA_0292  contador-lee=%  update-liquidacion=%  insert-gasto=%  delete-operador=%  update-bitacora=%  delete-bitacora=%  por-service-role=%   (esperado 1 / 0 / rebota / 0 / 0 / 0 / entro)',
+    leidas, tocadas, gasto_insert, borrados, bit_tocadas, bit_borradas, por_admin;
 end $$;
