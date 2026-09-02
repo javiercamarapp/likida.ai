@@ -55,7 +55,17 @@ const filas = [{
   anticipo: 5000, comprobado: 3480, diferencia: 1520, ivaAcreditable: 480,
   porConcepto: [{ concepto: 'diesel', subtotal: 3000, baseConocida: true }],
   baseDesconocida: 0,
-  gastos: [{ id: 'g1', concepto: 'diesel', subtotal: 3000, descuento: null, tieneCfdi: true }],
+  // AUD24 (integración): la RPC 0281 (FIS-2/FIS-3) agregó `version` y los
+  // campos por comprobante que `cubetaDe`/`aGasto` leen — sin ellos
+  // `rpcDesactualizada` contesta 409 (`route.ts:104-110`), que es
+  // exactamente lo que este archivo prueba que NO debe pasar aquí.
+  version: 281,
+  gastos: [{
+    id: 'g1', concepto: 'diesel', subtotal: 3000, descuento: null, tieneCfdi: true,
+    monto: 3000, fecha: '2026-08-20', cfdiUuid: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    cfdiOrden: 1, folio: 'DS-1', folioNorm: 'DS1', formaPago: '01',
+    pagadoEn: '2026-08-20', pagadoForma: '01', ivaRetenido: null, isrRetenido: null,
+  }],
   diferencias: [],
   retenciones: 0,
 }];

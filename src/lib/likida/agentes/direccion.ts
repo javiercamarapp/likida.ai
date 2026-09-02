@@ -613,10 +613,22 @@ export function armarParteIncidente(inc: Incidente, telefonos: Telefono[], dia: 
     l.push('  Esto NO es «no hay a quién llamar»: es que esta flota no tiene póliza registrada en `flota_poliza` ni proveedores en `proveedor_emergencia`, o el tipo de emergencia no tiene proveedor asociado. Un número inventado aquí sería peor que no tener ninguno — mandaría a alguien a marcar a un desconocido en el peor momento.');
     l.push('  EL SIGUIENTE PASO ES DE UNA PERSONA: capturar el 800 de siniestros de la aseguradora y al menos una grúa de la zona, y volver a mirar este expediente.');
   } else {
-    // LEG-5: mismo criterio que la descripción de arriba — el teléfono de
-    // un contacto de emergencia (a veces un familiar) no se repite en la
-    // bandeja interna de Likida.
-    l.push(`  ${telefonos.length} contacto(s) de emergencia disponibles en el panel de tu flota — este parte no los reproduce; ábrelo con el expediente ${inc.id}.`);
+    // LEG-5: el riesgo real es el CONTACTO FAMILIAR (dato personal de un
+    // tercero, `aQuienLlamar` los marca "— familia de <operador>"), no la
+    // aseguradora ni los proveedores (contactos de negocio, necesarios para
+    // que esta pieza sirva de verdad en una emergencia). Solo la familia se
+    // remite al expediente; el resto de la lista se reproduce igual que
+    // siempre.
+    for (let i = 0; i < telefonos.length; i++) {
+      const t = telefonos[i];
+      l.push(`  ${numero(i + 1)}. ${t.quien}`);
+      if (t.quien.includes('— familia de')) {
+        l.push(`     tel: disponible en el panel de tu flota — este parte no lo reproduce (expediente ${inc.id}).`);
+      } else {
+        l.push(`     tel: ${t.numero}`);
+      }
+      l.push(`     respaldo: ${t.respaldo}`);
+    }
   }
 
   l.push('');

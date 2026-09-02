@@ -24,15 +24,26 @@ import { logger } from '@/lib/logger';
 export type PipelineChofer = 'whatsapp' | 'ocr' | 'cuadre';
 
 export async function pipelineTenantApagado(tenantId: string, pipeline: PipelineChofer): Promise<boolean> {
-  const { data, error } = await acotada(supabaseAdmin()
-    .from('interruptor_tenant')
-    .select('apagado')
-    .eq('tenant_id', tenantId)
-    .eq('pipeline', pipeline)
-    .maybeSingle(), 'pipelineTenantApagado');
-  if (error) {
-    logger.warn('interruptor_tenant.ilegible', { tenantId, pipeline, err: error.message });
+  // Envuelto en try/catch, no solo en el `{ error }` de Supabase: esta
+  // palanca corre en CADA turno del chofer, en el mismo webhook que 700+
+  // pruebas ejercitan con dobles simplificados de `supabaseAdmin()` que no
+  // implementan cada tabla/consulta — un doble incompleto no puede tumbar
+  // un turno que no tiene nada que ver con esta palanca. Fallo de lectura
+  // (medido o por excepción) = ENCENDIDO, igual en los dos casos.
+  try {
+    const { data, error } = await acotada(supabaseAdmin()
+      .from('interruptor_tenant')
+      .select('apagado')
+      .eq('tenant_id', tenantId)
+      .eq('pipeline', pipeline)
+      .maybeSingle(), 'pipelineTenantApagado');
+    if (error) {
+      logger.warn('interruptor_tenant.ilegible', { tenantId, pipeline, err: error.message });
+      return false;
+    }
+    return data?.apagado === true;
+  } catch (e) {
+    logger.warn('interruptor_tenant.ilegible', { tenantId, pipeline, err: e instanceof Error ? e.message : String(e) });
     return false;
   }
-  return data?.apagado === true;
 }

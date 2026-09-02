@@ -30,6 +30,12 @@ function builder() {
   Object.assign(b, {
     select: () => b,
     eq: () => b,
+    // AUD24 (integración): BLOQ-6 (revision) añadió el filtro de firma
+    // humana sobre esta misma consulta (`neq`/`in` según `rev.filtro`,
+    // FILTRO_REVISION_DEFECTO='firmadas' por omisión) — el doble necesita
+    // los dos métodos aunque esta prueba no verifique el filtro en sí.
+    neq: () => b,
+    in: () => b,
     gte: () => b,
     lt: () => b,
     or: () => b,

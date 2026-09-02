@@ -451,7 +451,14 @@ describe('el despacho de éxito del cliente (0218)', () => {
 
   it('atencion_faq SÍ pasa por el techo de gasto MEDIDO: es el único que gasta modelo', async () => {
     respuestas.set('agente_definicion', [{ data: [{ id: 'atencion_faq', presupuesto_dia_usd: 1 }], error: null }]);
-    respuestas.set('agente_corrida', [{ data: [{ costo_usd: 0.02 }], error: null }]);
+    // AUDITORÍA 24, ARQ-2 (integración): el runner ahora consulta
+    // `corridasSinCostoMedidoHoy` (count) ANTES de `gastoDelDiaUsd` (data) —
+    // dos llamadas a `agente_corrida`, en ese orden. `count: 0` = nada sin
+    // medir hoy, para que el techo compare contra el gasto real.
+    respuestas.set('agente_corrida', [
+      { count: 0, error: null },
+      { data: [{ costo_usd: 0.02 }], error: null },
+    ]);
     const r = await correrRunner(undefined, TENANT);
     // `atencion_faq` es el que MÁS necesita el reloj de los seis: gasta modelo
     // por ticket y `ordenarPorCosto` lo despacha al final de la vuelta.
@@ -461,7 +468,10 @@ describe('el despacho de éxito del cliente (0218)', () => {
 
   it('con el techo de atencion_faq agotado, ni se le pregunta al modelo', async () => {
     respuestas.set('agente_definicion', [{ data: [{ id: 'atencion_faq', presupuesto_dia_usd: 1 }], error: null }]);
-    respuestas.set('agente_corrida', [{ data: [{ costo_usd: 5 }], error: null }]);
+    respuestas.set('agente_corrida', [
+      { count: 0, error: null },
+      { data: [{ costo_usd: 5 }], error: null },
+    ]);
     const r = await correrRunner(undefined, TENANT);
     expect(correrExito).not.toHaveBeenCalled();
     expect(r.agentes[0].motivo).toMatch(/techo diario alcanzado/);
@@ -813,7 +823,13 @@ describe('el orden de despacho — lo barato primero, lo caro al final', () => {
       { id: 'atencion_faq', presupuesto_dia_usd: 1 },
       { id: 'onboarding_cliente', presupuesto_dia_usd: 0.1 },
     ], error: null }]);
-    respuestas.set('agente_corrida', [{ data: [], error: null }]);
+    // Solo `atencion_faq` gasta modelo y consulta `agente_corrida`
+    // (`onboarding_cliente` es determinista, no la toca): dos llamadas —
+    // `corridasSinCostoMedidoHoy` (count) y `gastoDelDiaUsd` (data) —.
+    respuestas.set('agente_corrida', [
+      { count: 0, error: null },
+      { data: [], error: null },
+    ]);
     const r = await correrRunner(undefined, TENANT);
     expect(correrExito.mock.calls.map((c) => c[0])).toEqual(['onboarding_cliente', 'atencion_faq']);
     expect(r.agentes.map((a) => a.agente)).toEqual(['onboarding_cliente', 'atencion_faq']);
