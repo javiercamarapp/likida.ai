@@ -15349,3 +15349,65 @@ begin
   raise exception E'WA_CONVERSACION_TEL_NORM_0274  variante-choca=%  otro-numero=%  otra-flota=%   (esperado t / t / t)',
     choca_variante, otro_numero_ok, otra_flota_ok;
 end $$;
+
+-- ── 234. La cancelación ARCO borra la conversación por teléfono NORMALIZADO y su search_path vive en la base (mig. 0286) ──
+--
+-- AUDITORÍA 24, DAT-2 / LEG-2 (CRÍTICO, reincidente de DATOS-23-2). El bloque
+-- 210 pasaba en verde con `"wa_conversacion": 0` porque su fixture no insertaba
+-- conversación; la app la crea por TELÉFONO (`loadConversation`) y nunca llena
+-- `operador_id`, así que el `delete … where operador_id = v_operador` borraba
+-- cero filas mientras el panel decía «el titular quedó anonimizado».
+--
+-- Aquí la conversación se inserta COMO LA CREA LA APP (sin `operador_id`) y
+-- además con OTRA variante del mismo celular (`529…` contra el `521…` del
+-- operador): la 0274 ya declaró que son el mismo número.
+--
+--   (a) la conversación del titular desaparece;
+--   (b) la evidencia lo cuenta (wa_conversacion = 1, envio_mensaje = 1);
+--   (c) DATOS-23-5: el evento de OTRO titular ya anonimizado NO se reescribe;
+--   (d) DAT-1: `pg_proc.proconfig` de la función —EN LA BASE, no en el
+--       archivo— trae `extensions` (sin él, digest() truena en gestionado).
+do $$
+declare
+  t uuid := gen_random_uuid(); op uuid := gen_random_uuid(); otro uuid := gen_random_uuid();
+  inc_otro uuid := gen_random_uuid(); sol uuid := gen_random_uuid();
+  ev jsonb; n_conv int; n_envio int; txt_otro text; cfg text;
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0286__');
+  insert into public.operador (id, tenant_id, nombre, telefono)
+    values (op, t, 'Juan Pérez', '5219993700779');
+  -- La conversación tal cual la escribe conv.ts: por teléfono, sin operador_id,
+  -- y en la variante SIN el "1" de Telmex.
+  insert into public.wa_conversacion (tenant_id, telefono, estado)
+    values (t, '529993700779', '{"turns": []}'::jsonb);
+  insert into public.envio_mensaje (tenant_id, telefono, canal, estado)
+    values (t, '+5219993700779', 'whatsapp', 'enviado');
+
+  -- Otro titular, YA anonimizado por una cancelación anterior: su evento no
+  -- debe volver a tocarse (DATOS-23-5).
+  insert into public.operador (id, tenant_id, nombre, telefono, anonimizado_en)
+    values (otro, t, 'Operador AAAAAA', 'anon:0000000000000000', now());
+  insert into public.incidencia (id, tenant_id, operador_id, tipo, prioridad, descripcion, texto_anonimizado_en)
+    values (inc_otro, t, null, 'siniestro', 'critica', '[texto retirado por cancelación ARCO del titular]', now() - interval '1 day');
+  insert into public.incidencia_evento (tenant_id, incidencia_id, tipo, detalle)
+    values (t, inc_otro, 'mensaje_adicional', jsonb_build_object('texto', 'marca intacta del otro titular'));
+
+  insert into public.solicitud_arco (id, tenant_id, operador_id, tipo, canal, vence_en)
+    values (sol, t, op, 'cancelacion', 'whatsapp', current_date + 15);
+
+  perform public.ejecutar_arco_cancelacion(t, sol);
+
+  select count(*) into n_conv from public.wa_conversacion
+    where tenant_id = t and public.telefono_normalizado(telefono) = public.telefono_normalizado('5219993700779');
+  select count(*) into n_envio from public.envio_mensaje
+    where tenant_id = t and public.telefono_normalizado(telefono) = public.telefono_normalizado('5219993700779');
+  select s.evidencia into ev from public.solicitud_arco s where s.id = sol;
+  select e.detalle->>'texto' into txt_otro from public.incidencia_evento e where e.incidencia_id = inc_otro;
+  select array_to_string(p.proconfig, ' ') into cfg
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public' and p.proname = 'ejecutar_arco_cancelacion';
+
+  raise exception E'ARCO_TELEFONO_NORM_0286  conv-vivas=%  envios-vivos=%  evidencia-conv=%  evidencia-envio=%  otro-intacto=%  proconfig-extensions=%   (esperado 0 / 0 / 1 / 1 / t / t)',
+    n_conv, n_envio, ev->>'wa_conversacion', ev->>'envio_mensaje',
+    txt_otro = 'marca intacta del otro titular', cfg like '%extensions%';
+end $$;
