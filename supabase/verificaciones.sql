@@ -15426,3 +15426,37 @@ begin
   raise exception E'POLIZA_V2_0281  version=%  insumos-por-gasto=%  dos-fotos=%  piso-subtotal=%  piso-descuento=%   (esperado t / t / t / t / t)',
     version_281, insumos_por_gasto, dos_fotos, piso_subtotal, piso_descuento;
 end $$;
+
+-- ── 229. El agregado fiscal parte las celdas por el sello del complemento de pago (mig. 0282) ──
+--
+-- AUDITORÍA 24, FIS-7 (MEDIO). Dos CFDI '99' idénticos en todo menos en
+-- `pagado_en` caían en UNA celda y el panel del contador negaba el IVA de los
+-- dos. Con la 0282 son DOS celdas, cada una con `pagado` y `pagadoForma`, y
+-- `ivaSostenible` (fiscal.ts) puede sostener el pagado — la ley sigue en TS.
+do $$
+declare
+  t uuid := gen_random_uuid(); v uuid := gen_random_uuid(); op uuid := gen_random_uuid();
+  celdas jsonb;
+  dos_celdas boolean := false;
+  trae_pagado boolean := false;
+  forma_del_rep boolean := false;
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0282__');
+  insert into public.operador (id, tenant_id, nombre, telefono)
+    values (op, t, 'Operador 0282', '+5218100000282');
+  insert into public.viaje (id, tenant_id, operador_id, folio, anticipo, estatus)
+    values (v, t, op, 'VJ-0282', 10000, 'abierto');
+  insert into public.gasto (tenant_id, viaje_id, concepto, monto, sub_total, iva_traslado, cfdi_uuid, forma_pago, metodo_pago, fecha, pagado_en, pagado_forma)
+    values (t, v, 'diesel', 1160, 1000, 160, 'aaaaaaaa-0282-0282-0282-000000000001', '99', 'PPD', current_date, null, null),
+           (t, v, 'diesel', 1160, 1000, 160, 'aaaaaaaa-0282-0282-0282-000000000002', '99', 'PPD', current_date, current_date, '03');
+
+  celdas := public.gastos_fiscales_agregados_tenant(t, null, null, 2000, 750, array['alimentacion','viaticos'], '{}'::date[]);
+
+  dos_celdas   := jsonb_array_length(celdas) = 2;
+  trae_pagado  := (select bool_and(x ? 'pagado' and x ? 'pagadoForma') from jsonb_array_elements(celdas) x);
+  forma_del_rep := exists (select 1 from jsonb_array_elements(celdas) x where (x->>'pagado')::boolean and x->>'pagadoForma' = '03' and (x->>'n')::int = 1)
+               and exists (select 1 from jsonb_array_elements(celdas) x where not (x->>'pagado')::boolean and x->'pagadoForma' = 'null'::jsonb and (x->>'n')::int = 1);
+
+  raise exception E'FISCAL_AGREGADO_PAGADO_0282  dos-celdas=%  trae-pagado=%  forma-del-rep=%   (esperado t / t / t)',
+    dos_celdas, trae_pagado, forma_del_rep;
+end $$;

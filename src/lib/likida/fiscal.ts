@@ -73,6 +73,15 @@ export interface GastoFiscal {
   efosRevisar: boolean | null;
   /** c_FormaPago del SAT. '01' es efectivo. */
   formaPago: string | null;
+  /**
+   * AUDITORÍA 24, FIS-7: ¿un complemento de pago liquidó este CFDI POR
+   * COMPLETO? (`gasto.pagado_en is not null`, mig. 0199; dimensión del
+   * agregado desde la 0282). `null`/ausente = no se sabe, y se trata como NO
+   * pagado — el lado conservador, el mismo que el panel tenía antes.
+   */
+  pagado?: boolean | null;
+  /** `FormaDePagoP` del REP: el medio con el que DE VERDAD se pagó un '99'. */
+  pagadoForma?: string | null;
   subTotal: number | null;
   ivaTraslado: number | null;
   iepsTraslado: number | null;
@@ -145,6 +154,21 @@ function pesoDe(g: GastoFiscal): number {
 }
 
 /**
+ * La forma de pago que se puede JUZGAR — la misma idea que `formaPagoJuzgable`
+ * en cuadre/engine.ts (FIS-1/FIS-5): `'99 Por definir'` no es un medio, es la
+ * ausencia de uno (RMF 2.7.1.29 fr. II). Con el REP ingerido, el medio real es
+ * su `FormaDePagoP`; sin él, `null` = «no opino» — desconocido no es «medio
+ * distinto» ni «efectivo».
+ *
+ * AUDITORÍA 24, FIS-7 (MEDIO): este módulo era ciego al complemento de pago
+ * y el mismo UUID daba $0 en «IVA acreditable documentado» y $8,000 en el PDF.
+ */
+export function formaPagoEfectiva(g: Pick<GastoFiscal, 'formaPago' | 'pagado' | 'pagadoForma'>): string | null {
+  if (g.formaPago !== FORMA_PAGO_SIN_PAGAR) return g.formaPago;
+  return g.pagado ? (g.pagadoForma ?? null) : null;
+}
+
+/**
  * LISR 27-III, el único juicio POR MONTO de la ley: sobre un comprobante se
  * compara aquí; sobre una celda se lee la partición que SQL hizo con el MISMO
  * tope (ver `CeldaFiscal.sobreTopeEfectivo`).
@@ -169,10 +193,11 @@ function sobreTopeEfectivo(g: GastoFiscal, o: OpcionesFiscales): boolean {
  * - Combustible NO entra: lo gobierna la RFA 2.9 con su propia matriz.
  */
 function medioFueraDeLista27III(g: GastoFiscal, o: OpcionesFiscales): boolean {
-  if (!g.formaPago || g.formaPago === '01') return false;
+  const forma = formaPagoEfectiva(g);
+  if (!forma || forma === '01') return false;
   if (esCombustible(g, o)) return false;
   if (!sobreTopeEfectivo(g, o)) return false;
-  return !(MEDIOS_LISR_27_III as readonly string[]).includes(g.formaPago);
+  return !(MEDIOS_LISR_27_III as readonly string[]).includes(forma);
 }
 
 // ── Periodo ────────────────────────────────────────────────────────────────
@@ -475,7 +500,7 @@ export function causasDe(g: GastoFiscal, o: OpcionesFiscales): Causa[] {
   // MISMO predicado que usa el motor, importado a propósito: si el panel se
   // escribe su copia, vuelven las dos cifras sobre el mismo comprobante.
   if (esCombustible(g, o)) {
-    if (medioNoAdmitidoCombustible(g.formaPago)) {
+    if (medioNoAdmitidoCombustible(formaPagoEfectiva(g))) {
       // AUDITORÍA 14-15, ALTO: mismo estándar que el motor — pero SIN DECLARAR
       // (elegible15 undefined) NO es "deducción perdida": el motor lo mantiene
       // "por confirmar" y el panel debe decir lo mismo (en_riesgo), no perdido.
@@ -485,7 +510,7 @@ export function causasDe(g: GastoFiscal, o: OpcionesFiscales): Causa[] {
     // El tope de efectivo NO aplica al combustible: su frontera es la lista de
     // la LISR 27-III, arriba. `sobreTopeEfectivo` (de master) prefiere la celda
     // que ya calculó el motor sobre recalcular el monto aquí.
-  } else if (g.formaPago === '01' && sobreTopeEfectivo(g, o)) {
+  } else if (formaPagoEfectiva(g) === '01' && sobreTopeEfectivo(g, o)) {
     push('efectivo_sobre_tope');
   } else if (medioFueraDeLista27III(g, o)) {
     push('medio_pago_no_admitido');
@@ -681,7 +706,7 @@ function ivaSostenible(g: GastoFiscal, o: OpcionesFiscales): boolean {
   if (g.estadoSat === 'cancelado') return false;
   if (g.estadoSat === 'pendiente' || g.estadoSat === 'no_encontrado') return false;
   if (g.efos === true) return false;
-  if (g.formaPago === '01' && !esCombustible(g, o) && sobreTopeEfectivo(g, o)) return false;
+  if (formaPagoEfectiva(g) === '01' && !esCombustible(g, o) && sobreTopeEfectivo(g, o)) return false;
   // AUDITORÍA 22, FIS-C3: mismo hecho con otra forma de pago. Mientras el
   // contador no confirme, la proporción deducible es cero y LIVA 5-I no acredita.
   if (medioFueraDeLista27III(g, o)) return false;
@@ -702,7 +727,7 @@ function ivaSostenible(g: GastoFiscal, o: OpcionesFiscales): boolean {
   //     `efectivo_no_elegible` o `combustible_efectivo`), luego no hay IVA.
   // Esta función es un booleano y no reparte proporciones; el motor sí lo hace
   // con `proporcionDeducible`, y él es quien imprime la cifra del PDF.
-  if (medioNoAdmitidoCombustible(g.formaPago) && esCombustible(g, o) && o.elegible15 !== true) return false;
+  if (medioNoAdmitidoCombustible(formaPagoEfectiva(g)) && esCombustible(g, o) && o.elegible15 !== true) return false;
   // AUDITORÍA 18-c3, FISC-C3-2 (CRÍTICO): LIVA 5-III exige que el impuesto esté
   // "efectivamente pagado en el mes". `'99' Por definir` = la contraprestación
   // NO se ha pagado (RMF 2.7.1.29 fr. II), que es el caso normal de un CFDI PPD
@@ -716,7 +741,10 @@ function ivaSostenible(g: GastoFiscal, o: OpcionesFiscales): boolean {
   // Ojo con el criterio del módulo: se niega SOLO cuando la columna dice '99'.
   // Un comprobante SIN `forma_pago` es desconocido, no impago (mismo estándar
   // que `causasDe` y que `getAcumuladoCombustible`).
-  if (g.formaPago === FORMA_PAGO_SIN_PAGAR) return false;
+  // AUDITORÍA 24, FIS-7: con el complemento de pago ingerido (`pagado`, mig.
+  // 0282 como dimensión del agregado) el '99' deja de cerrar la puerta — igual
+  // que `pagadoConRep` en el motor. Sin el sello, todo queda como antes.
+  if (g.formaPago === FORMA_PAGO_SIN_PAGAR && !g.pagado) return false;
   return true;
 }
 
@@ -790,7 +818,13 @@ export function resumirFiscal(gastos: GastoFiscal[], o: OpcionesFiscales): Resum
     // El IEPS del diésel exige pago electrónico y NO tiene la válvula del 15%
     // que la RFA 2.9 concede para ISR: la facilidad salva la deducción, no el
     // acreditamiento (LIF 2026 20-A, 4º párrafo).
-    if (esDieselConIeps(g, o) && g.iepsTraslado !== null && g.formaPago && g.formaPago !== '01') {
+    // AUDITORÍA 24, FIS-A2 (ALTO, reincidente 23): era `!== '01'`, que sumaba
+    // '06', '99' (no pagado) y cualquier medio fuera de la lista. LIF 20-A
+    // (`normas/lif-2026-20-A.yaml`) exige pago con los medios de la LISR
+    // 27-III: lista CERRADA y forma EFECTIVA (la del REP, si el CFDI era '99').
+    // Sigue siendo el IEPS TRASLADADO documentado, no el estímulo (cuota × litros).
+    const formaIeps = formaPagoEfectiva(g);
+    if (esDieselConIeps(g, o) && g.iepsTraslado !== null && formaIeps && (MEDIOS_LISR_27_III as readonly string[]).includes(formaIeps)) {
       iepsDieselDocumentado += g.iepsTraslado;
     }
     if (g.concepto === 'caseta') {
@@ -847,7 +881,11 @@ export function resumirCombustibleCasetas(gastos: GastoFiscal[]): ResumenCombust
     const sinCfdi = filas.filter((g) => !g.cfdiUuid);
     const conFormaPago = filas.filter((g) => g.formaPago);
     const baseConocida = conFormaPago.reduce((s, g) => s + g.monto, 0);
-    const electronico = conFormaPago.filter((g) => g.formaPago !== '01').reduce((s, g) => s + g.monto, 0);
+    // FIS-A2: «electrónico» = uno de los medios de la LISR 27-III, con la forma
+    // EFECTIVA; un '99' sin pagar no es electrónico todavía.
+    const electronico = conFormaPago
+      .filter((g) => { const f = formaPagoEfectiva(g); return !!f && (MEDIOS_LISR_27_III as readonly string[]).includes(f); })
+      .reduce((s, g) => s + g.monto, 0);
     const cuenta = (xs: GastoFiscal[]) => xs.reduce((s, g) => s + pesoDe(g), 0);
     return {
       concepto,
@@ -870,7 +908,7 @@ export function tope15DeGastos(gastos: GastoFiscal[], o: OpcionesFiscales): Resu
     if (!esCombustible(g, o)) continue;
     if (!(g.monto > 0)) continue;
     totalCombustible += g.monto;
-    if (medioNoAdmitidoCombustible(g.formaPago)) efectivo += g.monto;
+    if (medioNoAdmitidoCombustible(formaPagoEfectiva(g))) efectivo += g.monto;
   }
   return evaluarTope15({ efectivo, totalCombustible });
 }
@@ -982,6 +1020,8 @@ export function diagnosticoRetencion(gastos: GastoFiscal[]): DiagnosticoRetencio
 /** Forma EXACTA de una celda tal como la emite `gastos_fiscales_agregados_tenant`. */
 interface CeldaCruda {
   concepto: string; claveProdServ: string | null; formaPago: string | null;
+  /** FIS-7 (mig. 0282). `null` = la RPC no lo trae (base anterior): no pagado. */
+  pagado: boolean | null; pagadoForma: string | null;
   efos: boolean | null; efosRevisar: boolean | null; estadoSat: string | null;
   tieneCfdi: boolean; sinFecha: boolean; ivaEstado: CeldaFiscal['ivaEstado'];
   sobreTopeEfectivo: boolean;
@@ -1029,6 +1069,7 @@ function leerCelda(x: unknown, i: number): CeldaCruda {
   if (!Number.isInteger(n) || n < 1) throw falla('n');
   return {
     concepto: strReq('concepto'), claveProdServ: str('claveProdServ'), formaPago: str('formaPago'),
+    pagado: bool('pagado'), pagadoForma: str('pagadoForma'),
     efos: bool('efos'), efosRevisar: bool('efosRevisar'), estadoSat: str('estadoSat'),
     tieneCfdi: boolReq('tieneCfdi'), sinFecha: boolReq('sinFecha'), ivaEstado,
     sobreTopeEfectivo: boolReq('sobreTopeEfectivo'),
@@ -1150,7 +1191,7 @@ function consolidarCeldasPorEmisor(celdas: CeldaCruda[]): CeldaCruda[] {
     // Las DEMÁS dimensiones tienen que coincidir: fundir a través de bandas o
     // conceptos cambiaría causas fiscales, no solo ortografía.
     const llave = JSON.stringify([
-      identidad, c.concepto, c.claveProdServ, c.formaPago, c.efos, c.efosRevisar,
+      identidad, c.concepto, c.claveProdServ, c.formaPago, c.pagado, c.pagadoForma, c.efos, c.efosRevisar,
       c.estadoSat, c.sinFecha, c.ivaEstado, c.sobreTopeEfectivo, c.banda, c.totalTimbradoDia,
     ]);
     const previa = grupos.get(llave);
@@ -1208,6 +1249,8 @@ function aGastoFiscal(c: CeldaCruda, cortes: CortesPlazo): GastoFiscal {
     efos: c.efos,
     efosRevisar: c.efosRevisar,
     formaPago: c.formaPago,
+    pagado: c.pagado,
+    pagadoForma: c.pagadoForma,
     subTotal: c.subTotalNulos >= c.n ? null : c.subTotal,
     ivaTraslado: c.ivaEstado === 'nulo' ? null : c.iva,
     iepsTraslado: c.iepsNulos >= c.n ? null : c.ieps,
