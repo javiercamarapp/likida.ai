@@ -15471,3 +15471,61 @@ begin
     n_filas, lat_u1 = 19.5, not con_unique, con_indice,
     rastreo->>'unidadesConPosicion', (rastreo->>'ultimaPosicion')::timestamptz > now() - interval '2 hours', futura_rebota;
 end $$;
+
+-- ── 236. `wa_outbox` y `evento_seguridad_flota` tienen plazo, y `posicion` ya no paga índices repetidos (mig. 0288) ──
+--
+-- AUDITORÍA 24, DAT-9 / REN-4 (MEDIO). Dos tablas que crecían sin purga —la
+-- bandeja de salida con su payload y la telemetría de cámara con lat/lng— y
+-- una tabla de 230k filas/día con dos índices repetidos y ninguno que
+-- sirviera al `delete … where medida_en < X` nocturno.
+--
+--   (a) el outbox: lo `sent` viejo se va, lo `sent` reciente y lo `pending`
+--       viejo (trabajo por hacer) se quedan;
+--   (b) los eventos: el leve viejo se va, el grave de 200 días se queda
+--       (dura 365), el grave de 400 se va, el leve reciente se queda;
+--   (c) `mantenimiento_de_datos` los reporta con nombre;
+--   (d) el catálogo de `posicion`: sin `posicion_unidad_medida_idx` ni
+--       `posicion_sin_duplicado`, con `posicion_medida_idx`, y ninguna
+--       pareja de índices con la misma definición.
+do $$
+declare
+  t uuid := gen_random_uuid();
+  o_sent_viejo uuid := gen_random_uuid(); o_sent_nuevo uuid := gen_random_uuid(); o_pending_viejo uuid := gen_random_uuid();
+  r jsonb; m jsonb;
+  outbox_quedan int; leve_viejo int; grave_200 int; grave_400 int; leve_nuevo int;
+  sin_dup boolean; con_medida boolean; repetidos int;
+begin
+  insert into public.tenant (id, nombre) values (t, '__verif_0288__');
+  insert into public.wa_outbox (id, payload, estado, creada_en, enviada_en) values
+    (o_sent_viejo,    '{}'::jsonb, 'sent',    now() - interval '91 days', now() - interval '91 days'),
+    (o_sent_nuevo,    '{}'::jsonb, 'sent',    now() - interval '10 days', now() - interval '10 days'),
+    (o_pending_viejo, '{}'::jsonb, 'pending', now() - interval '200 days', null);
+  insert into public.evento_seguridad_flota (tenant_id, proveedor, evento_id_externo, etiquetas, grave, lat, lng, ocurrido_en) values
+    (t, 'samsara', 'leve-viejo',  '{harsh_brake}', false, 19.0, -99.0, now() - interval '181 days'),
+    (t, 'samsara', 'grave-200',   '{crash}',       true,  19.0, -99.0, now() - interval '200 days'),
+    (t, 'samsara', 'grave-400',   '{crash}',       true,  19.0, -99.0, now() - interval '400 days'),
+    (t, 'samsara', 'leve-nuevo',  '{harsh_brake}', false, 19.0, -99.0, now() - interval '10 days');
+
+  r := public.purgar_wa_outbox(90, now(), null);
+  m := public.mantenimiento_de_datos(30, now());
+
+  select count(*) into outbox_quedan from public.wa_outbox where id in (o_sent_viejo, o_sent_nuevo, o_pending_viejo);
+  select count(*) into leve_viejo from public.evento_seguridad_flota where tenant_id = t and evento_id_externo = 'leve-viejo';
+  select count(*) into grave_200  from public.evento_seguridad_flota where tenant_id = t and evento_id_externo = 'grave-200';
+  select count(*) into grave_400  from public.evento_seguridad_flota where tenant_id = t and evento_id_externo = 'grave-400';
+  select count(*) into leve_nuevo from public.evento_seguridad_flota where tenant_id = t and evento_id_externo = 'leve-nuevo';
+
+  sin_dup := not exists (select 1 from pg_indexes where schemaname = 'public' and tablename = 'posicion'
+                           and indexname in ('posicion_unidad_medida_idx', 'posicion_sin_duplicado'));
+  con_medida := exists (select 1 from pg_indexes where schemaname = 'public' and tablename = 'posicion'
+                          and indexname = 'posicion_medida_idx');
+  select count(*) into repetidos from (
+    select regexp_replace(indexdef, '^CREATE (UNIQUE )?INDEX \S+ ON', '') as def
+      from pg_indexes where schemaname = 'public' and tablename = 'posicion'
+     group by 1 having count(*) > 1) d;
+
+  raise exception E'PURGAS_0288  outbox-quedan=%  outbox-borrado-directo=%  leve-viejo=%  grave-200=%  grave-400=%  leve-nuevo=%  mant-outbox=%  mant-eventos=%  sin-indices-repetidos=%  con-indice-purga=%  definiciones-repetidas=%   (esperado 2 / 1 / 0 / 1 / 0 / 1 / t / t / t / t / 0)',
+    outbox_quedan, r->>'borradas', leve_viejo, grave_200, grave_400, leve_nuevo,
+    m ? 'waOutboxPurgado', (m->>'eventosSeguridadPurgados')::int >= 2, sin_dup, con_medida, repetidos;
+end $$;
+
