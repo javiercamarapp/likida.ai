@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { resolverTenantEfectivo } from '@/lib/auth/tenant-efectivo';
+import { sufijoTenant } from '../sufijo';
 import { requireSessionTenant } from '@/lib/auth/guard';
 import { puedeVerRuta } from '@/lib/auth/visibilidad';
 import { puedeAsignar } from '@/lib/auth/permisos';
@@ -75,8 +76,7 @@ export default async function PaginaDespacho({
   const { tenantId, rol } = await resolverTenantEfectivo('/dashboard/despacho', sp);
   if (!puedeVerRuta(rol, '/dashboard/despacho')) redirect('/dashboard');
 
-  const base = sp.tenant ? `?tenant=${sp.tenant}` : sp.vista ? `?vista=${sp.vista}` : '';
-  const sufijo = sp.rol ? `${base}${base ? '&' : '?'}rol=${sp.rol}` : base;
+  const sufijo = sufijoTenant(sp);
   const destino = `/dashboard/despacho${sufijo}`;
 
   // ── FE-2: LOS CATÁLOGOS YA NO SE CARGAN ─────────────────────────────────

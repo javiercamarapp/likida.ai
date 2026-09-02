@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { resolverTenantEfectivo } from '@/lib/auth/tenant-efectivo';
+import { sufijoTenant } from '../../sufijo';
 import { requireSessionTenant } from '@/lib/auth/guard';
 import { puedeVerRuta, puedeVerArea } from '@/lib/auth/visibilidad';
 import {
@@ -48,8 +49,7 @@ export default async function PaginaAgenteCobranza({
   const { tenantId, rol } = await resolverTenantEfectivo('/dashboard/agentes/cobranza', sp);
   if (!puedeVerRuta(rol, '/dashboard/agentes/cobranza')) redirect('/dashboard');
 
-  const base = sp.tenant ? `?tenant=${sp.tenant}` : sp.vista ? `?vista=${sp.vista}` : '';
-  const sufijo = sp.rol ? `${base}${base ? '&' : '?'}rol=${sp.rol}` : base;
+  const sufijo = sufijoTenant(sp);
 
   const [cola, config, bitacora, corridas] = await Promise.all([
     colaCobranza(tenantId),

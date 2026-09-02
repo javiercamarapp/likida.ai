@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { resolverTenantEfectivo } from '@/lib/auth/tenant-efectivo';
+import { sufijoTenant } from '../../sufijo';
 import { puedeVerRuta } from '@/lib/auth/visibilidad';
 import {
   getKpis, getLiquidaciones, contarViajes, getLiquidacionesPorDia,
@@ -56,8 +57,7 @@ export default async function PaginaAgenteLiquidacion({
   const { tenantId, rol } = await resolverTenantEfectivo('/dashboard/agentes/liquidacion', sp);
   if (!puedeVerRuta(rol, '/dashboard/agentes/liquidacion')) redirect('/dashboard');
 
-  const base = sp.tenant ? `?tenant=${sp.tenant}` : sp.vista ? `?vista=${sp.vista}` : '';
-  const sufijo = sp.rol ? `${base}${base ? '&' : '?'}rol=${sp.rol}` : base;
+  const sufijo = sufijoTenant(sp);
 
   // Las trece, lanzadas de una. `vigilar` sobre las que PUEDEN rechazar: una
   // promesa sin oyente que revienta antes de que su bloque la espere se
