@@ -12,6 +12,7 @@ import {
 import { VENTANA_MAX_DIAS } from '@/lib/likida/sat_descarga/ciclo';
 import { DIAS_AVISO_DEFECTO } from '@/lib/likida/sat_descarga/peaje_cierre';
 import { fechaMx, hoyMx } from '@/lib/formato';
+import { sufijoTenant } from '../sufijo';
 import { BarraPagina, TituloSeccion } from '../resumen-visual';
 import { StatCard, EstadoVacio } from '../../admin/ui/kit';
 import { FormaConAviso, Campo, Selector, type ResultadoAccion } from '../../admin/ui/forma';
@@ -271,7 +272,7 @@ export async function VistaDescargaSat({ searchParams, tenantExiste = true }: {
                 ['casado', 'los que ya cuadraron'],
                 ['ignorado', 'los archivados'],
               ] as const).map(([e, texto]) => (
-                <Link key={e} href={`/dashboard/descarga-sat/bandeja?estatus=${e}`}
+                <Link key={e} href={`/dashboard/descarga-sat/bandeja?estatus=${e}${sufijoTenant(searchParams) ? `&${sufijoTenant(searchParams).slice(1)}` : ''}`}
                   className="inline-flex items-center gap-1.5 font-medium px-3 py-1.5 rounded-full hairline hover:opacity-70 transition-opacity">
                   <Scale3d width={13} height={13} strokeWidth={1.75} /> {texto}
                 </Link>
