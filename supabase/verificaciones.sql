@@ -15349,3 +15349,182 @@ begin
   raise exception E'WA_CONVERSACION_TEL_NORM_0274  variante-choca=%  otro-numero=%  otra-flota=%   (esperado t / t / t)',
     choca_variante, otro_numero_ok, otra_flota_ok;
 end $$;
+
+
+-- ── 246. `revisar_liquidacion`: aprobar firma una vez, ajustar en negativo rebota, rechazar reabre a en_cuadre, y la revisión no se toca por fuera (mig. 0299) ──
+--
+-- AUDITORÍA 24, BLOQUEANTE 6. «Tú firmas lo que la máquina cuadró» no tenía
+-- botón: cero UPDATE sobre `liquidacion.revision` porque la columna no
+-- existía. Este bloque ataca la RPC nueva por sus cuatro costados:
+--   (a) un UPDATE suelto de `revision` rebota (LR003): la firma solo entra por
+--       la RPC, que deja quién/cuándo/por qué;
+--   (b) aprobar firma (`aprobada`, revisada_por = la persona) y deja bitácora
+--       en la MISMA transacción;
+--   (c) la segunda aprobación rebota (LR010): una firma no se pone dos veces;
+--   (d) ajustar con monto ≤ 0 rebota (LR016) y NO mueve ni el gasto ni el total;
+--   (e) ajustar bien mueve `gasto.monto`, el total y la diferencia por la
+--       delta, y queda `ajustada` con el arreglo de ajustes;
+--   (f) rechazar deja `rechazada` y devuelve el viaje a `en_cuadre` — y tras
+--       el rechazo el chofer SÍ puede volver a mandar un ticket (la 0036 ya no
+--       cuenta esa liquidación como emitida).
+-- Esperado: REVISAR_LIQUIDACION_0299 suelto-rebota=t aprobada=t bitacora=t doble-rebota=t negativo-rebota=t negativo-intacto=t ajustada=t delta-ok=t rechazada=t en-cuadre=t ticket-tras-rechazo=t
+do $$
+declare
+  v_t uuid; v_u uuid := gen_random_uuid(); v_o uuid; v_o2 uuid; v_o3 uuid;
+  v_v1 uuid; v_v2 uuid; v_v3 uuid; v_l1 uuid; v_l2 uuid; v_l3 uuid; v_g uuid;
+  r jsonb;
+  suelto_rebota boolean := false; aprobada boolean := false; bitacora boolean := false;
+  doble_rebota boolean := false; negativo_rebota boolean := false; negativo_intacto boolean := false;
+  ajustada boolean := false; delta_ok boolean := false; rechazada boolean := false;
+  en_cuadre boolean := false; ticket_tras_rechazo boolean := false;
+  n_monto numeric; n_total numeric; n_dif numeric; est text; rev text; quien uuid;
+begin
+  insert into tenant (nombre) values ('ZZZ VERIF REVISION 0299') returning id into v_t;
+  insert into app_user (id, tenant_id, email, rol) values (v_u, v_t, 'zzz-revisa-0299@likida.test', 'flota_admin');
+  insert into operador (tenant_id, nombre, telefono) values (v_t, 'P1', '520000009901') returning id into v_o;
+  insert into operador (tenant_id, nombre, telefono) values (v_t, 'P2', '520000009902') returning id into v_o2;
+  insert into operador (tenant_id, nombre, telefono) values (v_t, 'P3', '520000009903') returning id into v_o3;
+  insert into viaje (tenant_id, operador_id, folio, anticipo) values (v_t, v_o, 'R-1', 5000) returning id into v_v1;
+  insert into viaje (tenant_id, operador_id, folio, anticipo) values (v_t, v_o2, 'R-2', 5000) returning id into v_v2;
+  insert into viaje (tenant_id, operador_id, folio, anticipo) values (v_t, v_o3, 'R-3', 5000) returning id into v_v3;
+
+  -- Un ticket leído como $800 que era de $8,000 (WA-3), en el viaje 2.
+  insert into gasto (tenant_id, viaje_id, concepto, monto) values (v_t, v_v2, 'diesel', 800) returning id into v_g;
+
+  v_l1 := guardar_liquidacion_tx(v_t, v_v1, 4200, 5000, 800, 'revisar', '[]'::jsonb, 0,0,0, null, 0);
+  v_l2 := guardar_liquidacion_tx(v_t, v_v2,  800, 5000, 4200, 'revisar', '[]'::jsonb, 0,0,0, null, 0);
+  v_l3 := guardar_liquidacion_tx(v_t, v_v3, 4900, 5000, 100, 'con_diferencias', '[]'::jsonb, 0,0,0, null, 0);
+
+  -- (a) la firma no entra por la puerta de atrás.
+  begin
+    update liquidacion set revision = 'aprobada', revisada_en = now() where id = v_l1;
+  exception when sqlstate 'LR003' then suelto_rebota := true;
+  end;
+
+  -- (b) aprobar.
+  r := revisar_liquidacion(v_t, v_l1, 'aprobar', null, null, v_u, null);
+  select revision, revisada_por into rev, quien from liquidacion where id = v_l1;
+  aprobada := (rev = 'aprobada' and quien = v_u and (r ->> 'revision') = 'aprobada');
+  bitacora := exists (select 1 from bitacora_auditoria
+                       where tenant_id = v_t and accion = 'liquidacion.aprobada'
+                         and entidad = 'liquidacion' and entidad_id = v_l1::text and actor_id = v_u);
+
+  -- (c) no se firma dos veces.
+  begin
+    perform revisar_liquidacion(v_t, v_l1, 'aprobar', null, null, v_u, null);
+  exception when sqlstate 'LR010' then doble_rebota := true;
+  end;
+
+  -- (d) un ajuste a negativo rebota y no deja nada movido.
+  begin
+    perform revisar_liquidacion(v_t, v_l2, 'ajustar', 'se leyó mal',
+      jsonb_build_array(jsonb_build_object('gastoId', v_g, 'montoNuevo', -5)), v_u, null);
+  exception when sqlstate 'LR016' then negativo_rebota := true;
+  end;
+  select monto into n_monto from gasto where id = v_g;
+  select total_comprobado, revision into n_total, rev from liquidacion where id = v_l2;
+  negativo_intacto := (n_monto = 800 and n_total = 800 and rev = 'pendiente');
+
+  -- (e) el ajuste bueno: $800 → $8,000, delta +7,200 sobre el total y la diferencia.
+  r := revisar_liquidacion(v_t, v_l2, 'ajustar', 'el ticket dice 8,000, el OCR leyó 800',
+    jsonb_build_array(jsonb_build_object('gastoId', v_g, 'montoNuevo', 8000)), v_u, null);
+  select monto into n_monto from gasto where id = v_g;
+  select total_comprobado, diferencia, revision into n_total, n_dif, rev from liquidacion where id = v_l2;
+  ajustada := (rev = 'ajustada' and jsonb_array_length((select ajustes from liquidacion where id = v_l2)) = 1);
+  delta_ok := (n_monto = 8000 and n_total = 8000 and n_dif = -3000);
+
+  -- (f) rechazar reabre a en_cuadre y el ticket tardío YA entra.
+  r := revisar_liquidacion(v_t, v_l3, 'rechazar', 'faltan las casetas del regreso', null, v_u, null);
+  select revision into rev from liquidacion where id = v_l3;
+  select estatus into est from viaje where id = v_v3;
+  rechazada := (rev = 'rechazada');
+  en_cuadre := (est = 'en_cuadre');
+  begin
+    insert into gasto (tenant_id, viaje_id, concepto, monto) values (v_t, v_v3, 'caseta', 120);
+    ticket_tras_rechazo := true;
+  exception when others then ticket_tras_rechazo := false;
+  end;
+
+  raise exception E'REVISAR_LIQUIDACION_0299  suelto-rebota=%  aprobada=%  bitacora=%  doble-rebota=%  negativo-rebota=%  negativo-intacto=%  ajustada=%  delta-ok=%  rechazada=%  en-cuadre=%  ticket-tras-rechazo=%   (esperado t / t / t / t / t / t / t / t / t / t / t)',
+    suelto_rebota, aprobada, bitacora, doble_rebota, negativo_rebota, negativo_intacto,
+    ajustada, delta_ok, rechazada, en_cuadre, ticket_tras_rechazo;
+end $$;
+
+
+-- ── 247. La revisión en la tabla: cuadró sola = firme por el motor, el re-cierre retira la firma, y viaje.estatus no contradice a la revisión (mig. 0299) ──
+--
+-- Lo que la RPC no puede garantizar sola (DAT-6: «la coherencia se puso en la
+-- RPC y no en la tabla»):
+--   (a) una liquidación `cuadrada` nace `aprobada` con revisada_por NULL (la
+--       firmó el motor): «tú firmas lo que NO cuadró»;
+--   (b) el re-cierre del motor (upsert de guardar_liquidacion_tx) con cifras
+--       distintas RETIRA la firma humana: vuelve a `pendiente` sin firmante;
+--   (c) el mismo re-cierre sobre una RECHAZADA la devuelve a `pendiente` y el
+--       viaje a `liquidado` — el ciclo cierra;
+--   (d) un UPDATE suelto que devuelve a `abierto` un viaje con liquidación
+--       firmada por una persona rebota al confirmar (23514, trigger diferido);
+--   (e) `reabrir_viaje_tx` sobre ese mismo viaje SÍ pasa: abre el viaje y
+--       retira la liquidación en la misma transacción, y al commit no hay
+--       contradicción que comprobar.
+-- Esperado: REVISION_TABLA_0299 sola-firme=t sin-humano=t recierre-retira=t rechazada-vuelve=t viaje-liquidado=t suelto-rebota=t reabrir-pasa=t
+do $$
+declare
+  v_t uuid; v_u uuid := gen_random_uuid(); v_o uuid; v_o2 uuid; v_o3 uuid;
+  v_v1 uuid; v_v2 uuid; v_v3 uuid; v_l1 uuid; v_l2 uuid; v_l3 uuid;
+  sola_firme boolean := false; sin_humano boolean := false; recierre_retira boolean := false;
+  rechazada_vuelve boolean := false; viaje_liquidado boolean := false;
+  suelto_rebota boolean := false; reabrir_pasa boolean := false;
+  rev text; quien uuid; est text;
+begin
+  insert into tenant (nombre) values ('ZZZ VERIF REVISION TABLA 0299') returning id into v_t;
+  insert into app_user (id, tenant_id, email, rol) values (v_u, v_t, 'zzz-revisa-tabla-0299@likida.test', 'flota_admin');
+  insert into operador (tenant_id, nombre, telefono) values (v_t, 'P1', '520000009911') returning id into v_o;
+  insert into operador (tenant_id, nombre, telefono) values (v_t, 'P2', '520000009912') returning id into v_o2;
+  insert into operador (tenant_id, nombre, telefono) values (v_t, 'P3', '520000009913') returning id into v_o3;
+  insert into viaje (tenant_id, operador_id, folio, anticipo) values (v_t, v_o,  'T-1', 5000) returning id into v_v1;
+  insert into viaje (tenant_id, operador_id, folio, anticipo) values (v_t, v_o2, 'T-2', 5000) returning id into v_v2;
+  insert into viaje (tenant_id, operador_id, folio, anticipo) values (v_t, v_o3, 'T-3', 5000) returning id into v_v3;
+
+  -- (a) cuadró sola.
+  v_l1 := guardar_liquidacion_tx(v_t, v_v1, 5000, 5000, 0, 'cuadrada', '[]'::jsonb, 0,0,0, null, 0);
+  select revision, revisada_por into rev, quien from liquidacion where id = v_l1;
+  sola_firme := (rev = 'aprobada');
+  sin_humano := (quien is null);
+
+  -- (b) firmada por persona, luego re-cerrada con otras cifras.
+  v_l2 := guardar_liquidacion_tx(v_t, v_v2, 4200, 5000, 800, 'revisar', '[]'::jsonb, 0,0,0, null, 0);
+  perform revisar_liquidacion(v_t, v_l2, 'aprobar', null, null, v_u, null);
+  perform guardar_liquidacion_tx(v_t, v_v2, 4300, 5000, 700, 'revisar', '[]'::jsonb, 0,0,0, null, 0);
+  select revision, revisada_por into rev, quien from liquidacion where id = v_l2;
+  recierre_retira := (rev = 'pendiente' and quien is null);
+
+  -- (c) rechazada, y el motor vuelve a cuadrar.
+  v_l3 := guardar_liquidacion_tx(v_t, v_v3, 4900, 5000, 100, 'con_diferencias', '[]'::jsonb, 0,0,0, null, 0);
+  perform revisar_liquidacion(v_t, v_l3, 'rechazar', 'faltan casetas', null, v_u, null);
+  perform guardar_liquidacion_tx(v_t, v_v3, 5000, 5000, 0, 'cuadrada', '[]'::jsonb, 0,0,0, null, 0);
+  select revision into rev from liquidacion where id = v_l3;
+  select estatus into est from viaje where id = v_v3;
+  rechazada_vuelve := (rev = 'aprobada');   -- cuadró sola esta vez: firme por el motor
+  viaje_liquidado := (est = 'liquidado');
+
+  -- (d) el S9 de DAT-6: firmada por persona y alguien la abre con un UPDATE.
+  perform revisar_liquidacion(v_t, v_l2, 'aprobar', null, null, v_u, null);
+  begin
+    update viaje set estatus = 'abierto' where id = v_v2;
+    set constraints all immediate;   -- lo que pasaría al commit, ahora
+  exception when check_violation then suelto_rebota := true;
+  end;
+  set constraints all deferred;
+
+  -- (e) el camino auditado sí pasa.
+  begin
+    perform reabrir_viaje_tx(v_t, v_v2);
+    set constraints all immediate;
+    select estatus into est from viaje where id = v_v2;
+    reabrir_pasa := (est = 'abierto' and not exists (select 1 from liquidacion where id = v_l2));
+  exception when others then reabrir_pasa := false;
+  end;
+
+  raise exception E'REVISION_TABLA_0299  sola-firme=%  sin-humano=%  recierre-retira=%  rechazada-vuelve=%  viaje-liquidado=%  suelto-rebota=%  reabrir-pasa=%   (esperado t / t / t / t / t / t / t)',
+    sola_firme, sin_humano, recierre_retira, rechazada_vuelve, viaje_liquidado, suelto_rebota, reabrir_pasa;
+end $$;
