@@ -13,7 +13,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('@/lib/likida/tools', () => ({}));
 
-const { mensajeTipoNoSoportado } = await import('./processor');
+const { mensajeTipoNoSoportado, mensajeDocumentoNoEsXml, puedeSerXml } = await import('./processor');
 
 describe('mensajeTipoNoSoportado — se nombra lo que mandó, no un catálogo', () => {
   it('el video: se dice que no se lee y qué hacer en su lugar', () => {
@@ -43,5 +43,54 @@ describe('mensajeTipoNoSoportado — se nombra lo que mandó, no un catálogo', 
     for (const s of [undefined, 'sticker', 'video', 'contacts', 'unsupported']) {
       expect(mensajeTipoNoSoportado(s)).toMatch(/Mándame la foto de tu ticket o el XML/);
     }
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUDITORÍA 24 · WA-8 (MEDIO) — un `document` que no es XML se bajaba ENTERO
+// (WhatsApp permite 100 MB) para descubrir después que no servía, y se
+// contestaba siempre lo mismo: «necesito el XML del CFDI, no el PDF». El
+// chofer con iPhone que usa «Documento» para no perder calidad manda un
+// `image/heic` y lee que mandó un PDF — que no mandó.
+// ═══════════════════════════════════════════════════════════════════════════
+describe('puedeSerXml — se descarta lo que con certeza NO es, nunca por lista blanca', () => {
+  it('los mimes con los que un XML reenviado llega de verdad pasan todos', () => {
+    for (const m of ['text/xml', 'application/xml', 'application/octet-stream', 'text/plain']) {
+      expect(puedeSerXml(m), m).toBe(true);
+    }
+  });
+
+  it('si Meta no dijo el mime, se intenta igual (fail-open: rebotar un XML bueno es peor)', () => {
+    expect(puedeSerXml(undefined)).toBe(true);
+    expect(puedeSerXml('')).toBe(true);
+  });
+
+  it('imagen, PDF, video y audio NO son el XML', () => {
+    for (const m of ['image/heic', 'image/jpeg', 'application/pdf', 'video/mp4', 'audio/ogg']) {
+      expect(puedeSerXml(m), m).toBe(false);
+    }
+  });
+
+  it('el mime en mayúsculas se entiende igual', () => {
+    expect(puedeSerXml('APPLICATION/PDF')).toBe(false);
+  });
+});
+
+describe('mensajeDocumentoNoEsXml — le dice lo que mandó, no lo que no mandó', () => {
+  it('el HEIC del iPhone: mandado como archivo, y qué botón usar', () => {
+    const t = mensajeDocumentoNoEsXml('image/heic');
+    expect(t).toMatch(/archivo/i);
+    expect(t).toMatch(/cámara|galería/i);
+    expect(t, 'no mandó ningún PDF').not.toMatch(/PDF/);
+  });
+
+  it('el PDF del CFDI: se nombra, y se pide el .xml que viene con él', () => {
+    const t = mensajeDocumentoNoEsXml('application/pdf');
+    expect(t).toMatch(/PDF/);
+    expect(t).toMatch(/XML/);
+  });
+
+  it('sin mime conocido queda el texto de siempre', () => {
+    expect(mensajeDocumentoNoEsXml()).toMatch(/necesito el \*XML\* del CFDI/);
   });
 });

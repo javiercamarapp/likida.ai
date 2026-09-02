@@ -78,7 +78,7 @@ import {
   iniciarRenovacionMessageClaim,
 } from '@/lib/likida/conv';
 import { registrarCosto, registrarCostoWhatsApp, faseDeModelo, vincularCostosALiquidacion } from '@/lib/likida/costos';
-import { sendText, sendButtons, sendDocument, downloadMediaAsDataUrl, downloadMediaAsText, ImagenDemasiadoPesadaError } from '@/lib/meta/client';
+import { sendText, sendButtons, sendDocument, downloadMediaAsDataUrl, downloadMediaAsText, metadatosMedia, MAX_XML_BYTES, ImagenDemasiadoPesadaError } from '@/lib/meta/client';
 import { avisarOficina, parametrosAvisoOficina } from '@/lib/meta/aviso_oficina';
 import {
   decidirAcuse, mensajeConfirmar, mensajeAcuse, mensajeRefoto, esPeticionDeFoto,
@@ -1001,6 +1001,43 @@ export function mensajeTipoNoSoportado(subtipo?: string): string {
     default:
       return `Por ahora solo proceso texto, fotos de comprobantes, el XML del CFDI y tu ubicación 📍. ${cola}`;
   }
+}
+
+/**
+ * Un `document` que NO es el XML del CFDI (AUDITORÍA 24 · WA-8).
+ *
+ * WhatsApp deja mandar cualquier cosa por el botón de «Documento», y el
+ * mensaje era uno solo: «necesito el XML del CFDI, no el PDF». El chofer con
+ * iPhone que usa «Documento» para no perder calidad manda su ticket como
+ * `image/heic` y lee que mandó un PDF —que no mandó—, así que no tiene forma
+ * de saber qué hacer. Se le dice lo que pasó y el siguiente paso, por tipo.
+ *
+ * PURA: es texto y se prueba como texto.
+ */
+export function mensajeDocumentoNoEsXml(mime?: string | null): string {
+  const m = (mime ?? '').toLowerCase();
+  if (m.startsWith('image/')) {
+    return 'Esa foto me llegó como *archivo* 📎 y así no la puedo leer. Mándamela otra vez con el botón de la *cámara o la galería* (como foto) y la proceso. 📸';
+  }
+  if (m === 'application/pdf') {
+    return 'El *PDF* del comprobante no lo leo 📄. Mándame el *XML* del CFDI (el archivo .xml que viene junto con el PDF) o una *foto* del ticket. 🧾';
+  }
+  if (m.startsWith('video/') || m.startsWith('audio/')) {
+    return 'Eso no lo puedo leer 🤔. Si es un comprobante, mándame la *foto* del ticket o el *XML* del CFDI. 🧾';
+  }
+  return 'Recibí un documento, pero necesito el *XML* del CFDI (el archivo .xml que te manda la gasolinera por correo), no el PDF. ¿Me lo reenvías? 📎';
+}
+
+/**
+ * ¿Puede este `mime` ser el XML del CFDI? Se responde en NEGATIVO a propósito:
+ * un XML reenviado por correo llega igual como `text/xml`, `application/xml`
+ * o `application/octet-stream` según el cliente, y bloquear por lista blanca
+ * rebotaría comprobantes buenos. Solo se descarta lo que con certeza no lo es.
+ */
+export function puedeSerXml(mime?: string | null): boolean {
+  const m = (mime ?? '').toLowerCase();
+  if (!m) return true;   // Meta no lo dijo: se intenta, como siempre.
+  return !(m.startsWith('image/') || m.startsWith('video/') || m.startsWith('audio/') || m === 'application/pdf');
 }
 
 /** El error de fondo, sin el envoltorio del ciclo de tools (ver arriba). */
@@ -2949,10 +2986,26 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
         return;
       }
       try {
+        // ── AUDITORÍA 24 · WA-8 (MEDIO): QUÉ ES Y CUÁNTO PESA, ANTES ────────
+        // WhatsApp acepta documentos de 100 MB y esto los bajaba ENTEROS a
+        // memoria para después descubrir que no eran un XML. Una llamada a
+        // los metadatos lo decide barato, y de paso permite contestar por lo
+        // que de verdad mandó: el HEIC del iPhone leía «no el PDF».
+        const metaDoc = await metadatosMedia(msg.mediaId);
+        if (metaDoc && !puedeSerXml(metaDoc.mimeType)) {
+          logger.info('xml.no_es_xml', { viaje: viajeId, mime: metaDoc.mimeType, bytes: metaDoc.fileSize });
+          await say(mensajeDocumentoNoEsXml(metaDoc.mimeType));
+          return;
+        }
+        if (metaDoc?.fileSize != null && metaDoc.fileSize > MAX_XML_BYTES) {
+          logger.warn('xml.demasiado_pesado', { viaje: viajeId, bytes: metaDoc.fileSize });
+          await say('Ese archivo pesa demasiado para ser el XML de un comprobante 📎. Mándame el *.xml* que te manda la gasolinera, o una *foto* del ticket. 🧾');
+          return;
+        }
         const xmlText = await downloadMediaAsText(msg.mediaId);
         const xml = xmlText ? parseCfdiXml(xmlText) : null;
         if (!xml || !xml.uuid) {
-          await say('Recibí un documento, pero necesito el *XML* del CFDI (el archivo .xml que te manda la gasolinera por correo), no el PDF. ¿Me lo reenvías? 📎');
+          await say(mensajeDocumentoNoEsXml(metaDoc?.mimeType));
           return;
         }
 
