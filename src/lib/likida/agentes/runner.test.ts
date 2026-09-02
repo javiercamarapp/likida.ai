@@ -154,6 +154,7 @@ const {
   correrRunner, ordenarPorCosto, llamaAlModelo, AGENTES_DESPACHABLES,
   MARGEN_RELOJ_MS, PLAZO_RUNNER_MS,
   PASOS_LATIDO, COSTO_LATIDO_MS, conRelojDuro, nuevoAvanceRunner, cerrarPorRelojDuro,
+  motivoBandejaGlobalSinAtender, topeBandejaGlobal, diasVencimientoPieza,
 } = await import('./runner');
 type ResultadoRunner = import('./runner').ResultadoRunner;
 
@@ -1175,5 +1176,93 @@ describe('el despacho de leads (0235)', () => {
     correrLeads.mockResolvedValue({ resultado: 'corrio', piezas: 1, costoUsd: 0 });
     const r = await correrRunner(undefined, TENANT);
     expect(r.saltadosPorReloj).toEqual([]);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AGB-5 (auditoría 24, 1-sep-2026) — CONTRAPRESIÓN GLOBAL: antes solo el
+// Redactor miraba su propia bandeja; los demás 44 agentes que encolan un
+// parte fabricaban sin mirar si alguien las leía (107 pendientes medidas,
+// cero resoluciones humanas en 15 días).
+// ═══════════════════════════════════════════════════════════════════════════
+describe('motivoBandejaGlobalSinAtender — PURA', () => {
+  it('sin nada pendiente, no hay motivo', () => {
+    expect(motivoBandejaGlobalSinAtender(0, null)).toBeNull();
+  });
+
+  it('llegar al tope (la consulta trajo topeBandejaGlobal() filas) sí es motivo', () => {
+    expect(motivoBandejaGlobalSinAtender(topeBandejaGlobal(), '2026-09-01T00:00:00Z')).toMatch(/bandeja sin atender/);
+  });
+
+  it('por debajo del tope pero con la más vieja pasada de plazo, también es motivo', () => {
+    const ahora = new Date('2026-09-01T00:00:00Z').getTime();
+    const viejaVencida = new Date(ahora - (diasVencimientoPieza() + 1) * 86_400_000).toISOString();
+    expect(motivoBandejaGlobalSinAtender(1, viejaVencida, ahora)).toMatch(/vencida/);
+  });
+
+  it('por debajo del tope y la más vieja dentro del plazo: sin motivo', () => {
+    const ahora = new Date('2026-09-01T00:00:00Z').getTime();
+    const nueva = new Date(ahora - 60_000).toISOString();
+    expect(motivoBandejaGlobalSinAtender(1, nueva, ahora)).toBeNull();
+  });
+});
+
+describe('el candado 5 (AGB-5) en correrRunner', () => {
+  it('con la bandeja al tope (o por arriba), un agente que encola un parte (back office) se SALTA con el motivo "bandeja sin atender"', async () => {
+    respuestas.set('agente_definicion', [{ data: [{ id: 'talento', presupuesto_dia_usd: 0.1 }], error: null }]);
+    respuestas.set('cola_aprobacion', [{
+      data: Array.from({ length: topeBandejaGlobal() }, (_, i) => ({ creado_en: `2026-08-${10 + i}T00:00:00Z` })),
+      error: null,
+    }]);
+    const r = await correrRunner(undefined, TENANT);
+    expect(r.agentes[0]).toMatchObject({ agente: 'talento', resultado: 'saltado' });
+    expect(r.agentes[0].motivo).toMatch(/bandeja sin atender/);
+  });
+
+  it('con la bandeja al tope, un agente de LEADS también se salta — el candado es ancho, no solo del Redactor', async () => {
+    respuestas.set('agente_definicion', [{ data: [{ id: 'vigia', presupuesto_dia_usd: 0.1 }], error: null }]);
+    respuestas.set('cola_aprobacion', [{
+      data: Array.from({ length: topeBandejaGlobal() }, (_, i) => ({ creado_en: `2026-08-${10 + i}T00:00:00Z` })),
+      error: null,
+    }]);
+    const r = await correrRunner(undefined, TENANT);
+    expect(r.agentes[0]).toMatchObject({ agente: 'vigia', resultado: 'saltado' });
+    expect(correrLeads).not.toHaveBeenCalled();
+  });
+
+  it('los CUATRO de dirección (correo directo a Javier) NO pasan por este candado — mandan correo, no encolan', async () => {
+    respuestas.set('agente_definicion', [{ data: [{ id: 'kpi_whatsapp', presupuesto_dia_usd: 0.1 }], error: null }]);
+    respuestas.set('cola_aprobacion', [{
+      data: Array.from({ length: topeBandejaGlobal() }, (_, i) => ({ creado_en: `2026-08-${10 + i}T00:00:00Z` })),
+      error: null,
+    }]);
+    const r = await correrRunner(undefined, TENANT);
+    expect(correrDireccion).toHaveBeenCalledWith('kpi_whatsapp');
+    expect(r.agentes[0]).toMatchObject({ agente: 'kpi_whatsapp', resultado: 'corrio' });
+  });
+
+  it('sin poder leer la bandeja, fail closed: se salta igual que si estuviera llena', async () => {
+    respuestas.set('agente_definicion', [{ data: [{ id: 'vigilante_calidad', presupuesto_dia_usd: 0.1 }], error: null }]);
+    respuestas.set('cola_aprobacion', [{ data: null, error: { message: 'db down' } }]);
+    const r = await correrRunner(undefined, TENANT);
+    expect(r.agentes[0]).toMatchObject({ agente: 'vigilante_calidad', resultado: 'saltado' });
+    expect(r.agentes[0].motivo).toMatch(/no se pudo leer la bandeja global/);
+  });
+
+  it('se lee UNA sola vez por vuelta — dos agentes no exentos comparten la misma lectura', async () => {
+    // `talento` y `vigilante_calidad`, los dos del back office restante, en
+    // la MISMA vuelta: si el candado leyera la bandeja una vez por agente, la
+    // cola de `cola_aprobacion` (una sola respuesta) se agotaría en el
+    // primero y el segundo caería al default vacío ("bandeja sana"),
+    // contradiciendo al primero. Memoizado, los dos ven la MISMA bandeja llena.
+    respuestas.set('agente_definicion', [
+      { data: [{ id: 'talento', presupuesto_dia_usd: 0.1 }, { id: 'vigilante_calidad', presupuesto_dia_usd: 0.1 }], error: null },
+    ]);
+    respuestas.set('cola_aprobacion', [{
+      data: Array.from({ length: topeBandejaGlobal() }, (_, i) => ({ creado_en: `2026-08-${10 + i}T00:00:00Z` })),
+      error: null,
+    }]);
+    const r = await correrRunner();
+    expect(r.agentes.every((a) => a.resultado === 'saltado')).toBe(true);
   });
 });

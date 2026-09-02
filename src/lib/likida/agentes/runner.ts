@@ -54,6 +54,80 @@ export function topePendientesBandeja(): number {
   return Number.isFinite(v) && v > 0 ? Math.floor(v) : 20;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// AGB-5 (auditoría 24, 1-sep-2026) — CONTRAPRESIÓN GLOBAL de la bandeja.
+//
+// Antes SOLO el Redactor miraba su propia bandeja (`correo_frio` pendientes,
+// candado de arriba); los otros 44 agentes que encolan un parte no miraban
+// nada. Medido en producción: 107 pendientes, CERO resoluciones humanas en
+// 15 días, y la vuelta seguía fabricando partes con el latido en verde. El
+// candado de abajo mira la bandeja ENTERA (todos los tipos) y por DOS
+// razones: demasiadas piezas sin resolver, o la más vieja lleva demasiado
+// tiempo esperando (una bandeja que "solo" tiene 10 piezas pero la más vieja
+// tiene un mes tampoco se está atendiendo). Fail closed: sin poder leerla,
+// no se fabrica encima.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** El tope de pendientes TOTALES (cualquier tipo) a partir del cual ningún
+ *  agente que encola un parte sigue fabricando. */
+export function topeBandejaGlobal(): number {
+  const v = Number(process.env.LIKIDA_RUNNER_TOPE_BANDEJA_GLOBAL);
+  return Number.isFinite(v) && v > 0 ? Math.floor(v) : 40;
+}
+
+/** Los días que una pieza pendiente puede esperar antes de que la bandeja se
+ *  considere "sin atender" — el VENCIMIENTO de la pieza (AGB-5): pasado este
+ *  plazo, ya no importa cuántas haya, la señal es que nadie está mirando. */
+export function diasVencimientoPieza(): number {
+  const v = Number(process.env.LIKIDA_RUNNER_DIAS_VENCIMIENTO_PIEZA);
+  return Number.isFinite(v) && v > 0 ? Math.floor(v) : 7;
+}
+
+/** La parte PURA: dado lo que la base contestó, ¿la bandeja está sin
+ *  atender, y por qué? Separada de la lectura para poder probarla sin base.
+ *  `pendientesVistos` es lo que trajo una consulta con `.limit(tope)`
+ *  ordenada por `creado_en` ascendente — no hace falta un COUNT aparte:
+ *  llegar al tope ya contesta "sí, hay al menos `tope`", y la PRIMERA fila
+ *  de esa misma consulta YA es la más vieja de toda la bandeja. Una sola
+ *  consulta, dos preguntas. */
+export function motivoBandejaGlobalSinAtender(
+  pendientesVistos: number,
+  piezaMasViejaCreadaEn: string | null,
+  ahoraMs: number = Date.now(),
+): string | null {
+  const tope = topeBandejaGlobal();
+  if (pendientesVistos >= tope) {
+    return `bandeja con ≥ ${tope} piezas pendientes (cualquier tipo) — aprobar es humano; el runner no fabrica encima ("bandeja sin atender")`;
+  }
+  if (piezaMasViejaCreadaEn) {
+    const edadDias = (ahoraMs - new Date(piezaMasViejaCreadaEn).getTime()) / 86_400_000;
+    const plazo = diasVencimientoPieza();
+    if (edadDias > plazo) {
+      return `la pieza pendiente más vieja de la bandeja lleva ${edadDias.toFixed(1)} días esperando (> ${plazo}) — vencida sin que nadie la haya mirado ("bandeja sin atender")`;
+    }
+  }
+  return null;
+}
+
+/** La parte con I/O: UNA consulta —`creado_en` de las pendientes, más viejas
+ *  primero, topada al mismo `topeBandejaGlobal()`— basta para las dos
+ *  preguntas de arriba. Fail closed: sin poder leerla, se trata como
+ *  "sin atender", el mismo criterio que el resto del runner. */
+async function leerBandejaGlobalSinAtender(): Promise<string | null> {
+  const tope = topeBandejaGlobal();
+  const { data, error } = await supabaseAdmin()
+    .from('cola_aprobacion')
+    .select('creado_en')
+    .eq('estado', 'pendiente')
+    .order('creado_en', { ascending: true })
+    .limit(tope);
+  if (error) {
+    return 'no se pudo leer la bandeja global — fail closed ("bandeja sin atender")';
+  }
+  const filas = (data ?? []) as Array<{ creado_en: string }>;
+  return motivoBandejaGlobalSinAtender(filas.length, filas[0]?.creado_en ?? null);
+}
+
 /** Los cuatro reporteros de dirección (0216). Se sube a constante —antes era
  *  un literal dentro de su propia rama— porque `AGENTES_DESPACHABLES` la
  *  necesita: una lista paralela para el auditor podría divergir del despacho
@@ -512,6 +586,14 @@ export async function correrRunner(
   const avance = opts.avance ?? nuevoAvanceRunner();
   const agentes: AgenteDelRunner[] = avance.agentes;
   const saltadosPorReloj: string[] = avance.saltadosPorReloj;
+  // AGB-5: la contrapresión global se lee UNA vez por vuelta, no una vez por
+  // agente — memoizada localmente a esta llamada (nunca a nivel de módulo:
+  // dos vueltas concurrentes no deben compartir la lectura de la otra).
+  let bandejaGlobalCache: string | null | undefined;
+  const bandejaGlobalSinAtender = async (): Promise<string | null> => {
+    if (bandejaGlobalCache === undefined) bandejaGlobalCache = await leerBandejaGlobalSinAtender();
+    return bandejaGlobalCache;
+  };
 
   if (await estaApagado('global')) {
     avance.apagadoGlobal = true;
@@ -634,6 +716,22 @@ export async function correrRunner(
         agentes.push({ agente: a.id, resultado: 'saltado', motivo: e instanceof Error ? e.message.slice(0, 200) : 'fallo del lote' });
       }
       continue;
+    }
+
+    // Candado 5 — CONTRAPRESIÓN GLOBAL de la bandeja (AGB-5). Todo lo que
+    // sigue de aquí en adelante ENCOLA UN PARTE en `cola_aprobacion`, salvo
+    // los cuatro de `DIRECCION` (mandan correo directo a Javier, 0216) y
+    // `enviador`/`enriquecedor` (no encolan ahí: mandan correo o escriben el
+    // dossier). El Redactor ya se despachó arriba con su propio candado más
+    // estrecho (solo mira `correo_frio`); este es el candado ANCHO, y
+    // aplicarlo también a `redactor` de nuevo aquí no aplica porque ya hizo
+    // `continue`.
+    if (!DIRECCION.includes(a.id) && a.id !== 'enviador' && a.id !== 'enriquecedor') {
+      const motivo = await bandejaGlobalSinAtender();
+      if (motivo) {
+        agentes.push({ agente: a.id, resultado: 'saltado', motivo });
+        continue;
+      }
     }
 
     // Los 4 financieros (0215): deterministas, gasto de modelo $0 (el techo
