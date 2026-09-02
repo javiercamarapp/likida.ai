@@ -239,8 +239,12 @@ function normalizarOperador(cuerpo: Record<string, unknown>, fila: number): Oper
   // ningún otro sitio de la ruta. El tenant sale de `abrir()`.
   const nombre = texto(cuerpo, 'nombre', { obligatorio: true, max: 120 });
   if (!nombre) throw new CampoInvalido('nombre', '`nombre` es obligatorio.');
-  const telefono = texto(cuerpo, 'telefono', { obligatorio: true, max: 25 });
-  if (!telefono) throw new CampoInvalido('telefono', '`telefono` es obligatorio: es la identidad del chofer frente al bot de WhatsApp.');
+  // Sin `obligatorio: true`: ese camino lanza «`telefono` es obligatorio.» y
+  // aquí el porqué importa más que el qué. Un integrador que lee «es la
+  // identidad del chofer» entiende que no puede mandar el campo vacío y
+  // rellenarlo después; con el mensaje genérico, lo rellena después.
+  const telefono = texto(cuerpo, 'telefono', { max: 25 });
+  if (!telefono) throw new CampoInvalido('telefono', 'Falta el `telefono`: es la identidad del chofer frente al bot de WhatsApp, y sin él no puede reportar un gasto.');
 
   const crudo: OperadorCrudo = {
     nombre,
