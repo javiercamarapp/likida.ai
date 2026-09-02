@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { readFileSync } from 'fs';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // EL SDR (0217) — el contrato es la CADENCIA que se detiene sola:
@@ -181,5 +182,13 @@ describe('el reloj de la vuelta corta también la BÚSQUEDA del SDR (c7-1)', () 
     respuestas.set('cola_aprobacion', [{ data: [], error: null }]);
     const r = await candidatosDeSeguimiento(5);
     expect(r).toHaveLength(1);
+  });
+});
+
+describe('AGB-2 — el SYSTEM del SDR no nombra a ningún prospecto', () => {
+  it('no contiene "Innovativos" ni "Grupo GAL"', () => {
+    const fuente = readFileSync('src/lib/likida/agentes/sdr.ts', 'utf8');
+    expect(fuente).not.toContain('Innovativos');
+    expect(fuente).not.toContain('Grupo GAL');
   });
 });

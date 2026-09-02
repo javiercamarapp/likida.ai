@@ -35,7 +35,7 @@ REGLAS:
 - Referencia honesta al correo anterior ("le escribí hace unos días sobre la liquidación de viajes") sin reprochar el silencio.
 - Termina con UNA pregunta de agenda concreta ("¿le vienen bien 15 minutos esta semana?").
 - Si el dossier trae un Contacto, usa EXACTAMENTE el token {{NOMBRE}} donde iría su nombre de pila; si dice "no capturado", saluda sin nombre.
-- PROHIBIDO: cifras nuevas, promesas nuevas, datos que no estén en el dossier, la palabra "recordatorio", los guiones largos (—), y decir "clientes reales" (si mencionas tracción, la frase permitida es "en pláticas con transportistas como Grupo GAL y Transportes Innovativos").
+- PROHIBIDO: cifras nuevas, promesas nuevas, datos que no estén en el dossier, la palabra "recordatorio", los guiones largos (—), decir "clientes reales", y nombrar a NINGÚN prospecto o cliente por su nombre (AGB-2: si mencionas tracción, la única frase permitida es "en pláticas con transportistas del centro y norte del país").
 - Español mexicano directo, sin emojis.
 
 FORMATO DE SALIDA (exacto):

@@ -83,6 +83,10 @@ vi.mock('./cola', async () => {
     verificarFormatoCampana: (texto: string) => {
       if (/clientes?\s+reales/i.test(texto)) throw new DI('El correo dice "clientes reales" — Pieza descartada.');
       if (texto.includes('—')) throw new DI('El correo trae guion largo (—) — Pieza descartada.');
+      // AGB-2: réplica del candado de tracción — TRACCION_PUBLICABLE vacía.
+      for (const nombre of ['Grupo GAL', 'Transportes Innovativos', 'Innovativos']) {
+        if (texto.includes(nombre)) throw new DI(`El correo nombra a "${nombre}" como tracción — no autorizado. Pieza descartada.`);
+      }
     },
   };
 });
@@ -397,9 +401,15 @@ describe('verificarFormatoCampana — los guardarraíles son código, no prompt'
     expect(() => verificarFormatoCampana('Liquidamos viajes — sin liquidador.')).toThrow(/guion largo/);
   });
 
-  it('deja pasar la frase permitida ("en pláticas con transportistas como...")', async () => {
+  it('deja pasar la frase permitida sin nombrar a nadie ("en pláticas con transportistas del centro y norte del país")', async () => {
     const { verificarFormatoCampana } = await import('./redactor');
-    expect(() => verificarFormatoCampana('Estamos en pláticas con transportistas como Grupo GAL y Transportes Innovativos.')).not.toThrow();
+    expect(() => verificarFormatoCampana('Estamos en pláticas con transportistas del centro y norte del país.')).not.toThrow();
+  });
+
+  it('AGB-2: rechaza nombrar al prospecto del piloto o a Grupo GAL como tracción, aunque la plática sea real', async () => {
+    const { verificarFormatoCampana } = await import('./redactor');
+    expect(() => verificarFormatoCampana('Estamos en pláticas con transportistas como Grupo GAL y Transportes Innovativos.')).toThrow(/tracción/);
+    expect(() => verificarFormatoCampana('Ya trabajamos con Transportes Innovativos.')).toThrow(DatoInvalido);
   });
 
   it('un correo del modelo que viole el formato NO entra a la cola y la corrida queda en fallo', async () => {
@@ -446,6 +456,12 @@ describe('el Redactor pide SCHEMA, no markdown (los 3 fallos de la primera pasad
     // El prompt ya no puede pedir markdown: sería un contrato contra el otro.
     expect(llamada.system).not.toContain('## Variante A');
     expect(llamada.system).toContain('JSON');
+  });
+
+  it('AGB-2: el SYSTEM no nombra a ningún prospecto ("Innovativos", "Grupo GAL")', () => {
+    const fuente = readFileSync('src/lib/likida/agentes/redactor.ts', 'utf8');
+    expect(fuente).not.toContain('Innovativos');
+    expect(fuente).not.toContain('Grupo GAL');
   });
 
   it('el archivo ya no parsea markdown con regex — esa frontera se fue al schema (estructural)', () => {

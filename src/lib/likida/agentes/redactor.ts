@@ -50,7 +50,7 @@ ESCRIBE 3 VARIANTES:
 REGLAS DE ESCRITURA:
 - Máximo 5 líneas por correo. Asunto de máximo 6 palabras, sin signos de admiración. (El asunto de la variante A se sustituye después por el asunto fijo de la campaña — escríbelo igual: el de las variantes B/C sí sale.)
 - PROHIBIDO el guion largo (—) en cualquier parte del correo.
-- Si mencionas tracción, la ÚNICA frase permitida es "en pláticas con transportistas como Grupo GAL y Transportes Innovativos". PROHIBIDO decir "clientes reales" o llamar cliente a cualquier empresa: ninguna ha firmado.
+- Si mencionas tracción, la ÚNICA frase permitida es "en pláticas con transportistas del centro y norte del país". PROHIBIDO nombrar a NINGÚN prospecto o cliente por su nombre, aunque exista una plática real (AGB-2: el nombre de un prospecto es un dato de terceros, no un argumento de venta). PROHIBIDO decir "clientes reales" o llamar cliente a cualquier empresa: ninguna ha firmado.
 - Termina SIEMPRE con una pregunta de agenda concreta: "¿le vienen bien 15 minutos el jueves?" — no "¿le interesaría platicar?".
 - Remitente: el vendedor humano indicado, una persona. Nunca "el equipo de Likida".
 - Español mexicano directo. Prohibido "revolucionario", "innovador", "inteligente", "de vanguardia", "solución integral". Sin emojis, sin negritas de venta, sin postdata de urgencia falsa.

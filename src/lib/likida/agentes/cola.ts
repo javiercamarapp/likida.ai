@@ -38,18 +38,45 @@ export function topeCorreoFrioDia(): number {
  *  estructural también al ENVIAR (c5-14: la edición humana no lo esquiva). */
 export const TIPOS_CAMPANA = ['correo_frio', 'correo_seguimiento'] as const;
 
-/** El verificador ESTRUCTURAL del formato de campaña — los dos guardarraíles
+/** AGB-2 (auditoría 24, 1-sep-2026): nombres de prospectos/clientes que SÍ se
+ *  autorizó nombrar como tracción en correo de campaña — VACÍA por default.
+ *  Sin una entrada aquí, a propósito, ningún nombre de tercero sale en un
+ *  correo automático. El SYSTEM del redactor y del SDR permitían literalmente
+ *  "Grupo GAL y Transportes Innovativos" — el nombre del PROSPECTO DEL PILOTO
+ *  saliendo hacia Coca-Cola FEMSA, Pepsi, Nadro, KFC sin su consentimiento.
+ *  Poblar esta lista es una decisión explícita de Javier (acuerdo de
+ *  referencia real), nunca un efecto secundario de que el modelo "decida
+ *  mencionar tracción". */
+export const TRACCION_PUBLICABLE: readonly string[] = [];
+
+/** Los nombres que YA se cazaron saliendo sin autorización (AGB-2) — se
+ *  bloquean SIEMPRE salvo que aparezcan, a propósito, en `TRACCION_PUBLICABLE`. */
+const NOMBRES_TRACCION_CAZADOS = ['Grupo GAL', 'Transportes Innovativos', 'Innovativos'] as const;
+
+function nombreTraccionNoAutorizado(texto: string): string | null {
+  for (const nombre of NOMBRES_TRACCION_CAZADOS) {
+    if (texto.includes(nombre) && !TRACCION_PUBLICABLE.includes(nombre)) return nombre;
+  }
+  return null;
+}
+
+/** El verificador ESTRUCTURAL del formato de campaña — los guardarraíles
  *  cazados en vivo: jamás "clientes reales" (ninguna empresa ha firmado; la
- *  frase permitida es "en pláticas con...") y sin guiones largos. Es código,
- *  no prompt. Vive AQUÍ (y no en redactor.ts, que lo re-exporta) porque la
- *  puerta de salida también lo aplica (c5-14): una edición humana o una
- *  variante guardada que lo viole tampoco sale. */
+ *  frase permitida es "en pláticas con..."), sin guiones largos, y jamás un
+ *  nombre de tercero no autorizado como tracción (AGB-2, `TRACCION_PUBLICABLE`).
+ *  Es código, no prompt. Vive AQUÍ (y no en redactor.ts, que lo re-exporta)
+ *  porque la puerta de salida también lo aplica (c5-14): una edición humana o
+ *  una variante guardada que lo viole tampoco sale. */
 export function verificarFormatoCampana(texto: string): void {
   if (/clientes?\s+reales/i.test(texto)) {
     throw new DatoInvalido('El correo dice "clientes reales" — ninguna empresa ha firmado; la frase permitida es "en pláticas con transportistas como...". Pieza descartada.');
   }
   if (texto.includes('—')) {
     throw new DatoInvalido('El correo trae guion largo (—) — el formato de campaña los prohíbe. Pieza descartada.');
+  }
+  const nombreNoAutorizado = nombreTraccionNoAutorizado(texto);
+  if (nombreNoAutorizado) {
+    throw new DatoInvalido(`El correo nombra a "${nombreNoAutorizado}" como tracción — nombre de tercero no autorizado (TRACCION_PUBLICABLE vacía por default). Pieza descartada.`);
   }
 }
 
