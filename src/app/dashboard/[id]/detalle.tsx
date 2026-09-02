@@ -9,6 +9,8 @@ import { StatusPill, type Estado } from '@/app/admin/ui/kit';
 import { FormaConAviso, type ResultadoAccion } from '@/app/admin/ui/forma';
 import { BarraPagina } from '../resumen-visual';
 import { ComboCatalogo, type BuscarCatalogo } from '../combo-catalogo';
+import { PanelRevision, type GastoAjustable } from './revision-panel';
+import type { RevisionDetalle } from '@/lib/likida/revision';
 import {
   BTN_PRIMARIO, BTN_SECUNDARIO, ESTILO_PRIMARIO, ESTILO_SECUNDARIO,
   Kpi, Dato, Rotulo, LineaDeTiempo, Diferencia, PillRenglon, TH,
@@ -52,9 +54,18 @@ export interface PropsDetalle {
   } | null;
   /** La acción de reabrir, solo si el rol administra. */
   reabrir: ((previo: ResultadoAccion, fd: FormData) => Promise<ResultadoAccion>) | null;
+  /** La firma humana (BLOQ-6, mig. 0299). `null` = no se pudo leer el estado
+   *  de la revisión; entonces NO se pinta el panel, porque unos botones sin
+   *  saber si la liquidación ya está firmada invitan a firmarla dos veces. */
+  revision: {
+    estado: RevisionDetalle;
+    gastos: GastoAjustable[];
+    /** `null` = el rol ve la firma pero no la pone. */
+    accion: ((previo: ResultadoAccion, fd: FormData) => Promise<ResultadoAccion>) | null;
+  } | null;
 }
 
-export function DetalleLiquidacion({ d, sufijo, estatus, etiqueta, pdfHref, wa, reasignar, reabrir }: PropsDetalle) {
+export function DetalleLiquidacion({ d, sufijo, estatus, etiqueta, pdfHref, wa, reasignar, reabrir, revision }: PropsDetalle) {
   // LA FOTO DEL TICKET SE GUARDA (CFF art. 30, conservación 5 años) PERO NO SE
   // ENSEÑA AQUÍ. El aviso de privacidad (privacidad.ts:498) le promete al
   // operador que un dato sensible que aparezca por accidente en su ticket "no
@@ -405,6 +416,13 @@ export function DetalleLiquidacion({ d, sufijo, estatus, etiqueta, pdfHref, wa, 
               </p>
             )}
           </section>
+
+          {/* La firma va ANTES de «reabrir»: es lo que se hace todos los
+              días; reabrir es lo excepcional y destructivo. */}
+          {revision && (
+            <PanelRevision estado={revision.estado} gastos={revision.gastos}
+              accion={revision.accion} folio={d.folio} />
+          )}
 
           {reabrir && (
             <section className="card p-4">

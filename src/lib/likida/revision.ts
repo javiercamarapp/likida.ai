@@ -31,6 +31,23 @@ import { inicioDiaMx, finDiaMx } from '@/lib/formato';
 export type RevisionLiquidacion = 'pendiente' | 'aprobada' | 'ajustada' | 'rechazada';
 export const REVISIONES: readonly RevisionLiquidacion[] = ['pendiente', 'aprobada', 'ajustada', 'rechazada'];
 
+// ── QUIÉN FIRMA ─────────────────────────────────────────────────────────────
+//
+// Mismo criterio que `puedeTimbrar` en `auth/permisos.ts` y por la misma
+// razón: firmar una liquidación autoriza un pago al chofer y cierra el
+// expediente fiscal del viaje. El DUEÑO y el CONTADOR, sí; el ENCARGADO no —
+// el jefe de tráfico no ve una sola cifra de dinero de la flota, así que mal
+// puede aprobar una. `superadmin` entra por soporte, como en todas las
+// puertas de ese archivo. Rol desconocido: NO (fallar cerrado).
+//
+// Vive aquí y no en `permisos.ts` porque es el permiso de ESTA función; el
+// día que se consolide, se mueve con su prueba.
+const FIRMA = new Set(['superadmin', 'flota_admin', 'contador']);
+
+export function puedeFirmarLiquidacion(rol: string): boolean {
+  return FIRMA.has(rol);
+}
+
 export type AccionRevision = 'aprobar' | 'ajustar' | 'rechazar';
 export const ACCIONES_REVISION: readonly AccionRevision[] = ['aprobar', 'ajustar', 'rechazar'];
 
