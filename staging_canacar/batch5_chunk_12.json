@@ -1,0 +1,52 @@
+[
+  {
+    "id": "10111194-14e8-487a-b477-c89abf134b92",
+    "empresa": "Traslados de Vanguardia, S.A. de C.V.",
+    "ciudad": "Silao de la Victoria, Guanajuato",
+    "correo": "transporte@grupointra.com.mx",
+    "telefono": "4773288809",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Cámara Nacional del Autotransporte de Carga (Canacar) · 51 a 250 personas · Carretera Panamericana Km 142 Mas 200 Sn Int Na, Colonia San Jose del Carmen, CP 36294\nUbicación aproximada 17-ago: centroide de 37 establecimientos DENUE en Silao de la Victoria, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "71ccd185-82ce-4063-bd78-aae2bce95e29",
+    "empresa": "Traslados y Almacenes el Aguila, S.A. de C.V.",
+    "ciudad": "San Nicolás de los Garza, Nuevo León",
+    "correo": "gzamora@tyaasa.mx",
+    "telefono": "8120018583",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 51 a 250 personas · Avenida Antiguo Camino Lagrande 202 Int Na, Colonia Colonial Lagrange, CP 66490\nUbicación aproximada 17-ago: centroide de 150 establecimientos DENUE en San Nicolás de los Garza, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nENCAJE: alto — carga y almacenaje en San Nicolás, socio CANACAR, 51 a 250 personas\nPROSPECCIÓN 19-ago-2026: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (autotransporte de carga, 51 a 250 personas, Col. Colonial Lagrange, San Nicolás de los Garza, NL) · el dominio del correo del censo (tyaasa.mx) no resuelve en DNS, así que no hay sitio que consultar · WebSearch sin cupo en la sesión · unidades null: el rango de CANACAR es de personal\nINVESTIGACIÓN PROFUNDA 20-ago-2026: mismo grupo/empresa que la ficha principal (id a145b891-9252-4c79-8253-e0d062b6bef8, \"Autolineas Nuevomex, S.A. de C.V.\") — ver esa ficha para decisor y mensajes completos. Sin mensaje propio aquí para no duplicar el envío.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3fddbdf3-9033-4c8b-8da8-cc39344c052b",
+    "empresa": "Trelsa, S.A. de C.V.",
+    "ciudad": "Querétaro, Querétaro",
+    "correo": "cxp@trelsa.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General y Especializada · 51 a 250 personas · Boulevard Bernardo Quintana Q7001 Int Torre 2 Suite 1102, Colonia Centro Sur, CP 76090\nUbicación aproximada 17-ago: centroide de 266 establecimientos DENUE en Querétaro, Querétaro — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f3b03a85-eeb2-4d6a-b6bc-305e2b842572",
+    "empresa": "Tsim Internacional, S.A. de C.V.",
+    "ciudad": "San Nicolás de los Garza, Nuevo León",
+    "correo": "guillermo.flores@tsim.com.mx",
+    "telefono": "8183515779",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Local de Carga · 51 a 250 personas · Avenida Los Angeles 303 Int Na, Colonia Garza Cantu, CP 66480\nUbicación aproximada 17-ago: centroide de 150 establecimientos DENUE en San Nicolás de los Garza, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-20: sin decisor publico (correo de Guillermo Flores en el registro CANACAR, sin cargo confirmado; no aparece en el sitio) · LinkedIn: no localizado · fuente: tsim.com.mx (sitio oficial, verificado 2026-08-20) + CANACAR directorio de socios 17-ago-2026 (Transporte Local de Carga, 51-250 personas). NUM_UNIDADES: 50 tractocamiones — cifra REAL publicada ('mas de 50'), se usa el minimo declarado. 60+ anios de experiencia, servicios logisticos integrales. · COSECHA 2026-08-26: sitio vivo (3 pág) · \"Inicio - TSIM INTERNACIONAL\" · correos: contacto@tsim.com.mx · sin directivos públicos",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3176c676-a632-4ae4-95bc-e49b90e0c8a4",
+    "empresa": "Tsm Connect, S.A. de C.V.",
+    "ciudad": "Ramos Arizpe, Coahuila",
+    "correo": "pzamora@tsmconnect.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 51 a 250 personas · Carretera Libramiento Oscar Flores Tapia Km 305 Sn Int Na, Parque Industrial Ramos Arizpe, CP 25900",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "9d711d1d-df9d-497f-a3d5-98b162ef99be",
+    "empresa": "Bcn Logistics, S. de R.L. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "marco.bustos@bclog.mx",
+    "telefono": "6862614375",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Prolongación Rio Presidio 1001 Int Na, Colonia Granjas Nuevas, CP 21390\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nENCAJE: alto — socio CANACAR, autotransporte de carga general, 11-50 personas.\nPROSPECCIÓN 20-ago-2026: sin decisor público · LinkedIn: no hallado · fuente: directorio de socios CANACAR (razón social, no persona física); correo de la base en dominio propio (bclog.mx); sin sitio web; WebSearch agotado en la sesión (200/200), investigación solo por WebFetch a dominios conocidos. unidades: null. Mensajes generados.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b6fdf02c-491a-4653-847e-4a52cfca5800",
+    "empresa": "Beatriz García Ortega",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "servicio.gmex@outlook.com",
+    "telefono": "2294185031",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Publico Federal de Carga · 11 a 50 personas · Avenida Revillagigedo 3010 Int Na, Colonia Centro, CP 91700\nPROSPECCIÓN 2026-08-19: decisor Beatriz García Ortega, Propietaria (persona física registrada en CANACAR) · LinkedIn: no encontrado · fuente: CANACAR directorio de socios (ya en base)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "cf141465-b0e3-4d17-9a7e-c7b8298d1457",
+    "empresa": "Benjamín Medina Magaña",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "benjamin.medina.magana@gmail.com",
+    "telefono": "8675939156",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Carretera Carretera Mex Ii Km 27.3 Km 27.3 Int Na, Fraccionamiento Villas de Oradel, CP 88285\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "bc825fe9-a6e3-42da-8544-2418a9b2e447",
+    "empresa": "Benjamin Ricardo de Lira Hernandez, S.A. de C.V.",
+    "ciudad": "Centro, Tabasco",
+    "correo": "gylsiruiz@grupoblh.com",
+    "telefono": "9931284816",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Materiales y Residuos Peligrosos · 11 a 50 personas · Carretera Carretera Coatzacoalcos-Villahermosa Km. 163+600 Margen Izq Sn Int Na, Ranchería Anacleto Canabal 3Ra Secc, CP 86287\nUbicación aproximada 17-ago: centroide de 165 establecimientos DENUE en Centro, Tabasco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7ec91ac1-f26f-493f-bc00-ad384beb8e88",
+    "empresa": "Bliser, S.A. de C.V.",
+    "ciudad": "Azcapotzalco, Ciudad de México",
+    "correo": "isaac.escobar@armor.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Cuitlahuac 3435 Int Na, Ciudad Ciudad de México, CP 2800\nUbicación aproximada 17-ago: centroide de 174 establecimientos DENUE en Azcapotzalco, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

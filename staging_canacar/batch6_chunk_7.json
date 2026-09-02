@@ -1,0 +1,52 @@
+[
+  {
+    "id": "f2cde008-00a0-45a9-bd4a-90abe8be5cda",
+    "empresa": "TRANSPORTES OSCAR FERMIN ALMAZAN",
+    "ciudad": "Tequixquiac, México",
+    "correo": "oscar_almazan_gonzalez@hotmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte local de materiales para la construcción · 31 a 50 personas\nPROSPECCION 2026-08-20: sin decisor publico (el nombre de la empresa YA revela al titular en el nombre comercial: Oscar Fermin Almazan; pero ninguna fuente PUBLICA independiente -sitio, prensa, registro CANACAR/AAAG- lo confirma como decisor, solo el nombre comercial del DENUE, insuficiente por si solo segun la regla de 'razon social como persona fisica' que aplica a CANACAR/AAAG, no al nombre comercial libre de DENUE) · LinkedIn: no localizado · fuente: DENUE 05/2026 (sin sitio; correo hotmail). Giro: autotransporte local de materiales para la construccion, Tequixquiac, Mexico, 31 a 50 personas. Flota NO publicada — unidades sin dato. ENCAJE: alto — transporte de materiales para construccion, tamano en rango objetivo, posible titular identificable por nombre comercial",
+    "fuente": "denue"
+  },
+  {
+    "id": "8d023eb7-e65c-4a8a-82dd-8acd35580f90",
+    "empresa": "TRANSPORTES REFRIGERADOS MARTINEZ",
+    "ciudad": "Abasolo, Guanajuato",
+    "correo": "asistente@refrigeradosmartinez.com",
+    "telefono": "4626290766",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo con refrigeración · 31 a 50 personas · sitio: www.transportesrefrigeradosmartines.com · establecimiento: TRANSPORTES REFRIGERADOS MARTINEZ\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  },
+  {
+    "id": "ba445da0-0d86-4c17-96d4-17357a5a77f2",
+    "empresa": "VS TRUCKING",
+    "ciudad": "Ciénega de Flores, Nuevo León",
+    "correo": "proveedores@vstrucking.com.mx",
+    "telefono": "8183313344",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo de productos agrícolas sin refrigeración · 31 a 50 personas · establecimiento: VS TRUCKING\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  },
+  {
+    "id": "3a00bbf5-9d53-4f47-9d76-3e43eb6561a2",
+    "empresa": "TRANSPORTES ISA",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": null,
+    "telefono": "6566687768",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga general · 31 a 50 personas\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  },
+  {
+    "id": "4e4e996b-b5aa-4d69-9411-19469d65ef3d",
+    "empresa": "\"Express Logistica y Almacenaje\"",
+    "ciudad": "Toluca, México",
+    "correo": "ventas@expresst.com.mx",
+    "telefono": "7222643538",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte · 11 a 50 personas · Calle Jesus Reyes Heroles 134 Int Na, Colonia Guadalupe, CP 50111\nUbicación aproximada 17-ago: centroide de 256 establecimientos DENUE en Toluca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nINVESTIGACION-LOTE-NUM 18-ago-2026 (agentes sonnet, aplica=true): APLICA: CANACAR la clasifica \"Autotransporte de Carga Especializada\". OJO: el dominio que CANACAR le atribuye (expresst.com.mx) es en realidad de la empresa HERMANA \"Express Toluqueños\" (mismo fundador Jorge Gómez) — HTML sin actualizar desde 2010.\nHISTORIA: socia registrada de CANACAR (directorio de socios, 17-ago-2026): 'Express Logística y Almacenaje', Servicio de Transporte, 11 a 50 personas, Calle Jesús Reyes Heroles 134, Colonia Guadalupe, Toluca, México. Correo: ventas@expresst.com.mx (coincide con el nombre comercial, abreviado 'ExpressT').\nPROSPECCIÓN 2026-08-20: sin decisor público · LinkedIn: no hallado · fuente: directorio de socios CANACAR 17-ago-2026. WebSearch agotado en la sesión.",
+    "fuente": "canacar"
+  }
+]

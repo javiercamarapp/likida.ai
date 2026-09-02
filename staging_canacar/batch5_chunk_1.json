@@ -1,0 +1,52 @@
+[
+  {
+    "id": "0d06731b-53f2-455c-98e5-08739c07a4f7",
+    "empresa": "Transportadora Petroquímica del Potosí, S.A. de C.V.",
+    "ciudad": "San Luis Potosí, San Luis Potosí",
+    "correo": "gabriel_transpp@hotmail.com",
+    "telefono": "4448240389",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Eje Vial 126 110 Int Na, Zona Industrial Zona Industrial, CP 78395\nUbicación aproximada 17-ago: centroide de 259 establecimientos DENUE en San Luis Potosí, San Luis Potosí — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f7d8e38c-17a0-446a-a275-1226f091b6ef",
+    "empresa": "Transportadora Taurus, S.A. de C.V.",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "dario.deleon@s-martmx.com",
+    "telefono": "6566331488",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Calle General Monterde 1750 Int Nan, Colonia Reforma, CP 32380\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 2026-08-21: DECISOR CONFIRMADO (confianza media) — Leonardo Gutiérrez Villa, listado como \"key principal\" en Dun & Bradstreet (cargo exacto no confirmado). La fila duplicada del censo (id e6546b5f) tenía nota previa 'sin decisor público con cargo' tras búsqueda LinkedIn — este dato sale de D&B, no de LinkedIn. Se consolida esa fila como duplicado_de esta.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "55b41cee-5381-4e68-8c40-8e15d9633255",
+    "empresa": "Transporte Especializado Eliseo, S.A. de C.V.",
+    "ciudad": "Castaños, Coahuila",
+    "correo": "jfgr108822@hotmail.com",
+    "telefono": "6666300267",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Camino Jose de Las Fuentes 402 Int 402, Colonia Expropiacion Comunidad de Labradores Blancos, CP 25870",
+    "fuente": "canacar"
+  },
+  {
+    "id": "377a5e34-d763-4494-bd5b-65cac299fa82",
+    "empresa": "Transporte y Logistica Alcomex",
+    "ciudad": "Santo Tomás Hueyotlipan, Puebla",
+    "correo": "luis.coyac@alcomex.mx",
+    "telefono": "2227060031",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Boulevard Carmen Serdan 205 Int Na, Colonia San Felipe Hueyotiplan, CP 72030 · 2 sucursales registradas en CANACAR (Puebla, Puebla)\nUbicación aproximada 17-ago: centroide de 2 establecimientos DENUE en Santo Tomás Hueyotlipan, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: decisor Luis Alberto Coyac Duarte, Director General · LinkedIn: https://www.linkedin.com/company/grupo-alcomex (página de empresa; sin perfil personal público) · viajes/mes: no público · historia: transportista de carga general en Puebla, envíos locales y a toda la república (alcomex.mx) · flota: no publican número · conmutador del sitio: (222) 890 5519, recepcion@alcomex.mx · fuente: D&B (key principal) + sitio oficial + CANACAR · score fit rúbrica prospección: 1/5 (decisor nombrado +1; sin vacante, sin flota publicada)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ac396a3d-c09c-4b44-bc7e-ad60296897fd",
+    "empresa": "Transportes Aliano, S.A. de C.V.",
+    "ciudad": "Puebla, Puebla",
+    "correo": "fernando_bardales@laitaliana.com.mx",
+    "telefono": "2225772426",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Carga en General · 51 a 250 personas · Prolongación de la 27 Norte 8027 Int Na, Ciudad Na, CP 72010\nUbicación aproximada 17-ago: centroide de 496 establecimientos DENUE en Puebla, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público con cargo confirmado (correo institucional ya registrado, fernando_bardales@laitaliana.com.mx, sin cargo publicado) · fuente: laitaliana.com.mx/nosotros/ — Transportes Aliano opera como flota de carga de Grupo Industrial La Italiana (Molino Harinero San Blas, Galletas Gisa, Italgrani).",
+    "fuente": "canacar"
+  }
+]

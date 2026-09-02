@@ -1,0 +1,52 @@
+[
+  {
+    "id": "eeed171a-82a3-4ddd-901a-5fbfe3a828a7",
+    "empresa": "Arturo Trejo Rubio",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "contabilidad@transportestrejo.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Pesada · 11 a 50 personas · Calle Via Botteghelle 2611 Int Na, Colonia Fracc Canto de Calabria, CP 32540\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "25123c5b-f0c3-49e4-8b37-a63289026efa",
+    "empresa": "Asphalt Carriers S. de R.L. de C.V.",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "asoto@acarriers.com",
+    "telefono": "6566820203",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Avenida Baudelio Perez 735 Int Na, Colonia Zaragoza, CP 32590\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a7403b83-6044-44f7-a37d-645b2ca69cea",
+    "empresa": "Aureliano Garcia Escalera",
+    "ciudad": "Reynosa, Tamaulipas",
+    "correo": "nohemi_ga07@hotmail.com",
+    "telefono": "8993182773",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Reynosa Matamoros 100 Int C, Ejido el Guerreño, CP 88780\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Reynosa, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nDECISOR: la razón social del registro CANACAR es una PERSONA FÍSICA — Aureliano García Escalera es el titular del permiso de autotransporte de carga, no un contacto intermedio.\nHISTORIA: socio CANACAR de autotransporte de carga con 11 a 50 personas, domicilio en Carretera Reynosa-Matamoros 100, Ejido El Guerreño, Reynosa, Tamaulipas (CP 88780). Corredor fronterizo Reynosa–Matamoros.\nPROSPECCIÓN 2026-08-20: decisor Aureliano García Escalera, titular / persona física del permiso · LinkedIn: no hallado · fuente: CANACAR directorio de socios 17-ago-2026 (razón social como persona física, 11 a 50 personas).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d435f4e0-ceaa-4c06-8eed-cd0b60408d92",
+    "empresa": "Aurelio Pedraza Ávila",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "aurelio.pedraza@hotmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Antigua Carretera Nacional 6249 Int A, Colonia Concordia, CP 88298\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nDECISOR: registro CANACAR a nombre de persona física Aurelio Pedraza Ávila — el titular ES el decisor. Se declara así, sin cargo corporativo adicional.\nUNIDADES: sin dato — CANACAR reporta 11 a 50 personas (personal, no unidades); sin conteo de flota publicado.\nENCAJE: alto — carga federal en Nuevo Laredo, socio CANACAR, cruce fronterizo.\nPROSPECCIÓN 2026-08-19: decisor Aurelio Pedraza Ávila, titular persona física · LinkedIn: no localizado · fuente: directorio de socios CANACAR 17-ago-2026 · WebSearch agotado en la sesión (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9ffce054-20ee-47a6-a27a-190da60505d0",
+    "empresa": "Auto Express Landa, S.A. de C.V.",
+    "ciudad": "Allende, Nuevo León",
+    "correo": "autoexpresslanda@gmail.com",
+    "telefono": "8266881340",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Allende-Cadereyta Km 2.5 Sn Int Na, Zona Industrial Talleres, CP 67350\nUbicación aproximada 17-ago: centroide de 123 establecimientos DENUE en Allende, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nENCAJE: alto — socio CANACAR de carga, 11-50 personas.\nPROSPECCIÓN 20-ago-2026: sin decisor público · LinkedIn: no hallado · fuente: directorio de socios CANACAR (razón social, no persona física); correo de la base es gmail de la empresa; sin sitio web; WebSearch agotado en la sesión (200/200), investigación solo por WebFetch a dominios conocidos. unidades: null. Sin mensaje esta tanda: quedó fuera de los 5 mejores frente a Alanis/Treca/Thermos/Ruiz Hermanos/Cova.",
+    "fuente": "canacar"
+  }
+]

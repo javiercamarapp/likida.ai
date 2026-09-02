@@ -1,0 +1,52 @@
+[
+  {
+    "id": "261a0743-d5b5-4a8a-8fb8-056776c2dc8b",
+    "empresa": "Mercagri",
+    "ciudad": "Tapachula, Chiapas",
+    "correo": "contabilidad@mercagri.com",
+    "telefono": "9621852125",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Comercio Al Por Mayor de Fertilizantes, Plaguicidas y Semillas Para Siembra · 11 a 50 personas · Avenida Norte Sn Int Na, Colonia Tres Cruces, CP 30719\nDENUE API 17-ago (cruce CANACAR→DENUE): «MERCAGRI», score 1.06",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ae811966-c378-496c-a353-04fbac067823",
+    "empresa": "Mexmarine Logística Portuaria, S.A. de C.V.",
+    "ciudad": "Lázaro Cárdenas, Michoacán",
+    "correo": "juanaalvarado@mexmarine.com.mx",
+    "telefono": "7535322477",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Isla Cerralvo Mz 3 Lt13 Int Na, Colonia Isla del Cayacal, CP 60950",
+    "fuente": "canacar"
+  },
+  {
+    "id": "cce7bc0a-4c32-4a81-892a-e4f7ff0bf60d",
+    "empresa": "Miguel Ángel Fernández Anaya",
+    "ciudad": "Coatzacoalcos, Veracruz",
+    "correo": "atuniversales@hotmail.com",
+    "telefono": "9212145151",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foráneo de Carga Especializado · 11 a 50 personas · Avenida Revolucion 1323 Int Na, Colonia Maria de la Piedad, CP 96410",
+    "fuente": "canacar"
+  },
+  {
+    "id": "1d08e970-56c7-4cc2-8928-71daa46e3fad",
+    "empresa": "Miguel García Jiménez",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "mgjtransport@hotmail.com",
+    "telefono": "6861135296",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Al Aeropurto Km 11.5 Int Na, Colonia Mariano Abasolo, CP 21600\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b260d97a-4952-4816-ab11-c6b727f22a6e",
+    "empresa": "Mincarrier, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "trafico@mincarrier.com",
+    "telefono": "8671920452",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Lincoln 3705 Int Na, Colonia Juarez, CP 88209\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nSITIO OFICIAL 2026-08-19 (mincarrier.com): \"más de 25 años\" en transporte, distribución y logística México-EUA · tel (956) 727 8813 · bases en Nuevo Laredo, Tamaulipas y Laredo, Texas · NO publica conteo de unidades → unidades queda null.\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: sitio oficial mincarrier.com + CANACAR 17-ago-2026\nENCAJE: alto — transfronterizo con 25+ años, socio CANACAR, 11-50 personas",
+    "fuente": "canacar"
+  }
+]

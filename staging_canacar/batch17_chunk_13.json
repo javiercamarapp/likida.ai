@@ -1,0 +1,52 @@
+[
+  {
+    "id": "8830a3ac-8a6a-4a0d-946c-8498bbc485d8",
+    "empresa": "Transportes Refrigerados Mercurio, S.A. de C.V.",
+    "ciudad": "Uruapan, Michoacán",
+    "correo": "tractostrm@agroexportavocados.com",
+    "telefono": "4521056318",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportes Refrigerados · 11 a 50 personas · Calle Lazaro Cardenas 69 Int Na, Colonia Jucutacato, CP 60230",
+    "fuente": "canacar"
+  },
+  {
+    "id": "da6eefc2-6cbd-4bac-818b-40233e44d698",
+    "empresa": "Transportes Refrigerados Trl, S.A. de C.V.",
+    "ciudad": "Ensenada, Baja California",
+    "correo": "transporteslunas@hotmail.com",
+    "telefono": "6461777840",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Libre Ensenada-Maneadero Sn Int Na, Colonia Maneadero, CP 22790\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Ensenada, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "09634b0c-7677-451a-a9f0-2ba2eb616dab",
+    "empresa": "Transportes Regulares y Especializados Kamar, S.A. de C.V.",
+    "ciudad": "Monclova, Coahuila",
+    "correo": "bertha.gonzalez@aktivos.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Boulevard Harold R. Pape 1601 Int Na, Colonia Asturias, CP 25790",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4fa29b10-f6a8-44bf-826e-06180717df19",
+    "empresa": "Transportes Renan de la Fuente",
+    "ciudad": "Centro, Tabasco",
+    "correo": "renandelafuente@hotmail.com",
+    "telefono": "9933379016",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicios de Transporte de Combustible · 11 a 50 personas · Calle 03 Sn Int Na, Parque Industrial Deit, CP 86280\nDENUE API 17-ago (cruce CANACAR→DENUE): «TRANSPORTE RF», score 1.06\nHISTORIA: socio registrado de CANACAR (directorio de socios, consulta 17-ago-2026) en Servicios de Transporte de COMBUSTIBLE, 11 a 50 personas, con domicilio en el Parque Industrial DEIT, Villahermosa (CP 86280). Transportar combustible exige permiso CRE/SENER, unidades con autotanque y control estricto de litros — es el perfil donde el estímulo de IEPS al diésel pesa más y donde el control de litros elegibles ya existe. El cruce CANACAR→DENUE del 17-ago lo empata con «TRANSPORTE RF» (score 1.06), consistente con las iniciales del titular.\nDECISOR: la razón social 'Transportes Renán de la Fuente' está a nombre de persona física y el correo de contacto es renandelafuente@hotmail.com — el titular ES Renán de la Fuente. Se declara así, con esa base (razón social + correo nominal coincidente); no hay una segunda fuente que publique su cargo formal.\nUNIDADES: sin conteo de autotanques publicado — null (11-50 en CANACAR son PERSONAS).\nENCAJE: alto — transportista de combustible afiliado a CANACAR, dolor de diésel directo.\nPROSPECCIÓN 2026-08-19: decisor Renán de la Fuente, titular/persona física · LinkedIn: no hallado · fuente: directorio de socios CANACAR 17-ago-2026 + razón social y correo nominal. WebSearch agotado en la sesión.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2db81f7e-27d4-4336-b1ea-e9b82e0f365b",
+    "empresa": "Transportes Ricabe, S.A. de C.V.",
+    "ciudad": "Azcapotzalco, Ciudad de México",
+    "correo": "abel.aguirre@ricabe.com",
+    "telefono": "5560106180",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Rabaul Esquina Nueces Sn Int Pta 5 Despacho 203, Cantón Jardin Azpeitia, CP 2530\nUbicación aproximada 17-ago: centroide de 174 establecimientos DENUE en Azcapotzalco, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

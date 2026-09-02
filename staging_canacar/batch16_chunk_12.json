@@ -1,0 +1,52 @@
+[
+  {
+    "id": "042f8235-a2ee-431c-b987-cf2b6c327901",
+    "empresa": "Transportes Especializados Peninsulares, S.A. de C.V.",
+    "ciudad": "Mérida, Yucatán",
+    "correo": "ruby.sansores@grupo-riga.com.mx",
+    "telefono": "9999880647",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Merida a Cancun Km 8.1, San Pedro Noh Pat · PROSPECCIÓN 2026-08-19: sin decisor público · LinkedIn: no hallado · viajes/mes: no público · historia: no pública; el dominio del correo (grupo-riga.com.mx) aloja a Transportes ABC del Caribe (Mérida: encortinados, tolvas, cajas secas, refrigerados, góndolas, planas, GPS 24/7) — probable mismo grupo, no confirmado · fuente: grupo-riga.com.mx, CANACAR · fit 1/5 (rúbrica)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e3303cfe-330b-444a-aba6-2cf506d94b80",
+    "empresa": "Transportes Esteban, S.A. de C.V.",
+    "ciudad": "Toluca, México",
+    "correo": "afabian@transportesesteban.com.mx",
+    "telefono": "7222266600",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Avenida Isidro Fabela Sn Int Na, Barrio San Pablo Autopan, CP 50290\nUbicación aproximada 17-ago: centroide de 256 establecimientos DENUE en Toluca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nENCAJE: alto — socio CANACAR, carga en el corredor Toluca-Valle de México\nPROSPECCIÓN 2026-08-19: sin decisor público · LinkedIn: no hallado · fuente: CANACAR 17-ago-2026. El dominio transportesesteban.com.mx no resuelve DNS al 19-ago-2026, aunque el correo del directorio sí lo usa. WebSearch agotado en la sesión. Flota sin conteo publicado → unidades null.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6cd6d5d4-3521-455b-8b7c-5ac91d008dd7",
+    "empresa": "Transportes Express Js, S.A. de C.V.",
+    "ciudad": "Silao de la Victoria, Guanajuato",
+    "correo": "administracion@expressjs.mx",
+    "telefono": "4721183541",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Raul Bravo 4 Int Na, Colonia Independencia, CP 36160\nUbicación aproximada 17-ago: centroide de 37 establecimientos DENUE en Silao de la Victoria, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0c3b6879-acf8-4bbe-9ade-45b069f8033d",
+    "empresa": "Transportes Fastcargo, S.A. de C.V.",
+    "ciudad": "León, Guanajuato",
+    "correo": "roberto_elizondom@hotmail.com",
+    "telefono": "4291470662",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Calle Yaquis Oriente 105 Int Na, Colonia Las Bugambilias, CP 37270\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8403bdb9-37e7-4065-858c-b133c4c9a23a",
+    "empresa": "Transportes García y Mirafuentes, S.A. de C.V.",
+    "ciudad": "Tezoyuca, México",
+    "correo": "cobranza@gymtransportes.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Calle Rio Papalotla Sn Int Sn, Barrio la Resurreccion, CP 56000\nUbicación aproximada 17-ago: centroide de 13 establecimientos DENUE en Tezoyuca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

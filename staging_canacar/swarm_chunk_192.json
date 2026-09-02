@@ -1,0 +1,102 @@
+[
+  {
+    "id": "ad4ab595-d84b-4752-9acf-818600571b62",
+    "empresa": "Transportes Apan, S.A. de C.V.",
+    "ciudad": "Apan, Hidalgo",
+    "correo": "transportapan@hotmail.com",
+    "telefono": "7483121356",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foráneo de Carga General · 0 a 10 personas · Calle Manuel Medina 46 Int Na, Colonia San Rafael, CP 43909\nUbicación aproximada 17-ago: centroide de 11 establecimientos DENUE en Apan, Hidalgo — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "516e2758-7ab9-458d-8aff-8d69186ac92e",
+    "empresa": "Transportes Arangy Sa de Cv",
+    "ciudad": "Epazoyucan, Hidalgo",
+    "correo": "transportesarangy@hotmail.com",
+    "telefono": "7717917047",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo y Local de Carga en General · 0 a 10 personas · Carretera Miguel Lerdo de Tejada Sn Int Na, Pueblo Santa Monica, CP 43590",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e829f1d5-4162-4eeb-b9c4-69f89d3061a7",
+    "empresa": "Transportes Arie",
+    "ciudad": "Lerma, México",
+    "correo": "rh@s4.com.mx",
+    "telefono": "5510260290",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Avenida Miguel Aleman Km 1500 Int Na, Colonia Lerma, CP 52000\nUbicación aproximada 17-ago: centroide de 39 establecimientos DENUE en Lerma, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "81595fd9-816c-4dbe-9823-eae7e259d7ae",
+    "empresa": "Transportes Arlo",
+    "ciudad": "Arandas, Jalisco",
+    "correo": "contabilidad.arlo@hotmail.com",
+    "telefono": "3481350640",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga en General · 0 a 10 personas · Calle Arandas - Tepatitlan de Morelos Kilometro 8 Int 20, Ciudad Arandas, CP 47188\nUbicación aproximada 17-ago: centroide de 17 establecimientos DENUE en Arandas, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "dc476d0e-f29b-4bf6-b8d5-ccc007894cd1",
+    "empresa": "Transportes B&W",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "lucia.pavan@transportesbw.com",
+    "telefono": "6863041861",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Otros Servicio de Transporte · 0 a 10 personas · Avenida Cuauhtemoc 50 Int 3 F, Colonia Aviacion, CP 21230\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d9c78e65-7bcc-465b-b1fb-39ee185a6111",
+    "empresa": "Transportes Blamar del Norte, S. de R.L. de C.V.",
+    "ciudad": "Matamoros, Tamaulipas",
+    "correo": "blas4607@aol.com",
+    "telefono": "8682566124",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transfer · 0 a 10 personas · Calle Calle 21 1308 Int Na, Ciudad Matamoros, CP 87300\nUbicación aproximada 17-ago: centroide de 181 establecimientos DENUE en Matamoros, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7c85e607-755f-4484-8448-dfb14cbca0a2",
+    "empresa": "Transportes Botello",
+    "ciudad": "León, Guanajuato",
+    "correo": "ventas@transbotello.com.mx",
+    "telefono": "4779452769",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Tenayuca 524 Int Na, Colonia Azteca Ii, CP 37520\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "68890600-6952-4884-9622-0a84a9f2543d",
+    "empresa": "Transportes Breca, S.A. de C.V.",
+    "ciudad": "Nava, Coahuila",
+    "correo": "tbreca02@bres.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Federal de Carga Local y Foraneo · 0 a 10 personas · Carretera Federal 2 1001 Int Na, Colonia Sin Colonia, CP 26183",
+    "fuente": "canacar"
+  },
+  {
+    "id": "73300210-47e6-4621-a67e-080b53186ca4",
+    "empresa": "Transportes Carlitos, S.A. de C.V.",
+    "ciudad": "Zapopan, Jalisco",
+    "correo": "operaciones@transportescarlitos.com",
+    "telefono": "3336166364",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Avenida Patria 5003 Int Na, Colonia Jardines Vallarta, CP 45027\nUbicación aproximada 17-ago: centroide de 205 establecimientos DENUE en Zapopan, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nSITIO 19-ago-2026 (www.transportescarlitos.com): \"Transportes Carlitos nace en febrero del 2018\", con presencia en Guadalajara, Altamira, Manzanillo y Veracruz; servicios de contenedores, cajas secas y plataformas. Teléfono (33) 3616 6364, correo contacto@transportescarlitos.com. No publica directorio ni conteo de flota.\nENCAJE: alto — multi-puerto (Altamira, Manzanillo, Veracruz) desde Guadalajara, operación de 7-8 años\nPROSPECCIÓN 19-ago-2026: sin decisor público · fuente: www.transportescarlitos.com y directorio de socios CANACAR 17-ago-2026 (autotransporte de carga general, 0 a 10 personas, Av. Patria 5003, Col. Jardines Vallarta, Zapopan, Jalisco) · WebSearch sin cupo en la sesión · unidades null: no publican conteo de unidades",
+    "fuente": "canacar"
+  },
+  {
+    "id": "37346e91-98b4-472a-bd17-568057d889d2",
+    "empresa": "Transportes Carzay, S.A. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "administración@tcarzay.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 0 a 10 personas · Calle Costa Real 418 Int B, Colonia Astilleros de Veracruz, CP 91800",
+    "fuente": "canacar"
+  }
+]

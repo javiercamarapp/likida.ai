@@ -1,0 +1,52 @@
+[
+  {
+    "id": "84f0058b-5aa3-42d8-aabe-b6589853a3c1",
+    "empresa": "Servicios y Transportes Guerra, S.A. de C.V.",
+    "ciudad": "Guadalupe, Nuevo León",
+    "correo": null,
+    "telefono": "8120292423",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio Publico de Carga General · 51 a 250 personas · Avenida Tres 103 Int Na, Colonia Central de Carga, CP 67129\nUbicación aproximada 17-ago: centroide de 170 establecimientos DENUE en Guadalupe, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "09ec44fc-e69e-47a2-bb48-1a1c7313dafb",
+    "empresa": "Transportes Camperos de Jalisco, S.A. de C.V.",
+    "ciudad": "Cocula, Jalisco",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Otro Autotransporte Foraneo de Carga General · 51 a 250 personas · Carretera Barra de Navidad 118 Int Sn, Colonia San Juan, CP 48500\nUbicación aproximada 17-ago: centroide de 3 establecimientos DENUE en Cocula, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "33ff1bb5-8211-4c8c-8fa8-9e1b2498501b",
+    "empresa": "Transportes Laurita, S.A. de C.V.",
+    "ciudad": "Cárdenas, Tabasco",
+    "correo": null,
+    "telefono": "9371209711",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Carretera Carretera Federal Na Int Na, Zona Federal Carretera Federal Cardenas Coatzacoalcos, CP 86529\nUbicación aproximada 17-ago: centroide de 34 establecimientos DENUE en Cárdenas, Tabasco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-19: sin decisor publico, sin sitio oficial localizable (WebSearch agotado en esta sesion) · contexto: Transportes Laurita, autotransporte de carga general, 51 a 250 personas (CANACAR) — operacion grande, Carretera Cardenas, Tabasco\nENCAJE: alto — flota grande en operacion de carga/pasajeros con diesel",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d4a47e4c-97b5-4371-8baf-7ffefe5af200",
+    "empresa": "Transportes Lyrma de Cd. Juárez, S.A. de C.V.",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": null,
+    "telefono": "6566164147",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Calle del Romeral 1328 Int Na, Fraccionamiento la Playa, CP 32317\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nUNIDADES: sin dato — sin sitio web ni conteo de flota publicado; CANACAR reporta 51 a 250 personas (personal, no unidades, pero es un rango alto — señal de operación grande).\nENCAJE: alto — carga general, socio CANACAR, plantilla grande, plaza fronteriza Ciudad Juárez.\nPROSPECCIÓN 2026-08-19: sin decisor público · sin sitio web · fuente: directorio de socios CANACAR 17-ago-2026 · WebSearch agotado en la sesión (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4c16991b-f895-422c-a627-5b394d200b5e",
+    "empresa": "Transportes Refrigerados Marma, S.A. de C.V.",
+    "ciudad": "Cuautitlán Izcalli, México",
+    "correo": null,
+    "telefono": "5552401402",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Publico Federal de Carga · 51 a 250 personas · Calle Interceptor Poniente Mz 11 Lt 3 Int Sn, Colonia San Isidro, CP 54730\nUbicación aproximada 17-ago: centroide de 171 establecimientos DENUE en Cuautitlán Izcalli, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: decisor: sin decisor público (sin sitio web; búsqueda web no disponible esta tanda) · LinkedIn: no público · viajes/mes: no público · historia: no pública · fuente: directorio de socios CANACAR (autotransporte público federal de carga, 51-250 personas, Cuautitlán Izcalli). Tamaño 51-250 personas: prospecto grande, reintentar cuando haya búsqueda web. Score fit 1/5 → urgencia 'explorando'.",
+    "fuente": "canacar"
+  }
+]

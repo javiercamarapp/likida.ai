@@ -1,0 +1,52 @@
+[
+  {
+    "id": "275eec26-2fcc-4af6-b4c1-5c7405ae783b",
+    "empresa": "Transporte Fralucs, S.A. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "contabilidad@fralucs.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Kilometro 5 Carretera Mexicali a Tijuana Sn Int Na, Colonia Zaragoza, CP 21604\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b13a3e95-64f3-43ae-b93a-2fe924cf0ba4",
+    "empresa": "Transporte Internacional López Ochoa, S.A. de C.V.",
+    "ciudad": "Matamoros, Tamaulipas",
+    "correo": "tilsa@prodigy.net.mx",
+    "telefono": "8688140995",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportar Carga Pesada · 11 a 50 personas · Calle Camino Real Slo 15 Int Na, Colonia Predio Barranquitas, CP 87494\nUbicación aproximada 17-ago: centroide de 181 establecimientos DENUE en Matamoros, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (la razón social nombra a López Ochoa, pero ninguna fuente identifica a la persona con cargo) · fuente: CANACAR 17-ago-2026\nENCAJE: alto — socio CANACAR de carga pesada en frontera, 11-50 personas",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b5ce6cf2-5c67-48c0-a620-57379c911f36",
+    "empresa": "Transporte Moderno Integral, S.A. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "jesus.hernandez@mmcorpo.com",
+    "telefono": "6862515554",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Periférico Oriente 685 Int Na, Colonia Venustiano Carraza, CP 21394\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (el correo del registro está en dominio mmcorpo.com, administración compartida) · fuente: CANACAR 17-ago-2026",
+    "fuente": "canacar"
+  },
+  {
+    "id": "bbfc40e0-4041-48f1-b768-51109c0ecefa",
+    "empresa": "Transporte Mumor, S.A. de C.V.",
+    "ciudad": "Cuauhtémoc, Ciudad de México",
+    "correo": "paulina.munoz@transportemumor.mx",
+    "telefono": "5536832483",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Avenida Baja California 274 Int 2B, Colonia Hipodromo, CP 6100\nUbicación aproximada 17-ago: centroide de 267 establecimientos DENUE en Cuauhtémoc, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ccf982e1-8b2d-4576-94ee-c87ed4358470",
+    "empresa": "Transporte Santa Lucia",
+    "ciudad": "Toluca, México",
+    "correo": "claudiarisa90@gmail.com",
+    "telefono": "7291806066",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Local y Foranea · 11 a 50 personas · Calle Tamaulipas 37 Int Na, Barrio San Salvador, CP 50200\nUbicación aproximada 17-ago: centroide de 256 establecimientos DENUE en Toluca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

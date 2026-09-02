@@ -1,0 +1,102 @@
+[
+  {
+    "id": "b337de33-07d3-4aff-abf1-d1a375e74cbe",
+    "empresa": "Promotrucks",
+    "ciudad": "Huixquilucan, México",
+    "correo": "abraham@promotrucks.com.mx",
+    "telefono": "5534254153",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Mercancias · 0 a 10 personas · Boulevard Palmas Hills 4 Int 1006, Colonia Hacienda de Las Palmas, CP 52763\nUbicación aproximada 17-ago: centroide de 26 establecimientos DENUE en Huixquilucan, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nSITIO OFICIAL 2026-08-19 (promotrucks.com.mx): \"transporte de carga sencillo o full\", rastreo 24/7, operadores certificados, cobertura nacional, declara \"amplia flota\" sin conteo exacto → unidades queda null · tel 55 3425 4153.\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: sitio oficial promotrucks.com.mx + CANACAR 17-ago-2026\nENCAJE: alto — cobertura nacional con rastreo 24/7, socio CANACAR",
+    "fuente": "canacar"
+  },
+  {
+    "id": "305ddefe-68ee-4ae0-b96d-1ad7ae32e5b9",
+    "empresa": "Q Transportes, S.A. de C.V.",
+    "ciudad": "Gómez Palacio, Durango",
+    "correo": "q_transportes@hotmail.com",
+    "telefono": "8717191155",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Canatlan 493 Int Na, Parque Industrial Lagunero, CP 35078\nUbicación aproximada 17-ago: centroide de 111 establecimientos DENUE en Gómez Palacio, Durango — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-19: sin decisor publico, sin sitio oficial localizable (WebSearch agotado en esta sesion) · contexto: Q Transportes, autotransporte de carga general, 0 a 10 personas (CANACAR), Gomez Palacio, Durango\nENCAJE: bajo — flota chica (0-10 personas), volumen bajo esperado",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5bb77353-2ec0-4d04-801c-988f8c86455f",
+    "empresa": "Q-Logistics, S.A. de C.V.",
+    "ciudad": "Benito Juárez, Ciudad de México",
+    "correo": "administracion@q-logistics.com.mx",
+    "telefono": "5555504910",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 0 a 10 personas · Calle Milwaukee 27 Int Na, Colonia Napoles, CP 3810\nUbicación aproximada 17-ago: centroide de 171 establecimientos DENUE en Benito Juárez, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b54d32e3-93b5-4ed7-a9f2-df94b58c7c92",
+    "empresa": "Quantum Fletes y Logística, S. de R.L. de C.V.",
+    "ciudad": "Querétaro, Querétaro",
+    "correo": "leticiasanchez@transportesquantum.com.mx",
+    "telefono": "4422620275",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 0 a 10 personas · Carretera Estatal 431 Km 1 + 263 Int Na, Colonia el Colorado, CP 76246\nUbicación aproximada 17-ago: centroide de 266 establecimientos DENUE en Querétaro, Querétaro — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · correo ya en base (leticiasanchez@transportesquantum.com.mx) sugiere fuertemente el nombre 'Leticia Sánchez' (formato nombre.apellido en dominio propio de la empresa) pero no se confirmó cargo en una página que la nombre — no se escribe como decisor sin esa confirmación · CANACAR: Transporte de Carga, 0 a 10 personas, Querétaro · fuente: CANACAR directorio de socios (ya en base)\nPROSPECCIÓN 2026-08-19 (complemento): sitio oficial verificado transportesquantum.com.mx — transporte de carga terrestre desde 2006, certificación CTPAT, GPS 24h, servicios dedicados, seguro de carga; Carretera Estatal 431 Km 1+263, La Peña Colorada, Qro. (coincide con el domicilio ya en base) · teléfono público 442 221 6541 y correo ventas@transportesquantum.com.mx (no sobrescriben los datos ya en base) · fuente: transportesquantum.com.mx",
+    "fuente": "canacar"
+  },
+  {
+    "id": "de989a37-42b3-4c72-9364-2627e7953c67",
+    "empresa": "Rafael Flores Robles",
+    "ciudad": "Guadalajara, Jalisco",
+    "correo": "grupomoncayot@gmail.com",
+    "telefono": "3511111176",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 0 a 10 personas · Avenida Gabino Barreda 1159 Int Na, Colonia la Aurora, CP 44790\nUbicación aproximada 17-ago: centroide de 508 establecimientos DENUE en Guadalajara, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: decisor Rafael Flores Robles, titular (persona física con actividad empresarial de autotransporte de carga general, permisionario) — la razón social del registro ES su nombre, por lo que el titular es el propio decisor · sin sitio ni LinkedIn público localizado · 0 a 10 personas, Guadalajara, Jalisco · fuente: CANACAR, directorio de socios (ya en base)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a6021288-1a83-4e11-9f0a-85dc832f34c1",
+    "empresa": "Rafael Melo Barrera",
+    "ciudad": "Tulancingo de Bravo, Hidalgo",
+    "correo": "tesoreria@sanantoniologisticos.com.mx",
+    "telefono": "7757586597",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte · 0 a 10 personas · Calle Naranjo 131 Int Na, Colonia Valle Verde, CP 43648\nUbicación aproximada 17-ago: centroide de 47 establecimientos DENUE en Tulancingo de Bravo, Hidalgo — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nDECISOR: la razón social del registro CANACAR es una PERSONA FÍSICA — Rafael Melo Barrera es el titular del permiso de transporte, no un contacto intermedio. Opera bajo el nombre comercial San Antonio Logísticos Express.\nHISTORIA: San Antonio Logísticos Express declara '+20 años de experiencia', '+50 conductores' y '53M paquetes enviados' (volumen histórico), con base en Carr. Tulancingo–Jaltepec, Tulancingo, Hidalgo. Su sitio atribuye la fundación a la 'Familia Hernández González' — sin confirmar la relación exacta con Rafael Melo Barrera como titular actual del permiso CANACAR; se declara a Rafael Melo Barrera como decisor por ser la razón social registrada, y se deja la nota de la familia fundadora como contexto sin fusionar ambos datos. Tel 775 753 5979, contacto@sanantoniologisticos.com.mx (fuente: sanantoniologisticos.com.mx, consultado 2026-08-20).\nPROSPECCIÓN 2026-08-20: decisor Rafael Melo Barrera, titular / persona física del permiso · LinkedIn: no hallado · fuente: CANACAR directorio de socios 17-ago-2026 (razón social como persona física) + sanantoniologisticos.com.mx.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "945f0311-da53-4c8f-b170-b9f6ead98882",
+    "empresa": "Ramón Barrón Quiroz",
+    "ciudad": "Valle de Santiago, Guanajuato",
+    "correo": "fertivalle@grupobarron.com.mx",
+    "telefono": "4561380904",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Carretera la Gachupina Km 0.5 Sn Int Na, Colonia Valle de Santiago, CP 38400\nUbicación aproximada 17-ago: centroide de 11 establecimientos DENUE en Valle de Santiago, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b045eb53-4567-49d8-8da9-496434bcbe98",
+    "empresa": "Ramón Gómez Hernández",
+    "ciudad": "Tepatitlán de Morelos, Jalisco",
+    "correo": "rgtransportes.gomez@gmail.com",
+    "telefono": "3781040575",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Valle de Loira 1626 Int Na, Colonia Campos Eliseos, CP 47684\nUbicación aproximada 17-ago: centroide de 46 establecimientos DENUE en Tepatitlán de Morelos, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: decisor Ramón Gómez Hernández, Propietario (persona física registrada en CANACAR; correo rgtransportes.gomez@gmail.com ya en base coincide con sus iniciales y apellido) · LinkedIn: no encontrado · fuente: CANACAR directorio de socios (ya en base) — Autotransporte de Carga General, 0 a 10 personas",
+    "fuente": "canacar"
+  },
+  {
+    "id": "432bf7d6-453d-40dc-95f2-52bcada21483",
+    "empresa": "Ramses Antonio Sahagun Paredes",
+    "ciudad": "Almoloya de Juárez, México",
+    "correo": "cobranza.all@canacar.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Avenida Bicentenario 69 Mza 01 Int Lte 09, Colonia Almoloya de Juarez, CP 50900",
+    "fuente": "canacar"
+  },
+  {
+    "id": "556246cb-f6de-420a-8750-37041011648f",
+    "empresa": "Rápidos Leo, S.A. de C.V.",
+    "ciudad": "Chihuahua, Chihuahua",
+    "correo": "rapidosleo2@hotmail.com",
+    "telefono": "6144332538",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Presa Boquilla 2314 Int 1, Colonia Lomas del Santuario I Etapa, CP 31206\nUbicación aproximada 17-ago: centroide de 282 establecimientos DENUE en Chihuahua, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

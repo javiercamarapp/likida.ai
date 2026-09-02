@@ -1,0 +1,52 @@
+[
+  {
+    "id": "02f0d465-2e17-4ede-a4cf-b90520bae858",
+    "empresa": "Flomex Logística, S. de R.L. de C.V.",
+    "ciudad": "Tultitlán, México",
+    "correo": "moilopez@flomexlogistica.com",
+    "telefono": "5552454316",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Mercancia Terrestre · 11 a 50 personas · Camino Real 3 Int Na, Colonia Los Reyes Tultitlan, CP 54915\nUbicación aproximada 17-ago: centroide de 127 establecimientos DENUE en Tultitlán, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8c7c0af6-e7ea-4a5b-aa7a-a5df033cdf1e",
+    "empresa": "Francisco García Salas",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "fgarciastransport@hotmail.com",
+    "telefono": "6642115211",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle la Noria 9 Int 2, Colonia Granjas Familiares Matamoros, CP 22203\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3ad35cfe-571e-4016-ab57-8c2fe1a969f6",
+    "empresa": "Freightmex Carrier",
+    "ciudad": "Guadalajara, Jalisco",
+    "correo": "bertha@transcargatravel.com.mx",
+    "telefono": "3336660124",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Juan de la Barrera 1355 Int Na, Colonia la Nogatera, CP 44470\nUbicación aproximada 17-ago: centroide de 508 establecimientos DENUE en Guadalajara, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3a8893e9-8d78-405e-b379-914da01d4a9e",
+    "empresa": "Froco, S. de R.L. de C.V.",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "finanzas1@turboexpress22.com",
+    "telefono": "6646232911",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Boulevard Manuel J. Clouthier 21322 Int Na, Colonia Campestre Murua, CP 22455\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3f77873f-6ab4-4c43-97e1-226f493fa255",
+    "empresa": "Frozar, S.A. de C.V.",
+    "ciudad": "Mérida, Yucatán",
+    "correo": "mmoo@frozar.com",
+    "telefono": "9999437461",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Periferico Poniente 22285 Int Na, Colonia Nora Quintana, CP 97238\nUbicación aproximada 17-ago: centroide de 302 establecimientos DENUE en Mérida, Yucatán — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-19: sin decisor publico (sitio oficial no nombra direccion/gerencia) · contexto: transporte refrigerado con base en Periferico Poniente 22285, Col. Nora Quintana, Merida; horario Lun-Sab 7am-5pm, Dom 9am-3pm · sitio: frozar.com · fuente: WebFetch sitio oficial\nENCAJE: medio — flota mediana en operacion de transporte con diesel",
+    "fuente": "canacar"
+  }
+]

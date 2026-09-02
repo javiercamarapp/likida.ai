@@ -1,0 +1,52 @@
+[
+  {
+    "id": "83373fbe-e1f3-4aa5-b4b1-ff4205276422",
+    "empresa": "TRANSPORTES MANZANILLO",
+    "ciudad": "Manzanillo, Colima",
+    "correo": "mvargas@grupologistico.mx",
+    "telefono": "3143331684",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga especializado · 101 a 250 personas · establecimiento: TRANSPORTES MANZANILLO\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  },
+  {
+    "id": "ec7bda75-35cc-4a45-9abc-939e9ae81e08",
+    "empresa": "TRANSPORTES MON-RO",
+    "ciudad": "Saltillo, Coahuila de Zaragoza",
+    "correo": "fianzasmty@mon-ro.com",
+    "telefono": "8182216800",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga especializado · 101 a 250 personas · sitio: www.mon-ro.com · establecimiento: TRANSPORTES MON-RO\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono y correo",
+    "fuente": "denue"
+  },
+  {
+    "id": "af7f8dc5-774f-472c-bd1d-93292ea39511",
+    "empresa": "TRANSPORTES SAL AVE",
+    "ciudad": "Matamoros, Tamaulipas",
+    "correo": "lourdes.saldana@salave.com",
+    "telefono": "8688241285",
+    "estado": "contactado",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo de materiales y residuos peligrosos · 101 a 250 personas · sitio: sal_ave.com · establecimiento: TRANSPORTES SAL AVE\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  },
+  {
+    "id": "dc27bfbf-3276-4909-996d-ba1cab76c205",
+    "empresa": "TRANSPORTES SANTA FE DEL SURESTE",
+    "ciudad": "Atitalaquia, Hidalgo",
+    "correo": "angela.gomez@santafedelsureste.com.mx",
+    "telefono": "5586175023",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo de materiales y residuos peligrosos · 101 a 250 personas · establecimiento: TRANSPORTES SANTA FE DEL SURESTE\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono y correo",
+    "fuente": "denue"
+  },
+  {
+    "id": "8d1a785f-5ffd-4038-aff2-5729aaa6f390",
+    "empresa": "TRANSPOVER",
+    "ciudad": "Emiliano Zapata, Veracruz de Ignacio de la Llave",
+    "correo": "liliana.hernandez@transpover.com",
+    "telefono": "2281659200",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga general · 101 a 250 personas · establecimiento: TRANSPOVER\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  }
+]

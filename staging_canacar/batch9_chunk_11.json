@@ -1,0 +1,52 @@
+[
+  {
+    "id": "793b78d3-6ecd-4516-90ef-f8fe4437f8a2",
+    "empresa": "Fletes Hunter Express de México, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "cornelas@hinterexpressus.com",
+    "telefono": "8672977914",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Agustin Melgar 4763 Int Na, Colonia Electricistas Leonardo Rodz Alcaide Suterm Ii, CP 88270\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5a180094-4b3c-43b9-9c54-f9c1339a2907",
+    "empresa": "Fletes Internacionales Balo, S.A. de C.V.",
+    "ciudad": "Reynosa, Tamaulipas",
+    "correo": "facturacion@transportesbalo.com",
+    "telefono": "8999258879",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte · 11 a 50 personas · Calle Nevado de Toluca 1 Int Na, Colonia Almaguer, CP 88780\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Reynosa, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f3e645d6-49a4-4282-b83a-9360bacca9d4",
+    "empresa": "Fletes Lackner, S.A. de C.V.",
+    "ciudad": "Monterrey, Nuevo León",
+    "correo": "jcontreras@fleteslackner.mx",
+    "telefono": "8183178044",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Calle Lomas de Los Pinos 500 Int Sn, Colonia Estanzuela, CP 64988\nUbicación aproximada 17-ago: centroide de 442 establecimientos DENUE en Monterrey, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-20: sin decisor publico (correo de J. Contreras, sin cargo confirmado) · LinkedIn: no localizado · fuente: CANACAR directorio de socios 17-ago-2026 (11-50 personas); fleteslackner.mx tiene certificado TLS autofirmado, sin contenido verificable al 2026-08-20 — aviso util para la empresa (su sitio se ve inseguro en navegador). Flota NO publicada — num_unidades sin dato.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "df98a83c-f5f7-40b8-a4dd-0dc8f8e6f1d1",
+    "empresa": "Fletes Locales San Francisco, S.A. de C.V.",
+    "ciudad": "San Nicolás de los Garza, Nuevo León",
+    "correo": "mario@flsanfco.com",
+    "telefono": "1818615139",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Avenida de la Juventud 100 Int Na, Colonia Industrial Nogalar, CP 66484\nUbicación aproximada 17-ago: centroide de 150 establecimientos DENUE en San Nicolás de los Garza, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público confirmado con nombre completo y cargo (el correo en base, mario@flsanfco.com, sugiere un contacto de nombre \"Mario\" pero ninguna fuente pública lo nombra con apellido/cargo — no se agrega a contacto_nombre) · sitio oficial http://flsanfco.com/ localizado · empresa familiar con +30 años de operación, mudanzas y fletes locales/foráneos, miembro CANACAR (Autotransporte de Carga, 11-50 personas), San Nicolás de los Garza NL — fuente: mudanzasmx.com.mx, directorios comerciales.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "584b46c1-e350-4d86-92e3-96957d983cb1",
+    "empresa": "Fletes Madero del Altiplano, S.A. de C.V.",
+    "ciudad": "Calpulalpan, Tlaxcala",
+    "correo": "hectorhh11@yahoo.com.mx",
+    "telefono": "7499180413",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Federal Mexico Veracruz Km 60.5 Sn Int Na, Colonia el Palmar, CP 90203\nUbicación aproximada 17-ago: centroide de 10 establecimientos DENUE en Calpulalpan, Tlaxcala — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (sin sitio web, correo yahoo, sin prensa) · viajes/mes: no público · historia: no pública · fuente: directorio CANACAR · SCORE FIT (rúbrica pública): 1/5",
+    "fuente": "canacar"
+  }
+]

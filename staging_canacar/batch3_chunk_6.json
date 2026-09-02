@@ -1,0 +1,52 @@
+[
+  {
+    "id": "de37df23-ca30-454d-8cb6-2bf1e3773814",
+    "empresa": "Terrestres Esteban, S. de R.L. de C.V.",
+    "ciudad": "Toluca, México",
+    "correo": "earreola@transportesesteban.com.mx",
+    "telefono": "7223790403",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 51 a 250 personas · Avenida Isidro Fabela Sn Int Na, Colonia Ojo de Agua, CP 50290\nUbicación aproximada 17-ago: centroide de 256 establecimientos DENUE en Toluca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "89e6fcb1-187d-4424-8554-3a4cb43ef609",
+    "empresa": "Tlw Freight Mexico, S.A. de C.V.",
+    "ciudad": "Guadalajara, Jalisco",
+    "correo": "oscar.uribe@tlwfreightmexico.com",
+    "telefono": "3316055270",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga, Almacenaje, Logistica · 51 a 250 personas · Calle Juan Manuel 1162 Int Na, Colonia Santa Teresita, CP 44600\nUbicación aproximada 17-ago: centroide de 508 establecimientos DENUE en Guadalajara, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0694f4a7-e2d5-416b-bf11-8b55afcbaaca",
+    "empresa": "Todo México Por Tierra, S.A.P.I. de C.V.",
+    "ciudad": "Amatlán de los Reyes, Veracruz",
+    "correo": "jazmin.flores@tmttransportes.com.mx",
+    "telefono": "2299326738",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte de Carga en General · 51 a 250 personas · Carretera Km Mas 700 Carretera Federal Cordoba-Vearcruz Sn Int Tercer Piso, Colonia Venta Parada, CP 94954\nINVESTIGACIÓN PROFUNDA 20-ago-2026: José Luis Carus Sánchez, Director (LinkedIn, cargo explícito).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0eb0d429-78d0-40bb-9063-6c9ce60bb01b",
+    "empresa": "Todolog Mallas y Tubos",
+    "ciudad": "Tlalnepantla de Baz, México",
+    "correo": "nrodriguez@ipasa.mx",
+    "telefono": "5510360585",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Mercancia · 51 a 250 personas · Calle Mariano Escobedo 163 Int Na, Colonia San Lorenzo, CP 54030\nUbicación aproximada 17-ago: centroide de 187 establecimientos DENUE en Tlalnepantla de Baz, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "389252c9-4494-43a6-9cf8-b44b788df5cc",
+    "empresa": "Tortracs",
+    "ciudad": "Cuautitlán, México",
+    "correo": "pedro.lascurain@tortracs.net",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Via Terrestre · 51 a 250 personas · Calle Calle 5 14 Int Na, Colonia la Palma, CP 54879\nUbicación aproximada 17-ago: centroide de 54 establecimientos DENUE en Cuautitlán, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

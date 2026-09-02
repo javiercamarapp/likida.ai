@@ -1,0 +1,52 @@
+[
+  {
+    "id": "0307b961-bb25-4fdb-bbfc-55c843f96c2d",
+    "empresa": "Logistica de Gran Peso, S.A. de C.V.",
+    "ciudad": "León, Guanajuato",
+    "correo": null,
+    "telefono": "4773285037",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Terreste de Carga · 11 a 50 personas · Camino Camino a Duarte 1143 Int Na, Colonia Sin Colonia, CP 37680\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "24bb6e2a-6c97-43b2-b947-2f40a4289643",
+    "empresa": "Lrs Trucking Service, S.A. de C.V.",
+    "ciudad": "Apodaca, Nuevo León",
+    "correo": null,
+    "telefono": "8111980871",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga a Nivel Nacional · 11 a 50 personas · Calle Cerro del Mirador 218 Int Sn, Colonia Cerritos de Agua Fria, CP 66620\nUbicación aproximada 17-ago: centroide de 300 establecimientos DENUE en Apodaca, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c353a524-c121-440a-b80f-d200e9709e55",
+    "empresa": "Maria del Carmen Ibarra Gutierrez",
+    "ciudad": "Tlajomulco de Zúñiga, Jalisco",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Camino Real a Colima 445 Int 50, Colonia Otra No Especificada en el Catalogo, CP 45645\nUbicación aproximada 17-ago: centroide de 131 establecimientos DENUE en Tlajomulco de Zúñiga, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3edfc6d3-a499-4cbb-92b4-b9f05b46b345",
+    "empresa": "Mas Porteo",
+    "ciudad": "Torreón, Coahuila",
+    "correo": null,
+    "telefono": "8719570993",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Fletes · 11 a 50 personas · Calle Sin Nombre Na Int Na, Colonia el Ranchito, CP 27107\nPROSPECCION 2026-08-19: sin decisor publico, sin sitio oficial localizable (WebSearch agotado en esta sesion) · contexto: Mas Porteo, servicio de fletes, 11 a 50 personas (CANACAR), Torreon, Coahuila\nENCAJE: medio — servicio de fletes de tamano mediano, diesel probable",
+    "fuente": "canacar"
+  },
+  {
+    "id": "bf1ebabe-2b43-4195-ae5c-76cb07e086b0",
+    "empresa": "Movac Express, S.A. de C.V.",
+    "ciudad": "Zapopan, Jalisco",
+    "correo": null,
+    "telefono": "3333655005",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Empresarios 135 Int C, Colonia Puerta de Hierro, CP 45116\nUbicación aproximada 17-ago: centroide de 205 establecimientos DENUE en Zapopan, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (búsqueda web no disponible por tope de sesión) · CANACAR: Autotransporte de Carga, 11 a 50 personas, Zapopan · fuente: CANACAR directorio de socios (ya en base)",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,1002 @@
+[
+  {
+    "id": "2eb78e3c-acc5-4b2c-8fe3-1fa2244506ea",
+    "empresa": "Autotransportes de Carga Unión Leonesa",
+    "ciudad": "León, Guanajuato",
+    "correo": "unionleo11@hotmail.com",
+    "telefono": "4777122784",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporate de Calzado · 11 a 50 personas · Privada Prolongacion Juarez 101 Int Na, Colonia Plaza de Toros, CP 37450\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "98bea82f-92ee-4a9d-8e67-ecdf13e92c33",
+    "empresa": "Autotransportes Drakkar, S.A. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "azayas@tvikingo.com",
+    "telefono": "2299328290",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Foraneo de Carga General · 11 a 50 personas · Calle Hernandez y Hernandez 409 Int 3, Colonia Faros, CP 91709 · PROSPECCIÓN 2026-08-19: sin decisor público confirmado · sitio tvikingo.com (dominio del correo ya en base) devolvió 403 al intentar verificarlo por WebFetch, no se pudo confirmar contenido ni nombre. El local-part 'azayas' del correo es indicio, no confirmación pública independiente. Mensaje hiperpersonalizado generado con evidencia CANACAR.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a1010d5a-d1d4-4f82-b3e1-e5af3c10c400",
+    "empresa": "Autotransportes Especializados Grúas y Maniobras López, S.A. de C.V.",
+    "ciudad": "Iztapalapa, Ciudad de México",
+    "correo": "uriel_lopez@tralo.com.mx",
+    "telefono": "5556003930",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle 22 de Diciembre de 1860 46 B Int Na, Colonia Leyes de Reforma, CP 9310\nUbicación aproximada 17-ago: centroide de 359 establecimientos DENUE en Iztapalapa, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público confirmado — indicio fuerte pero no fuente independiente: razón social incluye 'López' y correo uriel_lopez@tralo.com.mx sugiere que el decisor podría llamarse Uriel López, pero no hay fuente pública que lo nombre con cargo explícito, así que no se llenó contacto_nombre · sitio tralo.com.mx no cargó contenido — pendiente de reintentar · socio CANACAR, grúas y maniobras especializadas · fuente: búsqueda web",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8f8b3ba7-5382-44f4-9550-79f6cf2dc58f",
+    "empresa": "Autotransportes Guadalajara Bajio",
+    "ciudad": "Tonalá, Jalisco",
+    "correo": "direccion@transgb.com.mx",
+    "telefono": "3312947259",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Camino Real 179 Int Na, Colonia San Francisco de la Soledad, CP 45424\nUbicación aproximada 17-ago: centroide de 73 establecimientos DENUE en Tonalá, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "099e283a-a56f-4b50-9d8a-93f8d1bb7bbd",
+    "empresa": "Autotransportes Internacionales, S. de R.L. de C.V.",
+    "ciudad": "Azcapotzalco, Ciudad de México",
+    "correo": "r.rangel@ati.com.mx",
+    "telefono": "5550622600",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Mudanzas · 11 a 50 personas · Calle Nuevo Santo Domingo 149 Int Na, Fraccionamiento Industrial San Antonio, CP 2760\nUbicación aproximada 17-ago: centroide de 174 establecimientos DENUE en Azcapotzalco, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "dff9f6a1-de11-4423-a2aa-516b8b34703b",
+    "empresa": "Autotransportes Jopali",
+    "ciudad": "Culiacán, Sinaloa",
+    "correo": "gvalenzuela@grupoimpulsora.com",
+    "telefono": "6679921415",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Poniente 2099 Int Na, Colonia Infonavit Las Flores, CP 80159\nUbicación aproximada 17-ago: centroide de 265 establecimientos DENUE en Culiacán, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "75331079-49f5-4343-9634-bbb08a7a58c7",
+    "empresa": "Autotransportes Karve",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "azayas@tvikingo.com",
+    "telefono": "2299328290",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga Especializada · 11 a 50 personas · Calle Hernandez y Hernandez 409 Int 1C, Colonia Faros, CP 91708\n\nPROSPECCIÓN 19-ago-2026: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (autotransporte foráneo de carga especializada, 11 a 50 personas, Calle Hernández y Hernández 409, Col. Faros, Veracruz) · el correo del censo pertenece al dominio tvikingo.com, posible nombre comercial (\"T Vikingo\"); no se verificó · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c0e15cb4-5460-4275-9288-9b41a5ed09d6",
+    "empresa": "Autotransportes Moctezuma de Occidente, S.A. de C.V.",
+    "ciudad": "Manzanillo, Colima",
+    "correo": "carlosamosa@prodigy.net.mx",
+    "telefono": "3143366645",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio Publico Federal de Carga General · 11 a 50 personas · Carretera Manzanillo-Minatitlan Km 2 Int Na, Zona Industrial Tapeixtles, CP 28876\nUbicación aproximada 17-ago: centroide de 551 establecimientos DENUE en Manzanillo, Colima — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nSocio CANACAR (17-ago-2026) con permiso de Servicio Público Federal de Carga General —la figura más formal del padrón—, 11 a 50 personas, sobre la carretera Manzanillo–Minatitlán km 2, Zona Industrial Tapeixtles. Manzanillo es el puerto de contenedores número uno del Pacífico mexicano: el giro implica arrastre de contenedor puerto–interior con viajes largos y recurrentes.\nENCAJE: alto — permiso federal de carga, 11-50 personas, arrastre desde puerto de Manzanillo\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (sin sitio web; WebSearch agotado en la sesión)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5e18777b-5b2e-4cbf-87cb-e5991128f6c2",
+    "empresa": "Autotransportes Ocnepan",
+    "ciudad": "Acolman, México",
+    "correo": "ivan.mendieta@ocnepan.com",
+    "telefono": "5519206804",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportacion de Carga Terrestre · 11 a 50 personas · Calle Tlahuilco 51 Int Na, Colonia Santa Catarina, CP 55875\nUbicación aproximada 17-ago: centroide de 42 establecimientos DENUE en Acolman, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8af5a5a1-a040-4f2a-89e5-cd8d1652d4f0",
+    "empresa": "Autotransportes Oilsa, S.A. de C.V.",
+    "ciudad": "Azcapotzalco, Ciudad de México",
+    "correo": "soledadmunoz@oilsa.mx",
+    "telefono": "5560852710",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Poniente 116 494 Int Na, Colonia Industrial Vallejo, CP 2300\nUbicación aproximada 17-ago: centroide de 174 establecimientos DENUE en Azcapotzalco, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d3b9e41b-002f-4de9-b899-9d45b0bc2c4c",
+    "empresa": "Autotraslado Forza, S.A. de C.V.",
+    "ciudad": "Tultitlán, México",
+    "correo": "juridico@gruasforza.com",
+    "telefono": "5558944698",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Remolque y Autotransporte de Vehiculos · 11 a 50 personas · Calle el Olivo 19 Int Na, Colonia Recursos Hidraulicos, CP 54913\nUbicación aproximada 17-ago: centroide de 127 establecimientos DENUE en Tultitlán, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nHISTORIA (sitio oficial gruasforza.com, 19-ago-2026): 10 años de experiencia en traslado y resguardo de vehículos con grúas y madrinas; centros logísticos en varios estados; clientes automotrices y aseguradoras mostrados solo por logotipo, sin nombrarse. Teléfonos publicados: servicio (56) 1338 0730, quejas (55) 3517 6094, bolsa de trabajo (55) 1700 6235. Correo general contacto@gruasforza.com (se conserva juridico@gruasforza.com ya capturado). Sitio localizado por el dominio del correo y registrado en `sitio`.\nUNIDADES: sin dato — el sitio describe tipos de grúa pero no publica conteo total; CANACAR reporta 11 a 50 personas (personal, no unidades).\nVACANTE: el sitio publica un teléfono de bolsa de trabajo pero ninguna vacante concreta — no hay evidencia suficiente para llenar el campo `vacante`.\nENCAJE: alto — traslado de vehículos, cada servicio se liquida distinto.\nPROSPECCIÓN 2026-08-19: sin decisor público · el sitio no nombra directivos · fuente: directorio de socios CANACAR 17-ago-2026 + sitio oficial gruasforza.com · WebSearch agotado en la sesión (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "98ceadef-fbff-4081-b4ba-2c27a5e054f5",
+    "empresa": "Ava Xa Transportes, S.A. de C.V.",
+    "ciudad": "Azcapotzalco, Ciudad de México",
+    "correo": "fermin.miranda@avaxa.com.mx",
+    "telefono": "5553550612",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Federal · 11 a 50 personas · Calle 9 1441 Int Na, Colonia Aguilera, CP 2900\nUbicación aproximada 17-ago: centroide de 174 establecimientos DENUE en Azcapotzalco, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nENCAJE: alto — socio CANACAR de carga federal, 11-50 personas.\nPROSPECCIÓN 20-ago-2026: sin decisor público · LinkedIn: no hallado · fuente: directorio de socios CANACAR (razón social, no persona física); correo de la base en dominio propio (avaxa.com.mx); sin sitio web; WebSearch agotado en la sesión (200/200), investigación solo por WebFetch a dominios conocidos. unidades: null. Mensajes generados.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "98c05e34-b555-4f5b-aa02-45933158119c",
+    "empresa": "Azucena Hernández López",
+    "ciudad": "Monclova, Coahuila",
+    "correo": "azucenahernandezlopez54@gmail.com",
+    "telefono": "8661123433",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Dallilas 3002 Int Sn, Colonia Elsa Hernandez, CP 25724\n\nENCAJE: alto — socio CANACAR, titular persona física identificada, carga general 11-50 personas.\nPROSPECCIÓN 20-ago-2026: decisora Azucena Hernández López, titular (persona física) · LinkedIn: no hallado · fuente: directorio de socios CANACAR, cuya razón social ES la persona física — por eso se declara titular. Sin sitio web; WebSearch agotado en la sesión (200/200), investigación solo por WebFetch a dominios conocidos. unidades: null. Mensajes generados.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "1a6d4c8f-4764-4816-9a0b-27c4f04cd912",
+    "empresa": "Balderas, S.A. de C.V.",
+    "ciudad": "Álvaro Obregón, Ciudad de México",
+    "correo": "roberto@balderas.com.mx",
+    "telefono": "5555981255",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida de Las Minas 83 Int Na, Colonia Lomas de Becerra, CP 1280\nUbicación aproximada 17-ago: centroide de 95 establecimientos DENUE en Álvaro Obregón, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9863546e-d319-4f21-93f9-18a9ae22cc6e",
+    "empresa": "Balvino Rodriguez Perez",
+    "ciudad": "Jalapa, Tabasco",
+    "correo": "fletes.rodriguez@outlook.com",
+    "telefono": "9931666192",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportacion de Articulos · 11 a 50 personas · Carretera Federal Villahermosa-Macuspana Km 26 Int Na, Ranchería Tequila 1Ra Secc, CP 86850\nUbicación aproximada 17-ago: centroide de 4 establecimientos DENUE en Jalapa, Tabasco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nENCAJE: alto — socio CANACAR, titular persona física identificado, transportación de artículos 11-50 personas.\nPROSPECCIÓN 20-ago-2026: decisor Balvino Rodríguez Pérez, titular (persona física) · LinkedIn: no hallado · fuente: directorio de socios CANACAR, cuya razón social ES la persona física — por eso se declara titular. Sin sitio web; WebSearch agotado en la sesión (200/200), investigación solo por WebFetch a dominios conocidos. unidades: null. Mensajes generados.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "42bfd23c-fd7a-407d-b7ef-f107ec4208f3",
+    "empresa": "Batuc Express, S.A. de C.V.",
+    "ciudad": "Hermosillo, Sonora",
+    "correo": "icons@tpitic.com.mx",
+    "telefono": "6622122900",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle de Los Pinos Sn Int Na, Colonia Los Naranjos, CP 83060\nUbicación aproximada 17-ago: centroide de 285 establecimientos DENUE en Hermosillo, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "203f8f7d-418d-4f60-90d0-05cad63e593e",
+    "empresa": "Bc Logistica Internacional, S de Rl de Cv",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "csolorio@logisticsbc.com",
+    "telefono": "6642629389",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Calle Internacional Parcela Int E, Colonia Aeropuerto, CP 22204\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9d711d1d-df9d-497f-a3d5-98b162ef99be",
+    "empresa": "Bcn Logistics, S. de R.L. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "marco.bustos@bclog.mx",
+    "telefono": "6862614375",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Prolongación Rio Presidio 1001 Int Na, Colonia Granjas Nuevas, CP 21390\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nENCAJE: alto — socio CANACAR, autotransporte de carga general, 11-50 personas.\nPROSPECCIÓN 20-ago-2026: sin decisor público · LinkedIn: no hallado · fuente: directorio de socios CANACAR (razón social, no persona física); correo de la base en dominio propio (bclog.mx); sin sitio web; WebSearch agotado en la sesión (200/200), investigación solo por WebFetch a dominios conocidos. unidades: null. Mensajes generados.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b6fdf02c-491a-4653-847e-4a52cfca5800",
+    "empresa": "Beatriz García Ortega",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "servicio.gmex@outlook.com",
+    "telefono": "2294185031",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Publico Federal de Carga · 11 a 50 personas · Avenida Revillagigedo 3010 Int Na, Colonia Centro, CP 91700\nPROSPECCIÓN 2026-08-19: decisor Beatriz García Ortega, Propietaria (persona física registrada en CANACAR) · LinkedIn: no encontrado · fuente: CANACAR directorio de socios (ya en base)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "cf141465-b0e3-4d17-9a7e-c7b8298d1457",
+    "empresa": "Benjamín Medina Magaña",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "benjamin.medina.magana@gmail.com",
+    "telefono": "8675939156",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Carretera Carretera Mex Ii Km 27.3 Km 27.3 Int Na, Fraccionamiento Villas de Oradel, CP 88285\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "bc825fe9-a6e3-42da-8544-2418a9b2e447",
+    "empresa": "Benjamin Ricardo de Lira Hernandez, S.A. de C.V.",
+    "ciudad": "Centro, Tabasco",
+    "correo": "gylsiruiz@grupoblh.com",
+    "telefono": "9931284816",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Materiales y Residuos Peligrosos · 11 a 50 personas · Carretera Carretera Coatzacoalcos-Villahermosa Km. 163+600 Margen Izq Sn Int Na, Ranchería Anacleto Canabal 3Ra Secc, CP 86287\nUbicación aproximada 17-ago: centroide de 165 establecimientos DENUE en Centro, Tabasco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7ec91ac1-f26f-493f-bc00-ad384beb8e88",
+    "empresa": "Bliser, S.A. de C.V.",
+    "ciudad": "Azcapotzalco, Ciudad de México",
+    "correo": "isaac.escobar@armor.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Cuitlahuac 3435 Int Na, Ciudad Ciudad de México, CP 2800\nUbicación aproximada 17-ago: centroide de 174 establecimientos DENUE en Azcapotzalco, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9eeacfa8-6eea-4f0f-ae27-221ea61fd8c1",
+    "empresa": "Br Carrier Group S. de R.L. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "alfonso@brcarrier.com",
+    "telefono": "6869463323",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte · 11 a 50 personas · Calzada Abasolo del Gonzalez Ortega Sn Int Na, Colonia Mariano Abasolo, CP 21600\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 20-ago-2026: sin decisor público · LinkedIn: no hallado · fuente: directorio de socios CANACAR (razón social, no persona física); correo de la base en dominio propio (brcarrier.com); sin sitio web; WebSearch agotado en la sesión (200/200), investigación solo por WebFetch a dominios conocidos. Mensajes generados.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "916a5a3a-4703-4473-aafb-adf28a41068d",
+    "empresa": "Bufalo Xpress Logistics, S. de R.L. de C.V.",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "gperez@bajalg.com",
+    "telefono": "6642925791",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Canada Lote 1 Manzana 27 Int B, Colonia Río Tijuana 3Era Etapa, CP 22226\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 20-ago-2026: sin decisor público · LinkedIn: no hallado · fuente: directorio de socios CANACAR (razón social, no persona física); correo de la base en dominio distinto (bajalg.com), posible abreviatura de grupo sin confirmar; sin sitio web; WebSearch agotado en la sesión (200/200), investigación solo por WebFetch a dominios conocidos. Mensajes generados.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b94b658b-5958-4887-a8f5-bc180ffb1b7a",
+    "empresa": "Car-Hagen de México, S.A. de C.V.",
+    "ciudad": "Álvaro Obregón, Ciudad de México",
+    "correo": "acallejas@indesa.com.mx",
+    "telefono": "5555239889",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransportes Foraneo de Carga General · 11 a 50 personas · Calle Manuel Gutierrez Zamora 251 Int Na, Colonia Las Aguilas, CP 1710\nUbicación aproximada 17-ago: centroide de 95 establecimientos DENUE en Álvaro Obregón, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "83f6170b-f91d-48ac-9bda-51a1794d0b50",
+    "empresa": "Caravi Logística, S.A. de C.V.",
+    "ciudad": "Culiacán, Sinaloa",
+    "correo": "transportes@expormex.com.mx",
+    "telefono": "6677588777",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera el Dorado Km 25 Sn Int Na, Colonia Campo Patricia, CP 80430\nUbicación aproximada 17-ago: centroide de 265 establecimientos DENUE en Culiacán, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e7482cbd-f8b2-4f18-b53a-76ec9e061727",
+    "empresa": "Carga Mas Carga, S. de R.L. de C.V.",
+    "ciudad": "Tehuacán, Puebla",
+    "correo": "cargamascarga@yahoo.com.mx",
+    "telefono": "2727211327",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte · 11 a 50 personas · Avenida Nacional 310 Int Na, Colonia San Lorenzo Teotipilco, CP 75855\nUbicación aproximada 17-ago: centroide de 140 establecimientos DENUE en Tehuacán, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "758a27dc-e751-46c9-938a-d6d0511f2fcd",
+    "empresa": "Cargo Merchandise Logistics Mexico",
+    "ciudad": "Benito Juárez, Ciudad de México",
+    "correo": "direccion@cmlogistics.com.mx",
+    "telefono": "5526079204",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte de Carga · 11 a 50 personas · Avenida Insurgentes Sur 1392 Int 1, Colonia Actipan, CP 3230\nUbicación aproximada 17-ago: centroide de 171 establecimientos DENUE en Benito Juárez, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 19-ago-2026: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (servicio de transporte de carga, 11 a 50 personas, Av. Insurgentes Sur 1392, Col. Actipan, Benito Juárez, CDMX) · el correo del censo es de dirección general (direccion@cmlogistics.com.mx) · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  },
+  {
+    "id": "555dd249-51e1-4412-ba10-6b7fe694b287",
+    "empresa": "Caronte Logística Integral, S.A de C.V.",
+    "ciudad": "Soledad de Graciano Sánchez, San Luis Potosí",
+    "correo": "contacto@grupocaronte.com.mx",
+    "telefono": "4442982644",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga General · 11 a 50 personas · Cerrada de Milan 116 Int Na, Fraccionamiento San Lorenzo, CP 78433\nUbicación aproximada 17-ago: centroide de 71 establecimientos DENUE en Soledad de Graciano Sánchez, San Luis Potosí — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c31a2233-2516-4d8b-8754-27ea8809e18a",
+    "empresa": "Carryall Logistics , S.A de C.V.",
+    "ciudad": "San Pedro Tlaquepaque, Jalisco",
+    "correo": "gisela.davila@carryall.com.mx",
+    "telefono": "3316138822",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 11 a 50 personas · Calle San Lucas 2 Int Na, Colonia Los Puestos, CP 45638\nUbicación aproximada 17-ago: centroide de 219 establecimientos DENUE en San Pedro Tlaquepaque, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nSocia CANACAR (17-ago-2026): Transporte de Carga General, 11 a 50 personas, Calle San Lucas 2, Col. Los Puestos, San Pedro Tlaquepaque, Jalisco, CP 45638. Correo de negocio gisela.davila@carryall.com.mx (contacto nombrado: Gisela Dávila, sin cargo declarado — razón social es persona moral \"Carryall Logistics, S.A. de C.V.\").\nENCAJE: alto — carga general de 11-50 personas en Guadalajara, contacto de negocio nombrado\nPROSPECCIÓN 2026-08-20: sin decisor público confirmado con cargo (contacto de negocio: Gisela Dávila) · fuente: directorio de socios CANACAR 17-ago-2026",
+    "fuente": "canacar"
+  },
+  {
+    "id": "513396c6-6583-43aa-a6a0-e8ff6342844b",
+    "empresa": "Centauro del Norte Autotransporte, S.A. de C.V.",
+    "ciudad": "San Pedro Garza García, Nuevo León",
+    "correo": "aflores@grupomenora.com",
+    "telefono": "7828255955",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Roble 300 Int Na, Colonia Valle del Campestre, CP 66265\nUbicación aproximada 17-ago: centroide de 113 establecimientos DENUE en San Pedro Garza García, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d9390a2b-ae36-43e8-97f9-b14cb51de943",
+    "empresa": "Central de Fletes Atlante, S.A. de C.V.",
+    "ciudad": "León, Guanajuato",
+    "correo": "marco.miranda@fuentes7.com.mx",
+    "telefono": "4777116636",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Libramiento Norte Km 4.5 Sn Int Na, Colonia Maravillas, CP 37000\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2bc0464c-ca21-4975-87a8-551c74cbf3f3",
+    "empresa": "Centro Ferrecristal, S.A. de C.V.",
+    "ciudad": "Ciénega de Flores, Nuevo León",
+    "correo": "contabilidad@ferrrecristal.com",
+    "telefono": "8118107706",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Carretera Mexico-Laredo Km 1012 Int Na, Ciudad Cienega de Flores, CP 65550\nUbicación aproximada 17-ago: centroide de 19 establecimientos DENUE en Ciénega de Flores, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "bb4ebcae-ca69-4c00-929d-a21fb6ee2eea",
+    "empresa": "Cia Transporta Lamina, S.A. de C.V.",
+    "ciudad": "Puebla, Puebla",
+    "correo": "cpignaciob@hotmail.com",
+    "telefono": "2222341600",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Camino Antiguo a Tlaxcala 5 Int Na, Parque Industrial Ocotlan, CP 72680\nUbicación aproximada 17-ago: centroide de 496 establecimientos DENUE en Puebla, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (búsqueda web no disponible por tope de sesión) · CANACAR: Autotransporte de Carga General, 11 a 50 personas, Parque Industrial Ocotlán · fuente: CANACAR directorio de socios (ya en base)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "05bdc530-a7b1-4e77-895a-cba9a97eb9c8",
+    "empresa": "Cia. Internacional de Fletamentos, S.A. de C.V.",
+    "ciudad": "Altamira, Tamaulipas",
+    "correo": "jose.mendo@hinojosa.com.mx",
+    "telefono": "8332602660",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Golfo de California Km .480 Sn Int Na, Puerto Industrial de Altamira, CP 89603\nUbicación aproximada 17-ago: centroide de 176 establecimientos DENUE en Altamira, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN 20-ago-2026: sin director/dueño confirmado. INTERFLET, Puerto Industrial de Altamira.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4ac60217-d0a5-4398-a69a-3c2cc18fbb30",
+    "empresa": "Clarvi Transportes, S.A. de C.V.",
+    "ciudad": "Ahome, Sinaloa",
+    "correo": "jmvaldivia@clarvi.com",
+    "telefono": "6688128899",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Alfonso Cano 516 Ote Int Na, Fraccionamiento el Parque, CP 81259\nUbicación aproximada 17-ago: centroide de 140 establecimientos DENUE en Ahome, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nHISTORIA: socia registrada de CANACAR (directorio de socios, 17-ago-2026): Clarvi Transportes, S.A. de C.V., Autotransporte de Carga, 11 a 50 personas, Calle Alfonso Cano 516 Ote, Fraccionamiento El Parque, Ahome (Los Mochis), Sinaloa. Sitio oficial clarvi.com verificado y coincide con la empresa: más de 36 años de experiencia, 8 sucursales, más de 350 proyectos realizados. El giro real confirmado por el sitio es más amplio que solo transporte: ingeniería, operación y mantenimiento, muestreo y análisis de agua, y transporte de producto químico — empresa de servicios de agua/tratamiento con división de transporte de químicos. Correo del sitio: hola@clarvi.com (el de la base, jmvaldivia@clarvi.com, no se pudo confirmar como el del dueño).\nPROSPECCIÓN 2026-08-20: sin decisor público confirmado (no se pudo confirmar si 'J.M. Valdivia' es el propietario) · LinkedIn: no hallado · fuente: clarvi.com (sitio_verificado=true, 36+ años, 8 sucursales); directorio de socios CANACAR 17-ago-2026. WebSearch agotado en la sesión.\n\n=== INVESTIGACIÓN PROFUNDA ANIQ 26-ago-2026 ===\nUNIDADES (ANIQ): TRACTOCAMION, PLATAFORMA, TORTON, CAJA SECA, VOLTEO, PIPA, CAMIONETA 3 1/2 TONS.,\n\nPERMISOS: SCT, SETIQ, CANACAR\n\nRESEÑA ANIQ: ENTRE LOS PRODUCTOS QUE TRANSPORTAMOS DESTACAN: CLORO GAS EN PRESENTACIONES DE CONTENEDORES DE 907 KG Y CILINDROS DE 68 KG. SE PUEDE LLEVAR A CABO EN PLATAFORMA, DOBLE PLATAFORMA O TORTON. HIPOCLORITO DE SODIO EN TANQUES DE ACERO AL CARBÓN AHULADO CON CAPACIDADES DE 27 Y 35 TONELADAS O FULL DE 50 TO\n\nLINKEDIN EMPRESA: https://www.linkedin.com/company/clarvi/ (perfil corporativo del grupo CLARVI, matriz de Clarvi Transportes; no existe una página de LinkedIn separada solo para la razón social \"Clarvi Transportes, S.A. de C.V.\")\n\nLINKEDIN DIRECTOR: no encontrado\n\nFACEBOOK: https://www.facebook.com/Clarvi (página \"CLARVI | Los Mochis\", del grupo corporativo)\n\nAÑO FUNDACIÓN: 1989\n\nHISTORIA: CLARVI fue fundada en 1989 en Los Mochis, Sinaloa, y hoy tiene 36 años de trayectoria como líder en tratamiento de agua en Latinoamérica (México, Centroamérica y Sudamérica), siendo distribuidor principal de marcas como Wallace & Tiernan, Pacific Ozone, ETS-UV, Xylem, Halogen y Force Flow. \"Clarvi Transportes, S.A. de C.V.\" es la unidad/subsidiaria del grupo dedicada al transporte de productos químicos y materiales peligrosos (cuenta con permiso SCT y membresías en ANIQ y CANACAR), dando servicio logístico a la operación de tratamiento de agua del grupo. El grupo opera 8 sucursales en México y Colombia (Los Mochis, Guadalajara, Hermosillo, CDMX, Mexicali, Monterrey, Guasave y Bogotá) y cuenta con certificaciones ISO 9001:2015, NSF/ANSI 60 y 61, y aprobación de CONAGUA.\n\nEMPLEADOS: 201-500 empleados a nivel de grupo CLARVI (según LinkedIn, con 155 perfiles de empleados listados en la plataforma) — esta cifra corresponde al grupo corporativo, no específicamente a la unidad \"Clarvi Transportes\"\n\nFLOTA: no encontrado\n\nOTROS DIRECTIVOS (ANIQ): COORDINADOR DE RIESGOS Y NORMATIVA: MARISELA QUINTERO OCHOA <mquintero@clarvi.com> | LIDER ADMINISTRATIVO: FAUSTO ALBERTO MIRANDA SANZ <amiranda@clarvi.com>\n\nNOTAS: Hallazgo clave: \"Clarvi Transportes, S.A. de C.V.\" no es una empresa transportista independiente, sino la unidad de negocio de transporte de químicos y materiales peligrosos del grupo corporativo CLARVI (fundado 1989, Los Mochis, Sinaloa), cuyo giro principal es el tratamiento de agua (cloración, ósmosis inversa, plantas de tratamiento, productos químicos). Esto explica su registro en ANIQ (asociación de industria química) y su membresía en CANACAR (cámara de transporte de carga) y permiso único SCT para materiales peligrosos — coherente con transportar sus propios insumos químicos (cloro, productos de tratamiento) a sus 8 sucursales en México y Colombia. No se encontró un perfil de LinkedIn, Facebook, ni sitio web separado exclusivamente bajo el nombre \"Clarvi Transportes\" — todo apunta al mismo dominio clarvi.com y a los mismos perfiles sociales del grupo (LinkedIn: linkedin.com/company/clarvi, 2,088 seguidores, industria \"Engineering Services\"; Facebook: facebook.com/Clarvi). No se localizó un perfil de LinkedIn público para Jaime Martín Valdivia Cerecer pese a múltiples variaciones de búsqueda (nombre completo, sin segundo apellido, combinado con \"Clarvi\"); tampoco se encontraron otros directivos o contactos adicionales con nombre y correo verificables más allá del ya conocido (jmvaldivia@clarvi.com). Dato de flota específica de camiones/unidades no publicado en el sitio web ni en fuentes encontradas — el sitio corporativo no detalla cifras de flota, solo el hecho de contar con permiso SCT para transporte de materiales peligrosos. Contacto de ventas general del grupo: ventas@clarvi.com / hola@clarvi.com, tel. +52 668 812 8899, sede: Carretera Internacional No. 15, Km. 199+200, Zona Industrial, Los Mochis, Sinaloa.\n\nFuente: directorio ANIQ Transportistas (id=411) + investigación profunda 26-ago-2026 (workflow multi-agente).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2de603e7-d3df-4993-8b9b-03c6d1faae6f",
+    "empresa": "Cobra Express, S.A. de C.V.",
+    "ciudad": "Tlalnepantla de Baz, México",
+    "correo": "rodolfo.mojica@sistemacobra.com.mx",
+    "telefono": "5553841597",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotrasporte Local de Carga General · 11 a 50 personas · Calle Emilio Cardenas 60 Int Na, Colonia San Lorenzo, CP 54030\nUbicación aproximada 17-ago: centroide de 187 establecimientos DENUE en Tlalnepantla de Baz, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6b28a74c-b34b-4544-bfbf-6dd0cfebbc18",
+    "empresa": "Cold Red Transport, S.A. de C.V.",
+    "ciudad": "El Salto, Jalisco",
+    "correo": "facturas.redcoldtransport@hotmail.com",
+    "telefono": "3336060853",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera el Castillo 3558 Int 1, Colonia el Verde, CP 45694\nUbicación aproximada 17-ago: centroide de 68 establecimientos DENUE en El Salto, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "755c6cae-121f-4b03-b082-9fc1d8b56589",
+    "empresa": "Comercializacion Integracion y Servicios Ver Rod, S.A. de C.V.",
+    "ciudad": "Tampico, Tamaulipas",
+    "correo": "eduardo.vergara@cisverrod.com",
+    "telefono": "8337001521",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle 5 306 Int Na, Colonia Los Pinos, CP 89138\nUbicación aproximada 17-ago: centroide de 121 establecimientos DENUE en Tampico, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 19-ago-2026: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (autotransporte de carga general, 11 a 50 personas, Calle 5 #306, Col. Los Pinos, Tampico, Tamaulipas), opera como CIS Ver Rod, sin sitio · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9aff55b4-8f18-4b37-acb1-4e3ef4e18778",
+    "empresa": "Compass Solutions, S.A. de C.V.",
+    "ciudad": "Benito Juárez, Ciudad de México",
+    "correo": "vmartinez@compasssolutions.com.mx",
+    "telefono": "5541668478",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Real Mayorazgo 130 Int P 17 N 1707, Cantón Xoco, CP 3330\nUbicación aproximada 17-ago: centroide de 171 establecimientos DENUE en Benito Juárez, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 20-ago-2026: sin decisor público · LinkedIn: no hallado · fuente: directorio de socios CANACAR (razón social, no persona física); correo de la base en dominio propio (compasssolutions.com.mx); sin sitio web propio en el censo (WebSearch agotado en la sesión, 200/200, investigación solo por WebFetch a dominios conocidos). Mensajes generados.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c8bf49e2-fd2a-411a-8379-b92f1d46ba3f",
+    "empresa": "Coordinadora Fma, S.A. de C.V.",
+    "ciudad": "Altamira, Tamaulipas",
+    "correo": "vibarra@ipmaltamira.com.mx",
+    "telefono": "8332604440",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Fletes · 11 a 50 personas · Calle Recinto Fiscal Portuario Sn Int Na, Colonia Puerto Industrial, CP 89608\nUbicación aproximada 17-ago: centroide de 176 establecimientos DENUE en Altamira, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "1ffbeec6-230b-423d-b376-e25328c0bd5a",
+    "empresa": "Corporacion Transgodmex, S.A. de C.V.",
+    "ciudad": "León, Guanajuato",
+    "correo": "direccion@transgodmex.com",
+    "telefono": "4774750656",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Camino Presa del Salto 309 Int Sn, Colonia Ejido Jesus Maria, CP 37538\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b20baa55-e264-4847-a3bf-0c73d6bb105e",
+    "empresa": "Corporativo Cien Nuevo Laredo, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "juliocienfuegos@gpocien.com",
+    "telefono": "8677182972",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Lazo 502 Int Na, Colonia el Caporal, CP 88293\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (el correo del registro, juliocienfuegos@gpocien.com, insinúa el apellido Cienfuegos, pero ninguna fuente pública lo confirma con cargo) · fuente: CANACAR 17-ago-2026\nENCAJE: alto — socio CANACAR fronterizo, 11-50 personas, correo nominal directo",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3f785835-340e-45f2-a544-18c60cca3549",
+    "empresa": "Correcaminos Intercontinentales, S.A. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "ctpat@transportescorrecaminos.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Tomate 231 Int Na, Colonia Granjas Cecilia, CP 21386\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "06e2694d-c1fd-4da8-a706-6ead2bf02932",
+    "empresa": "Corsa Transportes, S.A. de C.V.",
+    "ciudad": "General Escobedo, Nuevo León",
+    "correo": "hescamilla@corsatransportes.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Federal · 11 a 50 personas · Avenida Libramiento a Saltillo Km 34.5 Sn Int D, Colonia Libramiento Norte, CP 66050\nUbicación aproximada 17-ago: centroide de 199 establecimientos DENUE en General Escobedo, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN PROFUNDA 20-ago-2026: Alejandro Villarreal, Director General. Oscar Mario González Esparza, key principal/dueño. Alfredo Rodríguez, Presidente. Víctor Daniel Reyes, Director de Administración y Finanzas.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5cc6d6bc-fd92-4f63-81df-84aabe0e42a5",
+    "empresa": "Covalco, S.A. de C.V.",
+    "ciudad": "Tlalnepantla de Baz, México",
+    "correo": "fabiola.briseno@covalco.mx",
+    "telefono": "5521288073",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Berlin 19 Int Na, Colonia Jardines de Bellavista, CP 54054\nUbicación aproximada 17-ago: centroide de 187 establecimientos DENUE en Tlalnepantla de Baz, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0131d70d-65d4-4244-8109-307e2ec0cfa1",
+    "empresa": "Cryogenic Trucking Mx, S. de R.L. de C.V.",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "cryogenictruckingmx@gmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte · 11 a 50 personas · Calle Cañon del Cobre 9350 Int Na, Colonia Villa Residencial del Real, CP 32550\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN 20-ago-2026 (2a pasada): sin nombre de director/dueño público tras dos búsquedas distintas. Empresa real, especialista en materiales peligrosos criogénicos transfronterizos (2015, El Paso-Cd. Juárez + 2 cruces más), pero genuinamente sin decisor identificable en fuentes públicas.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "cb959ed1-965f-4946-87a0-6140a9ed822e",
+    "empresa": "Dagal Autotransportes, S.A. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "gcalderas@dagal.com.mx",
+    "telefono": "6865616531",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Boulevard Adolfo Lopez Mateos 2201 Int F, Colonia Sanchez Taboada, CP 21360\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f92b70fc-9125-4e60-847b-862673397b90",
+    "empresa": "Dam Soluciones Logísticas, S. de R.L. de C.V.",
+    "ciudad": "Monterrey, Nuevo León",
+    "correo": "rvega@damlogistica.com",
+    "telefono": "8180221359",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte y Logistica · 11 a 50 personas · Calle Antonia Gonzalez 2581 Int Na, Colonia Ancon del Huajuco, CP 64820\nUbicación aproximada 17-ago: centroide de 442 establecimientos DENUE en Monterrey, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "764a647a-ba0d-4e9e-8892-be646e237e7d",
+    "empresa": "Daniel Felgueres Linares",
+    "ciudad": "Zapopan, Jalisco",
+    "correo": "transportesfelgueres@outlook.com",
+    "telefono": "3316664966",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 11 a 50 personas · Camino Real a Colima 50 Int Na, Colonia Los Cajetes, CP 45234\nUbicación aproximada 17-ago: centroide de 205 establecimientos DENUE en Zapopan, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 19-ago-2026: decisor Daniel Felgueres Linares, titular (la razón social del directorio de socios CANACAR es la persona física, así que el registrante ES el titular; el correo del censo (transportesfelgueres@) confirma el mismo apellido en dominio propio) · LinkedIn: no hallado · fuente: directorio de socios CANACAR 17-ago-2026 (transporte de carga general, 11 a 50 personas, Camino Real a Colima 50, Col. Los Cajetes, Zapopan, Jalisco) · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  },
+  {
+    "id": "718d8f5f-5ad3-4786-8e5f-bf29f46c82a2",
+    "empresa": "De Anda Trucking, S.A. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "deandatruck@hotmail.com",
+    "telefono": "6865620489",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Camino Camino Vecinal Parcela 23 Int Na, Colonia Ejido Cuernavaca, CP 21624\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nENCAJE: alto — carga general en Mexicali, socio CANACAR, 11 a 50 personas\nPROSPECCIÓN 19-ago-2026: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (autotransporte de carga general, 11 a 50 personas, Ejido Cuernavaca, Mexicali) · sin sitio propio; el correo del censo es un buzón de la razón social · WebSearch sin cupo en la sesión · unidades null: el rango de CANACAR es de personal, no de unidades",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f8edbc9e-a06d-4f5d-aee1-4a0298e5416a",
+    "empresa": "Dedicargo, S.A. de C.V.",
+    "ciudad": "Azcapotzalco, Ciudad de México",
+    "correo": "alejandrodominguez@dedicargo.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 0 a 10 personas · Calle Jose F. Gutierrez 273 Int Na, Colonia Angel Zimbron, CP 2099\nUbicación aproximada 17-ago: centroide de 174 establecimientos DENUE en Azcapotzalco, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\n=== INVESTIGACIÓN PROFUNDA ANIQ 26-ago-2026 ===\nUNIDADES (ANIQ): RABON, CAMIONETA 3 1/2 TONS.,\n\nPERMISOS: SICT, SETIQ, GEN. RESIDUOS PELIGROSOS\n\nRESEÑA ANIQ: SOMOS UNA EMPRESA MEXICANA COMPROMETIDA A BRINDAR SERVICIOS DE TRANSPORTE DE CARGA EN GENERAL, ESPECIALIZADA, SERVICIOS LOGÍSTICOS Y DE ALMACENAJE, DE ALTA CALIDAD. BRINDAMOS SOLUCIONES A LAS OPERACIONES LOGÍSTICAS A TRAVÉS DE LA MEJORA CONTINUA DE NUESTROS PROCESOS INTERNOS, MIDIENDO INDICADORES, I\n\nLINKEDIN EMPRESA: https://www.linkedin.com/company/dedicargo\n\nLINKEDIN DIRECTOR: no encontrado\n\nFACEBOOK: https://www.facebook.com/dedi.cargo (verificación parcial, ver notas)\n\nAÑO FUNDACIÓN: 2017\n\nHISTORIA: Dedicargo es una empresa mexicana de transporte de carga terrestre fundada en 2017. Es socio activo de CANACAR desde su fundación (2017) y cuenta con certificación SARI otorgada por la ANIQ para el manejo de materiales peligrosos. Ofrece esquemas dedicados, carga especializada (materiales peligrosos con operadores licencia tipo \"E\"), servicio local (CDMX y área metropolitana) y foráneo (interior de la República), además de un servicio más reciente de almacenaje y distribución con equipo propio.\n\nEMPLEADOS: 11-50 empleados (rango mostrado en LinkedIn de la empresa; ~6 empleados identificados públicamente en esa plataforma)\n\nFLOTA: Número exacto de unidades no encontrado. El sitio web indica un parque vehicular en 4 categorías: 1.5, 3.5, 10 y 28 toneladas; unidades renovadas del periodo 2017-2024, todas con GPS y monitoreo de seguridad 24 horas.\n\nNOTAS: Verificación de identidad de empresa: la página de LinkedIn (linkedin.com/company/dedicargo) coincide de forma sólida con la empresa objetivo — mismo sitio web (dedicargo.com.mx), mismo año de fundación (2017), mismo giro (transporte de carga), descripción de flota de camionetas de 1.5 y 3.5 toneladas que coincide con el sitio web. Se considera confirmada.\n\nFacebook: se localizó una página con el nombre \"Dedi Cargo\" y handle @dedi.cargo, cuyo nombre coincide exactamente con la marca de la empresa, pero Facebook bloqueó el acceso sin sesión iniciada tanto en la versión web de escritorio como en la móvil, por lo que NO se pudo confirmar dirección, categoría de negocio, teléfono ni enlace al sitio web dentro de la página. Se reporta con reserva — recomendable verificación manual antes de citarla como fuente confirmada.\n\nLinkedIn del director (Alejandro Dominguez): no se pudo localizar ni confirmar un perfil personal. LinkedIn exige inicio de sesión para ver la lista de empleados/directivos de la página de empresa, y los motores de búsqueda (Google, Bing, DuckDuckGo) devolvieron páginas de error/CAPTCHA o resultados irrelevantes al intentar acceder vía fetch directo sin sesión — no se debe asumir ningún perfil sin confirmación.\n\nEn el sitio web propio no se encontró el cargo/puesto formal de Alejandro Dominguez (solo aparece como el correo/contacto principal de la empresa), consistente con el rol de \"Director/contacto\" ya conocido por la ficha ANIQ.\n\nPosible dato relevante para la conversación de ventas: la ficha ANIQ ubica a la empresa en Baja California, pero el sitio web enfatiza operación en CDMX y área metropolitana / servicios foráneos al interior de la República, y LinkedIn ubica su sede/HQ en Cuautitlán, Estado de México. Esto podría indicar domicilio fiscal distinto de la operación principal, o múltiples bases — vale la pena confirmar con el contacto en la llamada de ventas.\n\nLimitación metodológica: la herramienta WebSearch llegó a su límite de uso en esta sesión antes de poder ejecutar las búsquedas 1-6 solicitadas de forma directa; la investigación se completó mediante WebFetch directo al sitio web (incluyendo sitemap y subpáginas: /quiénes-somos, /soluciones, /contacto) y mediante intentos de acceso directo (adivinado y luego confirmado) a las URLs de LinkedIn y Facebook. Los intentos de usar Bing/Google/DuckDuckGo vía WebFetch como sustituto de búsqueda no arrojaron resultados fiables (devolvieron páginas de error, CAPTCHA o contenido no relacionado).\n\nFuente: directorio ANIQ Transportistas (id=577) + investigación profunda 26-ago-2026 (workflow multi-agente).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "56b2e4ae-1c55-4151-ac28-43d8e133bd47",
+    "empresa": "Deltum Logistic, S.A. de C.V.",
+    "ciudad": "Tlalnepantla de Baz, México",
+    "correo": "deltumlogicsa@hotmail.com",
+    "telefono": "5546154776",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Queretaro 18 Int Sn, Colonia Valle Ceylan, CP 54150\nUbicación aproximada 17-ago: centroide de 187 establecimientos DENUE en Tlalnepantla de Baz, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4a75fa7f-8151-47f4-b149-9a9dead03585",
+    "empresa": "Distribuciones Yañez de Ocotlán, S.A. de C.V.",
+    "ciudad": "León, Guanajuato",
+    "correo": "mlizarraga@dyologistica.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Fletes · 11 a 50 personas · Calle Esfuerzo 101 D Int Sn, Colonia Eyupol, CP 37288\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "938fc6be-ad1e-40f7-a164-54a817ad0c36",
+    "empresa": "Dmg Express Inc, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "diegomg1@prodigy.net.mx",
+    "telefono": "8671080711",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 11 a 50 personas · Avenida Leandro Valle 4817 Int Na, Colonia Campestre, CP 88278\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "83287195-969c-474f-ae38-3bfeab98fdd1",
+    "empresa": "Domo Transportes, S.A. de C.V.",
+    "ciudad": "Tampico, Tamaulipas",
+    "correo": "contabilidaddomo@hotmail.com",
+    "telefono": "8332124049",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Septima 204 Int 204, Colonia Villa Hermosa, CP 89319\nUbicación aproximada 17-ago: centroide de 121 establecimientos DENUE en Tampico, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "962153b8-5362-4f9a-9bde-aeb1b1ec883f",
+    "empresa": "Dorado Autotanques, S.A. de C.V.",
+    "ciudad": "Río Blanco, Veracruz",
+    "correo": "leobardo.olivares@doradoautotanques.com.mx",
+    "telefono": "5585967720",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Hidrocarburos · 11 a 50 personas · Avenida Camino Nacional 40 Int Na, Colonia Los Pinos, CP 94732",
+    "fuente": "canacar"
+  },
+  {
+    "id": "23fa8824-b3b4-4afc-90b8-fd64e49b6ba8",
+    "empresa": "Dos D Carga, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "facturacion@dosdcarga.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Aeropuerto Km 13.6 Sn Int Na, Colonia Granjas Regina, CP 88296\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "fuente": "canacar"
+  },
+  {
+    "id": "243f9649-26f9-4827-9e3e-e2d06d5ce14c",
+    "empresa": "Drop Logistic, S.A. de C.V.",
+    "ciudad": "Salinas Victoria, Nuevo León",
+    "correo": "esanchezgaona@yahoo.com.mx",
+    "telefono": "8110806617",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga en General · 11 a 50 personas · Calle Jesus Treviño Montemayor 132 Int Na, Colonia Cette, CP 65500\nUbicación aproximada 17-ago: centroide de 41 establecimientos DENUE en Salinas Victoria, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4141b8f5-079a-4a16-be3a-7bb79381fae4",
+    "empresa": "Duma Transportes, S.A. de C.V.",
+    "ciudad": "Torreón, Coahuila",
+    "correo": "luis.garza@gduma.com",
+    "telefono": "8712925557",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Boulevard Torreo Matamoros 5750 Int Na, Colonia Gustavo Diaz Ordaz, CP 27080\nHISTORIA: socia registrada de CANACAR (directorio de socios, 17-ago-2026): Duma Transportes, S.A. de C.V., Autotransporte de Carga General, 11 a 50 personas, Blvd. Torreón-Matamoros 5750, Col. Gustavo Díaz Ordaz, Torreón, Coahuila — la más grande de esta tanda. Sitio oficial gduma.com verificado: opera caja seca 53', plataforma 48' y full plataforma, con cobertura en México, Estados Unidos, Canadá y Centroamérica — operación transfronterizal real. El sitio NO menciona a 'Luis Garza' (el correo de la base, luis.garza@gduma.com, es nominal pero sin confirmación de cargo por el sitio). Correo de cotizaciones publicado: cotizaciones@gduma.com. Teléfonos: 800 836 9991, 871 731 1158, WhatsApp +52 871 213 2466.\nUNIDADES: sin conteo de tractocamiones publicado — null (CANACAR reporta 11-50 PERSONAS).\nENCAJE: alto — socia CANACAR con cobertura México-EUA-Canadá-Centroamérica, la operación más grande de la tanda.\nPROSPECCIÓN 2026-08-20: sin decisor público confirmado (correo nominal 'luis.garza@' sin cargo verificado por el sitio) · LinkedIn: no hallado · fuente: directorio de socios CANACAR 17-ago-2026; gduma.com. WebSearch agotado en la sesión.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2cbb6a70-8a53-4bcc-9098-fd5462775673",
+    "empresa": "E P Insumos, S.A de C.V.",
+    "ciudad": "Cuautitlán Izcalli, México",
+    "correo": "ivone.guzman@epinsumos.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Compra, Venta y Comercializacion de Productos Quimicos Para la Galvanoplastia · 11 a 50 personas · Avenida Antoine Lavoiser Sin Numero Int 1 B, Colonia Complejo Industrial Cuamatla, CP 54730\nUbicación aproximada 17-ago: centroide de 171 establecimientos DENUE en Cuautitlán Izcalli, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "12108200-1b47-47de-a99b-b24202192f48",
+    "empresa": "Eba Truck Lines, S.A. de C.V.",
+    "ciudad": "Tecámac, México",
+    "correo": "daniel_ag@prodigy.net.mx",
+    "telefono": "5514193967",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Eje Oriente Pte Mz 3 Lt 9 Int Na, Colonia Zona Industrial, CP 43804\nUbicación aproximada 17-ago: centroide de 42 establecimientos DENUE en Tecámac, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f8a5b0fb-7977-4e9c-ba45-8727aea53c10",
+    "empresa": "Ecosoluciones Ambientales Logísticas y de Calidad, S.A. de C.V.",
+    "ciudad": "Puebla, Puebla",
+    "correo": "r.perez@ecosolucionesambientales.com.mx",
+    "telefono": "2225849925",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Rio Nazas 6131 Int Na, Ciudad Jardines de San Manuel, CP 72570\nUbicación aproximada 17-ago: centroide de 496 establecimientos DENUE en Puebla, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público con cargo confirmado (correo institucional ya registrado, r.perez@ecosolucionesambientales.com.mx, sin cargo publicado) · fuente: ecosolucionesambientales.com.mx (residuos de manejo especial, 11-50 empleados, fundada 2010, operación en 8+ estados, clientes OXXO/CEMEX/Holcim; el sitio redirige a ecosoluciones.com.mx).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "03b52ff2-053b-4a76-9778-ca9fe2181284",
+    "empresa": "Edianco",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "operaciones@edianco.com",
+    "telefono": "6566404361",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Otros Servicios de Intermediacion Para el Transporte de Carga · 11 a 50 personas · Calle Ramon Rayon 508 Int 1, Colonia Zaragoza, CP 32590\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "85404488-432c-4601-a644-95f64ede9aa3",
+    "empresa": "Elsa Mendoza E Hijas, S.A. de C.V.",
+    "ciudad": "Delicias, Chihuahua",
+    "correo": "facturacion@fletesmendoza.mx",
+    "telefono": "6394728470",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida 3Ra Poniente 709 Int Na, Colonia Centro, CP 33000\nUbicación aproximada 17-ago: centroide de 41 establecimientos DENUE en Delicias, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4552a4e3-721f-49df-a62b-c788cf7a3f00",
+    "empresa": "Emulsiones y Pavimentos de Sinaloa, S.A. de C.V.",
+    "ciudad": "Culiacán, Sinaloa",
+    "correo": "emulsiones@hotmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Camino Camino a Bachoco Sur 2936 Int Na, Colonia Bachigualato, CP 80139\nUbicación aproximada 17-ago: centroide de 265 establecimientos DENUE en Culiacán, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "111b2456-5ad8-47f3-a713-293c5ad1e2d3",
+    "empresa": "Energéticos Centrifugados del Norte, S.A. de C.V.",
+    "ciudad": "San Nicolás de los Garza, Nuevo León",
+    "correo": "lmejorado@ecnorsa.com.mx",
+    "telefono": "8183294500",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Calle Ramon Treviño 101 Int Na, Colonia Centro, CP 66400\nUbicación aproximada 17-ago: centroide de 150 establecimientos DENUE en San Nicolás de los Garza, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "24062c70-f31b-433d-8c13-8fd76089db9d",
+    "empresa": "Enerpol Transportes, S.A. de C.V.",
+    "ciudad": "Benito Juárez, Ciudad de México",
+    "correo": "sergio.avila@portimex.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Materiales y Residuos Peligrosos · 11 a 50 personas · Calle Augusto Rodín 43 Int 101, Colonia Napoles, CP 3810\nUbicación aproximada 17-ago: centroide de 171 establecimientos DENUE en Benito Juárez, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "be6117ad-490e-45a6-970d-b3e3b306db6e",
+    "empresa": "Enfoque en la Eficiencia de la Logística, S.A. de C.V.",
+    "ciudad": "Ecatepec de Morelos, México",
+    "correo": "reyna.m@ee-l.com",
+    "telefono": "5557490515",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle 10 24 Int Na, Colonia Rustica Xalostoc, CP 55340\nUbicación aproximada 17-ago: centroide de 186 establecimientos DENUE en Ecatepec de Morelos, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "024f7d1a-dd81-46c9-975e-2529d6ce8cb8",
+    "empresa": "Enfriadora Bajío de San José, S.A. de C.V.",
+    "ciudad": "Encarnación de Díaz, Jalisco",
+    "correo": "enfriadora_bajio@hotmail.com",
+    "telefono": "4757412189",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Pino Suarez 210 Int Na, Colonia Bajio de San Jose, CP 47280\nUbicación aproximada 17-ago: centroide de 10 establecimientos DENUE en Encarnación de Díaz, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5b25db0e-7faa-4984-9695-2bca864cf64a",
+    "empresa": "Enlaces Terrestres Asociados de Morelos S. de R.L. de C.V.",
+    "ciudad": "Cuautla, Morelos",
+    "correo": "enlacesmorelos@outlook.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga en General · 11 a 50 personas · Carretera Mexico Cuautla Km 95 Sn Int Na, Colonia Santa Barbara, CP 62767\nUbicación aproximada 17-ago: centroide de 63 establecimientos DENUE en Cuautla, Morelos — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6ab620be-00d9-4035-82ce-3053ce22384b",
+    "empresa": "Entregas Puntuales, S. de R.L. de C.V.",
+    "ciudad": "Mazatlán, Sinaloa",
+    "correo": "jeestrada@pmm.com.mx",
+    "telefono": "6699854811",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Calle Francisco Serrano 2316 Int 306, Colonia Centro, CP 82000\nUbicación aproximada 17-ago: centroide de 131 establecimientos DENUE en Mazatlán, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-19: sin decisor publico - fuente: CANACAR directorio de socios 17-ago-2026, correo (jeestrada@pmm.com.mx) de dominio de grupo mayor, sin cargo declarado. WebSearch agotado en la sesion (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3ac0fd2e-899f-4ddc-aef8-45493ea28dc7",
+    "empresa": "Epy Servicios Domesticos, S. de R.L. de C.V.",
+    "ciudad": "Toluca, México",
+    "correo": "direccion.epy@grupoyaco.net",
+    "telefono": "7226205239",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Manuel Buendia Tellez Giron 307 Int Na, Barrio San Salvador, CP 50020\nUbicación aproximada 17-ago: centroide de 256 establecimientos DENUE en Toluca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7644d568-b669-4014-a34b-65d6eab3f54c",
+    "empresa": "Especializados en Estructuras Metalicas Lober, S.A. de C.V.",
+    "ciudad": "Castaños, Coahuila",
+    "correo": "rociogtz@translober.com",
+    "telefono": "8666971620",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Federal · 11 a 50 personas · Carretera 57 Km 178 400 Int Na, Colonia California, CP 25870\n\nPROSPECCIÓN 19-ago-2026: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (autotransporte de carga federal, 11 a 50 personas, Carretera 57 Km 178+400, Col. California, Castaños, Coahuila) · el correo del censo pertenece al dominio translober.com, probablemente su nombre comercial real (\"TransLober\") · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  },
+  {
+    "id": "61b9c62a-f405-4161-9076-9d2a83fc4339",
+    "empresa": "Eva Lara Patiño",
+    "ciudad": "Celaya, Guanajuato",
+    "correo": "xptransporte@prodigy.net.mx",
+    "telefono": "4611180275",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Aurelio Bonilla 106 Int Na, Ampliación Emiliano Zapata, CP 38030\nUbicación aproximada 17-ago: centroide de 79 establecimientos DENUE en Celaya, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "216dd274-68d0-4aec-b72c-0cd55ed4e81b",
+    "empresa": "Expedite Logistics de Mexico, S.A. de C.V.",
+    "ciudad": "Juárez, Nuevo León",
+    "correo": "logistica@expedite.mx",
+    "telefono": "8661317219",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportacion y Logistica · 11 a 50 personas · Calle Paseo de Las Azucenas 816 Int Na, Colonia Paseo del Prado, CP 67275\nUbicación aproximada 17-ago: centroide de 30 establecimientos DENUE en Juárez, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9405b113-0801-4bfa-804a-b7177bfd9573",
+    "empresa": "Expedited Infinity Mx, S. de R.L. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "jose.sanchez@infinitylogistics.mx",
+    "telefono": "8671000712",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transprotes de Mercancias · 11 a 50 personas · Calle Carretera (Carr.) 1002 Int 1002, Colonia America 1, CP 88293\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f562fb01-f57f-4b96-894e-b6d185a47039",
+    "empresa": "Expedited Specialized Logistic, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "valentin.bernabe@sti.com.mx",
+    "telefono": "8677111700",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Piedras Negras Km 17 Mas 777 35 Sn Int Na, Colonia Ejido San Francisco, CP 88176\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e7375eaf-aa82-4d97-845a-3e4875b37c5d",
+    "empresa": "Expres Cantu",
+    "ciudad": "General Escobedo, Nuevo León",
+    "correo": "debanhi.ce@exprescantu.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte · 11 a 50 personas · Calle Eulalio Villareal 1955 Int Na, Ciudad General Escobedo, CP 66080\nUbicación aproximada 17-ago: centroide de 199 establecimientos DENUE en General Escobedo, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "54628b61-dacc-4719-8b1d-de625412156f",
+    "empresa": "Express Anáhuac, S.A. de C.V.",
+    "ciudad": "Monterrey, Nuevo León",
+    "correo": "avargas@exan.com.mx",
+    "telefono": "8183518098",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Platon Sanchez 2000 Int D, Colonia del Norte, CP 64500\nUbicación aproximada 17-ago: centroide de 442 establecimientos DENUE en Monterrey, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "69a2f0ac-d171-49c1-90ec-de13acf32696",
+    "empresa": "Express Casa Blanca de Nuevo Laredo, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "lupita.vazquez@expresscasablanca.com",
+    "telefono": "8677138092",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Avenida Flora Elena Alvarez 9601 Int Na, Colonia San Roberto, CP 88295\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (CANACAR registra la razón social sin titular; expresscasablanca.com no responde; buscador sin resultados) · LinkedIn: no hallado · viajes/mes: no público · historia: no pública · fuente: directorio CANACAR · fit 1/5",
+    "fuente": "canacar"
+  },
+  {
+    "id": "28e45ff9-2ddd-4b61-a63b-c84378045e01",
+    "empresa": "Express Gran Tiburón, S.A. de C.V.",
+    "ciudad": "Guadalupe, Nuevo León",
+    "correo": "virginia@grantiburon.com.mx",
+    "telefono": "8116395065",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Mercancía · 11 a 50 personas · Calle Puesta de Los Nogales 809 Int Na, Colonia Puesta del Sol, CP 67174\nUbicación aproximada 17-ago: centroide de 170 establecimientos DENUE en Guadalupe, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ee32d7a1-0b75-4212-b0d7-fe8dc7387a96",
+    "empresa": "Express Jimenez, S.A. de C.V.",
+    "ciudad": "Monclova, Coahuila",
+    "correo": "facturasexpressjmz@outlook.com",
+    "telefono": "8666411277",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Constitucion y Revolucion 1001 Int Na, Colonia Buenos Aires, CP 25770",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3d9a3963-5063-4c61-be74-ff2a1fef0b99",
+    "empresa": "Express Nacional de Carga, S.A. de C.V.",
+    "ciudad": "Lerma, México",
+    "correo": "contabilidad@exnac.com",
+    "telefono": "7282820986",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Avenida Juarez 12 Int Na, Colonia Agricola Analco, CP 52047\nUbicación aproximada 17-ago: centroide de 39 establecimientos DENUE en Lerma, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "67f98f18-0af6-473b-a794-3ce293e0afae",
+    "empresa": "Express Silsa, S.A. de C.V.",
+    "ciudad": "Cuautitlán Izcalli, México",
+    "correo": "silsa_07@prodigy.net.mx",
+    "telefono": "5558871595",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Avenida Tejocotes Lt 8 Mz 4 Int Na, Colonia San Martin Obispo Tepetlixpa, CP 54763\nUbicación aproximada 17-ago: centroide de 171 establecimientos DENUE en Cuautitlán Izcalli, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4efe5523-eced-47cf-aa12-9e60dee42a4c",
+    "empresa": "Express Syp",
+    "ciudad": "Huehuetoca, México",
+    "correo": "expressyp@hotmail.com",
+    "telefono": "5939180562",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte · 11 a 50 personas · Avenida Benito Juarez Sn Int Sn, Colonia Puente Grande, CP 54680\nUbicación aproximada 17-ago: centroide de 14 establecimientos DENUE en Huehuetoca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2e066005-01f3-4f6f-bcd6-fa313a04f0ee",
+    "empresa": "Express Teran, S.A. de C.V.",
+    "ciudad": "Allende, Nuevo León",
+    "correo": "hector_calles@expressteran.com.mx",
+    "telefono": "8261104548",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Allende-Cadereyta Km 2 Sn Int Na, Colonia el Maguey, CP 67350\nUbicación aproximada 17-ago: centroide de 123 establecimientos DENUE en Allende, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6ff51392-9381-4479-8cba-e66be3538099",
+    "empresa": "Ezgo Industrial Services And Carriers, S.A. de C.V.",
+    "ciudad": "Reynosa, Tamaulipas",
+    "correo": "ezgoindustrial@hotmail.com",
+    "telefono": "8999244625",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera a Monterrey Km 208.3 Sn Int Na, Colonia Casa Bella, CP 68747\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Reynosa, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nENCAJE: alto - socio CANACAR, 11-50 personas, ligado a maquiladoras\nPROSPECCION 2026-08-19: sin decisor publico - fuente: CANACAR directorio de socios 17-ago-2026, sin sitio. WebSearch agotado en la sesion (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0fd469b9-ada6-4001-9b9c-738b203e9ea9",
+    "empresa": "Fast Links México, S.A. de C.V.",
+    "ciudad": "Zapopan, Jalisco",
+    "correo": "jfacio@fastlinksmexico.com",
+    "telefono": "3338156409",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Volcan Cofre de Perote 4116 Int Na, Colonia el Colli Urbano 2Da Seccion, CP 45070\nUbicación aproximada 17-ago: centroide de 205 establecimientos DENUE en Zapopan, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5db90c44-aa5d-4aa7-beaa-0cd8c9207b01",
+    "empresa": "Felipe de Jesús Elizarraraz",
+    "ciudad": "Irapuato, Guanajuato",
+    "correo": "transeli08@live.com.mx",
+    "telefono": "8181242582",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga en General · 11 a 50 personas · Avenida Jacarandas 2134 Int Na, Colonia San Pedro, CP 36520\nUbicación aproximada 17-ago: centroide de 96 establecimientos DENUE en Irapuato, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f471dc57-1e86-4a0f-ad2b-46eb0933c780",
+    "empresa": "Ferro Monterrey, S.A. de C.V.",
+    "ciudad": "Azcapotzalco, Ciudad de México",
+    "correo": "knieto@tubosmonterrey.com.mx",
+    "telefono": "5553683348",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Poniente 122 603 Int B2, Colonia Industrial Vallejo, CP 2300\nUbicación aproximada 17-ago: centroide de 174 establecimientos DENUE en Azcapotzalco, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-20: sin decisor publico (correo de K. Nieto, sin cargo confirmado) · LinkedIn: no localizado · fuente: CANACAR directorio de socios 17-ago-2026 (11-50 personas) + tubosmonterrey.com.mx (sitio del grupo relacionado por dominio de correo, verificado 2026-08-20): confirma 'transportes propios que se programan a rutas en todo el pais', SIN cifra de unidades. Probable brazo logistico de un distribuidor mayorista de tuberia y plomeria con cobertura nacional. Flota NO publicada — num_unidades sin dato.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b8cc156d-a0b1-4e46-9c09-505eb22fc968",
+    "empresa": "Fevisa Logística, S.A. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "antonio.elizondo@fevisa.com",
+    "telefono": "6869045421",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Adolfo Lopez Mateos 2170 Int Na, Colonia Sanchez Taboada, CP 21360\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "37b18d0e-b405-4be1-a687-e2971ebb2d93",
+    "empresa": "Fham Consultoria y Asesoria Logistica Automotriz, S.A.P.I de C.V.",
+    "ciudad": "San Andrés Cholula, Puebla",
+    "correo": "paola.deita@fham.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Local de Carga Especializado · 11 a 50 personas · Avenida Via Atlixcayotl 5208 Int 17B, Colonia Lomas de Angelopolis, CP 72830\nUbicación aproximada 17-ago: centroide de 27 establecimientos DENUE en San Andrés Cholula, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4017f8b7-54c7-44c8-8688-003e8851914e",
+    "empresa": "Fleta",
+    "ciudad": "León, Guanajuato",
+    "correo": "darredondo@fleta.com.mx",
+    "telefono": "4773807252",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Epsilon 3635 Int 125, Colonia Los Lopez, CP 37680\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "613033a1-3ac6-4766-a00a-90ac7c462f86",
+    "empresa": "Fletera Unión, S.A. de C.V.",
+    "ciudad": "Guadalajara, Jalisco",
+    "correo": "selymar@grupocalafia.com.mx",
+    "telefono": "3333432568",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Rio Alamo 2450 Int Na, Colonia el Rosario, CP 44898\nUbicación aproximada 17-ago: centroide de 508 establecimientos DENUE en Guadalajara, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "df914769-bc32-4a5f-b72b-947e1ebac912",
+    "empresa": "Fletes Borja, S.A. de C.V.",
+    "ciudad": "Frontera, Coahuila",
+    "correo": "willians.martinez@metelmex.com",
+    "telefono": "8662588408",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Acero · 11 a 50 personas · Calle Hector Bladimir 900 Int Sn, Colonia Borja de Diaz Ordaz, CP 25680",
+    "fuente": "canacar"
+  },
+  {
+    "id": "90980f79-267b-44de-9d3d-55128758b6c7",
+    "empresa": "Fletes Chalin",
+    "ciudad": "Córdoba, Veracruz",
+    "correo": "gerardo.diaz@flecha.com.mx",
+    "telefono": "2717511002",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 11 a 50 personas · Calle Calle 35 301 Int 1, Colonia Moderna, CP 94640 · PROSPECCIÓN 2026-08-19: sin decisor público · sitio flecha.com.mx presentó error SSL al intentar verificarlo por WebFetch (handshake failure), no se pudo confirmar contenido.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0b492ccb-2491-4cb0-a8fe-1b4681ccd694",
+    "empresa": "Fletes de Oriente, S.A. de C.V.",
+    "ciudad": "San Pedro Tlaquepaque, Jalisco",
+    "correo": "contabilidad@fletesdeoriente.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera a Los Altos 4985 Int Na, Colonia San Pedrito, CP 45625\nUbicación aproximada 17-ago: centroide de 219 establecimientos DENUE en San Pedro Tlaquepaque, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a7573b5d-fcc0-4cbe-8707-857ebe6880da",
+    "empresa": "Fletes Dos Hermanos S.A. de C.V.",
+    "ciudad": "Atizapán de Zaragoza, México",
+    "correo": "transporteschavira@live.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo y Local de Carga General · 11 a 50 personas · Calle Municipio Libre Manzana 21 Lt 21 Int Lt 21, Colonia Ampliacion Profesor Cristobal Higuera, CP 52940\nUbicación aproximada 17-ago: centroide de 68 establecimientos DENUE en Atizapán de Zaragoza, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nHISTORIA: socio CANACAR de autotransporte foráneo y local de carga general con 11 a 50 personas, domicilio en Calle Municipio Libre, Colonia Ampliación Profesor Cristóbal Higuera, Atizapán de Zaragoza, Estado de México.\nPROSPECCIÓN 2026-08-20: sin decisor público · fuente: CANACAR directorio de socios 17-ago-2026 (autotransporte foráneo y local de carga general, 11 a 50 personas); correo live.com sin dominio propio y WebSearch agotado en la sesión.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "186ae0f3-2c5f-4914-a18b-a7a407980664",
+    "empresa": "Fletes Estratégicos de México, S.A. de C.V.",
+    "ciudad": "Santa Catarina, Nuevo León",
+    "correo": "jsaldana@femtransportes.com",
+    "telefono": "8180591691",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Autotransporte Publico de Carga · 11 a 50 personas · Calle Jesus Treviño M 205 Int Na, Colonia Puerta del Sol, CP 66358\nUbicación aproximada 17-ago: centroide de 110 establecimientos DENUE en Santa Catarina, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

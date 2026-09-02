@@ -1,0 +1,52 @@
+[
+  {
+    "id": "5b38b56b-5b70-4218-b9e4-8c4b5c0a9521",
+    "empresa": "Citro Gruas",
+    "ciudad": "Montemorelos, Nuevo León",
+    "correo": null,
+    "telefono": "8262637216",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicios de Gruas de Arrastre y Salvamento de Vehiculos · 11 a 50 personas · Calle Tampico 806 Int Na, Colonia Las Alamedas, CP 67563\nDENUE API 17-ago (cruce CANACAR→DENUE): «CITRO GRUAS», score 1.06",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d3981a51-5422-4082-b7fe-8f5aa6db8ac4",
+    "empresa": "Enlaces y Granos del Sureste",
+    "ciudad": "Tuxtla Gutiérrez, Chiapas",
+    "correo": null,
+    "telefono": "9656970322",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Otro Autotransporte Foraneo de Carga General · 11 a 50 personas · Calle Villahermosa A1129 Int Na, Colonia Juan Crispin, CP 29020\nUbicación aproximada 17-ago: centroide de 289 establecimientos DENUE en Tuxtla Gutiérrez, Chiapas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nUNIDADES: sin dato — CANACAR reporta 11 a 50 personas (personal, no unidades); sin conteo de flota publicado.\nENCAJE: alto — socio CANACAR, carga general foránea de larga distancia.\nPROSPECCIÓN 2026-08-19: sin decisor público · sin sitio web ni correo con dominio propio que consultar · fuente: directorio de socios CANACAR 17-ago-2026 · WebSearch agotado en la sesión (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c4593ef5-06b7-4168-a466-82a87dd03787",
+    "empresa": "Explotransportes Especializados, S.A. de C.V.",
+    "ciudad": "Guadalajara, Jalisco",
+    "correo": null,
+    "telefono": "3336163081",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Federal Especializada · 11 a 50 personas · Calle Juana de Arco 22 Int Na, Colonia Vallarta Norte, CP 44690\nUbicación aproximada 17-ago: centroide de 508 establecimientos DENUE en Guadalajara, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nExplotransportes Especializados, S.A. de C.V.: socia CANACAR (17-ago-2026), giro \"Autotransporte de Carga Federal ESPECIALIZADA\", 11 a 50 personas, Calle Juana de Arco 22, Col. Vallarta Norte, Guadalajara. Sin correo ni sitio localizados.\nENCAJE: alto — carga federal especializada de 11-50 personas en Guadalajara\nPROSPECCIÓN 2026-08-20: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (sin sitio ni correo; WebSearch agotado en la sesión)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "77dabb09-704e-4bf7-8cbb-0a1f34475d5a",
+    "empresa": "Famoru Express",
+    "ciudad": "Chihuahua, Chihuahua",
+    "correo": null,
+    "telefono": "6142581712",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga General · 11 a 50 personas · Calle Armando Grijalva 7102 Int Sn, Colonia Sierra Azul, CP 31384\nUbicación aproximada 17-ago: centroide de 282 establecimientos DENUE en Chihuahua, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 2026-08-21: DECISOR CONFIRMADO (confianza media) — Fabian Moreno Rubio, director general/dueño según agregador carrieratlas.com (dirección coincide: Armando Grijalva 7102). OJO: fuente indica solo 2 unidades/2 operadores en flota — empresa muy pequeña, verificar tamaño real antes de priorizar.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "99d12de7-52a9-4781-b0ac-aaa563a457b0",
+    "empresa": "Feltes 53",
+    "ciudad": "Allende, Nuevo León",
+    "correo": null,
+    "telefono": "8183058222",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foráneo de Carga Especializado · 11 a 50 personas · Carretera Allende Cadereyta Km 2.5 Int Na, Colonia el Cerrito, CP 67353\nUbicación aproximada 17-ago: centroide de 123 establecimientos DENUE en Allende, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

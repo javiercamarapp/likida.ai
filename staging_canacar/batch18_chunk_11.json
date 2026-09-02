@@ -1,0 +1,52 @@
+[
+  {
+    "id": "b4484644-90fa-42df-aabb-585582f61ce3",
+    "empresa": "Valeriano Gutiérrez Coronado",
+    "ciudad": "Múzquiz, Coahuila",
+    "correo": "vag-contabilidad@hotmail.com",
+    "telefono": "8646162477",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Carretera Palau Muzquiz Km 3.1 Sn Int Na, Colonia Infonavit, CP 26350\nPROSPECCIÓN 2026-08-19: decisor Valeriano Gutiérrez Coronado, titular (el registro CANACAR está a nombre de persona física) · LinkedIn: no hallado · fuente: CANACAR 17-ago-2026\nENCAJE: alto — socio CANACAR de 11-50 personas, titular identificado, tel y correo",
+    "fuente": "canacar"
+  },
+  {
+    "id": "831ff870-ed66-4410-a133-e60e1f1feaeb",
+    "empresa": "Via Express, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "cristina.davila@viaexpress.com.mx",
+    "telefono": "8677151109",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Anahuac 4647 Int Na, Colonia Anahuac, CP 88260\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2a7548a9-2980-4092-ad1f-09766a39c2f4",
+    "empresa": "Victoria Buhaya Caballero",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "vicky@reynatransportes.com",
+    "telefono": "6566486103",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Laguna de Mayran 6975 Int Na, Fraccionamiento Mexico, CP 32410\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b0e2b0e4-c4e6-4534-98fc-794a958bb0aa",
+    "empresa": "Wade Rain de México, S. de R.L. de C.V.",
+    "ciudad": "León, Guanajuato",
+    "correo": "lchacon@waderain.com",
+    "telefono": "4777115588",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Beta 204 Int Na, Colonia Industrial Delta, CP 37545\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (correo ya en base sugiere posible apellido 'Chacón', sin confirmar nombre completo; Wade Rain es fabricante/distribuidor de equipo de riego, registrado en CANACAR como flota de carga propia — probablemente reparto de su propio equipo) · CANACAR: Autotransporte de Carga General, 11 a 50 personas, León · fuente: CANACAR directorio de socios (ya en base)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b2a4ed93-999a-4584-8630-7186269d3df7",
+    "empresa": "Yarco Logistic, S.A. de C.V.",
+    "ciudad": "Torreón, Coahuila",
+    "correo": "emma@yarza.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Mueble 209 Int Na, Parque Industrial Oriente, CP 27272\nPROSPECCIÓN 2026-08-19: sin decisor público (el correo del registro, emma@yarza.com.mx, insinúa el apellido Yarza, pero ninguna fuente lo confirma con cargo) · fuente: CANACAR 17-ago-2026\nENCAJE: alto — socio CANACAR en parque industrial, 11-50 personas",
+    "fuente": "canacar"
+  }
+]

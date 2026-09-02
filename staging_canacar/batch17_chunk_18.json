@@ -1,0 +1,52 @@
+[
+  {
+    "id": "ac43e564-55a8-40c9-995a-79c6aaac3fd6",
+    "empresa": "Transportes y Maniobras Portuarias de Mexico",
+    "ciudad": "Manzanillo, Colima",
+    "correo": "roberto.cartas@tmpdemexico.com.mx",
+    "telefono": "3141652401",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General y Peligrosa · 11 a 50 personas · Calle Circunvalacion 478 Int Na, Colonia Centro, CP 28200\nUbicación aproximada 17-ago: centroide de 551 establecimientos DENUE en Manzanillo, Colima — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6cfd763a-5a87-4016-9716-8995cfa36ee0",
+    "empresa": "Transportes y Moviles de la Paz, S.A. de C.V.",
+    "ciudad": "Zapopan, Jalisco",
+    "correo": "adrianaadmi_tranmoviles@hotmail.com",
+    "telefono": "5519549314",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte Especializado de Oficinas Moviles · 11 a 50 personas · Calle Primero de Enero 3889 Int 18, Colonia Nuevo Mexico, CP 45138\nUbicación aproximada 17-ago: centroide de 205 establecimientos DENUE en Zapopan, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "136ffa3b-8fca-438b-953e-4fa19c4748ec",
+    "empresa": "Transportes Zaibick, S.A. de C.V.",
+    "ciudad": "Altamira, Tamaulipas",
+    "correo": "eloisa@larraga.com.mx",
+    "telefono": "8332602900",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Especializada · 11 a 50 personas · Carretera Tampico-Mante Km 33+260 Sn Int Na, Colonia Congregación Miguel Hidalgo, CP 89610\nUbicación aproximada 17-ago: centroide de 176 establecimientos DENUE en Altamira, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "471b0845-7ebb-4a7d-b202-e734d6b8209b",
+    "empresa": "Transportes Zondic, S.A. de C.V.",
+    "ciudad": "Saltillo, Coahuila",
+    "correo": "scordova@zondic.com",
+    "telefono": "8182800506",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Murguia 111 Int Na, Colonia Centro, CP 25000\nHISTORIA: socia registrada de CANACAR (directorio de socios, 17-ago-2026): Transportes Zondic, S.A. de C.V., Autotransporte de Carga, 11 a 50 personas, Calle Murguía 111, Centro, Saltillo, Coahuila. El dominio zondic.com no resuelve en DNS (ENOTFOUND), no se pudo verificar. Correo scordova@zondic.com — nominal (posible apellido Córdoba/Córdova), sin confirmación de nombre completo ni cargo.\nPROSPECCIÓN 2026-08-20: sin decisor público confirmado (correo nominal 'scordova@' sin nombre completo verificado) · LinkedIn: no hallado · fuente: directorio de socios CANACAR 17-ago-2026; zondic.com sin DNS. WebSearch agotado en la sesión.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3b7730a3-9e8e-467b-902d-3391bd3274a0",
+    "empresa": "Transportista Mexicana Valbo, S.A. de C.V.",
+    "ciudad": "Gustavo A. Madero, Ciudad de México",
+    "correo": "albinohernandezg@hotmail.com",
+    "telefono": "5526030592",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Avenida 510 138 Int Na, Colonia San Juan de Aragon, CP 7950\nUbicación aproximada 17-ago: centroide de 268 establecimientos DENUE en Gustavo A. Madero, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

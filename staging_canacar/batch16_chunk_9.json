@@ -1,0 +1,52 @@
+[
+  {
+    "id": "249c3e55-f6a3-4f75-bb77-7d333387a0bf",
+    "empresa": "Transportes de Gas del Sureste, S.A. de C.V.",
+    "ciudad": "Tuxtla Gutiérrez, Chiapas",
+    "correo": "transgasusa@hotmail.com",
+    "telefono": "9616141856",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Materiales Peligrosos Gas L.P · 11 a 50 personas · Boulevard Libramiento Sur Oriente Km 8.7 Sn Int Na, Colonia Jose Castillo Tielemans, CP 29070\nUbicación aproximada 17-ago: centroide de 289 establecimientos DENUE en Tuxtla Gutiérrez, Chiapas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b80113ce-e3ec-4b40-bc72-6ea1046dd3f0",
+    "empresa": "Transportes de Líquidos de Nayarit, S.A. de C.V.",
+    "ciudad": "Tepic, Nayarit",
+    "correo": "tralisa_tepic@hotmail.com",
+    "telefono": "3112125450",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio Publico de Autotransporte de Carga · 11 a 50 personas · Calle Cinco 49 Int Na, Colonia el Rodeo, CP 63060\nUbicación aproximada 17-ago: centroide de 89 establecimientos DENUE en Tepic, Nayarit — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (búsqueda web no disponible por tope de sesión) · CANACAR: Servicio Público de Autotransporte de Carga (líquidos), 11 a 50 personas, Tepic · fuente: CANACAR directorio de socios (ya en base)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3d49614e-cd4b-45dd-9d5e-702267f95fd5",
+    "empresa": "Transportes de Occidente Consolidaciones y Almacenaje, S.A. de C.V.",
+    "ciudad": "Zamora, Michoacán",
+    "correo": "gerenciageneral@troccona.com",
+    "telefono": "3515157162",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Alicante 13 Int Na, Colonia Valencia, CP 59610",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a969dd68-7ab1-4fb3-9cbb-cd80a88cb8f7",
+    "empresa": "Transportes Delta de Monterrey",
+    "ciudad": "Allende, Nuevo León",
+    "correo": "anapaula@transportesdelta.com.mx",
+    "telefono": "8110806570",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte Carga General · 11 a 50 personas · Calle Carlos Benjamin Salazar Martinez Norte 400 Int Na, Colonia el Maguey, CP 67350\nUbicación aproximada 17-ago: centroide de 123 establecimientos DENUE en Allende, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8e089dc1-557b-4767-84c6-017b34b71f69",
+    "empresa": "Transportes Directos, S.A. de C.V.",
+    "ciudad": "Progreso, Yucatán",
+    "correo": "transportesdirectos@hotmail.com",
+    "telefono": "9699353135",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Federal · 11 a 50 personas · Calle 80 250 Int A, Ciudad Centro, CP 97320\nUbicación aproximada 17-ago: centroide de 61 establecimientos DENUE en Progreso, Yucatán — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 2026-08-19: sin decisor público hallado — sin dominio propio ni sitio para consultar (correo genérico/ausente) y sin cupo de WebSearch en la sesión; solo se usó la evidencia ya presente en notas (DENUE).\nENCAJE: alto — empresa formal (S.A. de C.V.), socia de CANACAR, carga federal, tamaño medio-grande (11-50 personas).",
+    "fuente": "canacar"
+  }
+]

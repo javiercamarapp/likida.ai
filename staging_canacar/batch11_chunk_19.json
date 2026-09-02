@@ -1,0 +1,52 @@
+[
+  {
+    "id": "94c5af9f-face-4f7d-bc62-e8fdd67f4a18",
+    "empresa": "Morho Logistics, S. de R.L. de C.V.",
+    "ciudad": "Chihuahua, Chihuahua",
+    "correo": "admin@morhologistics.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga General · 11 a 50 personas · Calle Sierra de la Cal 4904 Int Na, Colonia Primero de Mayo, CP 31074\nUbicación aproximada 17-ago: centroide de 282 establecimientos DENUE en Chihuahua, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 2026-08-21: DECISOR CONFIRMADO (confianza alta) — Miguel Gerardo Morita Holguín, Gerente General de Morho Logistics (el nombre de la empresa es una contracción de \"Morita Holguín\"). Fuente: sitio oficial morhologistics.com.mx (dirección exacta coincide: Sierra de la Cal 4904) + perfil LinkedIn personal a su nombre afiliado a MORHO LOGISTICS S DE RL DE CV. Se consolida la fila duplicada del censo 'TRASPORTE MORHO LOGISTICS' (id df413599) como duplicado_de esta fila.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a092998f-68d2-4765-b662-56d4f81eb254",
+    "empresa": "Movisaro, S.A. de C.V.",
+    "ciudad": "Zapopan, Jalisco",
+    "correo": "cotizaciones@movisaro.com",
+    "telefono": "3313018173",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Especializada · 11 a 50 personas · Calle San Pedro y San Pablo 698 Int Na, Colonia el Campanario, CP 45234\nUbicación aproximada 17-ago: centroide de 205 establecimientos DENUE en Zapopan, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (razón social corporativa SA de CV, no persona física) · no se localizó sitio oficial · socio CANACAR, autotransporte de carga especializada en Zapopan · fuente: búsqueda web",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8c2e1cc6-fd7d-4d08-8949-ca9cacbb632d",
+    "empresa": "Mqlogistics de México, S. de R.L. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "manuel@mql.mx",
+    "telefono": "6865669186",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportista Federal de Carga · 11 a 50 personas · Circuito Antonio Valdez Herrera 2400 Int 1-A, Colonia Islas Agrarias A, CP 21600\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b7258898-7977-42ff-8546-cc3d3dafbb55",
+    "empresa": "Ms Logistics, S.A. de C.V.",
+    "ciudad": "Aguascalientes, Aguascalientes",
+    "correo": "carolina.m@mslogistics.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera a Loreto 308 Int Na, Rancho Na, CP 20358\nUbicación aproximada 17-ago: centroide de 261 establecimientos DENUE en Aguascalientes, Aguascalientes — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: CANACAR 17-ago-2026",
+    "fuente": "canacar"
+  },
+  {
+    "id": "97ddff20-f4c9-4973-bf54-f8f86cce872d",
+    "empresa": "Mudanzas Transcontainer, S.A. de C.V.",
+    "ciudad": "Tlalnepantla de Baz, México",
+    "correo": "alejandrob@transcontainer-group.com",
+    "telefono": "5553982323",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Avenida Dr. Gustavo Baz Prada 295 Int Na, Corredor Industrial Viveros de la Loma, CP 54080\nUbicación aproximada 17-ago: centroide de 187 establecimientos DENUE en Tlalnepantla de Baz, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

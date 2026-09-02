@@ -1,0 +1,52 @@
+[
+  {
+    "id": "aa0a90dd-c5e5-468c-99c9-ceeb66b82692",
+    "empresa": "Servitransportes de Carga Especializada, S.A. de C.V.",
+    "ciudad": "Monclova, Coahuila",
+    "correo": "servitransportesdecargae@prodigy.net.mx",
+    "telefono": "8666976347",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Secundaria 3 866 Int Na, Colonia Obrera Sur, CP 25790",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f1dc88ab-428c-4cf5-ab52-6296b9b76985",
+    "empresa": "Servitransportes Viga, S.A. de C.V.",
+    "ciudad": "Guadalupe, Nuevo León",
+    "correo": "carlos.fernandez@villacero.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera a San Miguel Km 2 200 Int Na, Villa de San Miguel, CP 67110\nUbicación aproximada 17-ago: centroide de 170 establecimientos DENUE en Guadalupe, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-19: sin decisor publico confirmado · LinkedIn: no localizado · fuente: CANACAR directorio de socios 17-ago-2026 (el correo del registro, en dominio villacero.com, esta a nombre de Carlos Fernandez pero NINGUNA fuente publica confirma su cargo, por eso no se escribe en contacto_nombre). Flota cautiva ligada al grupo siderurgico Villacero. Flota NO publicada — unidades sin dato. ENCAJE: medio — carga general socia de CANACAR, pero flota cautiva de un grupo grande",
+    "fuente": "canacar"
+  },
+  {
+    "id": "067948ad-4f44-4f15-8510-768fc680f39e",
+    "empresa": "Setvac",
+    "ciudad": "Abasolo, Guanajuato",
+    "correo": "gabrielavacac@gmail.com",
+    "telefono": "4621058147",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte de Carga Publico Federal · 11 a 50 personas · Carretera Federal Irapuato la Piedad Km 27.5 Sn Int Na, Colonia Los Pinos, CP 36970\nUbicación aproximada 17-ago: centroide de 17 establecimientos DENUE en Abasolo, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ec030ec9-7c96-4976-9892-929f6b801a66",
+    "empresa": "Sherpa Business Technology, S.A. de C.V.",
+    "ciudad": "Saltillo, Coahuila",
+    "correo": "tramitesexpressdot@hotmail.com",
+    "telefono": "8443922065",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Felipe Angeles 617 Int Na, Ciudad Saltillo Coahuila, CP 25270",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e61a3f94-c641-4b67-8114-7452c7b69fde",
+    "empresa": "Silsa Logística, S.A. de C.V.",
+    "ciudad": "Celaya, Guanajuato",
+    "correo": "coordinacion@silsalogistica.com.mx",
+    "telefono": "4611613495",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Paseo de Celaya 800 Int Na, Colonia Jardines de Celaya 1A Seccion, CP 38080\nUbicación aproximada 17-ago: centroide de 79 establecimientos DENUE en Celaya, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-20: sin decisor público hallado; dominio silsalogistica.com.mx no resuelve a sitio corporativo (página de hosting genérica), no se pudo confirmar como sitio oficial · fuente: CANACAR directorio de socios 17-ago-2026.",
+    "fuente": "canacar"
+  }
+]

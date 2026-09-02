@@ -1,0 +1,52 @@
+[
+  {
+    "id": "58020867-8816-47ed-8a64-a3264e5b5b5f",
+    "empresa": "Transportes David Durán García, S.A. de C.V.",
+    "ciudad": "Azcapotzalco, Ciudad de México",
+    "correo": "facturastddg@daduga.com.mx",
+    "telefono": "5555873356",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Fletes · 11 a 50 personas · Calle Poniente 116 690 Int Na, Zona Industrial Vallejo, CP 2300\nUbicación aproximada 17-ago: centroide de 174 establecimientos DENUE en Azcapotzalco, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (sitio daduga.com.mx caído, sin prensa hallada) · viajes/mes: no público · historia: no pública · fuente: directorio CANACAR; fetch al sitio oficial falló (DNS). · SCORE FIT (rúbrica pública): 1/5",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7076ce07-b639-4547-9f98-94e9110a4bc0",
+    "empresa": "Transportes de Carga del Noreste, S.A, de C.V.",
+    "ciudad": "Río Bravo, Tamaulipas",
+    "correo": "jmoralestranorsa@live.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Geneal · 11 a 50 personas · Carretera Matamoros-Mazatlan Km 69.2 Sn Int Sn, Colonia la Paz, CP 88811\nUbicación aproximada 17-ago: centroide de 24 establecimientos DENUE en Río Bravo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts). · PROSPECCIÓN 19-ago-2026: sin decisor público (cupo de WebSearch agotado en esta sesión; solo WebFetch disponible) · sin sitio oficial localizado; domicilio en Carretera Matamoros-Mazatlán km 69.2, Río Bravo, Tamaulipas · ENCAJE: medio — flota carretera chica pero con viajes recurrentes",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e9a96cc2-17d4-4419-b516-d5c7c43b1ba8",
+    "empresa": "Transportes de Carga Géminis, S.A. de C.V.",
+    "ciudad": "Tultitlán, México",
+    "correo": "juan.mondragong@tcgeminis.com.mx",
+    "telefono": "5558843349",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Via Jose Luis Portillo 13 Int Na, Colonia Mariano Escobedo, CP 53258\nUbicación aproximada 17-ago: centroide de 127 establecimientos DENUE en Tultitlán, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d268355c-a2d0-4b9c-a510-99c7f38c907b",
+    "empresa": "Transportes de Carga Travel, S.A. de C.V.",
+    "ciudad": "Guadalajara, Jalisco",
+    "correo": "contabilidad@transcargatravel.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Especializada · 11 a 50 personas · Camino Antiguo Camino a Chapala 1395 Int Na, Colonia la Nogalera, CP 44470\nUbicación aproximada 17-ago: centroide de 508 establecimientos DENUE en Guadalajara, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 19-ago-2026: sin decisor público — correo ya registrado es del área de contabilidad, sin sitio propio ni prensa.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6e70ccaf-b5fc-4894-a8a9-f3ec9206a227",
+    "empresa": "Transportes de D' Amiano, S.A. de C.V.",
+    "ciudad": "Tapachula, Chiapas",
+    "correo": "jcordero@damiano.com.mx",
+    "telefono": "9626262300",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Especializada Gas L.P. · 11 a 50 personas · Calle 8A. Avenida Norte 401 Int 20, Colonia 5 de Febrero, CP 30710\nUbicación aproximada 17-ago: centroide de 137 establecimientos DENUE en Tapachula, Chiapas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nHISTORIA: socio de CANACAR (directorio, 17-ago-2026), Autotransporte de Carga Especializada Gas L.P., 11 a 50 personas, 8a Av. Norte 401 Int 20, Col. 5 de Febrero CP 30710, Tapachula. damiano.com.mx (19-ago-2026): Grupo D'Amiano declara \"mas de 63 anos\" en compra, almacenamiento y distribucion de Gas LP (portatil, estacionario, carburacion), ademas de proyectos agricolas/ganaderos/forestales, administracion de inmuebles, construccion y renta de maquinaria. Tel oficina (962) 626-2300. Bolsa de trabajo en /vacantes SIN vacantes activas publicadas.\nENCAJE: alto - socio CANACAR, Gas LP especializado, 63 anos de trayectoria\nPROSPECCION 2026-08-19: sin decisor publico - fuente: damiano.com.mx no nombra directivos; correo del registro (jcordero@) solo da inicial. WebSearch agotado en la sesion (200/200).",
+    "fuente": "canacar"
+  }
+]

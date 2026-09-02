@@ -1,0 +1,52 @@
+[
+  {
+    "id": "5887fb9d-8b1a-4446-af8b-01f843d6c959",
+    "empresa": "Alfonso del Real Montoya",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "contabilidad@realiza.com.mx",
+    "telefono": "6646262620",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga General · 11 a 50 personas · Boulevard Via Rapida Poniente 6112 Int A, Colonia Rio Tijuana Tercera Etapa, CP 22226\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "349d05e4-04e0-435d-9cdf-6b2739823769",
+    "empresa": "Alfredo Suárez Serrano, S.A. de C.V.",
+    "ciudad": "Guaymas, Sonora",
+    "correo": "castajc@hotmail.com",
+    "telefono": "6222241885",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Fraccionamiento Las Butacas Sn Int Na, Fraccionamiento Las Batuecas, CP 85430\nDENUE API 17-ago (cruce CANACAR→DENUE): «ALFREDO SUAREZ SERRANO», score 1.06",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8ea98406-7d84-4b72-8866-b1992ee82720",
+    "empresa": "Alfri Express, S.A. de C.V.",
+    "ciudad": "Nogales, Sonora",
+    "correo": "drivera.nog@grupoei.com.mx",
+    "telefono": "6313160179",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Periferico y Reforma Sn Int Sn, Colonia del Rosario, CP 84020\nUbicación aproximada 17-ago: centroide de 145 establecimientos DENUE en Nogales, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6d708b48-877d-44ef-9b5b-5a3ecbaf4513",
+    "empresa": "Alianzas y Servicios Integrados, S.A. de C.V.",
+    "ciudad": "Celaya, Guanajuato",
+    "correo": "manuel@asitransportes.com",
+    "telefono": "4615983356",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Sur 9 132 Int Na, Colonia Ciudad Industrial, CP 38010\nUbicación aproximada 17-ago: centroide de 79 establecimientos DENUE en Celaya, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "1a892380-c6a6-4573-b342-5f6040e3c8e1",
+    "empresa": "Alma Leticia Suárez Soria",
+    "ciudad": "Castaños, Coahuila",
+    "correo": "suarezexpress@yahoo.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Boulevard Gustavo Galaz 210 Int a 100 Mts, Colonia California, CP 25870",
+    "fuente": "canacar"
+  }
+]

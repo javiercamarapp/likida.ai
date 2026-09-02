@@ -1,0 +1,52 @@
+[
+  {
+    "id": "c74e478a-c113-49f7-a114-2386dfd0cc02",
+    "empresa": "Tbs Logistics Services, S.A. de C.V.",
+    "ciudad": "Iztapalapa, Ciudad de México",
+    "correo": "angel.becerril.r@gmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle 22 de Diciembre de 1860 Mz 164 Lt 1866 a Int 306, Colonia Leyes de Reforma 3Era Seccion, CP 9310\nUbicación aproximada 17-ago: centroide de 359 establecimientos DENUE en Iztapalapa, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b8b1415a-f863-4ef3-833f-64849c0080fa",
+    "empresa": "Tbx Usa, S.A. de C.V.",
+    "ciudad": "Reynosa, Tamaulipas",
+    "correo": "gestoria@tbl.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Mercancia · 11 a 50 personas · Boulevard Luis Donaldo Colosio Sn Int Sn, Colonia la Escondida, CP 88770\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Reynosa, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "64440afb-ff38-4bd3-9fa9-a55bb2407ce4",
+    "empresa": "Tecnocargo de México, S.A. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "cuentasporpagar@tecnocargo.com.mx",
+    "telefono": "2291001560",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Cardel Km 3.5 Na Int Na, Colonia Playa Linda, CP 91810\nPROSPECCIÓN 2026-08-19: sin decisor público · LinkedIn: no hallado · viajes/mes: no público · historia: +25 años en transporte especializado (químicos peligrosos, refrigerado, carga general) desde Veracruz, clientes multinacionales (DOW, BASF, DuPont, Total, Barilla, DHL), ISO 9001 e ISO 14001 · flota: número no público · conmutador sitio: 229 100 1560, info@tecnocargo.com.mx · sitio: tecnocargo.com.mx · fuente: tecnocargo.com.mx · score fit: 1/5 (rúbrica pública) → urgencia: explorando",
+    "fuente": "canacar"
+  },
+  {
+    "id": "307805c5-2d81-4d9f-b65d-f67a2f43feb5",
+    "empresa": "Terramex Transporte y Logistica, S.A. de C.V.",
+    "ciudad": "San Nicolás de los Garza, Nuevo León",
+    "correo": "rtorres@grupoterramex.com",
+    "telefono": "8183320896",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Publico Federal de Carga · 11 a 50 personas · Avenida Nogalar Sur 206 Int B, Colonia Cuauhtemoc, CP 66450\nUbicación aproximada 17-ago: centroide de 150 establecimientos DENUE en San Nicolás de los Garza, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e61fdc84-7573-4bc6-8b8e-65f7ce0d15a6",
+    "empresa": "Tersa Logisitic Sa de Cv",
+    "ciudad": "Camargo, Tamaulipas",
+    "correo": "rramirez@tersausa.com",
+    "telefono": "8916880673",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Mercancia Refrigerada · 11 a 50 personas · Boulevard Carretera a Rio Grande Km 2.5 Na Int Na, Ciudad Camargo, CP 88440\nUbicación aproximada 17-ago: centroide de 6 establecimientos DENUE en Camargo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nHISTORIA (sin confirmar): el correo del directorio usa el dominio tersausa.com, señal de operación de cruce fronterizo entre Camargo, Tamaulipas y Texas; no se confirmó por fuente pública adicional.\nPROSPECCIÓN 2026-08-19: sin decisor público con cargo · LinkedIn: no hallado · fuente: CANACAR 17-ago-2026.",
+    "fuente": "canacar"
+  }
+]

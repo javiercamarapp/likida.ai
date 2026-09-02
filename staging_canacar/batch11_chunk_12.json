@@ -1,0 +1,52 @@
+[
+  {
+    "id": "b9be2704-7fe4-4263-8e71-8012811deefb",
+    "empresa": "Logística y Transportes Gafaso, S.A. de C.V.",
+    "ciudad": "Cuauhtémoc, Ciudad de México",
+    "correo": "fabricio.hernandez@gafaso.com.mx",
+    "telefono": "5555886159",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Colima 220 Int Departamento 305, Colonia Roma Norte, CP 6700\nUbicación aproximada 17-ago: centroide de 267 establecimientos DENUE en Cuauhtémoc, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e3f611b9-5991-4c04-8ac3-60fec1bb4e97",
+    "empresa": "Logística y Traslados Bg-Tc, S.A. de C.V.",
+    "ciudad": "Colima, Colima",
+    "correo": "operacionbgtc@gmail.com",
+    "telefono": "3123086783",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Condor 20 Int Na, Colonia Lomas Verdes, CP 28017\nUbicación aproximada 17-ago: centroide de 65 establecimientos DENUE en Colima, Colima — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nENCAJE: alto — socio CANACAR de 11-50 personas en Colima, correo de operaciones\nPROSPECCIÓN 2026-08-19: sin decisor público · LinkedIn: no hallado · fuente: CANACAR 17-ago-2026 (correo personal en gmail; WebSearch agotado). Flota sin conteo publicado → unidades null.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "39f97746-9408-4dc4-a677-30d5feba6044",
+    "empresa": "Logistics & Operations Expert Group, S.A. de C.V.",
+    "ciudad": "Tultitlán, México",
+    "correo": "contabilidad@loex.com.mx",
+    "telefono": "5532408414",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte y Almacenaje · 11 a 50 personas · Boulevard Benito Juarez 77-79 Int 1, Parque Industrial Tulti Cedis Cuatro, CP 54948\nUbicación aproximada 17-ago: centroide de 127 establecimientos DENUE en Tultitlán, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5f813e47-602c-4a1c-8abc-1bf6366b7ecb",
+    "empresa": "Logistics Management America, S. de R.L. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "cesar.morales@sdlmex.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Otro Autotransporte Foraneo de Carga Federal · 11 a 50 personas · Calzada Gustavo Vildosola 2001 Int Patios, Ejido Exejido Coahuila, CP 21360\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2f796b4c-796f-444d-a522-8d1a77e13788",
+    "empresa": "Logmart Integradores Logisticos de Mexico",
+    "ciudad": "Azcapotzalco, Ciudad de México",
+    "correo": "israel.alonso@logmart.com.mx",
+    "telefono": "5536609128",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicios de Transporte Terrestres y Logistica · 11 a 50 personas · Avenida Rabaul 500 Int Na, Parque Industrial Pical Pantaco, CP 2530\nUbicación aproximada 17-ago: centroide de 174 establecimientos DENUE en Azcapotzalco, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

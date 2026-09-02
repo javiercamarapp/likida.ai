@@ -1,0 +1,52 @@
+[
+  {
+    "id": "851b7fac-e6cc-47a3-b100-e93a69ac0534",
+    "empresa": "Rosch Transporte, S.A. de C.V.",
+    "ciudad": "Cuautitlán Izcalli, México",
+    "correo": "acampos@rosch.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 51 a 250 personas · Calle Tejocotes Lote 18 Zona 4 Int Na, Colonia San Martin Obispo Tepetlixpa, CP 54763\nUbicación aproximada 17-ago: centroide de 171 establecimientos DENUE en Cuautitlán Izcalli, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d0cd24cf-f102-4067-bc5f-44ec0841b9bd",
+    "empresa": "Safeg Transportation, S.A. de C.V.",
+    "ciudad": "León, Guanajuato",
+    "correo": "info@santafedeguanajuato.com",
+    "telefono": "4778302644",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Calle Jerez de Antaño 217 Int Na, Colonia Villas de Santa Julia, CP 37530\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 19-ago-2026: sin decisor público — correo ya registrado (info@santafedeguanajuato.com) es de dominio distinto al nombre comercial (posible grupo relacionado, no confirmado); sin sitio propio de Safeg localizado.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "28fcde0c-5bb3-4b0a-acef-68ec2684ef4f",
+    "empresa": "Sara Gabriela Alzaga Perez",
+    "ciudad": "Reynosa, Tamaulipas",
+    "correo": "caty.lopez@grupovegalza.com",
+    "telefono": "8991227583",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Autotransporte Terrestre de Carga · 51 a 250 personas · Boulevard Alvaro Obregon 1804 Int Na, Colonia Valle Verde, CP 88720\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Reynosa, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e79a74fe-14f2-43f1-b197-1126fdf419d2",
+    "empresa": "Sentinel Carriers, S.A. de C.V.",
+    "ciudad": "Gustavo A. Madero, Ciudad de México",
+    "correo": "angelica.rios@sentinelcarriers.com.mx",
+    "telefono": "5553687495",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Calle Coban 598 Int Na, Colonia Valle del Tepeyac, CP 7740\nUbicación aproximada 17-ago: centroide de 268 establecimientos DENUE en Gustavo A. Madero, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b9f684e8-a166-47e5-aff4-e6fb18e82e18",
+    "empresa": "Servi Transportes Huilango, S.A. de C.V.",
+    "ciudad": "Amatlán de los Reyes, Veracruz",
+    "correo": "s.t.huilango@prodigy.net.mx",
+    "telefono": "2717328170",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga en General · 51 a 250 personas · Carretera San Rafael-Rio Seco Sn Int Na, Pueblo Congregacion San Rafael, CP 94940\nPROSPECCIÓN 2026-08-19: sin decisor público (búsqueda web no disponible por tope de sesión) · CANACAR: Autotransporte de Carga en General, 51 a 250 personas — la operación más grande de esta tanda, Amatlán de los Reyes · fuente: CANACAR directorio de socios (ya en base)",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,102 @@
+[
+  {
+    "id": "8e1b76da-bf58-4a88-a0ef-faad53fc75b3",
+    "empresa": "Kathya Torres Arechiga",
+    "ciudad": "Ensenada, Baja California",
+    "correo": "famtatransportes@gmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Calle Lazaro Cardenas 181 Int Na, Colonia Emiliano Zapata, CP 22895\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Ensenada, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f520cacf-e7c4-40af-bda8-f09b33ed042d",
+    "empresa": "Kawac Construcciones",
+    "ciudad": "Matamoros, Tamaulipas",
+    "correo": "kawac.construcciones@gmail.com",
+    "telefono": "8688124672",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Produccion de Productos de Asfalto · 0 a 10 personas · Avenida Libramiento Emilio Portes Gil 160 Int Na, Colonia Ej Buena Vista, CP 87394\nDENUE API 17-ago (cruce CANACAR→DENUE): «KAWAC CONSTRUCCIONES», score 1.06",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5f84833c-6c39-4a11-b703-c0aebd0fa054",
+    "empresa": "Knigths Cargo, S.A. de C.V.",
+    "ciudad": "Morelia, Michoacán",
+    "correo": "knightscargo@gmail.com",
+    "telefono": "4432276299",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte y Logistica · 0 a 10 personas · Calle Acerina 253 Int Na, Colonia Industrial, CP 58130",
+    "fuente": "canacar"
+  },
+  {
+    "id": "eaf1c360-1c14-41b8-89a2-f6d1e5056c5b",
+    "empresa": "Kvr Logistica en Transportacion",
+    "ciudad": "Tlalnepantla de Baz, México",
+    "correo": "juan.hernandez@kvrlogistica.com",
+    "telefono": "5610220511",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicios de Intermediacion Al Transporte de Carga · 0 a 10 personas · Calle Temazcal 3 Int 301, Colonia la Loma, CP 54060\nUbicación aproximada 17-ago: centroide de 187 establecimientos DENUE en Tlalnepantla de Baz, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "459fd4ab-e1c6-4488-b88b-41b703569409",
+    "empresa": "Landen International Logistic, S.A. de C.V.",
+    "ciudad": "Gustavo A. Madero, Ciudad de México",
+    "correo": "yasmin.g@landen.com.mx",
+    "telefono": "5580330132",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Calle Norte 82 4310 Int Na, Colonia Nueva Tenochtitlan, CP 7890\nUbicación aproximada 17-ago: centroide de 268 establecimientos DENUE en Gustavo A. Madero, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "479915f8-e0f8-456a-b916-14462a765cd3",
+    "empresa": "Laura Inés Cons Figueroa",
+    "ciudad": "Hermosillo, Sonora",
+    "correo": "lcons@tpitic.com.mx",
+    "telefono": "6622136236",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Calzada Los Pinos 49 Int Sn, Colonia Los Naranjos, CP 83060\nUbicación aproximada 17-ago: centroide de 285 establecimientos DENUE en Hermosillo, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "aa307ced-2146-47cc-9e1f-6d9b7e7db154",
+    "empresa": "Lega Fletes Reynosa, S.A. de C.V.",
+    "ciudad": "Reynosa, Tamaulipas",
+    "correo": "administracion@legafletes.com",
+    "telefono": "8991228066",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Calle Sinaloa 1205 Int Na, Colonia Rodriguez, CP 88630\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Reynosa, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c5cfe278-f5d0-4af1-95e1-ecf5a3607719",
+    "empresa": "Leonardo Olivares Vazquez",
+    "ciudad": "Tulancingo de Bravo, Hidalgo",
+    "correo": "oli.leo.rob@gmail.com",
+    "telefono": "7752053163",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foráneo de Carga General · 0 a 10 personas · Calle Oyamel 216 Int Ninguno, Colonia San Juan, CP 43685\nUbicación aproximada 17-ago: centroide de 47 establecimientos DENUE en Tulancingo de Bravo, Hidalgo — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nLa razón social del directorio CANACAR ES una persona física: Leonardo Olivares Vázquez, socio titular. Autotransporte Foráneo de Carga General, 0 a 10 personas, Calle Oyamel 216, Col. San Juan, Tulancingo de Bravo, Hidalgo, CP 43685.\nPROSPECCIÓN 2026-08-20: decisor Leonardo Olivares Vázquez, titular/socio registrado (persona física en el padrón) · LinkedIn: no localizado · fuente: directorio de socios CANACAR 17-ago-2026",
+    "fuente": "canacar"
+  },
+  {
+    "id": "908debed-70d5-40b8-a6cd-303bfae1bd0d",
+    "empresa": "Liliana Vanessa Longoria Treviño",
+    "ciudad": "Matamoros, Tamaulipas",
+    "correo": "jfcof2@yahoo.com",
+    "telefono": "8681575741",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Calle del Carmen 6 Int Na, Colonia Delicias, CP 87360\nUbicación aproximada 17-ago: centroide de 181 establecimientos DENUE en Matamoros, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d183b501-6b88-4325-b760-b4df76e39225",
+    "empresa": "Líneas 1° de Mayo, S.A. de C.V.",
+    "ciudad": "Nava, Coahuila",
+    "correo": "mcepeda@l1mayo.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Carretera 57 Sn Int Sn, Colonia Na, CP 26170\nPROSPECCIÓN 19-ago-2026: sin decisor con cargo confirmado — correo ya registrado (mcepeda@l1mayo.com) sugiere contacto 'M. Cepeda'; confirma dominio propio l1mayo.com; ubicación Nava, Coahuila (cerca de Piedras Negras). No se llena contacto_nombre por falta de cargo.",
+    "fuente": "canacar"
+  }
+]

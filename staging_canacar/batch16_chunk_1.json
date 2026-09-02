@@ -1,0 +1,52 @@
+[
+  {
+    "id": "918e6dbd-4141-4b05-9662-e29a5e6d43f2",
+    "empresa": "Transportadora Nuevo Milenio, S.A. de C.V.",
+    "ciudad": "Saltillo, Coahuila",
+    "correo": "logistica@tnm.mx",
+    "telefono": "8444309339",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Oaxaca 683 Int Na, Colonia Republica Oriente, CP 25280",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a36ff2fc-e0e2-4110-9dc7-39c95736f0b0",
+    "empresa": "Transportadora Platinum, S.A. de C.V.",
+    "ciudad": "Santa Cruz Tlaxcala, Tlaxcala",
+    "correo": "recursos_humanos@corporativodelangel.mx",
+    "telefono": "2414171214",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Federal Mexico-Veracruz 50 Int Na, Pueblo San Miguel, CP 90640\nUbicación aproximada 17-ago: centroide de 6 establecimientos DENUE en Santa Cruz Tlaxcala, Tlaxcala — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · correo (recursos_humanos@corporativodelangel.mx) sugiere que forma parte de 'Corporativo del Ángel', no confirmado · socio CANACAR, Carretera México-Veracruz, Tlaxcala · fuente: búsqueda web",
+    "fuente": "canacar"
+  },
+  {
+    "id": "113dfc08-5d22-4d8a-8d9f-150127b80498",
+    "empresa": "Transportadora Reme de la Laguna, S.A. de C.V.",
+    "ciudad": "Gómez Palacio, Durango",
+    "correo": "transportadora.reme@gmail.com",
+    "telefono": "8711499028",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera la Union-Jabonoso Parcela 63 Int Na, Ejido Las Huertas, CP 35140\nUbicación aproximada 17-ago: centroide de 111 establecimientos DENUE en Gómez Palacio, Durango — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN 21-ago-2026: sin decisor público. Transporte local de productos agrícolas sin refrigeración.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e5e9c207-9e6f-4525-817b-62339535ebe3",
+    "empresa": "Transportadora San German, S.A. de C.V.",
+    "ciudad": "Cadereyta Jiménez, Nuevo León",
+    "correo": "erik.sandoval@tecarmex.com.mx",
+    "telefono": "8119662000",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera a Reynosa Km 39 Sn Int Na, Colonia Santa Fe, CP 67453\nUbicación aproximada 17-ago: centroide de 40 establecimientos DENUE en Cadereyta Jiménez, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nHISTORIA (sin confirmar): el correo del directorio (erik.sandoval@tecarmex.com.mx) usa el dominio de otra empresa (Tecarmex); posible vínculo de grupo no confirmado — el intento de verificar tecarmex.com.mx falló por conexión rechazada al 19-ago-2026.\nPROSPECCIÓN 2026-08-19: sin decisor público con cargo · LinkedIn: no hallado · fuente: CANACAR 17-ago-2026.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4a24da69-17c6-40c5-9cbf-0b4e0f7fcf4e",
+    "empresa": "Transportadora Tomza, S.A. de C.V.",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "ksanchez.p@tomza.com",
+    "telefono": "6561982756",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Carretera Panamericana Km 17.5 Sn Int Na, Colonia Nuevo Hipodromo, CP 32685\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

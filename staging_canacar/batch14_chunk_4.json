@@ -1,0 +1,52 @@
+[
+  {
+    "id": "9e4a189a-7d7a-4c4d-9df8-6e2fbf68e10b",
+    "empresa": "Servicio Express de Tijuana, S. de R.L. de C.V.",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "lmondragon@estruckline.net",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Cañon del Padre 375 Int 1, Colonia Alamar, CP 22465\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4bb8b6d9-62fe-49a1-9395-bb4cae5781db",
+    "empresa": "Servicio Ideal de Transportes, S.A. de C.V.",
+    "ciudad": "San Pedro Tlaquepaque, Jalisco",
+    "correo": "facturacion@diazfarias.com",
+    "telefono": "3332718550",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga en General · 11 a 50 personas · Camino a San Sebantian 950 Int Na, Colonia la Gigantera, CP 45601\nUbicación aproximada 17-ago: centroide de 219 establecimientos DENUE en San Pedro Tlaquepaque, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (correo de facturación en dominio diazfarias.com, que responde 403; posible grupo Díaz Farías, sin nombre verificable) · LinkedIn: no encontrado · viajes/mes: no público · historia: no pública · fuente: directorio CANACAR + intento de sitio · fit 1/5",
+    "fuente": "canacar"
+  },
+  {
+    "id": "fc989484-7912-4972-a15a-f4f186debb71",
+    "empresa": "Servicios Al Comercio y Transportes Garusi, S.A. de C.V.",
+    "ciudad": "Lázaro Cárdenas, Michoacán",
+    "correo": "gastonsiem@sercona.com.mx",
+    "telefono": "3314175588",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Autotransporte de Carga General Federal · 11 a 50 personas · Avenida Autonomia Universitaria 71 Int 10, Colonia Lazaro Cardenas, CP 60953",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3cac0555-7143-4376-9dee-4ce382af181b",
+    "empresa": "Servicios de Comercio Exterior y Logística Internacional Hermorey, S.A. de C.V.",
+    "ciudad": "Cuauhtémoc, Chihuahua",
+    "correo": "alondra.weckmann@sceli.mx",
+    "telefono": "6255825813",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Comercio Exterior y Logistica Internacional · 11 a 50 personas · Carretera Cuauhtémoc-Álvaro Obregon Km 7 Campo No. 2-B Int Na, Colonia Chihuahua, CP 31604\nUbicación aproximada 17-ago: centroide de 95 establecimientos DENUE en Cuauhtémoc, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c11a5540-e568-4f72-9f23-621c5ff76b1e",
+    "empresa": "Servicios de Transportacion de Carga Orm, S.A. de C.V.",
+    "ciudad": "Tultitlán, México",
+    "correo": "transportes.roa@hotmail.com",
+    "telefono": "5553585507",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Local de Carga General · 11 a 50 personas · Calle Estado de Mexico Mz 12 Int Na, Colonia Buena Vista 1A Secc, CP 54955\nUbicación aproximada 17-ago: centroide de 127 establecimientos DENUE en Tultitlán, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nSocio CANACAR (17-ago-2026): Autotransporte LOCAL de Carga General, 11 a 50 personas, Colonia Buena Vista 1a Secc., Tultitlán, Estado de México — corredor industrial del norte del Valle de México. Local con 11-50 personas significa muchos viajes cortos al día, que es el volumen donde el cuadre manual duele más por número que por complejidad. Correo de negocio registrado bajo el alias \"transportes.roa\".\nENCAJE: alto — carga local de 11-50 personas, alto número de viajes cortos por mes\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (sin sitio web; WebSearch agotado en la sesión)",
+    "fuente": "canacar"
+  }
+]

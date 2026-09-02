@@ -1,0 +1,52 @@
+[
+  {
+    "id": "3bb89acc-5af8-436e-ba04-17efe8442395",
+    "empresa": "Juan Manuel Villarreal de Alba",
+    "ciudad": "Monterrey, Nuevo León",
+    "correo": "operaciones@regioexpress.net",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 11 a 50 personas · Calle Paseo de Los Leones 1684 Int Sn, Colonia Las Cumbres 1 Sector, CP 64610\nUbicación aproximada 17-ago: centroide de 442 establecimientos DENUE en Monterrey, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "635279c8-1eb6-4acd-b209-7035748fab88",
+    "empresa": "Julio César Cienfuegos Garza",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "seguridad@gpocien.com",
+    "telefono": "8677182972",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Lazo 502 Int Na, Colonia el Caporal, CP 88293\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nENCAJE: alto - misma operacion que Grupo Cien Nuevo Laredo (64648b2f); no duplicar contacto\nPROSPECCION 2026-08-19: decisor Julio Cesar Cienfuegos Garza, titular (razon social persona fisica, socio CANACAR) - LinkedIn: no hallado - fuente: CANACAR directorio de socios 17-ago-2026, correo (seguridad@gpocien.com) confirma vinculo con Grupo Cien. WebSearch agotado en la sesion (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e55360b5-76ed-495b-a084-0e667909f469",
+    "empresa": "Karla Daniela Hidalgo González",
+    "ciudad": "Ciudad Madero, Tamaulipas",
+    "correo": "hidalgo.lotransporta@hotmail.com",
+    "telefono": "8331551957",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Trasporte de Contenedores y Caja Suelta · 11 a 50 personas · Calle Benito Juarez 307 Int Na, Colonia Revolucion Verde, CP 89518\nUbicación aproximada 17-ago: centroide de 33 establecimientos DENUE en Ciudad Madero, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nENCAJE: alto — titular identificada, socia CANACAR, transporte de contenedores en zona portuaria Tampico-Madero\nPROSPECCIÓN 2026-08-19: decisora Karla Daniela Hidalgo González, titular (registro CANACAR a nombre de persona física, correo con juego de su propio apellido) · LinkedIn: no hallado · fuente: CANACAR 17-ago-2026. Flota sin conteo publicado → unidades null.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a1c4fb43-0dff-4bd8-9944-259a8eed2020",
+    "empresa": "Koh Logistics, S. de R.L. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "luis.garcia@cohlogistics.com",
+    "telefono": "6642189048",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle a San Felipe Na Int Km 1.5, Colonia Rivera Campestre, CP 21387\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (correo luis.garcia@ sugiere apellido García, no confirmado) · ADVERTENCIA: el dominio del correo (cohlogistics.com) redirige a cohconstruction.com, una constructora no relacionada — no usar como fuente ni confiar en ese dominio · socio CANACAR, autotransporte de carga general, Mexicali · fuente: búsqueda web",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7ae6fc4e-85e2-4eda-845d-04219ef8c657",
+    "empresa": "Ktr Logistics, S. de R.L. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "sensei.hernandez@ktrlogistics.com",
+    "telefono": "6865648396",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Aeropuerto Km 9.5 Sn Int Lt 9, Colonia Mariano Abasolo, CP 21600\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

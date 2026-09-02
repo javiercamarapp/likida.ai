@@ -1,0 +1,102 @@
+[
+  {
+    "id": "6a8d0d8a-302f-4b2b-96fb-0bdca3faef7a",
+    "empresa": "Ttn Global Logistic, S.A. de C.V.",
+    "ciudad": "Tizayuca, Hidalgo",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Otros Servicios de Intermediacion Para el Transporte de Carga · 0 a 10 personas · Carretera Federal Mexico Pachuca Km 54.5 207 Int E, Colonia Haciendas de Tizayuca, CP 43815\nUbicación aproximada 17-ago: centroide de 31 establecimientos DENUE en Tizayuca, Hidalgo — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "aec161b3-cbae-4d9a-adfb-55d387058d93",
+    "empresa": "Tufesa Logist, S.A. de C.V.",
+    "ciudad": "Cajeme, Sonora",
+    "correo": null,
+    "telefono": "6444109444",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Calle California 1019 Int A, Colonia Sochiloa, CP 85150\nUbicación aproximada 17-ago: centroide de 140 establecimientos DENUE en Cajeme, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "80404a47-0e71-45bd-b4d6-f2cd3fa78f9b",
+    "empresa": "Viange Global Logistics",
+    "ciudad": "Manzanillo, Colima",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Boulevard Miguel de la Madrid Hurtado 502 Int Na, Colonia el Pacifico, CP 28219\nUbicación aproximada 17-ago: centroide de 551 establecimientos DENUE en Manzanillo, Colima — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a2622bba-5674-4ba2-b8c9-07b1962c9393",
+    "empresa": "Ybm Servicios Internacionales",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": null,
+    "telefono": "8672174535",
+    "estado": "contactado",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Local · 0 a 10 personas · Carretera a Piedras Negras Km 13.5 Int Sn, Colonia Ejido la Cruz, CP 88176\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · no se localizó correo ni sitio oficial · socio CANACAR, transporte local, Nuevo Laredo · fuente: búsqueda web",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f73a7ad4-78a4-4467-ab85-ea1d591a3864",
+    "empresa": "Yeni Patricia Hernandez Gomez",
+    "ciudad": "Centro, Tabasco",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Calle Antonio Reyes Zurita 119 Int Na, Colonia Carrizal, CP 86108\nUbicación aproximada 17-ago: centroide de 165 establecimientos DENUE en Centro, Tabasco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "566805b6-ddfe-4d79-afcb-af402db208e2",
+    "empresa": "Zbk Logistics, S.A. de C.V.",
+    "ciudad": "Tampico, Tamaulipas",
+    "correo": null,
+    "telefono": "8332602900",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Especializada en Modalidad de Materiales y Residuos Peligrosos · 0 a 10 personas · Calle Alvaro Obregon 103 Oriente Int 701, Colonia Centro Tampico, CP 89000\nUbicación aproximada 17-ago: centroide de 121 establecimientos DENUE en Tampico, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7627972e-a0dd-4d15-95d7-ee4684dd1834",
+    "empresa": "AGENCIAS ADUANALES ARJO S.A. DE C.V",
+    "ciudad": "Reynosa, Tamaulipas",
+    "correo": "daniel_nieto@aaarjo.net",
+    "telefono": "8999229733",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Servicios de agencias aduanales · 0 a 5 personas · sitio: aaarjo.net\nCANACAR (directorio de socios) 17-ago-2026: rellena correo\n\nPROSPECCIÓN 19-ago-2026: sin decisor público · fuente: DENUE 05/2026 (servicios de agencias aduanales, 0 a 5 personas, Reynosa, Tamaulipas) · WebSearch sin cupo en la sesión",
+    "fuente": "denue"
+  },
+  {
+    "id": "a248823c-043c-46c1-a52f-82169575aa92",
+    "empresa": "Ángel Alejandro González Benigno",
+    "ciudad": "Miguel Totoltepec, Estado de México",
+    "correo": "goba.logistic.jan@outlook.com",
+    "telefono": "5587930557",
+    "estado": "contactado",
+    "notas": "ANIQ id=559. Persona física, escala pequeña. Logística y transporte de carga química. Unidades: camioneta 3½ toneladas, pickup. También Areli Janeth Rocha Puebla, Gerente de Logística y Transporte. Permisos SCT y SETIQ. Cobertura: Coahuila, Edomex, Nuevo León, Puebla, Querétaro, SLP. CP 50225. Contactado 26-ago-2026 con plantilla estándar Likida.\n\n=== INVESTIGACIÓN PROFUNDA ANIQ 26-ago-2026 ===\nUNIDADES (ANIQ): CAMIONETA 3 1/2 TONS., PICKUP,\n\nPERMISOS: SCT, SETIQ\n\nRESEÑA ANIQ: NOS COMPROMETEMOS CON LA SATISFACCIÓN DE LOS REQUISITOS DE NUESTROS SOCIOS Y CON LA MEJORA CONTINUA DE LA EFICACIA DE NUESTRO SISTEMA DE GESTIÓN DE LA CALIDAD, PARA PROMOVER EL DESARROLLO Y LA COMPETITIVIDAD DE LA INDUSTRIA QUÍMICA ESTABLECIDA EN MÉXICO MANUEL AVILA CAMACHO #1SN MIGUEL TOTOLTEPEC C.\n\nLINKEDIN EMPRESA: no encontrado\n\nLINKEDIN DIRECTOR: no encontrado\n\nFACEBOOK: no encontrado\n\nAÑO FUNDACIÓN: no encontrado\n\nHISTORIA: no encontrado. No se localizó sitio web propio, sección \"nosotros\"/historia, ni ninguna fuente primaria o secundaria que documente la trayectoria de esta empresa/persona física. La ficha ANIQ (único dato de origen) no incluye sitio web funcional, solo un correo de Outlook (goba.logistic.jan@outlook.com), lo que sugiere una operación de transporte muy pequeña (posible persona física con actividad empresarial) sin presencia digital indexada.\n\nEMPLEADOS: no encontrado\n\nFLOTA: no encontrado\n\nOTROS DIRECTIVOS (ANIQ): GERENTE DE LOGÍSTICA Y TRANSPORTE: ARELI JANETH ROCHA PUEBLA <>\n\nNOTAS: Búsquedas realizadas: WebSearch se agotó (límite de 200 llamadas de la sesión) antes de poder ejecutarse para esta tarea, así que la investigación se hizo vía WebFetch sobre resultados de Google y Bing con variantes: \"Ángel Alejandro González Benigno\" LinkedIn; \"Angel Alejandro Gonzalez Benigno\" transporte/autotransporte Coahuila; \"GOBA Logistic\"; \"goba.logistic.jan@outlook.com\"; \"Gonzalez Benigno\" autotransporte Coahuila. Ninguna arrojó coincidencias reales. Las menciones de \"GOBA\" que sí aparecen indexadas (goba.mx - mobiliario médico/hospitalario; grupogoba.mx - construcción comercial/industrial; GOBA Internacional S.A. de C.V. - papelería mayorista) pertenecen a empresas distintas sin relación con transporte de carga ni con Coahuila, y se descartaron explícitamente para evitar confundirlas con el prospecto. No se encontró ningún directivo/contacto adicional con correo. Recomendación: si se dispone de acceso a fuentes de pago (SAT/RFC, Dun & Bradstreet, directorios de cámaras de transporte como CANACAR, o búsqueda manual en LinkedIn con sesión iniciada), podrían revelar más datos que una búsqueda web abierta no captura para negocios muy pequeños o recientes.\n\nFuente: directorio ANIQ Transportistas (id=559) + investigación profunda 26-ago-2026 (workflow multi-agente).",
+    "fuente": "aniq"
+  },
+  {
+    "id": "65951c5d-eb50-4855-b1b2-f9387a4a9129",
+    "empresa": "APOYO LOGISTICO DEL VALLE DEL SILICIO, S.A. DE C.V.",
+    "ciudad": null,
+    "correo": "julio.guadarrama_apolotran@gmail.com",
+    "telefono": "3336120618",
+    "estado": "nuevo",
+    "notas": "PADRÓN AAAG (agentes aduanales GDL): afiliado «APOLOTRAN» · corredor aduanal Guadalajara\nCANACAR (directorio de socios) 17-ago-2026: rellena correo",
+    "fuente": "aaag"
+  },
+  {
+    "id": "b992e137-93cb-43e3-9db6-0be1ca0911b7",
+    "empresa": "Auto Express La Silla, S.A. De C.V.",
+    "ciudad": "Tampico, Tamaulipas",
+    "correo": "pbernal@autoexpresslasilla.com.mx",
+    "telefono": "8110861464",
+    "estado": "nuevo",
+    "notas": "DIRECTORIO TAMPICO (Scribd): razón social del ciclo, corredor Tampico-Madero — sin contacto en la fuente\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono y correo",
+    "fuente": "scribd-tampico"
+  }
+]

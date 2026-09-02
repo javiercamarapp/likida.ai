@@ -1,0 +1,52 @@
+[
+  {
+    "id": "ad1b2cde-9bb0-495e-9ff3-666db589f08e",
+    "empresa": "Autopetra, S.A. de C.V.",
+    "ciudad": "Tequisquiapan, Querétaro",
+    "correo": "ealvarado@autopetra.com.mx",
+    "telefono": "4422781640",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Carretera a Ezequiel Montes Sn Int Na, Colonia el Sauz, CP 76796\nUbicación aproximada 17-ago: centroide de 5 establecimientos DENUE en Tequisquiapan, Querétaro — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · dominio autopetra.com.mx (inferido del correo ealvarado@autopetra.com.mx) no resuelve (falla de conexión/SSL en https y http) — no se pudo verificar sitio oficial ni localizar nombre de decisor · fuente: intento directo a autopetra.com.mx, sin resultado\nMENSAJE LINKEDIN: Hola, soy Javier, de Likida. Vi que Autopetra es socio de CANACAR con autotransporte de carga general en Tequisquiapan, Querétaro. Ayudamos a que el operador mande sus comprobantes por WhatsApp y la liquidación de cada viaje salga cuadrada. Estamos eligiendo a las primeras flotas. ¿Tiene 15 minutos esta semana?",
+    "fuente": "canacar"
+  },
+  {
+    "id": "db4563bb-384d-4fc0-bdde-e06dc5c3a70a",
+    "empresa": "Autotanques Cja",
+    "ciudad": "Cosoleacaque, Veracruz",
+    "correo": "gerencla@autotanquesja.com.mx",
+    "telefono": "9222224986",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General y Material Peligroso · 11 a 50 personas · Calle Raul R Perez 19 Int Na, Pueblo 7 de Mayo, CP 96340",
+    "fuente": "canacar"
+  },
+  {
+    "id": "472abcb1-4b6c-46ce-b909-7205a9aaa6eb",
+    "empresa": "Autotanques de Querétaro, S.A. de C.V.",
+    "ciudad": "Pedro Escobedo, Querétaro",
+    "correo": "rhumanos@gonie.com.mx",
+    "telefono": "4423885082",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Mexico-Queretaro Km 182.5 Na Int Na, Colonia Los Girasoles, CP 76700\nUbicación aproximada 17-ago: centroide de 19 establecimientos DENUE en Pedro Escobedo, Querétaro — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "af413f59-a6a3-48dc-9fcc-f3caaac624e0",
+    "empresa": "Autotanques Especializados Arias, S.A. de C.V.",
+    "ciudad": "Minatitlán, Veracruz",
+    "correo": "irasema@esparsa.org",
+    "telefono": "9222210185",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Berlin 8 Int Na, Colonia Nuevo Minatitlan, CP 96760",
+    "fuente": "canacar"
+  },
+  {
+    "id": "bb979020-5543-4a63-839d-792d74d220fb",
+    "empresa": "Autotransporte Hergola",
+    "ciudad": "Tuxtla Gutiérrez, Chiapas",
+    "correo": "luis.gordillo@hergola.mx",
+    "telefono": "9612333223",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foráneo de Carga General · 11 a 50 personas · Calle Toluca 180 Int Na, Ciudad Tuxtla Gutierrez, CP 29030\nDENUE API 17-ago (cruce CANACAR→DENUE): «AUTO TRANSPORTE HERGOLA», score 1.04",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "513396c6-6583-43aa-a6a0-e8ff6342844b",
+    "empresa": "Centauro del Norte Autotransporte, S.A. de C.V.",
+    "ciudad": "San Pedro Garza García, Nuevo León",
+    "correo": "aflores@grupomenora.com",
+    "telefono": "7828255955",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Roble 300 Int Na, Colonia Valle del Campestre, CP 66265\nUbicación aproximada 17-ago: centroide de 113 establecimientos DENUE en San Pedro Garza García, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d9390a2b-ae36-43e8-97f9-b14cb51de943",
+    "empresa": "Central de Fletes Atlante, S.A. de C.V.",
+    "ciudad": "León, Guanajuato",
+    "correo": "marco.miranda@fuentes7.com.mx",
+    "telefono": "4777116636",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Libramiento Norte Km 4.5 Sn Int Na, Colonia Maravillas, CP 37000\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2bc0464c-ca21-4975-87a8-551c74cbf3f3",
+    "empresa": "Centro Ferrecristal, S.A. de C.V.",
+    "ciudad": "Ciénega de Flores, Nuevo León",
+    "correo": "contabilidad@ferrrecristal.com",
+    "telefono": "8118107706",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Carretera Mexico-Laredo Km 1012 Int Na, Ciudad Cienega de Flores, CP 65550\nUbicación aproximada 17-ago: centroide de 19 establecimientos DENUE en Ciénega de Flores, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "bb4ebcae-ca69-4c00-929d-a21fb6ee2eea",
+    "empresa": "Cia Transporta Lamina, S.A. de C.V.",
+    "ciudad": "Puebla, Puebla",
+    "correo": "cpignaciob@hotmail.com",
+    "telefono": "2222341600",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Camino Antiguo a Tlaxcala 5 Int Na, Parque Industrial Ocotlan, CP 72680\nUbicación aproximada 17-ago: centroide de 496 establecimientos DENUE en Puebla, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (búsqueda web no disponible por tope de sesión) · CANACAR: Autotransporte de Carga General, 11 a 50 personas, Parque Industrial Ocotlán · fuente: CANACAR directorio de socios (ya en base)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "05bdc530-a7b1-4e77-895a-cba9a97eb9c8",
+    "empresa": "Cia. Internacional de Fletamentos, S.A. de C.V.",
+    "ciudad": "Altamira, Tamaulipas",
+    "correo": "jose.mendo@hinojosa.com.mx",
+    "telefono": "8332602660",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Golfo de California Km .480 Sn Int Na, Puerto Industrial de Altamira, CP 89603\nUbicación aproximada 17-ago: centroide de 176 establecimientos DENUE en Altamira, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN 20-ago-2026: sin director/dueño confirmado. INTERFLET, Puerto Industrial de Altamira.",
+    "fuente": "canacar"
+  }
+]

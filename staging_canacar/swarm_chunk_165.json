@@ -1,0 +1,102 @@
+[
+  {
+    "id": "db071313-eaf5-416a-af71-c658f1e7c98c",
+    "empresa": "María Fernanda Marín Reyes",
+    "ciudad": "Cuernavaca, Morelos",
+    "correo": "zaragozaferremarin@gmail.com",
+    "telefono": "7773214538",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Avenida Emiliano Zapata 22 Int A, Colonia Tlaltenango, CP 62170\nUbicación aproximada 17-ago: centroide de 71 establecimientos DENUE en Cuernavaca, Morelos — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "80d5359b-1e63-494b-b0b9-a8a93ba3ead1",
+    "empresa": "María Fernanda Rebollo Pizano",
+    "ciudad": "Maravatío, Michoacán",
+    "correo": "maferrebollo.p@gmail.com",
+    "telefono": "4471106981",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 0 a 10 personas · Avenida del Panteón 6 Int Na, Colonia Tziritzicuaro, CP 61262",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c9cca8d1-f31c-404e-9182-2ba837f19ee6",
+    "empresa": "María Guadalupe Venegas Cardona",
+    "ciudad": "Guadalajara, Jalisco",
+    "correo": "direccion@metapack.com.mx",
+    "telefono": "3336448570",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Francisco Sarabia 1399 Int 1, Colonia San Martin, CP 44710\nUbicación aproximada 17-ago: centroide de 508 establecimientos DENUE en Guadalajara, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "94fadfa7-5b05-4458-8901-309062277717",
+    "empresa": "Maria Laura Lopez Luna",
+    "ciudad": "Zacatlán, Puebla",
+    "correo": "lauramov2023@gmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 0 a 10 personas · Calle Poste 70 Int Na, Colonia Las Lajas, CP 73310\nUbicación aproximada 17-ago: centroide de 16 establecimientos DENUE en Zacatlán, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5955b443-c1cd-423a-bd82-04b20c490d34",
+    "empresa": "María Magdalena Martínez Alcalá",
+    "ciudad": "León, Guanajuato",
+    "correo": "logistica-anfer@outlook.com",
+    "telefono": "4771830726",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Circuito Paseo de Los Girasoles 104 Int Na, Fraccionamiento Porton de Los Girasoles, CP 37297\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f59c0a5c-cb18-4ea7-b9c9-646c65557152",
+    "empresa": "Mariano Sanchez Prisciliano",
+    "ciudad": "Cuautitlán Izcalli, México",
+    "correo": "msp.220479@gmail.com",
+    "telefono": "5519490747",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Alcatraz 55 Int Nan, Colonia Santa Maria de Gpe la Quebrada, CP 54769\nUbicación aproximada 17-ago: centroide de 171 establecimientos DENUE en Cuautitlán Izcalli, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "781df6a5-58dc-4121-921b-27a1448f4d2d",
+    "empresa": "Maribel Ramirez Rodriguez",
+    "ciudad": "Matamoros, Tamaulipas",
+    "correo": "nancy-muraira26@hotmail.com",
+    "telefono": "8198191884",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga en General · 0 a 10 personas · Calle Cañada Azul Altos 24 Altos Int Sn, Colonia Valle Dorado, CP 87382\nUbicación aproximada 17-ago: centroide de 181 establecimientos DENUE en Matamoros, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f1eef89a-c981-47ca-8e09-5f8141b44ad2",
+    "empresa": "Marin Castillo López",
+    "ciudad": "Tepeapulco, Hidalgo",
+    "correo": "transportes.castillo.lopez@gmail.com",
+    "telefono": "7919133744",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foráneo de Carga Especializado · 0 a 10 personas · Avenida Juarez 17 Int Na, Colonia Centro, CP 43970\nUbicación aproximada 17-ago: centroide de 14 establecimientos DENUE en Tepeapulco, Hidalgo — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-19: decisor Marin Castillo López, titular (la razon social del registro CANACAR es persona fisica, por lo que el titular ES el decisor) · LinkedIn: no localizado · fuente: CANACAR directorio de socios 17-ago-2026. Autotransporte foraneo de carga especializado en Tepeapulco, Hidalgo; sin sitio web, correo gmail a nombre de Transportes Castillo Lopez. Flota NO publicada — unidades sin dato. ENCAJE: alto — carga especializada foranea, titular identificado, decision en una sola persona",
+    "fuente": "canacar"
+  },
+  {
+    "id": "52cc8f62-70f7-41c7-950b-95516f96a158",
+    "empresa": "Mario Alberto Lopez Salazar",
+    "ciudad": "San Juan de Sabinas, Coahuila",
+    "correo": "lopezexpress@prodigy.net.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 0 a 10 personas · Carretera Federal 57 Kilometro 1196 Int Na, Colonia Americo Rodriguez, CP 26879",
+    "fuente": "canacar"
+  },
+  {
+    "id": "db1dcef0-fe98-4901-bff2-86ce8e215d84",
+    "empresa": "Mario Anselmo Sánchez Anaya",
+    "ciudad": "Iztacalco, Ciudad de México",
+    "correo": "marioanselmosanchezanaya@gmail.com",
+    "telefono": "5555308430",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Avenida Hidalgo 75 Int Na, Colonia Santa Anita, CP 8300\nUbicación aproximada 17-ago: centroide de 76 establecimientos DENUE en Iztacalco, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

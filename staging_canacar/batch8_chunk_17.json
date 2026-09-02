@@ -1,0 +1,52 @@
+[
+  {
+    "id": "69a2f0ac-d171-49c1-90ec-de13acf32696",
+    "empresa": "Express Casa Blanca de Nuevo Laredo, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "lupita.vazquez@expresscasablanca.com",
+    "telefono": "8677138092",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Avenida Flora Elena Alvarez 9601 Int Na, Colonia San Roberto, CP 88295\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (CANACAR registra la razón social sin titular; expresscasablanca.com no responde; buscador sin resultados) · LinkedIn: no hallado · viajes/mes: no público · historia: no pública · fuente: directorio CANACAR · fit 1/5",
+    "fuente": "canacar"
+  },
+  {
+    "id": "28e45ff9-2ddd-4b61-a63b-c84378045e01",
+    "empresa": "Express Gran Tiburón, S.A. de C.V.",
+    "ciudad": "Guadalupe, Nuevo León",
+    "correo": "virginia@grantiburon.com.mx",
+    "telefono": "8116395065",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Mercancía · 11 a 50 personas · Calle Puesta de Los Nogales 809 Int Na, Colonia Puesta del Sol, CP 67174\nUbicación aproximada 17-ago: centroide de 170 establecimientos DENUE en Guadalupe, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ee32d7a1-0b75-4212-b0d7-fe8dc7387a96",
+    "empresa": "Express Jimenez, S.A. de C.V.",
+    "ciudad": "Monclova, Coahuila",
+    "correo": "facturasexpressjmz@outlook.com",
+    "telefono": "8666411277",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Constitucion y Revolucion 1001 Int Na, Colonia Buenos Aires, CP 25770",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3d9a3963-5063-4c61-be74-ff2a1fef0b99",
+    "empresa": "Express Nacional de Carga, S.A. de C.V.",
+    "ciudad": "Lerma, México",
+    "correo": "contabilidad@exnac.com",
+    "telefono": "7282820986",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Avenida Juarez 12 Int Na, Colonia Agricola Analco, CP 52047\nUbicación aproximada 17-ago: centroide de 39 establecimientos DENUE en Lerma, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "67f98f18-0af6-473b-a794-3ce293e0afae",
+    "empresa": "Express Silsa, S.A. de C.V.",
+    "ciudad": "Cuautitlán Izcalli, México",
+    "correo": "silsa_07@prodigy.net.mx",
+    "telefono": "5558871595",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Avenida Tejocotes Lt 8 Mz 4 Int Na, Colonia San Martin Obispo Tepetlixpa, CP 54763\nUbicación aproximada 17-ago: centroide de 171 establecimientos DENUE en Cuautitlán Izcalli, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

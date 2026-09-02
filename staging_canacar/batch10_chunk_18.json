@@ -1,0 +1,52 @@
+[
+  {
+    "id": "ad388862-6cbe-40c4-8779-f7b512b4f6b9",
+    "empresa": "Logística Afl, S.A.P.I. de C.V.",
+    "ciudad": "Cajeme, Sonora",
+    "correo": "compras@logisticaafl.com",
+    "telefono": "6441400227",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Avenida Allende 119 Int Na, Colonia Norte, CP 85010\nUbicación aproximada 17-ago: centroide de 140 establecimientos DENUE en Cajeme, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d5cc5d8c-322e-4319-99a6-5cc49f80a426",
+    "empresa": "Logistica Amu",
+    "ciudad": "Querétaro, Querétaro",
+    "correo": "adriana@gazelle.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransportes Terrestres de Bienes · 11 a 50 personas · Avenida Paseo Monte Miranda 5 Int A, Colonia Cuesta Bonita, CP 76063\nUbicación aproximada 17-ago: centroide de 266 establecimientos DENUE en Querétaro, Querétaro — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nsin sitio web ni conteo de flota publicado — no se llena `num_unidades`; CANACAR reporta 11 a 50 personas (personal, no unidades). El correo adriana@gazelle.mx sugiere administración tercerizada o de grupo (\"Gazelle\"), sin confirmación pública.\nPROSPECCIÓN 2026-08-19: sin decisor público · sin sitio web propio · fuente: directorio de socios CANACAR 17-ago-2026 · WebSearch agotado en la sesión (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "34bf3576-264f-4dde-8413-7312484a0bfe",
+    "empresa": "Logística Cinco, S. de R.L. de C.V.",
+    "ciudad": "Querétaro, Querétaro",
+    "correo": "l.maldonado@logistica5.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 11 a 50 personas · Calle Dos 125 Int 14, Colonia Parque Industial Jurica, CP 76100\nUbicación aproximada 17-ago: centroide de 266 establecimientos DENUE en Querétaro, Querétaro — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "eb91eeca-9f10-450d-8362-a5564d06e9cd",
+    "empresa": "Logística de América, S. de R.L. de C.V.",
+    "ciudad": "San Luis Potosí, San Luis Potosí",
+    "correo": "logistica@gamericamx.com",
+    "telefono": "4441282885",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Boulevard Antonio Rocha Cordero 112 Int Na, Colonia Lomas de la Virgen, CP 78380\nUbicación aproximada 17-ago: centroide de 259 establecimientos DENUE en San Luis Potosí, San Luis Potosí — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 2026-08-20: sin decisor público · LinkedIn: no hallado (sin cupo de búsqueda web en esta sesión) · fuente: CANACAR (directorio de socios) + dominio gamericamx.com (solo confirma existencia, sin contenido).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a0175073-35f8-4211-b764-ee189fb0693e",
+    "empresa": "Logística de Liquidos Especializados Gbt, S.A. de C.V.",
+    "ciudad": "Cadereyta Jiménez, Nuevo León",
+    "correo": "zrivera@logiliquidos.com",
+    "telefono": "8334623006",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Por Carretera · 11 a 50 personas · Carretera Monterrey-Reynosa Km 28.5 200 Int A, Colonia Cadereyta Jimenez Centro, CP 67480\nUbicación aproximada 17-ago: centroide de 40 establecimientos DENUE en Cadereyta Jiménez, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público confirmado (correo zrivera@ sugiere apellido Rivera, no confirmado por fuente independiente) · dominio logiliquidos.com no resuelve, sin sitio activo · socio CANACAR, transporte de carga por carretera · fuente: búsqueda web",
+    "fuente": "canacar"
+  }
+]

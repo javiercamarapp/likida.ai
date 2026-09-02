@@ -1,0 +1,102 @@
+[
+  {
+    "id": "dcda06d1-fd7c-4e85-b125-9b020c6f0943",
+    "empresa": "ROBERTO UTRERA",
+    "ciudad": "Banderilla, Veracruz de Ignacio de la Llave",
+    "correo": "gruaitrasladosutrera@gmail.com",
+    "telefono": "2288111013",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Servicios de grúa · 0 a 5 personas · establecimiento: GRUAS UTRERA\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono\nPROSPECCIÓN 2026-08-19: decisor Roberto Utrera, Dueño · LinkedIn: no localizado · fuente: razón social del prospecto es el propio nombre del titular (persona física), coincide con el alias DENUE \"GRUAS UTRERA\" y con el dominio del correo gruaitrasladosutrera@gmail.com — no es un nombre inferido por patrón, es el mismo identificador ya registrado.",
+    "fuente": "denue"
+  },
+  {
+    "id": "b267aac3-282f-4c62-b913-103a26c41353",
+    "empresa": "Saltus Logistics",
+    "ciudad": "Escobedo, Nuevo León",
+    "correo": "mauricio@saltuslogistics.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "1 anuncio en el censo · señal: rutas, operadores, unidades, diésel, diesel, carta porte · último anuncio: 2026-07-07 · liga: https://mx.indeed.com/viewjob?jk=a6523bf3157235e4\nCANACAR (directorio de socios) 17-ago-2026: rellena correo\nSITIO OFICIAL 2026-08-19 (saltuslogistics.com): transporte de carga, logística y renta de remolques, \"más de 11 años de experiencia\" · tel +52 812 860 7777 · correo sonia@saltuslogistics.com (más específico que el genérico mauricio@ del registro) · NO publica conteo de unidades → unidades queda null.\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: vacante del censo (Indeed, 07-jul-2026) + sitio oficial saltuslogistics.com + CANACAR 17-ago-2026\nENCAJE: alto — la vacante nombra rutas, operadores, unidades, diésel y carta porte · COSECHA 2026-08-26: sitio vivo (4 pág) · \"Saltus Logistics | Fletes | Venta y Renta de Remolques\" · correos: sonia@saltuslogistics.com · sin directivos públicos",
+    "fuente": "censo"
+  },
+  {
+    "id": "234f326e-8645-4fb4-80eb-beb4b2f2313d",
+    "empresa": "SEGADI LOGISTIC & TRANSPORT S. DE R.L. DE C.V",
+    "ciudad": null,
+    "correo": "l.gonzalez@segadi.com.mx",
+    "telefono": "3315682613",
+    "estado": "nuevo",
+    "notas": "PADRÓN AAAG (agentes aduanales GDL): afiliado «SEGADI» · corredor aduanal Guadalajara\nCANACAR (directorio de socios) 17-ago-2026: rellena correo\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "fuente": "aaag"
+  },
+  {
+    "id": "e7e23ec0-6e7b-4608-a31b-b3d97ef44a15",
+    "empresa": "SEPSA CUSTODIA DE VALORES SA DE CV",
+    "ciudad": null,
+    "correo": "h_garcia@sepsacustodias.com.mx",
+    "telefono": "5541868597",
+    "estado": "nuevo",
+    "notas": "PADRÓN AAAG (agentes aduanales GDL): afiliado «SEPSA CUSTODIAS» · corredor aduanal Guadalajara\nCANACAR (directorio de socios) 17-ago-2026: rellena correo",
+    "fuente": "aaag"
+  },
+  {
+    "id": "7e54792a-78df-4235-a4e5-327a86b95047",
+    "empresa": "Servicios de Entrega de Paquetería SAPI, DE C. V.",
+    "ciudad": "CIUDAD DE MEXICO",
+    "correo": "eduardo_gonzalez@en-trega.com",
+    "telefono": "33 3040 2270",
+    "estado": "nuevo",
+    "notas": "UNIDADES (ANIQ): TRACTOCAMION, CAJA SECA, CAMIONETA 3 1/2 TONS., CAMION 6 TNS., CAMIÓN 12 TNS,\n\nPERMISOS: SCT, SETIQ\n\nRESEÑA ANIQ: EN EN-TREGA SOMOS UNA EMPRESA MEXICANA COMPROMETIDA CON BRINDAR SOLUCIONES INNOVADORAS EN ENVÍOS DE PAQUETERÍA Y MENSAJERÍA, CAMIÓN COMPLETO, TRANSPORTE DE CARGA CONSOLIDADA, DISTRIBUCIÓN Y ALMACENAJE DE MANERA EFICIENTE Y CONFIABLE PARA GENERAR VALOR AGREGADO A NUESTROS CLIENTES. FUELLE #1947 COL. \n\nLINKEDIN EMPRESA: https://www.linkedin.com/company/en-trega\n\nLINKEDIN DIRECTOR: no encontrado (se realizaron múltiples búsquedas con distintas variantes del nombre \"Eduardo Abraham Gonzalez Kennedy\" / \"Eduardo Gonzalez Kennedy\" y no se localizó un perfil de LinkedIn verificable de esta persona asociada a la empresa)\n\nFACEBOOK: Página de Facebook \"En-trega\" / \"Paquetería En-trega\" (facebook.com/paqueteriaentrega) — existencia confirmada por referencias cruzadas, pero no se pudo verificar el contenido completo de la página por restricciones de acceso al hacer scraping directo\n\nAÑO FUNDACIÓN: 2010 (según LinkedIn oficial de la empresa; una fuente secundaria de directorio de sucursales -sucursales.net- indica 2009, posible inicio de operaciones vs. constitución formal)\n\nHISTORIA: En-trega es una empresa 100% mexicana de logística y transporte fundada en 2010 (inicio de operaciones ubicado por otra fuente en 2009), con sede en Tlaquepaque, Jalisco. Ha crecido hasta operar al menos 13-15 sucursales en 8 estados de México (CDMX, Estado de México, Jalisco, Nuevo León, Querétaro, San Luis Potosí, Tamaulipas), y cuenta con certificaciones C-TPAT y OEA (Operador Económico Autorizado), ISO, y reconocimiento de Mejores Empresas Mexicanas (MEM). Mantiene una alianza estratégica con la transportista estadounidense Old Dominion Freight Line para envíos internacionales, y es miembro de ANIQ y Canacar.\n\nEMPLEADOS: 501-1,000 empleados (según el rango declarado en la página oficial de LinkedIn de la empresa)\n\nFLOTA: no encontrado (no se localizó un número o rango específico de unidades/camiones en fuentes verificables; el sitio web y buscadores no revelaron esta cifra)\n\nOTROS DIRECTIVOS (ANIQ): GERENTE DE SEGURIDAD: MIGUEL A. VILLASEÑOR RAMOS <seguridad@en-trega.com> | GERENTE DE OPERACIONES: JOSE LUIS ROJAS BELTRAN <operaciones@en-trega.com>\n\nNOTAS: Certificaciones y afiliaciones verificadas en el sitio oficial en-trega.com: OEA (Operador Económico Autorizado), CTPAT, ISO, Mejores Empresas Mexicanas (MEM), afiliación ANIQ, membresía Canacar, certificación Transporte Limpio (SEMARNAT). Servicios: paquetería y mensajería, camión completo (FTL), carga consolidada (LTL), almacenaje y distribución, logística internacional, última milla. Sitio web con portal de rastreo en línea y ERP para clientes (erp.en-trega.com). Presencia adicional confirmada en Instagram (@paqueteria_entrega, ~892 seguidores según snapshot de búsqueda) y Twitter/X. Sede corporativa en Tlaquepaque, Jalisco (no en Ciudad de México como indica la ficha ANIQ; posible discrepancia entre domicilio fiscal/CDMX y sede operativa real en Jalisco — vale la pena confirmar en la llamada de prospección). Nota metodológica: en esta sesión, el WebSearch nativo se agotó (límite de sesión alcanzado) y toda la investigación se realizó vía WebFetch sobre Bing, LinkedIn y el sitio propio de la empresa; esto limitó la profundidad de verificación cruzada, especialmente para el perfil personal del director.\n\nFuente: directorio ANIQ Transportistas (id=490) + investigación profunda 26-ago-2026 (workflow multi-agente).",
+    "fuente": "aniq"
+  },
+  {
+    "id": "915f3855-0212-47ec-85a2-6d525c1d631d",
+    "empresa": "SERVICIOS ESPECIALIZADOS ALANIS",
+    "ciudad": "Santiago, Nuevo León",
+    "correo": "avaldez@seaaalanis.com",
+    "telefono": "8122851971",
+    "estado": "contactado",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo de materiales y residuos peligrosos · 251 y más personas · sitio: www.seaalanis.com · establecimiento: SERVICIOS ESPECIALIZADOS ALANIS\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  },
+  {
+    "id": "38d9cbbc-e514-4280-b912-923e589947cb",
+    "empresa": "SIT BAHIA ENSENADA",
+    "ciudad": "Ensenada, Baja California",
+    "correo": "contacto@ensenadatransport.com",
+    "telefono": "6463621021",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo con refrigeración · 0 a 5 personas · establecimiento: ETL ENSENADA TRANSPORT LOGISTIC\nCANACAR (directorio de socios) 17-ago-2026: rellena correo",
+    "fuente": "denue"
+  },
+  {
+    "id": "6375aa53-8ecb-4b88-ae8e-574d034996c9",
+    "empresa": "TDA LOGISTICS & SERVICES S DE R L DE C V",
+    "ciudad": null,
+    "correo": "conta@tdaservices.com.mx",
+    "telefono": "5572486908",
+    "estado": "nuevo",
+    "notas": "PADRÓN AAAG (agentes aduanales GDL): afiliado «TDA LOGISTICS» · corredor aduanal Guadalajara\nCANACAR (directorio de socios) 17-ago-2026: rellena correo",
+    "fuente": "aaag"
+  },
+  {
+    "id": "a5fb9717-aabf-42cd-8b30-3759c6bda568",
+    "empresa": "TRANSPORTACIONES NACIONALES E INTERNACIONALES REGIAS, S.A. DE C.V.",
+    "ciudad": "Tampico, Tamaulipas",
+    "correo": "nledezma@grupofng.com",
+    "telefono": "8183501250",
+    "estado": "nuevo",
+    "notas": "DIRECTORIO TAMPICO (Scribd): razón social del ciclo, corredor Tampico-Madero — sin contacto en la fuente\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono y correo\nHISTORIA: correo corporativo (nledezma@grupofng.com) apunta a Grupo FNG, con cobertura declarada en Monterrey, Altamira, Tijuana, Nuevo Laredo, Puebla, Naucalpan, Toluca, Querétaro, Celaya, Guadalajara, Minatitlán, Cárdenas y Laredo, Texas. El sitio de Grupo FNG no menciona el nombre 'Regias' explícitamente — puede ser una de varias razones sociales del grupo; se trata la evidencia como del grupo, no confirmada 1:1 con esta razón social específica.\nPROSPECCIÓN 2026-08-20: sin decisor público · el sitio del grupo no nombra 'Regias' ni directivos · fuente: directorio Tampico (Scribd, corredor Tampico–Madero) + CANACAR directorio de socios 17-ago-2026 + grupofng.com (cobertura nacional, sin confirmar vínculo exacto con esta razón social).",
+    "fuente": "scribd-tampico"
+  },
+  {
+    "id": "b076057d-c3b8-485c-afa2-ebe6b925fdef",
+    "empresa": "TRANSPORTADORA DE COMBUSTIBLES Y ASFALTOS, S.A. DE C.V.",
+    "ciudad": "Tampico, Tamaulipas",
+    "correo": "trafico@muzquiz.com.mx",
+    "telefono": "8282848410",
+    "estado": "nuevo",
+    "notas": "DIRECTORIO TAMPICO (Scribd): razón social del ciclo, corredor Tampico-Madero — sin contacto en la fuente\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono y correo\nSITIO 2026-08-19 (muzquiz.com.mx, dominio del correo del registro): \"GRUPO ASTRO © 2013\", Transportadora de Combustibles y Asfaltos, Carretera Monterrey-Reynosa Km. 35, Cadereyta Jiménez, Nuevo León · sin teléfono, correo ni conteo de flota publicados.\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: CANACAR 17-ago-2026 + muzquiz.com.mx\nENCAJE: alto — pipas de combustible y asfalto, viajes con comprobación estricta",
+    "fuente": "scribd-tampico"
+  }
+]

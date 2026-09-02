@@ -1,0 +1,52 @@
+[
+  {
+    "id": "59888d49-fa5a-450d-9591-cc7a52b588d5",
+    "empresa": "Transportes Hgt, S. de R.L. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "eelenes@bgttrucking.com",
+    "telefono": "6861217668",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Al Aeropuerto Km 9.5 Int Na, Colonia Mariano Abasolo, CP 21600\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "74c0586d-30e8-43ba-a50c-de96c84a7ac8",
+    "empresa": "Transportes Hnos Guerrero, S.A. de C.V.",
+    "ciudad": "Juan C. Bonilla, Puebla",
+    "correo": "socorro.guerrero@transguerrero.com",
+    "telefono": "2222892257",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportes de Carga en General Local O Foraneo a Nivel Nacional · 11 a 50 personas · Avenida Allende 8 Int Na, Pueblo Santa Maria Cuenala, CP 72640\nUbicación aproximada 17-ago: centroide de 5 establecimientos DENUE en Juan C. Bonilla, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nENCAJE: alto — carga local o foránea a nivel nacional en Puebla, socio CANACAR, 11 a 50 personas; el correo del censo (socorro.guerrero@) comparte apellido con la razón social (\"Hnos Guerrero\"), fuerte señal de que es una empresa familiar, pero es persona moral (S.A. de C.V.), no un registro de persona física — NO se declara contacto_nombre para no sobre-inferir\nPROSPECCIÓN 19-ago-2026: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (transportes de carga en general local o foráneo a nivel nacional, 11 a 50 personas, Av. Allende 8, Pueblo Santa María Cuenala, Juan C. Bonilla, Puebla) · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e1e89be8-eeb6-4e14-ae68-ff3149d87c85",
+    "empresa": "Transportes Imex de Mexicali, S.A. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "agarcia@imextransport.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Boulevard Aeropuerto Km 9.5 Sn Int Na, Colonia Mariano Abasolo, CP 21600\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: imextransport.com.mx no cargó (certificado SSL vencido), sin acceso al contenido · ENCAJE: medio — carga general fronteriza en Mexicali, tamaño medio (11-50)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3341ffd9-cd37-4340-a5f2-6dd04b97be14",
+    "empresa": "Transportes Inovativos del Norte, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "pedroflores@inovativosdelnorte.com",
+    "telefono": "8677181887",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Nacional Km 10.5 Pte Sn Int Na, Colonia Enrique Cardenas Gonzalez, CP 88295\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-19: sin decisor publico, sin sitio oficial localizable (WebSearch agotado en esta sesion) · contexto: Transportes Inovativos del Norte, autotransporte de carga general, 11 a 50 personas (CANACAR), Nuevo Laredo, Tamaulipas\nENCAJE: medio — flota mediana en carga general fronteriza, diesel probable",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b352e9f2-3cf0-44a8-8288-4864e03d4b58",
+    "empresa": "Transportes Internacionales Creljor, S.A. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "contabilidad@transportescreljor.com",
+    "telefono": "7603574420",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Lote Agricola 829 Int Na, Colonia Castro, CP 21621\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: CANACAR 17-ago-2026\nENCAJE: alto — socio CANACAR transfronterizo, 11-50 personas, correo de dominio propio",
+    "fuente": "canacar"
+  }
+]

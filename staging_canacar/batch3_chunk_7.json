@@ -1,0 +1,52 @@
+[
+  {
+    "id": "75a5b493-80fa-4c6d-a86f-117bd20b2295",
+    "empresa": "Tracto Lineas Mexicanas, S.A. de C.V.",
+    "ciudad": "Monterrey, Nuevo León",
+    "correo": "mperez@autolineasmexicanas.com",
+    "telefono": "8181450173",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Autotransporte de Carga · 51 a 250 personas · Avenida Eugenio Garza Sada 2404 Int Na, Colonia Roma, CP 64700\nUbicación aproximada 17-ago: centroide de 442 establecimientos DENUE en Monterrey, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 19-ago-2026: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (servicio de autotransporte de carga, 51 a 250 personas, Av. Eugenio Garza Sada 2404, Col. Roma, Monterrey, Nuevo León) · opera como Autolíneas Mexicanas (dominio del correo del censo) · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  },
+  {
+    "id": "916d48b0-9eb3-45c6-b48a-e5e9181f12bc",
+    "empresa": "Tráfico Transportaciones, S.A. de C.V.",
+    "ciudad": "Salinas Victoria, Nuevo León",
+    "correo": "02contabilidad@ttrafico.com",
+    "telefono": "8182390327",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Calle Jesus Treviño Montemayor 148 Int A, Colonia Cette, CP 65500\nUbicación aproximada 17-ago: centroide de 41 establecimientos DENUE en Salinas Victoria, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4993c6ce-4cae-4714-b16c-5d783d9c4067",
+    "empresa": "Trak Transportaciones, S.A. de C.V.",
+    "ciudad": "General Escobedo, Nuevo León",
+    "correo": "molmos@traktransportaciones.com.mx",
+    "telefono": "8150009870",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportacion de Carga Especializada · 51 a 250 personas · Carretera Libramiento a Saltillo Km 34.5 Sn Int Na, Parque Industrial General Escobedo, CP 66050\nUbicación aproximada 17-ago: centroide de 199 establecimientos DENUE en General Escobedo, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nHISTORIA: socia registrada de CANACAR (directorio de socios, 17-ago-2026): Trak Transportaciones, S.A. de C.V., Transportación de Carga Especializada, 51 a 250 personas, Carretera Libramiento a Saltillo Km 34.5, Parque Industrial General Escobedo, Nuevo León. Sitio oficial traktransportaciones.com.mx verificado y coincide con la empresa: especializada en carga sobredimensionada, plataformas, división eólica (transporte de aspas/torres de aerogeneradores) y carga pesada; cuenta con programa CTPAT dentro de su sistema de gestión de calidad y es miembro de la SC&RA (Specialized Carriers & Rigging Association, asociación internacional del sector). Es un nicho de alto valor por viaje (carga sobredimensionada/eólica).\nPROSPECCIÓN 2026-08-20: sin decisor público (el sitio no nombra dueño ni director) · LinkedIn: no hallado · fuente: directorio de socios CANACAR 17-ago-2026; traktransportaciones.com.mx (sitio_verificado=true). WebSearch agotado en la sesión.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "cb0125e4-8d14-41d9-9fbd-ad1c3d69fb5a",
+    "empresa": "Tran K, S.A. de C.V.",
+    "ciudad": "Ixtlahuacán de los Membrillos, Jalisco",
+    "correo": "direccion@trank.com.mx",
+    "telefono": "3331423211",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Especializada · 51 a 250 personas · Carretera a la Capillar 2400 Int Na, Colonia la Capilla, CP 45870\nUbicación aproximada 17-ago: centroide de 3 establecimientos DENUE en Ixtlahuacán de los Membrillos, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2b3b49ec-31c9-4810-b86d-3ea85197050e",
+    "empresa": "Tranamex, S.A. de C.V.",
+    "ciudad": "Morelia, Michoacán",
+    "correo": "tranamex@hotmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Calle Chopin 10 Int 101, Colonia la Loma, CP 58290",
+    "fuente": "canacar"
+  }
+]

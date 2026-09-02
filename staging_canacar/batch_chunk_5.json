@@ -1,0 +1,52 @@
+[
+  {
+    "id": "bda1cde6-865e-4675-91ad-0c98320fcb13",
+    "empresa": "TT SERVICIOS ESPECIALIZADOS",
+    "ciudad": "Matehuala, San Luis Potosí",
+    "correo": "marlene.puente@ttse.mx",
+    "telefono": "4881014976",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga especializado · 101 a 250 personas · establecimiento: TT SERVICIOS ESPECIALIZADOS\nPROSPECCIÓN 2026-08-19: sin decisor público · correos ya en base (marlene.puente@ttse.mx) sugieren posible negocio familiar 'Puente' — ver también registro CANACAR (id bff05b78) con correo armando.puente@ttse.mx, mismo apellido — posible duplicado, verificar antes de tocar ambos por separado · DENUE: otro autotransporte foráneo de carga especializado, 101 a 250 personas · fuente: DENUE (ya en base)",
+    "fuente": "denue"
+  },
+  {
+    "id": "af821dd7-fefc-460d-86a2-697b43f51992",
+    "empresa": "Autotransportes Delta, S.A. de C.V.",
+    "ciudad": "Acolman, México",
+    "correo": "resp.operaciones@deltrans.mx",
+    "telefono": "5558364600",
+    "estado": "contactado",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Federal de Materiales, Residuos, Remanentes y Desechos Peligrosos · 51 a 250 personas · Carretera Federal a Las Piramides Km 34.5 Sn Int Sn, Colonia Tepexpan, CP 55885\nUbicación aproximada 17-ago: centroide de 42 establecimientos DENUE en Acolman, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "cd87f5a4-b27d-4e0a-835d-d8170c67f378",
+    "empresa": "Autotransportes Piramide, S.A. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "facturastrve@gomsa.com",
+    "telefono": "2299230500",
+    "estado": "contactado",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 51 a 250 personas · Carretera Veracruz-Cardel Sn Int Na, Colonia Chalchihuecan, CP 91808\nPROSPECCIÓN 2026-08-19: sin decisor público. LinkedIn: no localizado. fuente: gomsa.com (dominio del correo de facturación facturastrve@gomsa.com) — GOMSA es operador logístico integral (aduanal, transporte terrestre, freight forwarding, contract logistics) con clientes como AB InBev, Bridgestone, Chanel, Heinz, Sika, Zoetis; posible filial/marca de Autotransportes Piramide, sin fuente que lo confirme explícitamente.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5fccf0bb-0f2b-45af-b57b-d164727d3ea5",
+    "empresa": "Gruas y Maniobras Monterrey, S.A. de C.V.",
+    "ciudad": "San Nicolás de los Garza, Nuevo León",
+    "correo": "alicia_aranda@gruasmonterrey.com",
+    "telefono": "8181548000",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Especializado, Gruas Industriales, Arrastre, Traslado de Objetos Voluminosos · 51 a 250 personas · Avenida Nogalar 305 Int 22, Colonia Industrial Nogalar, CP 66484\nUbicación aproximada 17-ago: centroide de 150 establecimientos DENUE en San Nicolás de los Garza, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4b576b92-678f-4358-8001-ec4748a97880",
+    "empresa": "Log-Up Logística y Servicios, S.A. de C.V.",
+    "ciudad": "Apodaca, Nuevo León",
+    "correo": "administracion@logup.mx",
+    "telefono": "8113123054",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte Nacional · 51 a 250 personas · Eje Vial Arco Vial Laredo Saltillo 37.9 Int Na, Colonia Centro, CP 66600\nUbicación aproximada 17-ago: centroide de 300 establecimientos DENUE en Apodaca, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nHISTORIA: socia registrada de CANACAR (directorio de socios, 17-ago-2026): Log-Up Logística y Servicios, S.A. de C.V., Servicio de Transporte Nacional, 51 a 250 personas, Eje Vial Arco Vial Laredo-Saltillo Km 37.9, Apodaca, Nuevo León. Sitio oficial logup.mx verificado y coincide con la empresa: 'servicios de carga refrigerada y seca en cajas de 53 pies', con rastreo satelital y monitoreo de control de temperatura — consistente con transporte refrigerado de valor agregado. Domicilio del sitio: Anillo Periférico, Parque Industrial LAMAR, Nuevo León. Correo: logistica@logup.mx.\nPROSPECCIÓN 2026-08-20: sin decisor público (el sitio no nombra dueño ni director) · LinkedIn: no hallado · fuente: directorio de socios CANACAR 17-ago-2026; logup.mx (sitio_verificado=true). WebSearch agotado en la sesión.",
+    "fuente": "canacar"
+  }
+]

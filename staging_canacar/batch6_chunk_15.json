@@ -1,0 +1,52 @@
+[
+  {
+    "id": "f3004f5f-125b-4351-a589-96d4de358172",
+    "empresa": "Auto Lineas Monarca, S. de R.L. de C.V.",
+    "ciudad": "Allende, Nuevo León",
+    "correo": "contabilidad@almonarca.com",
+    "telefono": "8262687956",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga General · 11 a 50 personas · Calle Garza Ayala 303 Int Na, Colonia Centro, CP 67350\nUbicación aproximada 17-ago: centroide de 123 establecimientos DENUE en Allende, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-20: sin decisor publico · LinkedIn: no localizado · fuente: CANACAR directorio de socios 17-ago-2026 (sin sitio; solo correo de contabilidad). Flota NO publicada — unidades sin dato. ENCAJE: alto — carga general foranea, tamano en rango objetivo",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e11e6724-0226-4f5d-b0d9-ad94cff02574",
+    "empresa": "Auto Líneas Rápidas, S.A. de C.V.",
+    "ciudad": "Querétaro, Querétaro",
+    "correo": "marco.ledesma@ledsaindustrial.com",
+    "telefono": "4422483931",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Camino Viejo a Carmen Sn Int Na, Colonia la Piedad, CP 76908\nUbicación aproximada 17-ago: centroide de 266 establecimientos DENUE en Querétaro, Querétaro — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: ledsaindustrial.com no resuelve (dominio caído) · pista sin verificar: correo marco.ledesma@ledsaindustrial.com sugiere vínculo con LEDSA Industrial, sin confirmación pública",
+    "fuente": "canacar"
+  },
+  {
+    "id": "169d5959-9925-443f-bf6e-fa6191fffac4",
+    "empresa": "Auto Líneas Reyneras, S.A. de C.V.",
+    "ciudad": "San Nicolás de los Garza, Nuevo León",
+    "correo": "bsalazar@alr.com.mx",
+    "telefono": "8183198600",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Federal de Carga · 11 a 50 personas · Prolongación Diaz Ordaz 205 Int Sn, Fraccionamiento Diaz Ordaz, CP 66480\nUbicación aproximada 17-ago: centroide de 150 establecimientos DENUE en San Nicolás de los Garza, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN 21-ago-2026: sin decisor propio confirmado. Ramiro Ortiz Salinas aparece como 'Director en Autolíneas...' en LinkedIn pero no está claro si es de Reyneras o de la empresa hermana Regiomontanas — no se usa sin esa distinción clara.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "319d70ec-91f7-4eed-acca-ce71270ef029",
+    "empresa": "Auto Liqui Refinados, S.A. de C.V.",
+    "ciudad": "Azcapotzalco, Ciudad de México",
+    "correo": "transportes@daduga.com.mx",
+    "telefono": "5555873339",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Fletes · 11 a 50 personas · Calle Poniente 116 690 Int Sn, Zona Industrial Vallejo, CP 2300\nUbicación aproximada 17-ago: centroide de 174 establecimientos DENUE en Azcapotzalco, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f79f8912-4df1-4937-b32a-54c5061e5ae6",
+    "empresa": "Auto Tanques Estrella, S. de R.L. de C.V.",
+    "ciudad": "Azcapotzalco, Ciudad de México",
+    "correo": "cmelgarejob@daduga.com.mx",
+    "telefono": "5555873155",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Material Peligroso · 11 a 50 personas · Calle Poniente 116 690 Int Na, Zona Industrial Vallejo, CP 2300\nUbicación aproximada 17-ago: centroide de 174 establecimientos DENUE en Azcapotzalco, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

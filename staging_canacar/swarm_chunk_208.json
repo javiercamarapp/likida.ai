@@ -1,0 +1,102 @@
+[
+  {
+    "id": "8cb547d2-456f-49ac-81ab-f98159629722",
+    "empresa": "Armando Bruno Neri",
+    "ciudad": "Toluca, México",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Callejón Independencia 14 Int Na, Cantón Na, CP 50226\nUbicación aproximada 17-ago: centroide de 256 establecimientos DENUE en Toluca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "37e49707-06bb-45d0-bc54-2dbb6f517c42",
+    "empresa": "Arte Impreso en Envases",
+    "ciudad": "León, Guanajuato",
+    "correo": null,
+    "telefono": "4771812066",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Fabricacion de Envases de Carton · 0 a 10 personas · Boulevard Malaquita 204 Int 2, Colonia Villas del Country, CP 37358\nDENUE API 17-ago (cruce CANACAR→DENUE): «CAJAS MYCO», score 1.06",
+    "fuente": "canacar"
+  },
+  {
+    "id": "86a243af-19c2-47f6-b330-1a7d0899f1d2",
+    "empresa": "Auto Compone",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Tiburon Na Int Na, Cantón Na, CP 94299",
+    "fuente": "canacar"
+  },
+  {
+    "id": "68ae1d91-83d2-49de-8c6c-9a0db67adfe2",
+    "empresa": "Auto Industrial de Partes",
+    "ciudad": "Matamoros, Tamaulipas",
+    "correo": null,
+    "telefono": "8688108310",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Ingreso de Maquila · 0 a 10 personas · Calle Licenciado Albino Hernandez Poniente 7 Int Sn, Colonia Obrera, CP 87340\nUbicación aproximada 17-ago: centroide de 181 establecimientos DENUE en Matamoros, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (CANACAR registra la razón social sin nombrar titular; buscador sin resultados) · LinkedIn: no hallado · viajes/mes: no público · historia: no pública · fuente: directorio CANACAR · fit 1/5",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9c628376-6b83-413d-90f7-3e9c91abd71d",
+    "empresa": "Autolineas Express Rg",
+    "ciudad": "Monterrey, Nuevo León",
+    "correo": null,
+    "telefono": "8110806306",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 0 a 10 personas · Avenida Pino Suarez 750 Int Oficina 407, Colonia Monterrey Centro, CP 64000\nUbicación aproximada 17-ago: centroide de 442 establecimientos DENUE en Monterrey, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nENCAJE: bajo — socio CANACAR chico (0-10 personas), transporte de carga sin más detalle.\nPROSPECCIÓN 20-ago-2026: sin decisor público · LinkedIn: no hallado · fuente: directorio de socios CANACAR (razón social, no persona física); sin sitio web ni correo; WebSearch agotado en la sesión (200/200), investigación solo por WebFetch a dominios conocidos. unidades: null. Sin mensaje esta tanda: quedó fuera de los 5 mejores.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5bee2065-62e1-44a9-821d-c8f80779f3b0",
+    "empresa": "Autotransportes Fox, S.A. de C.V.",
+    "ciudad": "Toluca, México",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Francisco I. Madero 3 Int Na, Colonia San Lorenzo Tepaltitlán, CP 50010\nUbicación aproximada 17-ago: centroide de 256 establecimientos DENUE en Toluca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "793ebf13-3ae7-41b9-b29c-9219bf7c78e6",
+    "empresa": "Autotransportes Fronterizos de Carga, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Calle Oaxaca 3440 Int Na, Colonia Jardin, CP 88260\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9a357411-2dc5-4d7d-aae5-229316cebc3a",
+    "empresa": "Autotransportes Jeza",
+    "ciudad": "Jerez, Zacatecas",
+    "correo": null,
+    "telefono": "4949452828",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Arrastre · 0 a 10 personas · Boulevard 20 de Noviembre Km 27.5 Int Na, Ciudad Jerez, CP 99380\nUbicación aproximada 17-ago: centroide de 16 establecimientos DENUE en Jerez, Zacatecas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nENCAJE: bajo — socio CANACAR chico (0-10 personas), servicio de arrastre.\nPROSPECCIÓN 20-ago-2026: sin decisor público · LinkedIn: no hallado · fuente: directorio de socios CANACAR (razón social, no persona física); sin correo ni sitio web; WebSearch agotado en la sesión (200/200), investigación solo por WebFetch a dominios conocidos. unidades: null. Sin mensaje esta tanda: quedó fuera de los 5 mejores.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7e43101d-b0b4-48cf-9a5e-e73da05c8ed0",
+    "empresa": "Autotransportes Josar",
+    "ciudad": "Matamoros, Tamaulipas",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Francisco Villa 11 Int Sn, Colonia Las Palmas, CP 87420\nUbicación aproximada 17-ago: centroide de 181 establecimientos DENUE en Matamoros, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8b42c385-3a41-4778-8d23-ba9c8854d164",
+    "empresa": "Barba Autotanques, S.A. de C.V.",
+    "ciudad": "San Pedro Tlaquepaque, Jalisco",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Juan de la Barrera 6560 a Int Na, Colonia Guadalupana, CP 45595\nUbicación aproximada 17-ago: centroide de 219 establecimientos DENUE en San Pedro Tlaquepaque, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

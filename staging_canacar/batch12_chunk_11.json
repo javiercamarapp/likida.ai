@@ -1,0 +1,52 @@
+[
+  {
+    "id": "7ab73ff4-c34a-4191-86b0-f66ee22d56be",
+    "empresa": "Nazario Ruiz Gómez",
+    "ciudad": "Matamoros, Tamaulipas",
+    "correo": "contabilidad@tnruiz.com",
+    "telefono": "8688241066",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Materiales y Residuos Peligrosos · 11 a 50 personas · Calle Rene Guajardo 11 Int Na, Ciudad H. Matamoros Tam, CP 87394\nUbicación aproximada 17-ago: centroide de 181 establecimientos DENUE en Matamoros, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3bdb31e9-6982-4b4f-aa20-ea075ef52741",
+    "empresa": "Net Copiadoras",
+    "ciudad": "Ecatepec de Morelos, México",
+    "correo": "comprasnetcopiadoras@gmail.com",
+    "telefono": "5557671115",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Comercialización de Equipo de Impresión · 11 a 50 personas · Calle Salvador Sanchez Colin Mz 43 Int Sn, Colonia Granjas Valle de Guadalupe Seccion A, CP 55270\nDENUE API 17-ago (cruce CANACAR→DENUE): «NET COPIADORAS», score 1.06",
+    "fuente": "canacar"
+  },
+  {
+    "id": "bc2232fb-e7b0-41cd-b714-6492d81211e1",
+    "empresa": "Norden Ecotrucking, S.A. de C.V.",
+    "ciudad": "León, Guanajuato",
+    "correo": "administracion@nordentrucking.com",
+    "telefono": "4773948003",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransportes de Mercancias · 11 a 50 personas · Calle Estacion del Fcc la Trinidad 231 Int Na, Ciudad ., CP 37680\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (búsqueda web no disponible por tope de sesión) · CANACAR: Autotransportes de Mercancías, 11 a 50 personas, León · nombre comercial 'Ecotrucking' sugiere posicionamiento en eficiencia/sustentabilidad — buen anclaje para el ángulo de rendimiento de combustible · fuente: CANACAR directorio de socios (ya en base)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ed3369cc-a18f-4ffa-9dc3-8af6cece1fc3",
+    "empresa": "Norma Alicia Gutiérrez Coronado",
+    "ciudad": "Nava, Coahuila",
+    "correo": "delgutransportes@hotmail.com",
+    "telefono": "8787862474",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Boulevard Libramiento Lopez Portillo 670 Int Na, Colonia Plan de Ayala, CP 26183",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a6d2ee6b-4149-47f5-a136-24e4e8a25f56",
+    "empresa": "Norte Claro Transportación, S.A. de C.V.",
+    "ciudad": "Soledad de Graciano Sánchez, San Luis Potosí",
+    "correo": "gerencia@norte-claro.com.mx",
+    "telefono": "4443292338",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Circuito Boreal 544 Int Na, Colonia Villa Alborada, CP 78438\nUbicación aproximada 17-ago: centroide de 71 establecimientos DENUE en Soledad de Graciano Sánchez, San Luis Potosí — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nHISTORIA: Norte Claro Transportación declara 'más de 5 años de experiencia', con servicios de caja seca, caja refrigerada, góndolas, plataformas y Roll-Off en contenedor. Tel WhatsApp 444 706 8394 (fuente: norte-claro.com.mx, consultado 2026-08-20).\nPROSPECCIÓN 2026-08-20: sin decisor público · el sitio no nombra directivos · fuente: CANACAR directorio de socios 17-ago-2026 (autotransporte de carga, 11 a 50 personas) + norte-claro.com.mx.",
+    "fuente": "canacar"
+  }
+]

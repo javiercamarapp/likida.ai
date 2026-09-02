@@ -1,0 +1,52 @@
+[
+  {
+    "id": "73cfeba3-0062-4bb3-a03a-f0fa1b7e730c",
+    "empresa": "Transportes Juárez de Veracruz, S.A. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "calidad@transportesjuarez.mx",
+    "telefono": "2293568547",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General y Especializado · 11 a 50 personas · Callejón Heroes de Nacozari 242 Int 302, Colonia Veracruz Centro, CP 91700\n\nENCAJE: alto — carga general y especializado en el puerto de Veracruz, socio CANACAR, 11 a 50 personas, correo del área de calidad\nPROSPECCIÓN 19-ago-2026: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (autotransporte de carga general y especializado, 11 a 50 personas, Callejón Héroes de Nacozari 242, Veracruz Centro) · el correo del censo es del área de calidad, señal de que ya operan bajo algún sistema de gestión · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  },
+  {
+    "id": "741d5dee-c38e-40fa-b26f-3e0b995f6177",
+    "empresa": "Transportes Jvd, S. de R.L. de C.V.",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "jvdtransports@gmail.com",
+    "telefono": "6646613310",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Escaramuza Charra Lt 106 Int Na, Colonia Granjas Familiares Matamoros, CP 22203\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · LinkedIn: no hallado · viajes/mes: no público · historia: no pública (búsqueda Bing sin resultados) · fuente: directorio público CANACAR · score fit 0/5",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ad0bb723-ee8d-4652-b9ce-1e418094ada0",
+    "empresa": "Transportes Kasto, S.A. de C.V.",
+    "ciudad": "Pénjamo, Guanajuato",
+    "correo": "cesar.perez@grupokasto.com",
+    "telefono": "3525261340",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Geneal · 11 a 50 personas · Avenida Padre Hidalgo 410 Int 4, Colonia Santa Ana Pacueco, CP 36910\nUbicación aproximada 17-ago: centroide de 30 establecimientos DENUE en Pénjamo, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e650dfee-a3d3-47bd-bf3d-aad96d9146f3",
+    "empresa": "Transportes Kikapu, S.A. de C.V.",
+    "ciudad": "Cadereyta Jiménez, Nuevo León",
+    "correo": "tkikapu@gmail.com",
+    "telefono": "8282699464",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Zaragoza 605 Ote Int Na, Colonia Centro, CP 67480\nUbicación aproximada 17-ago: centroide de 40 establecimientos DENUE en Cadereyta Jiménez, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 2026-08-19: sin decisor público · LinkedIn: no hallado · fuente: CANACAR 17-ago-2026 (correo personal en gmail; WebSearch agotado).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "842b141a-f7f6-4caa-8213-1190424648c4",
+    "empresa": "Transpòrtes Lechuga",
+    "ciudad": "Chihuahua, Chihuahua",
+    "correo": "contatralecsa@infinitummail.com",
+    "telefono": "6144465665",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Fletes · 11 a 50 personas · Calle Aeropuerto de Dubai 6301 Int Na, Colonia Aeropuerto, CP 31384\nUbicación aproximada 17-ago: centroide de 282 establecimientos DENUE en Chihuahua, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

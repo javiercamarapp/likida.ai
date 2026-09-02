@@ -1,0 +1,52 @@
+[
+  {
+    "id": "c1ae2404-f8db-4c66-a51e-b0211f6918e1",
+    "empresa": "Transporte y Manejo Especial Lot",
+    "ciudad": "León, Guanajuato",
+    "correo": "gerencia@lot.com.mx",
+    "telefono": "4476778837",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporate Terrestre · 11 a 50 personas · Circuito Logistics 45 Int Lote 14, Colonia San Isidro, CP 36294\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nLOT — Soluciones para el Transporte (lot.com.mx, consulta 19-ago-2026): declaran 9 años de experiencia y una especialidad concreta, circuitos JUSTO A TIEMPO para la industria automotriz, con remolques adaptados (estructuras para robotización, gatas logísticas, iluminación, suspensión ajustable). Publican cartera de clientes ancla: Audi, Volkswagen, Mazda, General Motors, Pirelli, Michelin, Michelin Transport Logistics, Holcim, ILS, PAK, CRA, NAL México y Atolin. Socios CANACAR (17-ago-2026), 11 a 50 personas, Circuito Logistics 45, Col. San Isidro, León, Guanajuato. Tel. del sitio 477 690 7196, contacto gerencia@lot.com.mx. NO publican número de unidades, por eso el campo unidades queda en null.\nENCAJE: alto — circuitos JIT automotriz con clientes ancla armadoras, ventanas y penalizaciones\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: sitio oficial lot.com.mx (sin página de equipo) + directorio CANACAR 17-ago-2026",
+    "fuente": "canacar"
+  },
+  {
+    "id": "1cf5e973-884f-4c12-bb61-7fa0a8fad69e",
+    "empresa": "Transportes 100 Silva, S.A. de C.V.",
+    "ciudad": "Reynosa, Tamaulipas",
+    "correo": "operaciones@100silva.com.mx",
+    "telefono": "8992304320",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Valle del Sol 200 Int Na, Colonia la Escondida, CP 88770\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Reynosa, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "57b6671d-8842-4329-8ec1-7caf3129410e",
+    "empresa": "Transportes Abc del Caribe, S.A. de C.V.",
+    "ciudad": "Mérida, Yucatán",
+    "correo": "ruby.sansores@grupo-riga.com.mx",
+    "telefono": "9999880525",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle 27 129 Int A, Colonia Mexico, CP 97125\nUbicación aproximada 17-ago: centroide de 302 establecimientos DENUE en Mérida, Yucatán — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (el sitio no nombra directivos) · LinkedIn: no público · viajes/mes: no público · historia: carga general en Mérida, 6 tipos de equipo, patios km 8.1 carr. Mérida–Cancún, GPS 24/7, taller propio · sitio verificado grupo-riga.com.mx (razón social en el pie; tel 999 9880653, ventas@transportesabc.com) · rúbrica fit: 0/5 (sin vacante, sin flota pública, sin decisor) · fuente: grupo-riga.com.mx + directorio CANACAR\nINVESTIGACIÓN PROFUNDA 20-ago-2026: sin nombre de directivo público (EMIS pide compra de reporte).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2adea670-10d4-4082-a774-ea8d68c90491",
+    "empresa": "Transportes Aguilera de Carga General, S.A. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "trafico@grupoaguilera.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Avenida Progreso Mza 4 2 Esq. Desarrollo Int Na, Colonia Parque 2000, CP 91808",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7d4c9124-cfc8-476e-a12f-c45d92f59180",
+    "empresa": "Transportes Aguisot, S.A. de C.V.",
+    "ciudad": "Monclova, Coahuila",
+    "correo": "taguisot@prodigy.net.mx",
+    "telefono": "8666367200",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera 57 1205 Int Na, Colonia Eva Samano de Lopez Mateos, CP 25790",
+    "fuente": "canacar"
+  }
+]

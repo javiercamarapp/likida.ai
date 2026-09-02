@@ -1,0 +1,102 @@
+[
+  {
+    "id": "dd739fb7-67b1-4c01-8735-39f6e32448fc",
+    "empresa": "PAQUETERIA XPRESS",
+    "ciudad": "Escárcega, Campeche",
+    "correo": null,
+    "telefono": "2292640627",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Servicios de mensajería y paquetería local · 0 a 5 personas\nPROSPECCIÓN 2026-08-19: sin decisor público (sin sitio propio localizado, sin registro CANACAR, sin perfil de empresa en LinkedIn). No se localizó sitio ni correo oficial adicional · fuente: búsqueda pública sin resultado",
+    "fuente": "denue"
+  },
+  {
+    "id": "b1da4f72-de9c-4c75-92fb-f8679bf27fc3",
+    "empresa": "PIPAS PABLO ESPINOZA",
+    "ciudad": "León, Guanajuato",
+    "correo": null,
+    "telefono": "4777525643",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte local de carga especializado · 0 a 5 personas\nPROSPECCIÓN 2026-08-19: sin decisor público · el nombre 'Pipas Pablo Espinoza' sugiere persona física, pero no hay registro CANACAR a su nombre en esta ficha — no se escribe como decisor sin ese respaldo · DENUE: otro autotransporte local de carga especializada (agua en pipa), 0 a 5 personas, León · fuente: DENUE (ya en base)\nMENSAJE LINKEDIN: Hola, soy Javier, de Likida. Vi que Pipas Pablo Espinoza hace autotransporte local especializado de agua en pipa en León, Guanajuato. Ayudamos a que el operador mande sus comprobantes por WhatsApp y la liquidación de cada viaje salga cuadrada. Estamos eligiendo a las primeras flotas. ¿Tiene 15 minutos esta semana?",
+    "fuente": "denue"
+  },
+  {
+    "id": "f44aa4b8-4a2d-4e23-97ce-80b4b8cd82c5",
+    "empresa": "REYES MONTERRUBIO FIDEL FIDEL REYES MONTERRUBIO",
+    "ciudad": "MEXICO, D.F.",
+    "correo": null,
+    "telefono": "5555718617",
+    "estado": "nuevo",
+    "notas": "MUESTRA CANACAR (Scribd, padrón gremial — antigüedad por verificar): contacto del afiliado\nPROSPECCION 2026-08-20: decisor Fidel Reyes Monterrubio, titular — CON RESERVA: la fuente es una muestra de Scribd de padron gremial CANACAR marcada por la propia nota original como 'antiguedad por verificar' (confiabilidad menor que el directorio CANACAR oficial usado en otros registros), y el campo trae el nombre duplicado en dos ordenes (probable artefacto de extraccion), aunque ambas ordenes decodifican al mismo nombre sin ambiguedad · LinkedIn: no localizado · fuente: MUESTRA CANACAR (Scribd, padron gremial). Sin ciudad especifica (solo 'MEXICO, D.F.'), sin giro/SCIAN visible, sin sitio ni correo. Flota NO publicada — num_unidades sin dato.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "bb5bd958-3dcb-45b6-8623-53c4cdbde923",
+    "empresa": "RODRIGUEZ TELLEZ ALMA DELIA RODRIGUEZ TELLEZ ALMA DELIA",
+    "ciudad": "ESTADO DE MEXICO",
+    "correo": null,
+    "telefono": "5553631263",
+    "estado": "nuevo",
+    "notas": "MUESTRA CANACAR (Scribd, padrón gremial — antigüedad por verificar): contacto del afiliado",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3cc42b48-6d09-4c44-9bb1-7f2c86509239",
+    "empresa": "SALGADO JIMENEZ PETRA PETRA SALGADO JIMENEZ",
+    "ciudad": "MORELOS",
+    "correo": null,
+    "telefono": "7353536805",
+    "estado": "nuevo",
+    "notas": "MUESTRA CANACAR (Scribd, padrón gremial — antigüedad por verificar): contacto del afiliado",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ed39cd55-2416-4ebb-9e73-139798be65a8",
+    "empresa": "SANCHEZ ORTIZ JAIME ADHESIVOS Y PRODUCTOS QUIMICOSSA DE CVJAIME SANCHEZ ORTIZ",
+    "ciudad": "ESTADO DE MEXICO",
+    "correo": null,
+    "telefono": "5553103873",
+    "estado": "nuevo",
+    "notas": "MUESTRA CANACAR (Scribd, padrón gremial — antigüedad por verificar): contacto del afiliado",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c8ed6f21-7e35-4667-8e66-78bb46e94445",
+    "empresa": "SERVICIO DE GRUAS ENRIQUEZ HERMANOS, S.A. DE C.V. RICARDO ENRIQUEZ",
+    "ciudad": "ESTADO DE MEXICO",
+    "correo": null,
+    "telefono": "5959544421",
+    "estado": "nuevo",
+    "notas": "MUESTRA CANACAR (Scribd, padrón gremial — antigüedad por verificar): contacto del afiliado\n\nPROSPECCIÓN 2026-08-21: DECISOR CONFIRMADO (confianza media) — Ricardo Enríquez, contacto del afiliado en padrón CANACAR (apellido coincide con la razón social 'Enríquez Hermanos'; cargo exacto no confirmado por segunda fuente; nombre puede estar incompleto en la fuente).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "eb886447-cd97-499a-8aa0-2ac0c2596a81",
+    "empresa": "SERVICIO PAN AMERICANO DE PROTECCION, S.A. DE C.V. JUAN MARCOS LOPEZ",
+    "ciudad": "MEXICO, D.F.",
+    "correo": null,
+    "telefono": "5556273209",
+    "estado": "nuevo",
+    "notas": "MUESTRA CANACAR (Scribd, padrón gremial — antigüedad por verificar): contacto del afiliado\nPROSPECCIÓN 2026-08-20: decisor Juan Marcos López, contacto registrado en el padrón CANACAR (cargo no especificado en la fuente) · LinkedIn: no localizado sin sesión iniciada · fuente: padrón CANACAR vía Scribd. Descarté sepsa.com.mx como sitio oficial: pertenece a Sistemas Eléctricos de Potencia (Apodaca, N.L.), giro y ciudad distintos — no es este prospecto.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e41cc1b4-7e53-44e6-8bc1-06a9c76165e8",
+    "empresa": "SOC.COOP.TRANSPORTE PROGRESO DE VERACRUZ",
+    "ciudad": "Tlalixcoyan, Veracruz de Ignacio de la Llave",
+    "correo": null,
+    "telefono": "2292686393",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Transporte colectivo urbano y suburbano de pasajeros en autobuses de ruta fija · 0 a 5 personas · establecimiento: TERMINAL LA RUTA DEL CAMBIO\nPROSPECCIÓN 2026-08-19: sin decisor público (es sociedad cooperativa de pasajeros, no aparece en el padrón CANACAR de carga, sin sitio propio localizado). No se localizó sitio ni correo oficial · fuente: búsqueda pública sin resultado",
+    "fuente": "denue"
+  },
+  {
+    "id": "d07be329-33c7-4bd7-8f18-d69727f94bc1",
+    "empresa": "SOCIEDAD COOPERATIVA DE PRODUCCION Y PRESTACION DE SERVICIOS CUAUHTEMOC, S.C.L.ERNESTO SOTO CUELLAR",
+    "ciudad": "HIDALGO",
+    "correo": null,
+    "telefono": "7737850544",
+    "estado": "nuevo",
+    "notas": "MUESTRA CANACAR (Scribd, padrón gremial — antigüedad por verificar): contacto del afiliado\nPROSPECCIÓN 19-ago-2026: decisor Ernesto Soto Cuéllar, contacto del afiliado registrado directamente en el padrón CANACAR (nombre incluido en el registro de la cooperativa) · LinkedIn: no encontrado (público) · fuente: muestra CANACAR (Scribd, padrón gremial).",
+    "fuente": "canacar"
+  }
+]

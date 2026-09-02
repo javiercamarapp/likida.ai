@@ -1,0 +1,52 @@
+[
+  {
+    "id": "27839a72-f487-491a-970a-24d90d0d1f29",
+    "empresa": "Remolk, S.A. de C.V.",
+    "ciudad": "Gómez Palacio, Durango",
+    "correo": "clopez@remolk.com.mx",
+    "telefono": "8717191000",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General y Especializada · 11 a 50 personas · Calle Piedras Negras 422 Int B, Colonia Lagunero, CP 35070\nUbicación aproximada 17-ago: centroide de 111 establecimientos DENUE en Gómez Palacio, Durango — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c245e276-e6dc-48fc-ac6c-c0fb5fb3ee84",
+    "empresa": "Rendon Trucking & Logistic, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "e.rendon@rendontrucking.mx",
+    "telefono": "8677180285",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Los Pilotos 925 Int Na, Colonia la Paz, CP 88290\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nSocio CANACAR (17-ago-2026): Autotransporte de Carga General, 11 a 50 personas, Calle Los Pilotos 925, Col. La Paz, Nuevo Laredo, Tamaulipas, CP 88290 — cruce #1 de carga terrestre México-EUA. El correo de negocio (e.rendon@rendontrucking.mx) coincide con el apellido de la razón social \"Rendon Trucking & Logistic, S.A. de C.V.\", señal fuerte de que es empresa familiar, aunque la razón social es persona moral (no persona física en el padrón), así que NO se declara decisor con cargo por esta sola coincidencia de apellido.\nENCAJE: alto — carga general de 11-50 personas en Nuevo Laredo, cruce fronterizo #1\nPROSPECCIÓN 2026-08-20: sin decisor público confirmado (correo e.rendon@ coincide con apellido de la razón social, señal no concluyente) · fuente: directorio de socios CANACAR 17-ago-2026",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2c593ffb-dcd4-4287-800c-3d13ed6f7add",
+    "empresa": "Rg Freighters, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "isabel@rgfoods.com.mx",
+    "telefono": "8677199070",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Privada Nayarit 840 Int Na, Colonia Madero, CP 88270\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d7cb187e-2f70-4f27-91a4-853236d29698",
+    "empresa": "Rik Soluciones, S.A. de C.V.",
+    "ciudad": "Centro, Tabasco",
+    "correo": "riksoluciones@hotmail.com",
+    "telefono": "9933300178",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Arredanmiento de Equipo Vactor, Vehiculos y Camper · 11 a 50 personas · Carretera Federal Cardenas a Villahermosa Km 160.5 Int Na, Zona Federal Lazaro Cardenas 2Da Secc, CP 86287\nUbicación aproximada 17-ago: centroide de 165 establecimientos DENUE en Centro, Tabasco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e9401984-2ac1-4bff-b987-59ba4c800ca0",
+    "empresa": "Roal Business Solution, S. de R.L. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "contabilidad@roalgroup.net",
+    "telefono": "8677140513",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Aeropuerto Km. 2.5 2510 Int Na, Colonia America 4, CP 88299\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

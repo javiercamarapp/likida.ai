@@ -1,0 +1,52 @@
+[
+  {
+    "id": "0e637872-0c6e-4088-b867-3366617f0825",
+    "empresa": "Servicios y Transportes Mmlg, S. de R.L. de C.V.",
+    "ciudad": "Piedras Negras, Coahuila",
+    "correo": "contabilidad@transportesmm.com",
+    "telefono": "8781587679",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportes y Logistica · 51 a 250 personas · Carretera Libramiento Fausto Z. Martinez 408 Int F Planta Alta, Colonia Harold R. Pape, CP 26050",
+    "fuente": "canacar"
+  },
+  {
+    "id": "fca121cf-dd0a-4405-9367-2d9cabf90f5b",
+    "empresa": "Sika Transportes, S.A. de C.V.",
+    "ciudad": "Frontera, Coahuila",
+    "correo": "gabriela.hernandez@sikatransportes.com",
+    "telefono": "8666326366",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Carretera Libramiento Carlos Salinas de Gortari Km 11 600 Int Na, Colonia Occidental, CP 25640\n\nPROSPECCIÓN 2026-08-21: DECISOR CONFIRMADO (confianza media) — Ing. Edgar Gabriel Sierra Barboza, Director General de Sika Transportes (transporte de materiales peligrosos). Fuente única de resultados de búsqueda (sin URL directa verificada); corrige la sesión previa que no encontró el nombre en el sitio oficial. Se consolida la fila duplicada del censo 'SIKA TRANSPORTES' (id 6ad1f11c, sitio sikatransportes.com) como duplicado_de esta fila.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "60b23bc6-8b08-4058-8f7c-eae6160ad627",
+    "empresa": "Sintra Compañía de Transportes, S.A. de C.V.",
+    "ciudad": "Zacatecas, Zacatecas",
+    "correo": "hacosta@sintra.mx",
+    "telefono": "4921231740",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Calzada Luis Moya 900 Int Na, Colonia Gonzalez Ortega, CP 98087\nUbicación aproximada 17-ago: centroide de 37 establecimientos DENUE en Zacatecas, Zacatecas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "eb4092ec-f508-4afc-b4e4-ba798bb1ad8d",
+    "empresa": "Sistemas de Apoyo Logístico Al Comercio Internacional, S.A. de C.V.",
+    "ciudad": "Torreón, Coahuila",
+    "correo": "mcp@salci.com.mx",
+    "telefono": "8717329220",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Carretera Torreon-Mieleras Km 9.63 Sn Int Na, Colonia Sin Colonia, CP 27400",
+    "fuente": "canacar"
+  },
+  {
+    "id": "028bdea3-ee08-4f50-aa98-92b30b14d05a",
+    "empresa": "Sociedad Cooperativa de Producción y Prestación de Servicios Cuauhtémoc, S.C.L.",
+    "ciudad": "Tula de Allende, Hidalgo",
+    "correo": "cuentasxpagar.hgo@sccuauhtemoc.com.mx",
+    "telefono": "7736890013",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foráneo de Carga General · 51 a 250 personas · Prolongación Avenida Cruz Azul 86 Int Na, Colonia Monte Alegre, CP 42840\nUbicación aproximada 17-ago: centroide de 31 establecimientos DENUE en Tula de Allende, Hidalgo — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

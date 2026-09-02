@@ -1,0 +1,102 @@
+[
+  {
+    "id": "6f0ed33f-a2e2-4b03-9157-2e157dade714",
+    "empresa": "TRANSPORTES Y MAQUINARIA SAN FRANCISCO",
+    "ciudad": "Querétaro, Querétaro",
+    "correo": "construsf@hotmail.com",
+    "telefono": "4422067561",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo de materiales para la construcción · 6 a 10 personas · establecimiento: TRANSPORTES Y MAQUINARIA SAN FRANCISCO\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  },
+  {
+    "id": "36fddc1a-8024-43ef-97f3-3c1bb91c4b11",
+    "empresa": "FLETES LE",
+    "ciudad": "Allende, Nuevo León",
+    "correo": null,
+    "telefono": "8261080040",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo con refrigeración · 6 a 10 personas · establecimiento: FLETES LE\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  },
+  {
+    "id": "97254570-cdde-4544-a5e5-524c85548d52",
+    "empresa": "PAQUETERIA CASTORES",
+    "ciudad": "Lagos de Moreno, Jalisco",
+    "correo": null,
+    "telefono": "4777100700",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga general · 6 a 10 personas · establecimiento: PAQUETERIA CASTORES\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  },
+  {
+    "id": "db055abf-69bb-4394-b214-ab9485203ba3",
+    "empresa": "\"Hanssa-I\"",
+    "ciudad": "Ecatepec de Morelos, México",
+    "correo": "jc.sanchezibarra@hanssa-i.com",
+    "telefono": "5531848484",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Traslado y Fletes de Contenedores y Carga Consolidada · 0 a 10 personas · Carretera Lecheria Texcoco Km 42 Sn Int Na, Colonia Santa Maria Chiconautla, CP 55066\nUbicación aproximada 17-ago: centroide de 186 establecimientos DENUE en Ecatepec de Morelos, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nINVESTIGACION-LOTE-NUM 18-ago-2026 (agentes sonnet, aplica=true): APLICA: vacante publica \"EMPRESA DE TRACTOCAMIONES SOLICITA\" (carrocero, mantenimiento de flota) confirma unidades propias. Hibrido: tambien vende coordinacion logistica/aduanal. Ecatepec de Morelos.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "55851b74-97e0-4f59-b3f7-4b7743cff321",
+    "empresa": "2R Transportes",
+    "ciudad": "Monterrey, Nuevo León",
+    "correo": "2r.transportes2@gmail.com",
+    "telefono": "8110048941",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte Federal y Fronterizo de Carga General Por Carretera · 0 a 10 personas · Calle Pedregal del Acantilado 5612 Int Na, Colonia Pedregal la Silla, CP 64898\nUbicación aproximada 17-ago: centroide de 442 establecimientos DENUE en Monterrey, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nINVESTIGACION-LOTE-NUM 18-ago-2026 (agentes sonnet, aplica=true): APLICA: SCIAN 484233 confirmado via CANACAR (afiliacion exige permiso SICT + tarjetas de circulacion). Monterrey NL, 0-10 personas, sin sitio web. Correo genuino: 2r.transportes2@gmail.com.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7aa0c61c-f27a-46b5-b55a-981b1fe29435",
+    "empresa": "4 Matildes Transportistas, S.A. de C.V.",
+    "ciudad": "Nogales, Sonora",
+    "correo": "rh@hungaros.com",
+    "telefono": "6313143434",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Prolongación Alvaro Obregon Km 5.5 Sn Int Na, Colonia el Greco, CP 84066\nUbicación aproximada 17-ago: centroide de 145 establecimientos DENUE en Nogales, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5b28c9fc-c17e-43a1-a1a3-5d178af81a54",
+    "empresa": "A&C Transporte de Maquinaria, S.A. de C.V.",
+    "ciudad": "Gustavo A. Madero, Ciudad de México",
+    "correo": "javier@actransporte.com",
+    "telefono": "8331400029",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportista · 0 a 10 personas · Avenida Francisco Morazan 106 Int Na, Colonia la Pradera, CP 7500\nUbicación aproximada 17-ago: centroide de 268 establecimientos DENUE en Gustavo A. Madero, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nINVESTIGACION-LOTE-A 18-ago-2026 (agentes sonnet, aplica=true): APLICA fuerte: SCIAN 484119, fundada 1989, flota propia de lowboy/plataformas para carga sobredimensionada, patio 10,000m² en Altamira Tamaulipas. OJO: el \"ciudad\" del censo (CDMX) es el domicilio fiscal/CANACAR, la operacion real esta en Altamira.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "92c5346a-1dec-47a6-bab7-86351d50180d",
+    "empresa": "A1 Transportes Internacionales, S. de R.L. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "jorge@al-comintl.com",
+    "telefono": "8676884633",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Cruces Internacionales · 0 a 10 personas · Avenida Riva Palacio 703 Int Na, Colonia Centro, CP 88000\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nINVESTIGACION-LOTE-A 18-ago-2026 (agentes sonnet, aplica=true): DUPLICADO del registro anterior (A1 TRANSPORTES INTERNACIONALES) — misma empresa, dos filas del censo.\n\nENCAJE: medio — transportista de cruces internacionales, socio CANACAR, operación chica.\nPROSPECCIÓN 19-ago-2026: sin decisor público · LinkedIn: no hallado · fuente: directorio de socios CANACAR (aparece la razón social, no una persona física) + el correo de la base jorge@al-comintl.com, que sugiere nombre de pila pero NO lo nombra ninguna fuente pública con cargo, así que no se declara decisor; WebSearch agotado. unidades: sin conteo publicado → null. Sin mensaje esta tanda: la nota previa la marca como duplicado de otro registro del censo — resolver el duplicado antes de contactar.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2e8e99bd-16ab-4403-ae58-d04e2f777830",
+    "empresa": "Abastecedora Sta Rosa",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "transportesstarosa@hotmail.com",
+    "telefono": "2299292506",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Por Carretera · 0 a 10 personas · Calle Fernando Magallanes 441 Int 1A, Fraccionamiento Reforma, CP 91919\n\nINVESTIGACION-LOTE-ABARROTES2 18-ago-2026 (agentes sonnet, aplica=true): APLICA: registrada en el directorio de socios de CANACAR como \"Transporte de Carga Por Carretera\". Filial de Grupo Cariazur (azucarero, Veracruz). LinkedIn confirma flota: Jefe de Mantenimiento Vehicular (2017-18) y Chofer de Quinta Rueda actual, ruta Veracruz-Cordoba confirmada.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2d419136-dcaa-4070-a8b8-87989bcd5ea4",
+    "empresa": "Abc Logística, S.A. de C.V.",
+    "ciudad": "Tepotzotlán, México",
+    "correo": "olguinf@abclogistica.mx",
+    "telefono": "5518007940",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicios de Intermediacion Al Transporte · 0 a 10 personas · Carretera Mexico-Queretaro Km 42.5 Km 42.5 Int Na, Parque Industrial Texcacoa, CP 54605\nUbicación aproximada 17-ago: centroide de 77 establecimientos DENUE en Tepotzotlán, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

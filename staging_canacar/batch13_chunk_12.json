@@ -1,0 +1,52 @@
+[
+  {
+    "id": "00d929f5-df47-4858-9b0f-fb3329c5ab6d",
+    "empresa": "Samuel Tamez Treviño",
+    "ciudad": "Allende, Nuevo León",
+    "correo": "tatre2008@hotmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Auto Transporte de Carga · 11 a 50 personas · Prolongación Vista Sierra Sur 2010 Int B, Colonia Sección Buena Vista, CP 67350\nUbicación aproximada 17-ago: centroide de 123 establecimientos DENUE en Allende, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "68228285-6aa1-4cd4-8bac-4b0d553feef4",
+    "empresa": "San Antonio Logísticos Express, S.A. de C.V.",
+    "ciudad": "Tulancingo de Bravo, Hidalgo",
+    "correo": "erica@sanantoniolog.com.mx",
+    "telefono": "7757586597",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Calle Tlaloc 210 Int Na, Colonia Jaltepec, CP 43700\nUbicación aproximada 17-ago: centroide de 47 establecimientos DENUE en Tulancingo de Bravo, Hidalgo — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-19: sin decisor publico - fuente: CANACAR directorio de socios 17-ago-2026, correo (erica@sanantoniolog.com.mx) sin cargo declarado. WebSearch agotado en la sesion (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e9c93173-e577-4d35-8919-6571cac2371f",
+    "empresa": "San José Leasing Trucks, S.A. de C.V.",
+    "ciudad": "Tonalá, Jalisco",
+    "correo": "jm.aguilar@refamex.com.mx",
+    "telefono": "3315211494",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Privada Central 57 Int Na, Ciudad Aztlan, CP 45402\nUbicación aproximada 17-ago: centroide de 73 establecimientos DENUE en Tonalá, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4eebf033-1731-4c69-9e30-0dfa88b4a160",
+    "empresa": "Sandra Sainz Pedroza",
+    "ciudad": "Puebla, Puebla",
+    "correo": "admonsansainzp@hotmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Por Carretera a Nivel Regional y Nacional · 11 a 50 personas · Calle 29 Oriente 811 Int Na, Colonia Francisco I Madero, CP 74290\nUbicación aproximada 17-ago: centroide de 496 establecimientos DENUE en Puebla, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "aa04ca6c-2d88-4205-8192-b885eeee459d",
+    "empresa": "Saul Alejandro Contreras Romero",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "tatankatruckline2020@gmail.com",
+    "telefono": "6643764182",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Parque Municipal 45 Int Na, Colonia Arboledas, CP 22120\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

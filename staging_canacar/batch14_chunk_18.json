@@ -1,0 +1,52 @@
+[
+  {
+    "id": "43ed62c9-7208-43f4-9857-8ce27017dff8",
+    "empresa": "Transportación Especializada de México, S.A. de C.V.",
+    "ciudad": "Minatitlán, Veracruz",
+    "correo": "contabilidad@temsa.org.mx",
+    "telefono": "9222212351",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Berlin 19 Int Na, Colonia Nueva Mina Norte, CP 96734\nHISTORIA: socia registrada de CANACAR (directorio de socios, 17-ago-2026): Transportación Especializada de México, S.A. de C.V. (TEMSA) — Autotransporte de Carga General, 11 a 50 personas, Calle Berlín 19, Col. Nueva Mina Norte, Minatitlán, Veracruz (zona de refinería y complejo petroquímico Pajaritos-Cangrejera). El sitio temsa.org.mx no cargó (fallo de handshake SSL). Correo contabilidad@temsa.org.mx (buzón de contabilidad, no de dirección).\nUNIDADES: sin conteo de tractocamiones publicado — null (11-50 son PERSONAS).\nENCAJE: alto — socia CANACAR, carga general formal en zona petroquímica.\nPROSPECCIÓN 2026-08-20: sin decisor público · LinkedIn: no hallado · fuente: directorio de socios CANACAR 17-ago-2026; temsa.org.mx sin acceso (fallo SSL). WebSearch agotado en la sesión.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "cdda54b1-308f-4693-8d4b-f1dab4e897c2",
+    "empresa": "Transportaciones de Comercio Intercontinental, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "jesusgarza@tramitaciones.com",
+    "telefono": "8677134151",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Prolongación Guerrero 3600 Int Na, Colonia Madero, CP 88270\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0922174c-c2ae-45d2-ad1c-9b98a42d9214",
+    "empresa": "Transportaciones Rápidas de Occidente, S.A. de C.V.",
+    "ciudad": "Jacona, Michoacán",
+    "correo": "pdurang@agacentro.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Nacional Mexico Guadalajara Km 470 Sn Int Na, Colonia Centro, CP 59800",
+    "fuente": "canacar"
+  },
+  {
+    "id": "57db1915-c621-4108-895d-a2417954e6da",
+    "empresa": "Transportadora Arteaga Srl de Cv",
+    "ciudad": "Arteaga, Coahuila",
+    "correo": "jose.valdes@tarteaga.com",
+    "telefono": "8441033069",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Trnsporte de Carga Pesada · 11 a 50 personas · Boulevard Fundadores 630 Int Na, Ciudad Arteaga, CP 25350",
+    "fuente": "canacar"
+  },
+  {
+    "id": "66a39aae-4a61-4c76-85a1-78dd78068748",
+    "empresa": "Transportadora Bioindustrial-Iso, S.A. de C.V.",
+    "ciudad": "El Carmen, Nuevo León",
+    "correo": "facturacion@merloesa.com.mx",
+    "telefono": "8183351773",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Fletes · 11 a 50 personas · Carretera Monclova Km 7.5 Sn Int Na, Colonia el Carmen, CP 66550\nUbicación aproximada 17-ago: centroide de 16 establecimientos DENUE en El Carmen, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nENCAJE: alto - socio CANACAR, 11-50 personas, servicio de fletes\nPROSPECCION 2026-08-19: sin decisor publico - fuente: CANACAR directorio de socios 17-ago-2026, correo (facturacion@merloesa.com.mx) de area, no de persona. WebSearch agotado en la sesion (200/200).",
+    "fuente": "canacar"
+  }
+]

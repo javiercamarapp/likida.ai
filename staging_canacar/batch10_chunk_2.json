@@ -1,0 +1,52 @@
+[
+  {
+    "id": "52a1f097-c0d0-431f-8409-6b9da9a1e6cd",
+    "empresa": "Fletes Magos, S.A. de C.V.",
+    "ciudad": "Tezoyuca, México",
+    "correo": "contabilidad@fletesmagos.com.mx",
+    "telefono": "5949575367",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga en General · 11 a 50 personas · Calle Bezana Zurita Parcela 423 Int Na, Colonia Tequisistlan, CP 56020\nUbicación aproximada 17-ago: centroide de 13 establecimientos DENUE en Tezoyuca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "894561d3-4669-45f4-be9d-f4b90c198245",
+    "empresa": "Fletes Nueva Galicia S.A. de C.V.",
+    "ciudad": "Tonalá, Jalisco",
+    "correo": "juridico@fletesng.com",
+    "telefono": "3336812275",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Unicornio 64 Int Na, Colonia Ciudad Aztlan, CP 45402\nUbicación aproximada 17-ago: centroide de 73 establecimientos DENUE en Tonalá, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a20f21d9-f095-4419-a8dd-ecbc8797a882",
+    "empresa": "Fletes Quetzal",
+    "ciudad": "Apodaca, Nuevo León",
+    "correo": "contacto.fletesqquetzal@gmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General Local y Foraneo · 11 a 50 personas · Calle Garza García 416 Int A, Colonia Centro, CP 66600\nUbicación aproximada 17-ago: centroide de 300 establecimientos DENUE en Apodaca, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · no se localizó sitio oficial · socio CANACAR, autotransporte de carga general local y foráneo, Apodaca · fuente: búsqueda web",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c58d5bfa-b2f3-48f9-b90a-9e466f2715b5",
+    "empresa": "Fletes Rodriguez E Hijos, S.A. de C.V.",
+    "ciudad": "San Nicolás de los Garza, Nuevo León",
+    "correo": "ventas@rodriguezehijos.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Golfo de Mexico 640 Int Na, Colonia la Fe, CP 66477\nUbicación aproximada 17-ago: centroide de 150 establecimientos DENUE en San Nicolás de los Garza, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nFletes Rodríguez e Hijos, S.A. de C.V. (rodriguezehijos.com.mx, consulta 20-ago-2026): empresa familiar especializada en transporte de carga CONTENERIZADA y carga suelta, con presencia en Manzanillo y Monterrey; sirven a navieras, forwarders y empresas de logística (sin nombres específicos publicados). Manejan contenedores, rollos de acero y carga general. Correos operaciones@, logistica@, ventas@ y rh@rodriguezehijos.com.mx, tel. 81 1090 8835/8836. Registro CANACAR (17-ago-2026): Autotransporte de Carga, 11 a 50 personas, San Nicolás de los Garza, Nuevo León.\nPROSPECCIÓN 2026-08-20: sin decisor público · fuente: sitio oficial rodriguezehijos.com.mx (sin directorio de personas) + directorio CANACAR 17-ago-2026",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5fc8fe66-114b-41c0-917b-9550af4b0523",
+    "empresa": "Fletes Unificados y Logistica Especializada de México, S.A. de C.V.",
+    "ciudad": "Córdoba, Veracruz",
+    "correo": "sustaeta@fulem.mx",
+    "telefono": "2717138977",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle 14 1400 Int 2, Colonia San Jose, CP 94560",
+    "fuente": "canacar"
+  }
+]

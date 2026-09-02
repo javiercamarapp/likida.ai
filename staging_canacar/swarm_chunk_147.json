@@ -1,0 +1,102 @@
+[
+  {
+    "id": "cb39a2e6-0a40-4e93-adf9-b7f0ea10bc3c",
+    "empresa": "Humberto López Sosa",
+    "ciudad": "Manzanillo, Colima",
+    "correo": "tranporte3@logisticor.mx",
+    "telefono": "3143324544",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Calle Constitucion 47 Int Na, Colonia Burocrata, CP 28250\nUbicación aproximada 17-ago: centroide de 551 establecimientos DENUE en Manzanillo, Colima — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d5b5276b-537b-4e59-ba2c-fda12850545d",
+    "empresa": "Humberto Villarreal Hernandez",
+    "ciudad": "Linares, Nuevo León",
+    "correo": "villareal321@hotmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Federal · 0 a 10 personas · Calle Guayacan 1101 Int Na, Colonia Fovissste, CP 67755\nUbicación aproximada 17-ago: centroide de 7 establecimientos DENUE en Linares, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nDECISOR: registro CANACAR a nombre de persona física Humberto Villarreal Hernández — el titular ES el decisor.\nsin conteo exacto de flota publicado — no se llena `num_unidades`; CANACAR reporta 0 a 10 personas (personal, no unidades).\nPROSPECCIÓN 2026-08-19: decisor Humberto Villarreal Hernández, titular persona física · LinkedIn: no localizado · fuente: directorio de socios CANACAR 17-ago-2026 · WebSearch agotado en la sesión (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2816c554-184c-4dad-b25a-bcbe7874fc28",
+    "empresa": "Iborn, S.A. de C.V.",
+    "ciudad": "Nogales, Sonora",
+    "correo": "transporte@ibarrolaelias.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Periférico Poniente 1941 Int Local 15, Colonia Zona Fiscal, CP 84094\nUbicación aproximada 17-ago: centroide de 145 establecimientos DENUE en Nogales, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f7ebcedd-bab4-4391-82b2-583d92259708",
+    "empresa": "Icg Transportes, S.A. de C.V.",
+    "ciudad": "Querétaro, Querétaro",
+    "correo": "csm@boltix.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Calle Clemencia Borja Taboada 512 Int 308, Colonia Jurica Acueducto, CP 76220\nUbicación aproximada 17-ago: centroide de 266 establecimientos DENUE en Querétaro, Querétaro — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3353a3fe-ce46-4bc9-8901-7df1b967b23d",
+    "empresa": "Igl Express, S.A. de C.V.",
+    "ciudad": "Nuevo Morelos, Tamaulipas",
+    "correo": "rhsupervisor@infinitogl.com",
+    "telefono": "8671514740",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Creces de Importación · 0 a 10 personas · Avenida Vicente Guerrero 2801 Int Na, Colonia Guerrero, CP 88240\nPROSPECCION 2026-08-19: sin decisor publico, sin sitio oficial localizable (WebSearch agotado en esta sesion) · contexto: Igl Express, creces de importacion, 0 a 10 personas (CANACAR), Nuevo Morelos, Tamaulipas\nENCAJE: bajo — flota chica (0-10 personas), volumen bajo esperado",
+    "fuente": "canacar"
+  },
+  {
+    "id": "94456c0c-5b6a-43dc-b31b-c2cf8cca3a94",
+    "empresa": "Ignacio García Fierros",
+    "ciudad": "Caborca, Sonora",
+    "correo": "petroleosga@gmail.com",
+    "telefono": "6623380289",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Material y Residuos Peligrosos Diesel y Gasolina · 0 a 10 personas · Carretera Caborca Al Desemboque Km 2.5 Sn Int Na, Colonia Raquet Club, CP 83640\nUbicación aproximada 17-ago: centroide de 32 establecimientos DENUE en Caborca, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "90a468c6-8fe7-4795-b59b-37a9e64b11c1",
+    "empresa": "Imperium Merino Servín, S.A. de C.V.",
+    "ciudad": "Huixquilucan, México",
+    "correo": "santiago.merino@imperiumlog.com",
+    "telefono": "5554551060",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Avenida Jesus del Monte 32 Int Na, Colonia Jesus del Monte, CP 52786\nUbicación aproximada 17-ago: centroide de 26 establecimientos DENUE en Huixquilucan, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a97c8979-9142-4609-8378-9ba728004547",
+    "empresa": "Improdux, S.A. de C.V.",
+    "ciudad": "Hermosillo, Sonora",
+    "correo": "camoualan@gmail.com",
+    "telefono": "6623537937",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo Con Refrigeracion · 0 a 10 personas · Calle Corregidores 50 Int Na, Colonia Villa Satelite, CP 83200\nUbicación aproximada 17-ago: centroide de 285 establecimientos DENUE en Hermosillo, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b65f1097-8b19-4af1-acd8-48978f5c7822",
+    "empresa": "Impulse Cargo, S.A. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "contacto@impulse.mx",
+    "telefono": "2291210393",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Calzada Manuel J Clouthier 6345 Int C, Colonia Amapolas 1, CP 91775\nPROSPECCIÓN 2026-08-19: sin decisor público · sitio impulse.mx devolvió error 500 al intentar consultarlo · CANACAR: Autotransporte de Carga, 0 a 10 personas · fuente: CANACAR directorio de socios (ya en base)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "958ab2b2-53dc-4474-8d56-0fe73ce6befe",
+    "empresa": "In Box Cargo, S. de R.L. de C.V.",
+    "ciudad": "San Pedro Tlaquepaque, Jalisco",
+    "correo": "oscar.moreno@inboxcargo.com.mx",
+    "telefono": "3328766660",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Mariano Jimenez 123 Int Na, Colonia Las Liebres, CP 45623\nUbicación aproximada 17-ago: centroide de 219 establecimientos DENUE en San Pedro Tlaquepaque, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "a2ef9df4-dd7e-4c79-bcb0-0494fb2fc9f1",
+    "empresa": "Treymo, S. de R.L. de C.V.",
+    "ciudad": "Cuautitlán Izcalli, México",
+    "correo": "sancheza@treymo.com.mx",
+    "telefono": "5592628930",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Materiales y Residuos Peligrosos · 11 a 50 personas · Avenida Chalma Sn Int 32, Colonia Jardines de la Hacienda Sur, CP 54720\nUbicación aproximada 17-ago: centroide de 171 establecimientos DENUE en Cuautitlán Izcalli, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (correo sancheza@ sugiere apellido Sánchez, no confirmado) · no se localizó sitio oficial · socio CANACAR, materiales y residuos peligrosos, Cuautitlán Izcalli · fuente: búsqueda web",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d7fd3c7f-8edf-47ee-b0fe-6b1c21f8af9d",
+    "empresa": "Trf Soluciones Logisticas",
+    "ciudad": "Ecatepec de Morelos, México",
+    "correo": "raziel.fragoso@trf.com.mx",
+    "telefono": "4426600474",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Mercancias · 11 a 50 personas · Avenida Lago Chapultepec Na Int Depto 4, Colonia Jardines de Morelos Seccion Lagos, CP 55070\nUbicación aproximada 17-ago: centroide de 186 establecimientos DENUE en Ecatepec de Morelos, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0be69c15-b955-4ed8-bf72-c89aa67850f4",
+    "empresa": "Trip Mexicana, S.A. de C.V.",
+    "ciudad": "Manzanillo, Colima",
+    "correo": "andres@palazuelos.com.mx",
+    "telefono": "5552595959",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Lazaro Cardenas 907 Int Na, Colonia Las Brisas, CP 28210\nUbicación aproximada 17-ago: centroide de 551 establecimientos DENUE en Manzanillo, Colima — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN PROFUNDA 21-ago-2026: Santiago Palazuelos Urquiza, key principal (D&B). Gabriel Aguirre fue Director General según nota de T21 de 2018 — dato viejo, no usar sin verificar vigencia.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "296751d9-f07d-4ce6-a8c8-2f4b5abdfd9b",
+    "empresa": "Tsd Express, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "tsd_admin@tsdexpress.com",
+    "telefono": "8677182691",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Carretera Aeropuerto Km 1.345 Int Na, Colonia Na, CP 88283\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ce19da3a-c735-4e88-8aa4-d3a4df6c0257",
+    "empresa": "Urma Logistic, S.A. de C.V.",
+    "ciudad": "Zapopan, Jalisco",
+    "correo": "stephanyalcantara.urma@gmail.com",
+    "telefono": "3331202204",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Mariano Otero 1901 Int 403-A, Residencial Victoria, CP 45089\nUbicación aproximada 17-ago: centroide de 205 establecimientos DENUE en Zapopan, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

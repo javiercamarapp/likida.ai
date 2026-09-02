@@ -1,0 +1,52 @@
+[
+  {
+    "id": "0abb28ac-b037-4464-9b33-1f14b17fa839",
+    "empresa": "Transportes Robles Lozoya, S. de R.L. de C.V.",
+    "ciudad": "Chihuahua, Chihuahua",
+    "correo": "joseluis.m@trltransportes.com",
+    "telefono": "6144231524",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Via Lombardia 3000 Int 304, Ciudad Distrito 1, CP 31110\nUbicación aproximada 17-ago: centroide de 282 establecimientos DENUE en Chihuahua, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 2026-08-21: DECISOR CONFIRMADO (confianza media) — Patricia Robles Lozoya, listada como \"key principal\" en Dun & Bradstreet (apellido coincide con la razón social, consistente con que sea dueña/fundadora; cargo exacto no confirmado por segunda fuente).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b5818458-916b-493f-a746-83fd8845c4ae",
+    "empresa": "Transportes Rogb, S.A. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "mpaz@rogbsa.com.mx",
+    "telefono": "2296902050",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Fletes en General · 11 a 50 personas · Calle Tres Zapotes Manzana 2 Int Na, Parque Industrial Olmeca, CP 91808\nPROSPECCIÓN 2026-08-19: sin decisor público (búsqueda web no disponible por tope de sesión) · CANACAR: Servicio de Fletes en General, 11 a 50 personas, Parque Industrial Olmeca · correo ya en base (mpaz@rogbsa.com.mx) sugiere iniciales 'M. Paz', sin confirmar nombre completo en fuente pública — no se escribe como decisor sin verificar · fuente: CANACAR directorio de socios (ya en base)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "30b35192-c2bd-40f7-8141-3332fb2f94c3",
+    "empresa": "Transportes Salma, S.A. de C.V.",
+    "ciudad": "Cadereyta Jiménez, Nuevo León",
+    "correo": "cpxochitlrodriguez@hotmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Monterrey Reynosa Km 27.5 Sn Int Na, Colonia Centro, CP 67480\nUbicación aproximada 17-ago: centroide de 40 establecimientos DENUE en Cadereyta Jiménez, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a9be234c-50fa-4eec-8571-b815d6c0fca2",
+    "empresa": "Transportes Saturno, S.A. de C.V.",
+    "ciudad": "Venustiano Carranza, Ciudad de México",
+    "correo": "pedro.ramos@lsgaco.com",
+    "telefono": "5551336200",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Especializado de Carga · 11 a 50 personas · Avenida Aviacion Militar 30 Int Na, Colonia Industrial Puerto Aereo, CP 15710\nUbicación aproximada 17-ago: centroide de 454 establecimientos DENUE en Venustiano Carranza, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6b8c450d-8ad7-4952-99c9-8653891a808f",
+    "empresa": "Transportes Tamara, S.A. de C.V.",
+    "ciudad": "Mazatlán, Sinaloa",
+    "correo": "malvarado15@prodigy.net.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Puerto de Salina Cruz 12 Int Na, Colonia Parque Industrial Alfredo V Bonfil, CP 82050\nUbicación aproximada 17-ago: centroide de 131 establecimientos DENUE en Mazatlán, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

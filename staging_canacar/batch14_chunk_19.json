@@ -1,0 +1,52 @@
+[
+  {
+    "id": "ecd85599-f445-495a-bfcb-35c3199ed529",
+    "empresa": "Transportadora Central de Gas, S.A. de C.V.",
+    "ciudad": "Chihuahua, Chihuahua",
+    "correo": "facturacentral@grupozeta.com",
+    "telefono": "6144217662",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Avenida Tecnologico 6102 Int Na, Colonia Parral, CP 31150\nUbicación aproximada 17-ago: centroide de 282 establecimientos DENUE en Chihuahua, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-20: sin decisor público identificado. Indicio no confirmado: correo (facturacentral@grupozeta.com) comparte dominio con Grupo Zeta, distribuidora de gas LP (grupozeta.com activo desde fines de los 90 vía Wayback, sitio actual en mantenimiento) — no pude confirmar si es la misma entidad legal. Comparte domicilio, teléfono (6144217662) y patrón de correo con Baja Gas And Oil Transportes, otro prospecto de este mismo lote.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0c676916-67c1-464d-8a09-e43659ce414d",
+    "empresa": "Transportadora de Carga Sonot, S.A. de C.V.",
+    "ciudad": "Hermosillo, Sonora",
+    "correo": "alejandro.fernandez@sonot.com.mx",
+    "telefono": "6622610704",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Terrestre de Carga Regular en Zonas Federales · 11 a 50 personas · Boulevard Jesus Garcia Morales 785 Int Sn, Colonia el Llano, CP 83210\nUbicación aproximada 17-ago: centroide de 285 establecimientos DENUE en Hermosillo, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN 21-ago-2026: sin decisor público identificable.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ccc4f58a-e0d6-4d3a-a671-c43eb6621af0",
+    "empresa": "Transportadora de la Laguna, S.A. de C.V.",
+    "ciudad": "Gómez Palacio, Durango",
+    "correo": "contador_transp@grupogr.com.mx",
+    "telefono": "8717187502",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Gomez Palacio-Francisco I Madero Km 7.5 Sn Int B, Colonia Gomez Palacio, CP 35000\nUbicación aproximada 17-ago: centroide de 111 establecimientos DENUE en Gómez Palacio, Durango — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a61718d6-ef7c-4630-a708-0c1aeec67be0",
+    "empresa": "Transportadora Especializada de Maquinaria Truck",
+    "ciudad": "Tepotzotlán, México",
+    "correo": "rodriguez@globalfl.com.mx",
+    "telefono": "5558999996",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Federal · 11 a 50 personas · Calle Mariano Escobedo Sn Int Sn, Colonia Tlacateco, CP 54605\nUbicación aproximada 17-ago: centroide de 77 establecimientos DENUE en Tepotzotlán, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nHISTORIA: socio CANACAR de AUTOTRANSPORTE DE CARGA FEDERAL (clasificación explícita, no intermediación) con 11 a 50 personas, domicilio en Calle Mariano Escobedo, Colonia Tlacateco, Tepotzotlán, Estado de México (CP 54605). El nombre 'Especializada de Maquinaria' apunta a transporte de maquinaria/equipo pesado, giro de alto valor por viaje.\nOJO DOMINIO: globalfl.com.mx entra en bucle de redirecciones (más de 10) al 2026-08-20 — no se pudo leer el sitio ni buscar directivos ahí.\nPROSPECCIÓN 2026-08-20: sin decisor público · el sitio no carga por bucle de redirecciones · fuente: CANACAR directorio de socios 17-ago-2026 (autotransporte de carga federal, 11 a 50 personas) + intento fallido en globalfl.com.mx.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3665d4af-90f3-4976-beab-afc969996d77",
+    "empresa": "Transportadora Especializada Industrial, S.A. de C.V.",
+    "ciudad": "Cuautitlán Izcalli, México",
+    "correo": "laura.martineza@gsttransportes.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calzada de la Venta 14 Int Na, Fraccionamiento Industrial Cuamatla, CP 54730\nUbicación aproximada 17-ago: centroide de 171 establecimientos DENUE en Cuautitlán Izcalli, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

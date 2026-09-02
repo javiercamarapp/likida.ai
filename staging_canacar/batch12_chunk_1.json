@@ -1,0 +1,52 @@
+[
+  {
+    "id": "34fa0b7e-585b-4d7b-b0a3-6866535faf3c",
+    "empresa": "Logística y Comercializadora Traesva, S.A. de C.V.",
+    "ciudad": "Corregidora, Querétaro",
+    "correo": "administracion@traesva.com",
+    "telefono": "4426543568",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Paseo del Aguila Imperial 23 Int Na, Fraccionamiento Santa Fe, CP 76912\nUbicación aproximada 17-ago: centroide de 27 establecimientos DENUE en Corregidora, Querétaro — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "89ae6372-fa09-4731-978d-d35a611b480d",
+    "empresa": "Logística y Distribución Vahcrac, S.A. de C.V.",
+    "ciudad": "Coacalco de Berriozábal, México",
+    "correo": "carchav2@yahoo.com.mx",
+    "telefono": "5521591618",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 11 a 50 personas · Cerrada 16 de Septiembre Nave Dos Int Na, Colonia Coacalco de Barriozabal Cabecera Municipal, CP 55700\nUbicación aproximada 17-ago: centroide de 18 establecimientos DENUE en Coacalco de Berriozábal, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9883fbdb-215a-42a6-97e0-38986789169e",
+    "empresa": "Logística y Maniobras Melpag, S.A. de C.V",
+    "ciudad": "Manzanillo, Colima",
+    "correo": "nbedoya@alianza.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Carretera Manzanillo-Minatitlan Km 1 52 Int Na, Colonia Tapeixtles, CP 28239\nUbicación aproximada 17-ago: centroide de 551 establecimientos DENUE en Manzanillo, Colima — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "de8f537c-b641-4f26-9028-428478a46158",
+    "empresa": "Logistica y Mantenimiento Zigma",
+    "ciudad": "Yauhquemehcan, Tlaxcala",
+    "correo": "contacto@logisticazigma.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte · 11 a 50 personas · Calle la Conquista 268 Int Na, Colonia Santa Maria Atlihuetzian, CP 90459\nUbicación aproximada 17-ago: centroide de 4 establecimientos DENUE en Yauhquemehcan, Tlaxcala — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6d171f72-9fc7-4e6e-9480-05dc518e35b8",
+    "empresa": "Logística y Transporte Sierra, S.A. de C.V.",
+    "ciudad": "Puebla, Puebla",
+    "correo": "felipejeayala@gmail.com",
+    "telefono": "2227066666",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga en General · 11 a 50 personas · Retorno 2Do 48 Ote 411 Int 3, Colonia Villas Loreto, CP 72260\nUbicación aproximada 17-ago: centroide de 496 establecimientos DENUE en Puebla, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

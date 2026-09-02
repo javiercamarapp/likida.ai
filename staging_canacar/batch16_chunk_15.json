@@ -1,0 +1,52 @@
+[
+  {
+    "id": "dbb30134-b8c8-44e9-b04b-2d3d6113ff76",
+    "empresa": "Transportes J.C.D.D., S.A. de C.V.",
+    "ciudad": "Puebla, Puebla",
+    "correo": "dlm-197@hotmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Circuito Juan Pablo Ii 3106 Int 14, Colonia el Vergel, CP 72400\nUbicación aproximada 17-ago: centroide de 496 establecimientos DENUE en Puebla, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "58cec0fb-19d2-45e6-9d25-a18ed4c5e87c",
+    "empresa": "Transportes Jaíme Fernández, S.A. de C.V.",
+    "ciudad": "El Mante, Tamaulipas",
+    "correo": "lucia@transportesjf.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Carretera Mante-Tampico Km 0.6 Sn Int Na, Colonia Union Burocratica Sector 1, CP 89868\nUbicación aproximada 17-ago: centroide de 21 establecimientos DENUE en El Mante, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0c23d257-fe97-418c-8360-875ce500dce1",
+    "empresa": "Transportes Jat, S.A. de C.V.",
+    "ciudad": "Mazatlán, Sinaloa",
+    "correo": "lucy.acosta@tramasa.com.mx",
+    "telefono": "6699170033",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Materiales y Residuos Peligrosos · 11 a 50 personas · Avenida Luis Donaldo Colosio 19900 Int Na, Colonia Niños Heroes, CP 82190\nUbicación aproximada 17-ago: centroide de 131 establecimientos DENUE en Mazatlán, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN 21-ago-2026: sin decisor público. Transporte de materiales/residuos peligrosos, 11-30 empleados.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "58bb8cc0-ec25-4218-996c-50a12815a372",
+    "empresa": "Transportes Jersa",
+    "ciudad": "General Escobedo, Nuevo León",
+    "correo": "recursoshumanos@ltjersa.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga en General · 11 a 50 personas · Calle Villa de Las Puentes 104 Int Na, Colonia Villa de Los Ayala, CP 66070\nUbicación aproximada 17-ago: centroide de 199 establecimientos DENUE en General Escobedo, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "03f6eb69-b2be-4e06-aa9b-f26cc6c4374d",
+    "empresa": "Transportes Jimeno Hnos, S.A. de C.V.",
+    "ciudad": "Iztapalapa, Ciudad de México",
+    "correo": "jimeno@prodigy.net.mx",
+    "telefono": "5557409510",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Logistica Terrestre Nacional · 11 a 50 personas · Avenida Central 61 Int Na, Colonia Tepalcates, CP 9210\nUbicación aproximada 17-ago: centroide de 359 establecimientos DENUE en Iztapalapa, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

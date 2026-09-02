@@ -1,0 +1,102 @@
+[
+  {
+    "id": "3e8c49c8-656b-41f6-9258-226f59b034ff",
+    "empresa": "Checo'S Refrigerados, S. de R.L. de C.V.",
+    "ciudad": "Zamora, Michoacán",
+    "correo": "checos_refrigerados@hotmail.com",
+    "telefono": "3515158404",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Foraneo Con Refrigeracion · 0 a 10 personas · Calle Alonso Martinez 616 Int 2, Colonia Jardinadas, CP 59680\n\nPROSPECCIÓN 31-ago-2026: sin decisor público — empresa muy pequeña (0-10 personas), sin sitio propio, sin perfil de LinkedIn de empresa, sin presencia más allá de directorios genéricos (Sección Amarilla, Kompass) · registro USDOT 1931266 a nombre de \"Checos Refrigerados S de RL de CV\" en SAFER/FMCSA, marcado INACTIVE, sin datos de oficiales · correo de contacto adicional hallado en fila duplicada DENUE: checos_refrigerados@hotmail.com.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "66727086-bff8-436f-82b0-d7ea4f2c261d",
+    "empresa": "Cheltheto C4N",
+    "ciudad": "Centro, Tabasco",
+    "correo": "chelthetoc4nsapi@gmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Mercancias Al Sureste de Mexico de Caja Secas · 0 a 10 personas · Avenida Samarkanda Edif G6 Int Sn, Colonia Nueva Imagen, CP 86030\nUbicación aproximada 17-ago: centroide de 165 establecimientos DENUE en Centro, Tabasco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f9c3be1e-dbc3-413d-8f48-bce488769033",
+    "empresa": "Chita Express, S.A. de C.V.",
+    "ciudad": "Saltillo, Coahuila",
+    "correo": "alberto.garcia@zor.group",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Boulevard Vito Alessio Robles 1640 Int Na, Colonia Zona Industrial, CP 25230",
+    "fuente": "canacar"
+  },
+  {
+    "id": "57780b68-d729-4365-b373-e1c982a5ba1c",
+    "empresa": "Chumti, S.A. de C.V.",
+    "ciudad": "Cajeme, Sonora",
+    "correo": "jorgef@chumti.com",
+    "telefono": "6441696871",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Boulevard Las Torres 301 Int A, Colonia Las Haciendas, CP 85064\nUbicación aproximada 17-ago: centroide de 140 establecimientos DENUE en Cajeme, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "edd43312-78be-4030-888a-adc2b93934cb",
+    "empresa": "Claudia Gonzalez Pantoja",
+    "ciudad": "Aguascalientes, Aguascalientes",
+    "correo": "tresalca@hotmail.com",
+    "telefono": "4615984443",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 0 a 10 personas · Calle Jose Ochoa N 204 Int Na, Colonia Loma de Los Negritos, CP 20310\nUbicación aproximada 17-ago: centroide de 261 establecimientos DENUE en Aguascalientes, Aguascalientes — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-20: decisor Claudia González Pantoja, titular/propietaria (persona física con actividad empresarial) · fuente: CANACAR directorio de socios 17-ago-2026 (mismo nombre registrado como titular del giro; cargo por inferencia razonable, no una fuente que use la palabra \"dueña\" explícitamente).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "35684ef0-ed10-486c-b0b2-bcf29f13100d",
+    "empresa": "Cobo Express, S.A. de C.V.",
+    "ciudad": "Hermosillo, Sonora",
+    "correo": "cpcfelix@rubiofelix.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Andador Dr Pesqueira 588 Int Na, Ciudad Industrial Las Quintas, CP 83240\nUbicación aproximada 17-ago: centroide de 285 establecimientos DENUE en Hermosillo, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a7cc2bf8-26af-45a0-891b-a60a4aeac7d8",
+    "empresa": "Cohilis, S.A. de C.V.",
+    "ciudad": "Cunduacán, Tabasco",
+    "correo": "cohilis@yahoo.com",
+    "telefono": "9931606894",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Material Peligroso · 0 a 10 personas · Carretera Via Corta a Cunduacan Comalcalco Km 17.1 Int Na, Ranchería Pechucalco, CP 86690\nUbicación aproximada 17-ago: centroide de 11 establecimientos DENUE en Cunduacán, Tabasco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "62a4834d-c782-4ca5-8c0e-f064430ca9c2",
+    "empresa": "Cold Carrier S.A. de C.V.",
+    "ciudad": "San Pedro Tlaquepaque, Jalisco",
+    "correo": "factura@afrisa.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 0 a 10 personas · Avenida Periferico Sur 5879 Int Na, Colonia Las Pintas de Abajo, CP 45619\nUbicación aproximada 17-ago: centroide de 219 establecimientos DENUE en San Pedro Tlaquepaque, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c6dc9f51-24cc-43fb-aeb3-8dbcbe3c54b5",
+    "empresa": "Coldway Logistics, S.A. de C.V.",
+    "ciudad": "Peribán, Michoacán",
+    "correo": "coldway@meviavocados.com.mx",
+    "telefono": "3541019509",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Carretera Periban-Buenavista Km .200 Sn Int B, Colonia Centro, CP 60440\nColdway Logistics, S.A. de C.V.: socia CANACAR (17-ago-2026), Autotransporte de Carga General, 0 a 10 personas, Carretera Peribán-Buenavista km 0.200, Peribán, Michoacán — corazón de la zona aguacatera de exportación de Michoacán. El correo de negocio (coldway@meviavocados.com.mx) confirma vínculo directo con una comercializadora/exportadora de aguacate (\"Me Vía Avocados\"); el nombre \"Coldway\" (vía fría) es coherente con logística de cadena de frío para exportación de aguacate.\nPROSPECCIÓN 2026-08-20: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026 (correo confirma vínculo con exportadora de aguacate)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f96f5a99-0f41-41c3-b0fc-89f58b60df9e",
+    "empresa": "Coltrans",
+    "ciudad": "Manzanillo, Colima",
+    "correo": "nata@coltrans.global",
+    "telefono": "3141421554",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Boulevard Miguel Licenciado de la Madrid Hurtado 1251 Int 1 B, Colonia Salahua, CP 28867\nUbicación aproximada 17-ago: centroide de 551 establecimientos DENUE en Manzanillo, Colima — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "c9929995-8afa-429d-87a2-84931211fdd0",
+    "empresa": "Autofletes Quesería, S.A. de C.V.",
+    "ciudad": "Tlajomulco de Zúñiga, Jalisco",
+    "correo": "autofletesqueseria@gmail.com",
+    "telefono": "3339686479",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Carretera Circuito Metropolitano Sur 815 Int A, Zona Federal San Miguel Cuyutlan, CP 45660\nUbicación aproximada 17-ago: centroide de 131 establecimientos DENUE en Tlajomulco de Zúñiga, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · sin sitio oficial localizado tras búsqueda pública · CANACAR confirma giro Transporte de Carga, 11-50 personas, domicilio en San Miguel Cuyutlán (ya en base) · fuente: búsqueda pública, sin hallazgo nuevo",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a95b0e85-9fc6-4343-9e6c-f55f709ee203",
+    "empresa": "Autolineas de Carga, S.A. de C.V.",
+    "ciudad": "Culiacán, Sinaloa",
+    "correo": "trafico02@aldecarga.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Nardo 6375 Int Na, Fraccionamiento Bugambilias, CP 80145\nUbicación aproximada 17-ago: centroide de 265 establecimientos DENUE en Culiacán, Sinaloa — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "84f068e2-d447-4ddd-9ea7-1681cb3dc9bc",
+    "empresa": "Autolineas Especializadas en Graneles, S.A. de C.V.",
+    "ciudad": "Amatlán de los Reyes, Veracruz",
+    "correo": "aidet_alegra@prodigy.net.mx",
+    "telefono": "2717169701",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga General · 11 a 50 personas · Carretera Cordoba-Veracruz Km 10.5 Na Int Na, Colonia Venta Parada, CP 94995",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6b55a1fe-4202-4ca0-bbea-677d1077b6a0",
+    "empresa": "Autolineas Favela Alvarez, S.A. de C.V.",
+    "ciudad": "Torreón, Coahuila",
+    "correo": "autolineasalfa70@gmail.com",
+    "telefono": "8711698057",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera a Mieleras Sn Int Na, Ejido la Perla, CP 27404\nPROSPECCIÓN 2026-08-19: sin decisor público (CANACAR registra la razón social sin nombrar titular; buscador sin resultados) · LinkedIn: no hallado · viajes/mes: no público · historia: no pública · fuente: directorio CANACAR · fit 1/5",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a3f56f27-ee41-46fa-b5cd-6dc32c955b01",
+    "empresa": "Autolíneas Mrd, S.A. de C.V.",
+    "ciudad": "Monclova, Coahuila",
+    "correo": "autolineasmrd@prodigy.net.mx",
+    "telefono": "8661367008",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera 57 1207 Int Na, Fraccionamiento Industrial, CP 25790\nHISTORIA: socio CANACAR de autotransporte de carga con 11 a 50 personas, domicilio en Carretera 57 km 1207, Fraccionamiento Industrial, Monclova, Coahuila (CP 25790). Monclova es plaza siderúrgica: carga pesada y acero sobre el corredor 57 hacia la frontera y el Bajío.\nENCAJE: alto — carga pesada en corredor siderúrgico de Monclova, tamaño objetivo.\nPROSPECCIÓN 2026-08-20: sin decisor público · fuente: CANACAR directorio de socios 17-ago-2026 (autotransporte de carga, 11 a 50 personas); correo prodigy.net.mx sin dominio propio que consultar y WebSearch agotado en la sesión.",
+    "fuente": "canacar"
+  }
+]

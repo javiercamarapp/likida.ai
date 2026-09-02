@@ -1,0 +1,102 @@
+[
+  {
+    "id": "b541a695-2446-4741-b0d2-20758166b050",
+    "empresa": "Ratco Transport",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "er501458@gmail.com",
+    "telefono": "6631118928",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Fletes de Cargas Internacionales · 0 a 10 personas · Calle Jose Lopez Portillo Pte 19526 Int Na, Colonia Na, CP 22535\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público · fuente: CANACAR 17-ago-2026",
+    "fuente": "canacar"
+  },
+  {
+    "id": "71a66ace-bd9a-44bb-bf2b-224df657c31f",
+    "empresa": "Raúl Gerardo Rodríguez Hernández",
+    "ciudad": "Apaxco, México",
+    "correo": "transportestrova@hotmail.com",
+    "telefono": "5543600844",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Auto Transporte de Carga General · 0 a 10 personas · Carretera Zumpango Mexico 36.6 Km 36.6 Int Na, Colonia Loma Bonita, CP 55660\nDENUE API 17-ago (cruce CANACAR→DENUE): «TRANSPORTES RAUL GERARDO RODRIGUEZ HERNANDEZ RGRH», score 1.06\n\nENCAJE: medio — carga general persona física sobre la Zumpango-México, volumen bajo\nPROSPECCIÓN 19-ago-2026: decisor Raúl Gerardo Rodríguez Hernández, titular (la razón social del directorio de socios CANACAR es la persona física, así que el registrante ES el titular; el cruce CANACAR→DENUE lo confirma como \"TRANSPORTES RAUL GERARDO RODRIGUEZ HERNANDEZ RGRH\") · LinkedIn: no hallado · fuente: directorio de socios CANACAR 17-ago-2026 + cruce DENUE API · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ee9d1e3c-20f9-4b90-91c0-f4cb9bc16b9f",
+    "empresa": "Real del Tepeyac, S.A. de C.V.",
+    "ciudad": "Rioverde, San Luis Potosí",
+    "correo": "contabilidad@gruasrt.com.mx",
+    "telefono": "4871402923",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Otros Servicios Relacionados Con el Transporte · 0 a 10 personas · Carretera Carretera 70 Km 129.550 Sn Int Na, Colonia Rio Verde, CP 79610\nUbicación aproximada 17-ago: centroide de 17 establecimientos DENUE en Rioverde, San Luis Potosí — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "65e2dd35-c387-45c6-b901-aca1b91be8e9",
+    "empresa": "Refrigerados Itzae, S.A. de C.V.",
+    "ciudad": "Tultepec, México",
+    "correo": "refrigeradositzae@hotmail.com",
+    "telefono": "5525356461",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 0 a 10 personas · Calle Hacienda de Las Margaritas 10-B Int Na, Colonia Hacienda Real de Tultepec, CP 54987\nUbicación aproximada 17-ago: centroide de 19 establecimientos DENUE en Tultepec, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4616cfe2-f7da-4eb1-bae6-316196f87edc",
+    "empresa": "René Izquierdo Cuadra",
+    "ciudad": "Ecatepec de Morelos, México",
+    "correo": "transportes.rizquierdo@gmail.com",
+    "telefono": "5514272017",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Calle Obreros Mz 3 Lt 2 Int B, Colonia el Carmen, CP 55000\nUbicación aproximada 17-ago: centroide de 186 establecimientos DENUE en Ecatepec de Morelos, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d6d3c102-9c22-40c7-ba28-c1a8f59a645a",
+    "empresa": "René Rosembaun Carreón",
+    "ciudad": "Matamoros, Tamaulipas",
+    "correo": "matamoros@canacar.com.mx",
+    "telefono": "9215170850",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 0 a 10 personas · Carretera a Reynosa Km 18 Sn Int Sn, Ejido San Luisito, CP 87554\nUbicación aproximada 17-ago: centroide de 181 establecimientos DENUE en Matamoros, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nDECISOR: registro CANACAR a nombre de persona física René Rosembaun Carreón — el titular ES el decisor.\nADVERTENCIA DE DATO: el correo capturado (matamoros@canacar.com.mx) es la oficina regional de CANACAR en Matamoros, NO el correo propio de René Rosembaun Carreón — no se usó como canal de contacto personal, solo como evidencia del registro.\nsin conteo exacto de flota publicado — no se llena `num_unidades`; CANACAR reporta 0 a 10 personas (personal, no unidades).\nPROSPECCIÓN 2026-08-19: decisor René Rosembaun Carreón, titular persona física · LinkedIn: no localizado · fuente: directorio de socios CANACAR 17-ago-2026 · WebSearch agotado en la sesión (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3661ba64-8cdb-4960-9d54-803c959c2281",
+    "empresa": "Revusa",
+    "ciudad": "San Pedro Garza García, Nuevo León",
+    "correo": "hector.cortes@revusa.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga General · 0 a 10 personas · Calle Batallon de San Patricio 109 Int Na, Colonia del Valle Oriente, CP 66260\nUbicación aproximada 17-ago: centroide de 113 establecimientos DENUE en San Pedro Garza García, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "69d2b90e-c8a5-4870-8407-80b1df06b728",
+    "empresa": "Rg Logistica Terrestre S.A. de C.V.",
+    "ciudad": "El Mante, Tamaulipas",
+    "correo": "contabilidad@rglogistica.mx",
+    "telefono": "4821000074",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 0 a 10 personas · Carretera Mexico - Laredo Sn Int Sn, Rancho San Carlos, CP 89930\nUbicación aproximada 17-ago: centroide de 21 establecimientos DENUE en El Mante, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7c20562a-a65f-4c58-bf6b-e43b5cbc1be4",
+    "empresa": "Rhino Logistica",
+    "ciudad": "Zapopan, Jalisco",
+    "correo": "contacto@rhinologistica.com",
+    "telefono": "3323239978",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga en General de Caja Seca · 0 a 10 personas · Calle San Pablo 597 Int B, Colonia San Pablo, CP 45234\nUbicación aproximada 17-ago: centroide de 205 establecimientos DENUE en Zapopan, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9c5d80f0-139c-48b6-b33b-a203fb32cd4c",
+    "empresa": "Ricardo Cuesta Gonzalez",
+    "ciudad": "Lázaro Cárdenas, Michoacán",
+    "correo": "cugr.cuesta@gmail.com",
+    "telefono": "7531127592",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte · 0 a 10 personas · Avenida Las Palmas 1396 Int Na, Colonia 8Vo. Sector Fideicomiso, CP 60950",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "d117ad94-75c2-477f-b17c-1d09ead74d05",
+    "empresa": "Transportes Benítez, S.A. de C.V.",
+    "ciudad": "Reynosa, Tamaulipas",
+    "correo": "compras@transportesbenitez.com",
+    "telefono": "8999571818",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Calle Puerto Escondido 500 Int Na, Colonia Benito Juarez, CP 88790\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Reynosa, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 19-ago-2026: sin decisor público — correo ya registrado (compras@transportesbenitez.com) es del área de compras, no de dirección; sin sitio propio localizado.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7880b21e-b809-4e15-9034-62e817f53311",
+    "empresa": "Transportes Blindados Tameme",
+    "ciudad": "Cuauhtémoc, Ciudad de México",
+    "correo": "jnoguez@mailtameme.com.mx",
+    "telefono": "5522410489",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Traslado de Valores · 51 a 250 personas · Calle Arenal 41 Int Na, Colonia Esperanza, CP 6840\nDENUE API 17-ago (cruce CANACAR→DENUE): «TRANSPORTES BLINDADOS TAMEME», score 1.06",
+    "fuente": "canacar"
+  },
+  {
+    "id": "146e661c-020c-40d0-baef-c7351fce7ace",
+    "empresa": "Transportes Bonampak, S.A. de C.V.",
+    "ciudad": "Huiloapan de Cuauhtémoc, Veracruz",
+    "correo": "michel.cosmez@bonampak.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga General · 51 a 250 personas · Calle Duraznal 28 Int Sn, Colonia San Cristobal, CP 94780",
+    "fuente": "canacar"
+  },
+  {
+    "id": "dd8582cb-af0c-4f42-9e66-725ff9dc8032",
+    "empresa": "Transportes Canales, S.A. de C.V.",
+    "ciudad": "Río Bravo, Tamaulipas",
+    "correo": "emontemayor@trancasa.com",
+    "telefono": null,
+    "estado": "contactado",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Calle Brecha 115 Sn Int Na, Colonia Emilio Portes Gil, CP 88990\nUbicación aproximada 17-ago: centroide de 24 establecimientos DENUE en Río Bravo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0cc90f93-78ec-4afd-9d04-e62e18114048",
+    "empresa": "Transportes Cárdenas y Chávez, S.A. de C.V.",
+    "ciudad": "La Magdalena Contreras, Ciudad de México",
+    "correo": "tcardenasychavez1@gmail.com",
+    "telefono": "5556837558",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Calle Jalapa 27 Int Na, Cantón San Jeronimo Aculco, CP 10400\nUbicación aproximada 17-ago: centroide de 22 establecimientos DENUE en La Magdalena Contreras, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

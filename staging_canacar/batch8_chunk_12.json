@@ -1,0 +1,52 @@
+[
+  {
+    "id": "83287195-969c-474f-ae38-3bfeab98fdd1",
+    "empresa": "Domo Transportes, S.A. de C.V.",
+    "ciudad": "Tampico, Tamaulipas",
+    "correo": "contabilidaddomo@hotmail.com",
+    "telefono": "8332124049",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Septima 204 Int 204, Colonia Villa Hermosa, CP 89319\nUbicación aproximada 17-ago: centroide de 121 establecimientos DENUE en Tampico, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "962153b8-5362-4f9a-9bde-aeb1b1ec883f",
+    "empresa": "Dorado Autotanques, S.A. de C.V.",
+    "ciudad": "Río Blanco, Veracruz",
+    "correo": "leobardo.olivares@doradoautotanques.com.mx",
+    "telefono": "5585967720",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Hidrocarburos · 11 a 50 personas · Avenida Camino Nacional 40 Int Na, Colonia Los Pinos, CP 94732",
+    "fuente": "canacar"
+  },
+  {
+    "id": "23fa8824-b3b4-4afc-90b8-fd64e49b6ba8",
+    "empresa": "Dos D Carga, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "facturacion@dosdcarga.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Aeropuerto Km 13.6 Sn Int Na, Colonia Granjas Regina, CP 88296\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "fuente": "canacar"
+  },
+  {
+    "id": "243f9649-26f9-4827-9e3e-e2d06d5ce14c",
+    "empresa": "Drop Logistic, S.A. de C.V.",
+    "ciudad": "Salinas Victoria, Nuevo León",
+    "correo": "esanchezgaona@yahoo.com.mx",
+    "telefono": "8110806617",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga en General · 11 a 50 personas · Calle Jesus Treviño Montemayor 132 Int Na, Colonia Cette, CP 65500\nUbicación aproximada 17-ago: centroide de 41 establecimientos DENUE en Salinas Victoria, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4141b8f5-079a-4a16-be3a-7bb79381fae4",
+    "empresa": "Duma Transportes, S.A. de C.V.",
+    "ciudad": "Torreón, Coahuila",
+    "correo": "luis.garza@gduma.com",
+    "telefono": "8712925557",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Boulevard Torreo Matamoros 5750 Int Na, Colonia Gustavo Diaz Ordaz, CP 27080\nHISTORIA: socia registrada de CANACAR (directorio de socios, 17-ago-2026): Duma Transportes, S.A. de C.V., Autotransporte de Carga General, 11 a 50 personas, Blvd. Torreón-Matamoros 5750, Col. Gustavo Díaz Ordaz, Torreón, Coahuila — la más grande de esta tanda. Sitio oficial gduma.com verificado: opera caja seca 53', plataforma 48' y full plataforma, con cobertura en México, Estados Unidos, Canadá y Centroamérica — operación transfronterizal real. El sitio NO menciona a 'Luis Garza' (el correo de la base, luis.garza@gduma.com, es nominal pero sin confirmación de cargo por el sitio). Correo de cotizaciones publicado: cotizaciones@gduma.com. Teléfonos: 800 836 9991, 871 731 1158, WhatsApp +52 871 213 2466.\nUNIDADES: sin conteo de tractocamiones publicado — null (CANACAR reporta 11-50 PERSONAS).\nENCAJE: alto — socia CANACAR con cobertura México-EUA-Canadá-Centroamérica, la operación más grande de la tanda.\nPROSPECCIÓN 2026-08-20: sin decisor público confirmado (correo nominal 'luis.garza@' sin cargo verificado por el sitio) · LinkedIn: no hallado · fuente: directorio de socios CANACAR 17-ago-2026; gduma.com. WebSearch agotado en la sesión.",
+    "fuente": "canacar"
+  }
+]

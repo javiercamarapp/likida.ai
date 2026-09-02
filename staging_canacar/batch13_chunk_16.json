@@ -1,0 +1,52 @@
+[
+  {
+    "id": "b5d1c5c2-c7a2-4c30-af78-d8fb38b07b67",
+    "empresa": "Servicios Logisticos Especializados Marquez, S.A. de C.V.",
+    "ciudad": "Acolman, México",
+    "correo": "imarquez@transportesmarquez.mx",
+    "telefono": "5543638400",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Peligrosa · 11 a 50 personas · Callejón Miguel Aleman Valdez Sn Int Na, Colonia Anahuac 2Da Seccion, CP 55884\nUbicación aproximada 17-ago: centroide de 42 establecimientos DENUE en Acolman, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público (el correo del registro, imarquez@transportesmarquez.mx, insinúa el apellido Márquez, sin confirmar con cargo) · fuente: CANACAR 17-ago-2026",
+    "fuente": "canacar"
+  },
+  {
+    "id": "24b0ea80-6c15-4c19-91e5-a54a097ba7d1",
+    "empresa": "Servicios Rápidos Trébol, S.A. de C.V.",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": "rafael@ttrebol.com",
+    "telefono": "8677181112",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Morelos 234 Int Km 13, Colonia Granjas Regina, CP 88295\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "3809ebc9-5a17-46a4-8859-3beddddee227",
+    "empresa": "Servicios y Transportes Atlas, S.A. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "rmorales@sytatlas.com",
+    "telefono": "6865648385",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Monclova 736 Int Na, Colonia Ex Ejido Coahuila, CP 21360\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: sin decisor público nombrado · LinkedIn: página de empresa linkedin.com/company/sytatlas (sin decisor visible sin sesión) · viajes/mes: no público · historia: más de 20 años en transporte transfronterizo Mexicali–Calexico, patio certificado de 20,000 m², USDOT 880332 / MX380836; SAFER (FMCSA) registra 5 camiones y 5 operadores · fuente: sitio oficial sytatlas.com, SAFER FMCSA, CarrierSource · score fit 2/5 (rúbrica pública)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5b75af95-1537-46ec-ada1-12a5cefdcc48",
+    "empresa": "Servigruas de Nayarit, S.A. de C.V.",
+    "ciudad": "Tepic, Nayarit",
+    "correo": "jihdez@tepic.megared.net.mx",
+    "telefono": "3112164091",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Arrastre de Todo Tipo de Vehiculos · 11 a 50 personas · Calle Caoba 55 Int Na, Colonia San Juan, CP 63130\nUbicación aproximada 17-ago: centroide de 89 establecimientos DENUE en Tepic, Nayarit — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4e6ce170-dc37-49a4-a5f7-7877dc7867ff",
+    "empresa": "Servitec Logistics",
+    "ciudad": "León, Guanajuato",
+    "correo": "javier@serviteclogistics.com.mx",
+    "telefono": "4777784205",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Federal de Carga · 11 a 50 personas · Calle de la Conquista 343 Int Na, Colonia Las Amalias, CP 37438\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

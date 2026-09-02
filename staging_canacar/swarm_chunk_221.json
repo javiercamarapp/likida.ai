@@ -1,0 +1,102 @@
+[
+  {
+    "id": "7cde7ced-6c14-4aaa-8956-83cdb3bf9a8b",
+    "empresa": "Quinta Rueda Logistics",
+    "ciudad": "Guadalupe, Nuevo León",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Gloria Mendiola 112 Int Na, Colonia Eduardo Caballero, CP 67117\nUbicación aproximada 17-ago: centroide de 170 establecimientos DENUE en Guadalupe, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "ae3be7a5-1397-4a73-bb13-0a3a6db1574f",
+    "empresa": "Rafael Ortiz Rosales",
+    "ciudad": "Singuilucan, Hidalgo",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle Avena Na Int Na, Colonia el Susto, CP 43790\nUbicación aproximada 17-ago: centroide de 1 establecimiento DENUE en Singuilucan, Hidalgo — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "532e4368-0971-487b-8282-e589641c82b4",
+    "empresa": "Raul Natanael Gomez Melchor",
+    "ciudad": "Tuxtla Gutiérrez, Chiapas",
+    "correo": null,
+    "telefono": "9611716756",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General · 0 a 10 personas · Calle Gervasio Grajales 335 Int Na, Ciudad Tuxtla Gutierrez, CP 29020\nUbicación aproximada 17-ago: centroide de 289 establecimientos DENUE en Tuxtla Gutiérrez, Chiapas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b25fba64-6ce6-4fb5-8300-86ebbd7ad750",
+    "empresa": "Rocio Jackelin Gutierrez Tovar",
+    "ciudad": "San Felipe, Guanajuato",
+    "correo": null,
+    "telefono": "3957884664",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Mercancias · 0 a 10 personas · Calle Salvador Diaz Miron 109 Int Sn, Colonia Oriental, CP 37600\nUbicación aproximada 17-ago: centroide de 9 establecimientos DENUE en San Felipe, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: decisor Rocío Jackelin Gutiérrez Tovar, Propietaria (persona física registrada en CANACAR) · LinkedIn: no encontrado · fuente: CANACAR directorio de socios (ya en base) — Transporte de Mercancías, 0 a 10 personas",
+    "fuente": "canacar"
+  },
+  {
+    "id": "d994a547-0fd9-444e-8d80-5212d9f1350c",
+    "empresa": "Rogelio Amador de Hoyos Perez",
+    "ciudad": "Allende, Coahuila",
+    "correo": null,
+    "telefono": "8626210091",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Materiales y Residuos Peligrosos, Principalmente Combustoleos · 0 a 10 personas · Calle Benito Juarez 1202 Nte Int Sn, Colonia Centro, CP 26530",
+    "fuente": "canacar"
+  },
+  {
+    "id": "28c989f1-f281-44a6-9e28-a98baff5114d",
+    "empresa": "Roman Ruiz Cortes",
+    "ciudad": "Morelia, Michoacán",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 0 a 10 personas · Calle David Alfaro Siqueiros Pinto 374 Int L-9, Colonia Diego Rivera, CP 58219",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6c63a686-d1f0-4387-908c-6b90e7899e5f",
+    "empresa": "Rosendo Padilla Jasso",
+    "ciudad": "Guanajuato, Guanajuato",
+    "correo": null,
+    "telefono": "4776495021",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Federal · 0 a 10 personas · Calle Canal del Norte 327 Int Sn, Colonia la Norteña, CP 37109\nUbicación aproximada 17-ago: centroide de 37 establecimientos DENUE en Guanajuato, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "feb412be-92a3-4fd1-9b1d-cc4d13f10c12",
+    "empresa": "Rph Transport",
+    "ciudad": "Nuevo Laredo, Tamaulipas",
+    "correo": null,
+    "telefono": "8677133340",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Local · 0 a 10 personas · Carretera Nacional Nuevo Laredo Monterrey 10.5 Int Na, Colonia Granjas Guzman, CP 88293\nUbicación aproximada 17-ago: centroide de 573 establecimientos DENUE en Nuevo Laredo, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b859357c-a00b-474e-a1c3-ed1425cf91e0",
+    "empresa": "Ruch Agregados",
+    "ciudad": "Teoloyucan, México",
+    "correo": null,
+    "telefono": "5571111544",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte · 0 a 10 personas · Avenida la Lampara 0 Int 0, Barrio San Cruz, CP 54783\nUbicación aproximada 17-ago: centroide de 12 establecimientos DENUE en Teoloyucan, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b17e26a0-00db-4a6a-9fbd-d1db23cbf804",
+    "empresa": "Santander Lt",
+    "ciudad": "Guadalajara, Jalisco",
+    "correo": null,
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga Local y Fornaea · 0 a 10 personas · Calle Rita Perez de Moreno 937 Int Na, Colonia Talpita, CP 44719\nUbicación aproximada 17-ago: centroide de 508 establecimientos DENUE en Guadalajara, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

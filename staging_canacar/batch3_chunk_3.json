@@ -1,0 +1,52 @@
+[
+  {
+    "id": "14ba5454-0b56-43ce-a417-99fe1db2e9f6",
+    "empresa": "Servicio de Carga Estrella Blanca, S.A. de C.V.",
+    "ciudad": "Azcapotzalco, Ciudad de México",
+    "correo": "ereyes@estrellablanca.com.mx",
+    "telefono": "5557290800",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Calle Poniente 140 859 Int Na, Colonia Industrial Vallejo, CP 2300\nUbicación aproximada 17-ago: centroide de 174 establecimientos DENUE en Azcapotzalco, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN PROFUNDA 21-ago-2026: Luis Gerardo Mora es Director General del GRUPO Estrella Blanca completo (matriz de autobuses) — no confirmado que sea el contacto directo de esta división de carga específica, pero es la cabeza corporativa.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7f7c9d2c-7175-405b-8df0-919bb7536969",
+    "empresa": "Servicio Internacional de Enlace Terrestre, S.A. de C.V.",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "conta2@tsiete.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte · 51 a 250 personas · Avenida Zaragoza 720 Int Na, Colonia Waterfil, CP 32570\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2db1c227-5d12-4a45-928a-1aaea5dcab4f",
+    "empresa": "Servicios de Fletes y Maniobras, S. de R.L. de C.V.",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "jmelendez@fletesymaniobras.com.mx",
+    "telefono": "6566871442",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Mercancia · 51 a 250 personas · Calle Torreon 2148 Int Na, Colonia Fidel Avila, CP 32540\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "323e75b6-bb41-4883-a5c9-3ebbaf676591",
+    "empresa": "Servicios de Logística Transnacional en Transportación, S.A. de C.V.",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "efrain.rodriguez@selttra.com.mx",
+    "telefono": "6566112330",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Camino Camino Viejo a San Lorenzo 7404 Int Na, Colonia Partido Doblado, CP 32424\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "08d73883-e6fb-4e30-912c-6b43093bd139",
+    "empresa": "Servicios Refrigerados Internacionales, S.A. de C.V.",
+    "ciudad": "León, Guanajuato",
+    "correo": "randa@prodigy.net.mx",
+    "telefono": "4777111944",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Calle Transportistas 407 Int Na, Fraccionamiento Julian de Obregon, CP 37290\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

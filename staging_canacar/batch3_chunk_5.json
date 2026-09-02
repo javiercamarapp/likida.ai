@@ -1,0 +1,52 @@
+[
+  {
+    "id": "86968777-d619-4f8b-a19b-01c5f41df1fe",
+    "empresa": "Super Transportes Grg, S.A. de C.V.",
+    "ciudad": "Apodaca, Nuevo León",
+    "correo": "administracion@esporg.com.mx",
+    "telefono": "8116904608",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 51 a 250 personas · Calle Cecilio Garza 100 Int Na, Colonia el Milagro, CP 66634\nUbicación aproximada 17-ago: centroide de 300 establecimientos DENUE en Apodaca, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "80fc0c08-6345-4e18-b5d3-a68df41d9065",
+    "empresa": "T Combustibles de Camargo, S.A. de C.V.",
+    "ciudad": "Delicias, Chihuahua",
+    "correo": "florentino_ab@hotmail.com",
+    "telefono": "6141811881",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Combustibles · 51 a 250 personas · Prolongación de Av de Rio San Pedro Norte 800 Int Na, Colonia Otra No Especificada en el Catalogo, CP 33106\nUbicación aproximada 17-ago: centroide de 41 establecimientos DENUE en Delicias, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "25a34c79-542a-4585-95c1-52fe311d5f54",
+    "empresa": "T-Mar Logistics, S.A. de C.V.",
+    "ciudad": "Reynosa, Tamaulipas",
+    "correo": "joseluis@transportesmar.com",
+    "telefono": "8999540060",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Avenida Brecha el Guerreño Sn Int Na, Ejido el Guerreño, CP 88780\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Reynosa, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0b90ad4e-45a1-4f3e-9c0c-35f304aff219",
+    "empresa": "Tecma Transportation Services, S. de R.L. de C.V.",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "jennifer.martinez@tecma.com",
+    "telefono": "6566491000",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte · 51 a 250 personas · Calle Santos Dumont 6620 Int Na, Parque Industrial Panamericano, CP 32695\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN PROFUNDA 20-ago-2026: Miriam Baca Kotkowski, President. Alan Badillo, Director of Logistics and Transportation.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "326f4dbb-7b6b-4469-a7bf-95a5e9b6d66e",
+    "empresa": "Terrenal Express, S.A. de C.V.",
+    "ciudad": "Monterrey, Nuevo León",
+    "correo": "gtamez@terrenalexpress.com",
+    "telefono": "8128907616",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 51 a 250 personas · Avenida Revolucion 3610 Int Na, Colonia Contry, CP 64859\nUbicación aproximada 17-ago: centroide de 442 establecimientos DENUE en Monterrey, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

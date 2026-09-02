@@ -1,0 +1,52 @@
+[
+  {
+    "id": "9ad87497-1ef3-4ef7-a0cf-59111e20b348",
+    "empresa": "Logística Especializada Feremi, S.A. de C.V.",
+    "ciudad": "Coyoacán, Ciudad de México",
+    "correo": "olivia.tellez@logisticaferemi.com",
+    "telefono": "5556560455",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Retorno 4 de Mariquita Sanchez 79A Int Na, Conjunto Habitacional Culhuacan Secc Vii, CP 4480\nUbicación aproximada 17-ago: centroide de 75 establecimientos DENUE en Coyoacán, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "53eda340-1f9c-4dcf-874a-4b535c33de3a",
+    "empresa": "Logística Ltc, S.A. de C.V.",
+    "ciudad": "Hermosillo, Sonora",
+    "correo": "informacion@logisticaltc.com",
+    "telefono": "6622500779",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Carretera a Sahuaripa Sn Int Sn, Parque Industrial Hermosillo, CP 83297\nUbicación aproximada 17-ago: centroide de 285 establecimientos DENUE en Hermosillo, Sonora — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f650bf0e-4add-41f0-bc96-e638ce6ff751",
+    "empresa": "Logística Multimodal Especializada en Transporte, S.A. de C.V.",
+    "ciudad": "Manzanillo, Colima",
+    "correo": "rocio.quintero@logisticamultimodal.com",
+    "telefono": "3143340511",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida de la Laguna 9 Int A, Colonia Valle de Las Garzas, CP 28219\nUbicación aproximada 17-ago: centroide de 551 establecimientos DENUE en Manzanillo, Colima — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8cc024e3-5995-4229-9f51-4473d1343434",
+    "empresa": "Logistica Multimodal Vences, S.A. de C.V.",
+    "ciudad": "Tlalnepantla de Baz, México",
+    "correo": "eduardo.ochoa@vences.net",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Bogota 305 Int Na, Colonia Valle Dorado, CP 54020\nUbicación aproximada 17-ago: centroide de 187 establecimientos DENUE en Tlalnepantla de Baz, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f01b91e4-c652-4e03-a3f1-be2291a458da",
+    "empresa": "Logistica R&R",
+    "ciudad": "Toluca, México",
+    "correo": "tcv.logistica@gmail.com",
+    "telefono": "7223052772",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Canal de Aguas Negras Na Int Na, Colonia San Nicolas Tolentino, CP 50230\nUbicación aproximada 17-ago: centroide de 256 establecimientos DENUE en Toluca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 19-ago-2026: sin decisor público · sin sitio oficial localizado · fuente: búsqueda web (presupuesto de WebSearch de la sesión agotado; investigación limitada a datos CANACAR)\nENCAJE: alto — carga general en CANACAR, plantilla mediana confirmada",
+    "fuente": "canacar"
+  }
+]

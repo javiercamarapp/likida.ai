@@ -1,0 +1,52 @@
+[
+  {
+    "id": "091ecea6-fb97-4fe9-8b66-ad8f1b2b1430",
+    "empresa": "Autotransportes Cova, S.A. de C.V.",
+    "ciudad": "Azcapotzalco, Ciudad de México",
+    "correo": "genaro_aguilar@autocova.com",
+    "telefono": "5553680048",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Coltongo 175 Int Na, Colonia Coltongo, CP 2630\nUbicación aproximada 17-ago: centroide de 174 establecimientos DENUE en Azcapotzalco, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN PROFUNDA 20-ago-2026: C.P. José Covarrubias De la Sancha, Director General (sitio oficial autocova.com/historia).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5364f3b3-68f6-432a-9c49-7ca19b337e84",
+    "empresa": "Autotransportes de Carga Cuauhtémoc, S.A. de C.V.",
+    "ciudad": "Venustiano Carranza, Ciudad de México",
+    "correo": "atc_mex@yahoo.com",
+    "telefono": "5555528265",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga en General · 11 a 50 personas · Calle Lorenzo Boturini 392 Int Na, Colonia Lorenzo Boturini, CP 15820 · 2 sucursales registradas en CANACAR (Guadalajara, Jalisco)\nUbicación aproximada 17-ago: centroide de 454 establecimientos DENUE en Venustiano Carranza, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 2026-08-21: DECISOR CONFIRMADO (confianza media) — Patricia Orozco Sánchez, reconocida como una de \"los mejores directivos del autotransporte\" por la IRU en relación directa con Autotransportes de Carga Cuauhtémoc (Revista Magazzine). Cargo exacto no especificado en la fuente. Nota: fuente más antigua (2020) mencionaba a 'Humberto Orozco' como Director — posible transición familiar generacional; se prioriza el dato más reciente (Patricia Orozco Sánchez). Se consolida la fila duplicada del censo 'AUTOTRANSPORTES DE CARGA CUAUHTEMOC' (id a7f18cde, sitio atccuauhtemoc.com.mx) como duplicado_de esta fila.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f6284d26-a83a-413b-ad8f-b8a509b0cf54",
+    "empresa": "Autotransportes de Carga Thr, S.A. de C.V.",
+    "ciudad": "Querétaro, Querétaro",
+    "correo": "rtorres@thrtransportes.com",
+    "telefono": "4422120558",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Zoologia 203 Int A, Colonia Tecnologico, CP 76158\nUbicación aproximada 17-ago: centroide de 266 establecimientos DENUE en Querétaro, Querétaro — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 19-ago-2026: sin decisor público (el sitio thrtransportes.com no nombra dueño ni director; el correo ya en base, rtorres@thrtransportes.com, sugiere posible apellido Torres, sin confirmar por otra fuente) · fuente: sitio oficial thrtransportes.com (servicios: caja seca, plataforma, torton, rabón, cajas para bodega, servicio express, circuitos, patio de resguardo; tel +52 442 324 0356, correo info@thrtransportes.com).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2eb78e3c-acc5-4b2c-8fe3-1fa2244506ea",
+    "empresa": "Autotransportes de Carga Unión Leonesa",
+    "ciudad": "León, Guanajuato",
+    "correo": "unionleo11@hotmail.com",
+    "telefono": "4777122784",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporate de Calzado · 11 a 50 personas · Privada Prolongacion Juarez 101 Int Na, Colonia Plaza de Toros, CP 37450\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "98bea82f-92ee-4a9d-8e67-ecdf13e92c33",
+    "empresa": "Autotransportes Drakkar, S.A. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "azayas@tvikingo.com",
+    "telefono": "2299328290",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Foraneo de Carga General · 11 a 50 personas · Calle Hernandez y Hernandez 409 Int 3, Colonia Faros, CP 91709 · PROSPECCIÓN 2026-08-19: sin decisor público confirmado · sitio tvikingo.com (dominio del correo ya en base) devolvió 403 al intentar verificarlo por WebFetch, no se pudo confirmar contenido ni nombre. El local-part 'azayas' del correo es indicio, no confirmación pública independiente. Mensaje hiperpersonalizado generado con evidencia CANACAR.",
+    "fuente": "canacar"
+  }
+]

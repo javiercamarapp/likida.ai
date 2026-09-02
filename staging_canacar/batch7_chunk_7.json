@@ -1,0 +1,52 @@
+[
+  {
+    "id": "9c978aa1-d329-41b4-a707-dd0c44ff80cb",
+    "empresa": "Auto Transportes Azteca Plus, S.A. de C.V.",
+    "ciudad": "Fortín, Veracruz",
+    "correo": "alatayud@aztecaplus.com",
+    "telefono": "2717180555",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga en General · 11 a 50 personas · Calzada Tlacotengo 22 Int Na, Colonia Crucero Nacional, CP 94472 · PROSPECCIÓN 2026-08-19: sin decisor con cargo confirmado (opera como 'Azteca Calatayud') · sitio oficial verificado por WebFetch (aztecaplus.com redirige a aztecacalatayud.com): carga general y paquetería, GPS en unidades, ~7,500 clientes activos, cobertura CDMX/Puebla/Orizaba/Córdoba/Veracruz/Boca del Río · fuente: sitio oficial. Mensaje hiperpersonalizado generado con evidencia del sitio.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4973b151-eb64-4f94-9be0-f9eafae27ae3",
+    "empresa": "Auto Transportes Bass, S.A. de C.V.",
+    "ciudad": "La Piedad, Michoacán",
+    "correo": "bass.contabilidad@gmail.com",
+    "telefono": "3526880736",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Refrigerada · 11 a 50 personas · Calle Chilpancingo 962 Int 1, Colonia Jardines del Carmen (Peña), CP 59300",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7b0f31cd-c905-4700-9b69-c94b54d99b9e",
+    "empresa": "Auto Transportes Castillo Salazar, S.A. de C.V.",
+    "ciudad": "Montemorelos, Nuevo León",
+    "correo": "atcasasa@prodigy.net.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Carretera Antigua a Rayones 253 Int Sn, Colonia Ej. Escobedo, CP 67560\nUbicación aproximada 17-ago: centroide de 13 establecimientos DENUE en Montemorelos, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a8f6c993-be36-4d1f-83f5-65d0ae6c9e90",
+    "empresa": "Auto Transportes Frontera Norte, S.A. de C.V.",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "alanza.lopez@atfnorte.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Fletes en General, Servicio de Gruas y Maniobras · 11 a 50 personas · Boulevard Abelardo L Rodriguez Lote 42 Int Na, Colonia Calles, CP 21600\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2f70f568-27dd-414f-9547-d54f98f10b2d",
+    "empresa": "Auto Transportes Gale",
+    "ciudad": "Cosoleacaque, Veracruz",
+    "correo": "autotransportesgale@prodigy.net.mx",
+    "telefono": "9222640345",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportes de Carga · 11 a 50 personas · Carretera Carretera Mina Jaltipan Km 34.5 Sn Int Na, Colonia Cosoleacaque, CP 96340",
+    "fuente": "canacar"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "0c38a849-5fd6-4582-a5aa-977c60fd8c0b",
+    "empresa": "Agrícola Comercial del Valle de Santo Domingo, S.A.",
+    "ciudad": "La Paz, Baja California Sur",
+    "correo": "administracion@grupogutsa.com.mnx",
+    "telefono": "6121460133",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportes de Combustible · 11 a 50 personas · Calle Sonora Sn Int Sn, Colonia Chametla, CP 23205\nDENUE API 17-ago (cruce CANACAR→DENUE): «AGRICOLA COMERCIAL DEL VALLE DE SANTO DOMINGO», score 1.06",
+    "fuente": "canacar"
+  },
+  {
+    "id": "98594772-2a37-4a9c-a427-95a59d943c89",
+    "empresa": "Agrodestino, S.A. de C.V.",
+    "ciudad": "Jesús María, Aguascalientes",
+    "correo": "facturacion@agrodestino.com.mx",
+    "telefono": "4499569663",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga y de Personal · 11 a 50 personas · Carretera a Las Jaulas 203 Int Na, Colonia Sc, CP 20901\nUbicación aproximada 17-ago: centroide de 65 establecimientos DENUE en Jesús María, Aguascalientes — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nENCAJE: alto — socio CANACAR de carga y de personal, 11-50 personas, doble tipo de viaje.\nPROSPECCIÓN 20-ago-2026: sin decisor público · LinkedIn: no hallado · fuente: directorio de socios CANACAR (razón social, no persona física); correo de la base es buzón de facturación; sin sitio web; WebSearch agotado en la sesión (200/200), investigación solo por WebFetch a dominios conocidos. unidades: sin conteo de flota publicado → null. Mensajes generados al buzón de facturación, único contacto disponible.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "cdeeb80d-f9e3-4af5-9974-1f9ca349ed71",
+    "empresa": "Ags Integrados",
+    "ciudad": "Jesús María, Aguascalientes",
+    "correo": "elgal@agsintegrados.com",
+    "telefono": "7621118509",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Independencia 215 Int Na, Fraccionamiento Paseos de Aguascalientes, CP 20907\nUbicación aproximada 17-ago: centroide de 65 establecimientos DENUE en Jesús María, Aguascalientes — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "be3e0c3e-51b9-4e87-88cd-d4260193ae31",
+    "empresa": "Alejandro Pimentel Jiménez",
+    "ciudad": "Camerino Z. Mendoza, Veracruz",
+    "correo": "transelisama@hotmail.com",
+    "telefono": "2727268608",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 11 a 50 personas · Avenida Nicolas Bravo 20 Int Na, Ciudad Camerino Z Mendoza, CP 94740\nPROSPECCIÓN 2026-08-19: decisor Alejandro Pimentel Jiménez, Propietario (persona física registrada en CANACAR; correo transelisama@hotmail.com ya en base sugiere razón comercial 'Transportes Elisa' o similar) · LinkedIn: no encontrado · fuente: CANACAR directorio de socios (ya en base)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9a1d5cf0-10d5-4ed4-bdba-23701ee5f164",
+    "empresa": "Aleska Transportaciones S.A. de C.V.",
+    "ciudad": "General Escobedo, Nuevo León",
+    "correo": "perla@aleskatransportaciones.com",
+    "telefono": "8183975303",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Beatriz Escamilla 140 Int Na, Colonia Andres Caballero Moreno, CP 66080\nUbicación aproximada 17-ago: centroide de 199 establecimientos DENUE en General Escobedo, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nENCAJE: alto — socio CANACAR de carga, 11-50 personas, correo en dominio propio.\nPROSPECCIÓN 20-ago-2026: sin decisor público · LinkedIn: no hallado · fuente: directorio de socios CANACAR (razón social, no persona física); el correo perla@aleskatransportaciones.com sugiere un nombre pero ninguna fuente pública lo nombra con cargo → NO se declara decisor; sin sitio web; WebSearch agotado en la sesión (200/200), investigación solo por WebFetch a dominios conocidos. unidades: sin conteo de flota publicado → null. Mensajes generados.",
+    "fuente": "canacar"
+  }
+]

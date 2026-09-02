@@ -1,0 +1,52 @@
+[
+  {
+    "id": "66e6e83f-54f9-408b-ab54-86398de55166",
+    "empresa": "Rt Autotransportes, S.A. de C.V.",
+    "ciudad": "Zamora, Michoacán",
+    "correo": "rtautotransportesoficina@hotmail.com",
+    "telefono": "3515147272",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Libramiento Norte Km 10.2 Sn Int Na, Colonia Romero de Torres, CP 59721",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5d82112e-2325-423d-bae0-acf12f45b37d",
+    "empresa": "Rt Refrigerados, S.A. de C.V.",
+    "ciudad": "Zamora, Michoacán",
+    "correo": "refrigerados01@gmail.com",
+    "telefono": "3515147098",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle San Francisco Poniente 8 Int B, Fraccionamiento Madero, CP 59610",
+    "fuente": "canacar"
+  },
+  {
+    "id": "b568597a-9a8d-40fb-bb65-f578de4c6682",
+    "empresa": "Saida de la Garza Lucio",
+    "ciudad": "Reynosa, Tamaulipas",
+    "correo": "saidis.00@gmail.com",
+    "telefono": "8999260868",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Calle Valle del Sol 100 Int Na, Colonia la Escondida, CP 88770\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Reynosa, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-19: decisor Saida de la Garza Lucio, titular (el registro CANACAR está a nombre de persona física) · LinkedIn: no hallado · fuente: CANACAR 17-ago-2026",
+    "fuente": "canacar"
+  },
+  {
+    "id": "04f6e639-9818-4c17-a8da-ba53a399a77c",
+    "empresa": "Salvador Emmanuel Paredez Cantarey",
+    "ciudad": "Toluca, México",
+    "correo": "facturacion.sepc@gmail.com",
+    "telefono": "7222156088",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga General · 11 a 50 personas · Calle Emiliano Zapata Sn Int Na, Ejido San Juan Buenavista, CP 50070\nUbicación aproximada 17-ago: centroide de 256 establecimientos DENUE en Toluca, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "23e7f870-4b44-4e65-bb78-501899633858",
+    "empresa": "Salvador Obregon García",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "salvador.obregon@traesso.com",
+    "telefono": "2292832669",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Federal de Carga · 11 a 50 personas · Camino Paso del Toro-Villarin Parcela 300 Int Z1, Colonia Santa Fe, CP 91690\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "fuente": "canacar"
+  }
+]

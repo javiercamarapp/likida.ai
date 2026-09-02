@@ -1,0 +1,52 @@
+[
+  {
+    "id": "ca5437dc-5dca-480d-b231-4ca6f6aa2d2f",
+    "empresa": "TRANSPORTES AYALA DE CUERNAVACA",
+    "ciudad": "Cuernavaca, Morelos",
+    "correo": "transportesayala@prodigy.net.mx",
+    "telefono": "7772335034",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga general · 31 a 50 personas · sitio: www.ayalaht.commx · establecimiento: TRANSPORTES AYALA DE CUERNAVACA\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  },
+  {
+    "id": "09ac9b7f-3b8c-4790-8755-7a7184cfab56",
+    "empresa": "TRANSPORTES ESPECIALIZADOS ROJU",
+    "ciudad": "Apaxco, México",
+    "correo": "transportesroju@hotmail.com",
+    "telefono": "5562225535",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo de materiales y residuos peligrosos · 31 a 50 personas · establecimiento: TRANSPORTES ESPECIALIZADOS ROJU\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono\n\n=== INVESTIGACIÓN PROFUNDA ANIQ 26-ago-2026 ===\nUNIDADES (ANIQ): TRACTOCAMION, AUTOTANQUE, TORTON, CAJA SECA, JAULA, CAMIONETA 3 1/2 TONS.,\n\nPERMISOS: SCT, SEMARNAT, SEDUE\n\nRESEÑA ANIQ: “EN TRANSPORTES ROJU, ESTAMOS COMPROMETIDOS EN MANTENER EL CUIDADO AL MEDIO AMBIENTE, LA SEGURIDAD Y LA SALUD DE QUIENES TRABAJAMOS EN LA ORGANIZACIÓN, ASÍ COMO DE NUESTROS CLIENTES Y PROVEEDORES. NUESTRO CUMPLIMIENTO AL MARCO LEGAL NOS PERMITE UNA BUENA RELACIÓN CON LAS AUTORIDADES Y LA COMUNIDAD” \n\nLINKEDIN EMPRESA: no encontrado\n\nLINKEDIN DIRECTOR: no encontrado\n\nFACEBOOK: no encontrado\n\nAÑO FUNDACIÓN: no encontrado\n\nHISTORIA: no encontrado\n\nEMPLEADOS: no encontrado\n\nFLOTA: no encontrado\n\nOTROS DIRECTIVOS (ANIQ): GERENTE GENERAL: LIC. ADRIANA ROJAS ÁNGELES <arojas@transportesroju.com> | JEFE DE LOGÍSTICA: LIC. JOSÉ MANUEL VÁZQUEZ PACHECO <logisticaroju@hotmail.com>\n\nNOTAS: IMPORTANTE — investigación no completada por limitación técnica: en esta sesión la herramienta WebSearch reportó haber agotado su presupuesto de 200 búsquedas (\"this session has used its web search budget (200 of 200 WebSearch calls)\") antes de poder ejecutar ninguna de las búsquedas solicitadas (LinkedIn de la empresa, LinkedIn del director M. Herminio Rojas Hernández, Facebook, historia/año de fundación, tamaño de flota/empleados). Como alternativa intenté WebFetch directamente sobre www.transportesroju.com (tanto http:// como https://), pero ambas peticiones devolvieron HTTP 429 Too Many Requests con Retry-After: 3600 segundos, indicando que WebFetch también está limitado en esta sesión y no pudo cargar ni siquiera la página propia de la empresa.\n\nPor estas dos limitaciones técnicas combinadas, NO pude verificar ningún dato nuevo más allá de lo ya conocido (empresa, director, ciudad, sitio web, correo — todos de la ficha ANIQ proporcionada). Siguiendo la regla de no inventar ni asumir datos, todos los campos de investigación se marcan como \"no encontrado\" en lugar de adivinar.\n\nRecomendación: reintentar esta investigación en una sesión nueva (con presupuesto de WebSearch restablecido) o esperar ~1 hora para que se libere el límite de WebFetch, y entonces ejecutar los 6 pasos de búsqueda solicitados sobre: (1) LinkedIn de la empresa, (2) LinkedIn de M. Herminio Rojas Hernández, (3) Facebook de la empresa, (4) historia/año de fundación (incluyendo revisar www.transportesroju.com sección \"nosotros\"/\"historia\"), (5) tamaño de empleados y flota, (6) otros contactos/directivos.\n\nFuente: directorio ANIQ Transportistas (id=489) + investigación profunda 26-ago-2026 (workflow multi-agente).",
+    "fuente": "denue"
+  },
+  {
+    "id": "dc346a52-725c-49ee-b4d2-dceb7a1affb9",
+    "empresa": "TRANSPORTES FABRES",
+    "ciudad": "Tomatlán, Veracruz de Ignacio de la Llave",
+    "correo": "transportesfabres@outlook.com",
+    "telefono": "2711040207",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga general · 31 a 50 personas · establecimiento: TRANSPORTES FABRES\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  },
+  {
+    "id": "213f2409-2047-4c41-b096-4a91436583ff",
+    "empresa": "TRANSPORTES FORANEOS Y LOCALES DE RIO GRANDE",
+    "ciudad": "Torreón, Coahuila de Zaragoza",
+    "correo": "jorge.soriano@grupofase.com",
+    "telefono": "8712759079",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo de materiales y residuos peligrosos · 31 a 50 personas · establecimiento: TRANSPORTES FORANEOS Y LOCALES DE RIO GRANDE\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono\nPROSPECCIÓN 2026-08-19: investigación web no realizada (límite de búsquedas de la corrida) — mensaje anclado solo en censo DENUE · decisor: no buscado · viajes/mes: no público · historia: no pública · score fit rúbrica: 1/5",
+    "fuente": "denue"
+  },
+  {
+    "id": "ef250915-b8af-499c-b427-e7ea91c1fd2e",
+    "empresa": "TRANSPORTES MENDEZ",
+    "ciudad": "Nopaltepec, México",
+    "correo": "megal140223@gmail.com",
+    "telefono": "5511934226",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte local de materiales para la construcción · 31 a 50 personas\nCANACAR (directorio de socios) 17-ago-2026: rellena correo",
+    "fuente": "denue"
+  }
+]

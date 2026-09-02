@@ -1,0 +1,52 @@
+[
+  {
+    "id": "a6d03088-76aa-4701-a07d-91b4fd325f23",
+    "empresa": "\"Transportes de Gas Rodher\"",
+    "ciudad": "Cuautlancingo, Puebla",
+    "correo": "alberto.perez@gasrodher.com",
+    "telefono": "5567918271",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foráneo de Materiales y Residuos Peligrosos · 11 a 50 personas · Calle Vicente Guerrero 76 Int Sn, Colonia Sanctorum, CP 72730\nUbicación aproximada 17-ago: centroide de 52 establecimientos DENUE en Cuautlancingo, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nINVESTIGACION-LOTE-NUM 18-ago-2026 (agentes sonnet, aplica=true): APLICA: SCIAN 484232 confirmado, +10 anios, Ecatepec. Grupo matriz correcto es \"Grupo Transportes Huerta\" (NO confundir con \"Grupo Huerta\" automotriz, negocio distinto). Correo del censo (grupohuerta.com) tiene MX activo pero SIN sitio publicado.\nHISTORIA: socio CANACAR de AUTOTRANSPORTE FORÁNEO DE MATERIALES Y RESIDUOS PELIGROSOS (gas) con 11 a 50 personas, domicilio en Calle Vicente Guerrero 76, Colonia Sanctorum, Cuautlancingo, Puebla.\nOJO DOMINIO: gasrodher.com no devolvió contenido legible al 2026-08-20.\nPROSPECCIÓN 2026-08-20: sin decisor público · el sitio no devolvió contenido · fuente: CANACAR directorio de socios 17-ago-2026 (autotransporte foráneo de materiales y residuos peligrosos, 11 a 50 personas) + intento en gasrodher.com.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "5be277ff-2e83-4586-b8f8-7495f55d78c7",
+    "empresa": "3R Express",
+    "ciudad": "Tala, Jalisco",
+    "correo": "direecion@3rexpress.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Local y Foraneo de Carga · 11 a 50 personas · Carretera Carretera a Tala 10 Int Na, Colonia Guadalupe, CP 45340\nUbicación aproximada 17-ago: centroide de 11 establecimientos DENUE en Tala, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nINVESTIGACION-LOTE-NUM 18-ago-2026 (agentes sonnet, aplica=true): APLICA con confianza media (sin SCIAN/FMCSA propio verificado): 2 empleados describen operacion de transporte propia en LinkedIn. Tala/Guadalajara Jalisco. OJO: existe OTRA empresa \"Transportes Especializados 3R de Mexico\" (Tlahuac CDMX) con nombre parecido pero es empresa distinta — no confundir datos.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "bcc51517-9764-4e3a-bf67-175a51cf93ea",
+    "empresa": "501 Rt, S.A. de C.V.",
+    "ciudad": "Ramos Arizpe, Coahuila",
+    "correo": "v.chaires@501rt.com",
+    "telefono": "8446989180",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportacion de Carga · 11 a 50 personas · Calle Allende 1375 Int Na, Fraccionamiento Primitivo, CP 27000\n\nINVESTIGACION-LOTE-4A8 18-ago-2026 (agentes sonnet, aplica=true): DUPLICADO CONFIRMADO de RT501/\"501 Revolucionando el Transporte\" (Coahuila, ISO 9001/14001/45001, CTPAT) ya investigada y aplicada en tanda anterior. Misma empresa, fila distinta del censo — no repetir mensajes ni personas.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c3ccc8f7-d50e-48cf-b402-824db90473cc",
+    "empresa": "A&G Trucking Group, Inc.",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "trafico@agtrucking.net",
+    "telefono": "6643742955",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Internacional 8 Int 6, Colonia Aeropuerto, CP 22404\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nINVESTIGACION-LOTE-A 18-ago-2026 (agentes sonnet, aplica=true): APLICA fuerte: operacion binacional Tijuana-San Diego, USDOT 2829888 FAST Certified, 26 camiones/25 operadores propios declarados ante FMCSA (362,747 millas 2024). Correo real verificado: trafico@agtrucking.net.\nA&G Trucking Group, Inc.: socia CANACAR (17-ago-2026), Autotransporte de Carga General, 11 a 50 personas, Carretera Internacional 8, Col. Aeropuerto, Tijuana, Baja California — cerca del cruce fronterizo. La razón social registrada como \"Inc.\" y el correo de negocio del área de tráfico (trafico@agtrucking.net) sugieren operación binacional formal México-Estados Unidos. El sitio agtrucking.net no pudo consultarse esta sesión (error de conexión).\nENCAJE: alto — carga general binacional de 11-50 personas en Tijuana, tráfico propio\nPROSPECCIÓN 2026-08-20: sin decisor público · fuente: directorio de socios CANACAR 17-ago-2026; WebFetch a agtrucking.net falló (error de conexión)",
+    "fuente": "canacar"
+  },
+  {
+    "id": "84279479-cd37-4450-986f-079d0e1a87a9",
+    "empresa": "Aamer Manejo de Muestras Químicas, S.A. de C.V.",
+    "ciudad": "Gustavo A. Madero, Ciudad de México",
+    "correo": "josue.menao@aamer.mx",
+    "telefono": "5513849850",
+    "estado": "contactado",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte · 11 a 50 personas · Calle Atoyac 145 Int 13, Colonia San Felipe de Jesus, CP 7510\nUbicación aproximada 17-ago: centroide de 268 establecimientos DENUE en Gustavo A. Madero, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nINVESTIGACION-LOTE-4A8 18-ago-2026 (agentes sonnet, aplica=true): APLICA: registrada en CANACAR bajo giro \"Transporte\" (11-50 personas). Sitio propio declara \"unidades de 1, 3.5, 8 y 14 ton para materiales peligrosos y no peligrosos\" cobertura nacional. Certificacion ANIQ Responsabilidad Integral + SETIQ.\n\nINVESTIGACION CARRIL8 20-ago-2026 (WebFetch a aamer.mx, sitio VERIFICADO): confirma servicios de 'Quimicos, Comercio Exterior y Logistica' con envio de materiales peligrosos. Socio confirmado en directorio CANACAR 17-ago-2026, giro 'Transporte', 11 a 50 personas, Calle Atoyac 145 Int 13, Col. San Felipe de Jesus, CP 7510 (Gustavo A. Madero). El sitio no publica telefono, correo, anio de fundacion, flota ni vacantes mas alla de lo ya en registro. Tel confirmado 55 1384 9850, correo josue.menao@aamer.mx. Sin conteo de unidades: unidades queda null.\nPROSPECCION 2026-08-20: sin decisor publico - el sitio no nombra dueno ni director; WebSearch agotado en la sesion.\n\nPROSPECCIÓN 2026-08-21: DECISOR CONFIRMADO — Josué Alonso Mena Avilés, Director General. Fuente: directorio ANIQ de Transportistas (aniq.org.mx/directorio/Transportistas/empresa-detalle.asp?id=546), ficha con cargo exacto \"DIRECTOR GENERAL\" y correo josue.mena@aamer.mx (dominio propio de la empresa). Confianza media: fuente única de directorio sin segunda fuente independiente; nota — la base ya traía un correo parecido pero distinto (josue.menao@aamer.mx) de un scrape previo DENUE/CANACAR, discrepancia menor sin resolver.\n\nCONTACTADO 26-ago-2026: correo enviado a ventas@aamer.mx (formulario público del sitio, ante duda inicial sobre si tenían flota propia — resuelta por esta nota: SÍ aplica). Ojo: hay 3 correos distintos circulando para Aamer — ventas@aamer.mx (usado hoy), josue.menao@aamer.mx (este registro, scrape DENUE/CANACAR) y josue.mena@aamer.mx (ANIQ id=546, Josué Alonso Mena Avilés, Director General — la fuente más confiable). Confirmar con Javier cuál usar en el siguiente contacto si no responde.",
+    "fuente": "canacar"
+  }
+]

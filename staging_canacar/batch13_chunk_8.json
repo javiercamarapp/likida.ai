@@ -1,0 +1,52 @@
+[
+  {
+    "id": "94b2063f-8c1e-40e1-8375-f68e4da4a725",
+    "empresa": "Reco Transportes Ecológicos Noreste, S.A. de C.V.",
+    "ciudad": "Reynosa, Tamaulipas",
+    "correo": "eddy.ayala@gruporeco.com",
+    "telefono": "8999092500",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Rio Guayalejo 1308 Int Na, Colonia Longoria, CP 88660\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Reynosa, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "37a7c11f-deba-4d39-a88f-b175b464f4fd",
+    "empresa": "Reflen, S.A. de C.V.",
+    "ciudad": "San Pedro Garza García, Nuevo León",
+    "correo": "ramiro@mon-ro.com",
+    "telefono": "8182216600",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Cara · 11 a 50 personas · Calle Rio Amazonas Ote 302 Int Na, Colonia del Valle, CP 66220\nUbicación aproximada 17-ago: centroide de 113 establecimientos DENUE en San Pedro Garza García, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e8351c21-2415-4be8-a3d2-21fb43f482bf",
+    "empresa": "Refrigerados Kukulcán (Kukulcán Express)",
+    "ciudad": "Benito Juárez, Quintana Roo",
+    "correo": "e.guerrero@kukulcan-express.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Mercancias · 11 a 50 personas · Calle Central de Abastos Mz 4 Lt 5 Int Bod 113, Colonia Supermanzana 301, CP 77536\nUbicación aproximada 17-ago: centroide de 178 establecimientos DENUE en Benito Juárez, Quintana Roo — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nINVESTIGACION-LOTE-NUM 18-ago-2026 (agentes sonnet, aplica=true): APLICA fuerte: +25 años, flota propia de cajas refrigeradas 53 pies. CORREGIR SITIO: kukulcan-express.com (CON guion — sin guion da 403). Ojo: un directorio la clasifica erroneamente SCIAN 488990 (intermediacion) pero DENUE real es 484223/484233 (autotransporte con refrigeracion).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c8cd99b9-dd59-4de7-be3f-218b503602e1",
+    "empresa": "Refrigerados Mercado",
+    "ciudad": "Benito Juárez, Ciudad de México",
+    "correo": "cinthia.mercado@refrimerc.com",
+    "telefono": "5580008030",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Federal de Carga · 11 a 50 personas · Avenida Insurgentes Sur 1647 Int 219, Colonia Benito Juarez, CP 3900\nUbicación aproximada 17-ago: centroide de 171 establecimientos DENUE en Benito Juárez, Ciudad de México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2838045b-b86c-46a9-b616-6d5078d45ef8",
+    "empresa": "Refrigerados Moya, S. de R.L. de C.V.",
+    "ciudad": "Cuautitlán Izcalli, México",
+    "correo": "martha_moyamelgarejo@hotmail.com",
+    "telefono": "5545248440",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Parcela 47 Int Na, Colonia Buenavista, CP 54710\nUbicación aproximada 17-ago: centroide de 171 establecimientos DENUE en Cuautitlán Izcalli, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

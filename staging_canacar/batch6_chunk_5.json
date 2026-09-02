@@ -1,0 +1,52 @@
+[
+  {
+    "id": "bee3ff1e-be3b-403e-880a-b11359e176da",
+    "empresa": "FRIO EXPRESS CAVAZOS LEAL",
+    "ciudad": "Allende, Nuevo León",
+    "correo": "frio_expresscl@prodigy.net.mx",
+    "telefono": "8262687604",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo con refrigeración · 31 a 50 personas · establecimiento: FRIO EXPRESS CAVAZOS LEAL\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  },
+  {
+    "id": "89140579-7cc2-44b1-92ac-bbdacf3664e1",
+    "empresa": "LARP TRANSPORT",
+    "ciudad": "Medellín de Bravo, Veracruz de Ignacio de la Llave",
+    "correo": "larp@larptranspor.com",
+    "telefono": "2859712540",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otro autotransporte foráneo de carga general · 31 a 50 personas · sitio: www.larptranspor.com · establecimiento: LARP TRANSPORT\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono",
+    "fuente": "denue"
+  },
+  {
+    "id": "a2c7c1e2-e41f-4fd3-be99-237fd0c98be8",
+    "empresa": "LOGISTICA ESPECIALIZADA HGC",
+    "ciudad": "Allende, Nuevo León",
+    "correo": "cfialfasc@hotmail.com",
+    "telefono": "9373781355",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo de materiales y residuos peligrosos · 31 a 50 personas · establecimiento: LOGISTICA ESPECIALIZADA HGC\nCANACAR (directorio de socios) 17-ago-2026: rellena telefono\nPROSPECCIÓN 2026-08-19: sin decisor público · no se localizó sitio oficial · materiales y residuos peligrosos, Allende, Nuevo León · fuente: búsqueda web",
+    "fuente": "denue"
+  },
+  {
+    "id": "e01e6559-ef05-4ceb-86fc-a45781a64576",
+    "empresa": "RI VINCULACION EXPRESS TERRESTRE",
+    "ciudad": "Ayala, Morelos",
+    "correo": "administracion@ri-vet.com",
+    "telefono": "7351528224",
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Otros servicios de intermediación para el transporte de carga · 31 a 50 personas · establecimiento: RIVET\nCANACAR (directorio de socios) 17-ago-2026: rellena correo\nPROSPECCIÓN 2026-08-19: decisor Rogelio Ocampo Vergara, Director General (empresa familiar; hijos Irving Ocampo Padilla, Gerente de Operaciones, e Ingrid Ocampo Padilla, Gerente de Finanzas) · LinkedIn: sin perfil público localizado · fuente: alianzaflotillera.com/rivet-una-empresa-familiar-con-legado-de-excelencia/ · sitio oficial ri-vet.com confirma tel. 735 152 8224 / 735 353 6583, clientes Ryder, Ascent, Penske, Protrans, opera desde 1992 en Cuautla, Morelos",
+    "fuente": "denue"
+  },
+  {
+    "id": "3842955a-c83c-40f1-8e8a-aed669852028",
+    "empresa": "SEGADI LOGISTIC & TRANSPORT",
+    "ciudad": "Tlajomulco de Zúñiga, Jalisco",
+    "correo": "contacto@segadi.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "UNIVERSO DENUE 05/2026: Autotransporte foráneo de productos agrícolas sin refrigeración · 31 a 50 personas · sitio: www.segadi.com.mx · establecimiento: SEGADI LOGISTIC & TRANSPORT\nPROSPECCIÓN 2026-08-19: sin decisor público (su sitio segadi.com.mx no publica nombres de directivos) · LinkedIn: no público · viajes/mes: no público · historia: transportista de Tlajomulco con 14+ rutas documentadas (Guadalajara–Monterrey, Manzanillo–SLP, Ensenada–Cd. Juárez), almacén IMMEX/depósito fiscal, certificación OEA e ISO 9001, distinción 'Transportando a México' de CANACAR, sucursal en Manzanillo · fuente: sitio oficial segadi.com.mx · score fit 1/5 (rúbrica pública)",
+    "fuente": "denue"
+  }
+]

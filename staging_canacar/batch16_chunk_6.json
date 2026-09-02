@@ -1,0 +1,52 @@
+[
+  {
+    "id": "4e1db026-5c40-49a0-8c1d-5335acd04827",
+    "empresa": "Transportes Bum",
+    "ciudad": "Cerritos, San Luis Potosí",
+    "correo": "contabilidad@transportes-bum.com.mx",
+    "telefono": "4878720977",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Fletes · 11 a 50 personas · Carretera Libre a Cerritos Km 25 Sn Int Na, Colonia Montaña Estacion, CP 79420\nUbicación aproximada 17-ago: centroide de 5 establecimientos DENUE en Cerritos, San Luis Potosí — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6156cb14-4cac-46f5-ab2b-164cf4f743fa",
+    "empresa": "Transportes California Oea, S.A. de C.V.",
+    "ciudad": "Manzanillo, Colima",
+    "correo": "moises.ayala@transportescalifornia.com.mx",
+    "telefono": "3141028891",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Colima 1 Int Na, Colonia Burocrata, CP 28250\nUbicación aproximada 17-ago: centroide de 551 establecimientos DENUE en Manzanillo, Colima — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c9fe20d6-1bf9-4f61-af7f-2e9690a63ef6",
+    "empresa": "Transportes Calzada, S.A. de C.V.",
+    "ciudad": "Tianguistenco, México",
+    "correo": "info@transcalzada.mx",
+    "telefono": "7131356543",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Carretera Tenango- la Marquesa 1110 Int A, Colonia Santiago Tilapa, CP 52650\nUbicación aproximada 17-ago: centroide de 15 establecimientos DENUE en Tianguistenco, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "606527a2-a7d8-4bb9-9be0-fbc4abf43c8d",
+    "empresa": "Transportes Camecam, S.A. de C.V.",
+    "ciudad": "Mérida, Yucatán",
+    "correo": "luis.hoil@lodemored.com.mx",
+    "telefono": "9999304656",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicio de Transporte de Materiales y Residuos Peligrosos · 11 a 50 personas · Periférico Lic Manuel Berzunza y Berzunza 18601 Int Na, Fraccionamiento Francisco de Montejo, CP 97203\nUbicación aproximada 17-ago: centroide de 302 establecimientos DENUE en Mérida, Yucatán — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nHISTORIA: socio formal de CANACAR (directorio de socios, 17-ago-2026) en transporte de materiales y residuos peligrosos, 11 a 50 personas, Periferico Manuel Berzunza 18601, Fracc. Francisco de Montejo, Merida. Dominio del correo (lodemored.com.mx) no resuelve contenido - sin sitio institucional verificable.\nENCAJE: alto - peligrosos regulado, liquidacion documentalmente pesada\nPROSPECCION 2026-08-19: decisor Luis Hoil, cargo no publicado - LinkedIn: no hallado - fuente: correo de contacto en directorio de socios CANACAR (luis.hoil@lodemored.com.mx). No se le atribuye cargo por no estar publicado. WebSearch agotado en la sesion (200/200).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "cfd42cd8-a05d-421c-9064-5e630235af3b",
+    "empresa": "Transportes Cariazur, S.A. de C.V.",
+    "ciudad": "Veracruz, Veracruz",
+    "correo": "carlos.sosa@cariazur.com",
+    "telefono": "2293754330",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Avenida Fernando de Magallanes 441 Int 1A, Fraccionamiento Reforma, CP 91919\nPROSPECCIÓN 2026-08-19: sin decisor público confirmado (dominio cariazur.com resuelve pero con certificado SSL vencido — sitio no accesible; sin LinkedIn ni prensa) · nota: el correo institucional ya en base (carlos.sosa@cariazur.com) sugiere posible nombre \"Carlos Sosa\", pero sin fuente independiente que confirme cargo — no se escribe como dato confirmado · fuente: búsqueda web pública 19-ago-2026.",
+    "fuente": "canacar"
+  }
+]

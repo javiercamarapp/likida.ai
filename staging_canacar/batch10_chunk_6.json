@@ -1,0 +1,52 @@
+[
+  {
+    "id": "affc2d7e-cd9e-4b32-aea0-c1ec2b9bd589",
+    "empresa": "Gorillaz Logistics, S. de R.L. de C.V.",
+    "ciudad": "El Marqués, Querétaro",
+    "correo": "rh@gorillazlt.com.mx",
+    "telefono": "4442253202",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte · 11 a 50 personas · Calle Cuitlahuac 33 Int Na, Colonia Cumbres de Conín, CP 76246\nUbicación aproximada 17-ago: centroide de 86 establecimientos DENUE en El Marqués, Querétaro — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-20: sin decisor público — no se localizó sitio web oficial ni perfil de LinkedIn/prensa verificable para Gorillaz Logistics; los motores de búsqueda no devolvieron resultados propios de la empresa (solo resultados de la banda Gorillaz). Giro confirmado por CANACAR: transporte, 11-50 personas. Fuente: directorio CANACAR (ya en notas) + intento de búsqueda web 2026-08-20 sin resultados verificables adicionales.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f3aee302-d45d-47de-80b2-1b9911b5a770",
+    "empresa": "Grúas Dueñas, S. de R.L. de C.V.",
+    "ciudad": "Guadalajara, Jalisco",
+    "correo": "marquezb@live.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Remolque de Vehiculos de Motor · 11 a 50 personas · Calle Feliz Palavicini 2306 Int Na, Colonia Jardines Alcalde, CP 44298\nUbicación aproximada 17-ago: centroide de 508 establecimientos DENUE en Guadalajara, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-20: sin decisor publico · LinkedIn: no localizado · fuente: CANACAR directorio de socios 17-ago-2026 (sin sitio; correo live.com.mx). Giro: remolque de vehiculos de motor (gruas/arrastre de autos) — servicio por evento, no hay ciclo de viaje foraneo de carga que liquidar. Flota NO publicada — num_unidades sin dato.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0a6f55ab-df04-4c47-a8d3-4d8ebb0dbe45",
+    "empresa": "Grúas Estructuras y Tanques, S. de R.L.",
+    "ciudad": "Irapuato, Guanajuato",
+    "correo": "getventas1@hotmail.com",
+    "telefono": "4621878700",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Carretera Irapuato - Abasolo 4000 Int Na, Ciudad Irapuato, CP 36829\nUbicación aproximada 17-ago: centroide de 96 establecimientos DENUE en Irapuato, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "fe066957-59d2-4992-9486-0877972f7659",
+    "empresa": "Grúas Rioverde, S.A. de C.V.",
+    "ciudad": "Rioverde, San Luis Potosí",
+    "correo": "contabilidad@gruasrioverde.com.mx",
+    "telefono": "4871127516",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Otros Servicios Relacionados Al Transporte · 11 a 50 personas · Carretera 70 Km 129.5 Sn Int Na, Colonia Centro, CP 79610\nUbicación aproximada 17-ago: centroide de 17 establecimientos DENUE en Rioverde, San Luis Potosí — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "16935c3f-3364-4428-b239-c1b05a7d3092",
+    "empresa": "Grúas y Refacciones San Juan, S.A. de C.V.",
+    "ciudad": "San Juan del Río, Querétaro",
+    "correo": "brenda.cruz@grsj.com.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga Especializada · 11 a 50 personas · Calle Zacatecas 41 Int Na, Colonia Mexico, CP 76086\nUbicación aproximada 17-ago: centroide de 87 establecimientos DENUE en San Juan del Río, Querétaro — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

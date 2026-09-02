@@ -1,0 +1,102 @@
+[
+  {
+    "id": "e51c5dfc-9573-4061-bb4d-0671cc597c73",
+    "empresa": "Cristian Eduardo Pinales Cordova",
+    "ciudad": "Saltillo, Coahuila",
+    "correo": "transportespinales@prodigy.net.mx",
+    "telefono": "8443512173",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga General Terrestre · 0 a 10 personas · Calle Miguel Hidalgo Sur 1029 Int Na, Colonia Ojo de Agua, CP 25040\n\nENCAJE: alto — titular identificado, socio CANACAR, correo con su propio apellido\nPROSPECCIÓN 2026-08-19: decisor Cristian Eduardo Pinales Córdova, titular (registro CANACAR a nombre de persona física, correo coincide con su apellido) · LinkedIn: no hallado · fuente: CANACAR 17-ago-2026. Flota sin conteo publicado → unidades null.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "4df776a4-88ec-483f-ac57-afe2ed62ae2f",
+    "empresa": "Cristian Muñoz Maldonado",
+    "ciudad": "Ahuazotepec, Puebla",
+    "correo": "cristian07_24@hotmail.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foraneo de Carga General · 0 a 10 personas · Calle Morelos 10 Int Na, Condominio Centro, CP 73180\nUbicación aproximada 17-ago: centroide de 22 establecimientos DENUE en Ahuazotepec, Puebla — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8d2ed025-d911-4228-b47e-4adf8bf16910",
+    "empresa": "Cross Road Transportación, S.A. de C.V.",
+    "ciudad": "San Pedro Tlaquepaque, Jalisco",
+    "correo": "administracion@crossroad.mx",
+    "telefono": "3318503841",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Calle Salvador Orozco Loreto 28 Int Na, Colonia Las Liebres, CP 45623\nUbicación aproximada 17-ago: centroide de 219 establecimientos DENUE en San Pedro Tlaquepaque, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "da6ca49c-6462-41f4-910c-7f8422e30702",
+    "empresa": "Crossmotion Trucking",
+    "ciudad": "León, Guanajuato",
+    "correo": "mtorres@cmtrucking.mx",
+    "telefono": "4774497524",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Otro Autotransporte Federal de Carga General · 0 a 10 personas · Boulevard Juan Alonso de Torres 1920 Int Planta Alta, Ciudad León Guanajuato, CP 37125\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-20: decisor Marcela Torres, Directora Adjunta · LinkedIn: pagina de empresa mx.linkedin.com/company/crossmotionlogistics (publicacion sobre reconocimiento \"Las 100 Mujeres del Transporte y la Logistica 2026\") · fuente: LinkedIn (pagina publica de la empresa) + crossmotion.com.mx + directorio conectatunegocioleon.com; el correo ya registrado mtorres@cmtrucking.mx coincide con la inicial del nombre",
+    "fuente": "canacar"
+  },
+  {
+    "id": "a753b6c1-a022-44c1-b27e-3ffdc06f257f",
+    "empresa": "Cruz Bross Transportation",
+    "ciudad": "Nicolás Romero, México",
+    "correo": "mmanuel@cruzbrosstransportation.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transportes de Mercancias · 0 a 10 personas · Calle Quinto Barrio Sn Int Na, Ejido Cahuacan Nicolas Romero, CP 54430\nUbicación aproximada 17-ago: centroide de 40 establecimientos DENUE en Nicolás Romero, México — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nHISTORIA: Cruz Bros Transportation declara 'más de 25 años de experiencia en soluciones de transporte y distribución de carga', con cobertura 'desde Cd. Juárez hasta Nogales y Tijuana, así como todo el Pacífico y el Noroeste del país', además de Centro y Bajío. Ofrece carga completa, parcial, temperaturas controladas y logística personalizada. Correo gerencia@cruzbrosstransportation.com (fuente: cruzbrosstransportation.com, consultado 2026-08-20).\nPROSPECCIÓN 2026-08-20: sin decisor público · el sitio no nombra directivos · fuente: CANACAR directorio de socios 17-ago-2026 (transportes de mercancías, 0 a 10 personas) + cruzbrosstransportation.com.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "6aafd7d8-c114-4796-a9b1-b5fca7edd3d7",
+    "empresa": "Cruzger Logistics",
+    "ciudad": "León, Guanajuato",
+    "correo": "cristian.cruz@cruzger.com",
+    "telefono": "4772470955",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 0 a 10 personas · Calle Aranjuez 303 Int Na, Colonia Na, CP 37330\nUbicación aproximada 17-ago: centroide de 365 establecimientos DENUE en León, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "9e2a5d8f-2ab7-4dbd-8991-de63dc434887",
+    "empresa": "Cynthia Guadalupe Martinez Villavicencio",
+    "ciudad": "Tijuana, Baja California",
+    "correo": "transporteramirez12@hotmail.com",
+    "telefono": "6646268655",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Carretera a Tecate Km 28 Sn Int Na, Colonia Valle Redondo, CP 22330\nUbicación aproximada 17-ago: centroide de 859 establecimientos DENUE en Tijuana, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 20-ago-2026: decisora Cynthia Guadalupe Martínez Villavicencio, titular (persona física) · LinkedIn: no hallado · fuente: directorio de socios CANACAR, cuya razón social ES la persona física — por eso se declara titular. Sin sitio web; WebSearch agotado en la sesión (200/200), investigación solo por WebFetch a dominios conocidos. Mensajes generados.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "7e3f4078-8a71-497b-8176-dd94c161d98f",
+    "empresa": "D&M Logistics",
+    "ciudad": "Mexicali, Baja California",
+    "correo": "dmlogistic2022@gmail.com",
+    "telefono": "6864732072",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 0 a 10 personas · Avenida Jesus Agustin Castro 907 Int Na, Colonia Ricardo Flores Magon, CP 21220\nUbicación aproximada 17-ago: centroide de 342 establecimientos DENUE en Mexicali, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8fe11a7d-db2c-4512-a486-b6f95c097539",
+    "empresa": "Daemsa",
+    "ciudad": "Tula de Allende, Hidalgo",
+    "correo": "daemsa.countyrh@hotmail.com",
+    "telefono": "7737245388",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte Foráneo de Materiales Para la Construcción · 0 a 10 personas · Camino Real Atitalaquia 121 Int Na, Colonia el Llano 2Da Secc, CP 42803\nDENUE API 17-ago (cruce CANACAR→DENUE): «DAEMSA», score 1.06",
+    "fuente": "canacar"
+  },
+  {
+    "id": "c922ba5a-0989-4edd-a531-6a56842897f2",
+    "empresa": "Dahecu",
+    "ciudad": "Tula de Allende, Hidalgo",
+    "correo": "dahecu0508@gmail.com",
+    "telefono": "7731534507",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Ventas y Fletes · 0 a 10 personas · Calle Camino Real Atitalaquia 121 Int Na, Colonia el Llano 2Da Secc, CP 42820\nUbicación aproximada 17-ago: centroide de 31 establecimientos DENUE en Tula de Allende, Hidalgo — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

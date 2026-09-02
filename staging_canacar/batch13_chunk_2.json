@@ -1,0 +1,52 @@
+[
+  {
+    "id": "7f9efdb1-ba2d-4fad-9467-5812f74f3c44",
+    "empresa": "Number One Expedite, S. de R.L. de C.V.",
+    "ciudad": "Chihuahua, Chihuahua",
+    "correo": "edithc@number1expedite.com",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Ejido el Vergel 1128 Int Na, Colonia el Papalote Sauzal, CP 32599\nUbicación aproximada 17-ago: centroide de 282 establecimientos DENUE en Chihuahua, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "399c7d5f-6921-41e3-b1b8-c987a07fb946",
+    "empresa": "O'Falli Cargo Logistic",
+    "ciudad": "San Luis Potosí, San Luis Potosí",
+    "correo": "direccion@ofalli.mx",
+    "telefono": "4441329489",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Mercancias · 11 a 50 personas · Calle Hacienda de Guaname 348 Int Na, Colonia Hacienda de Bravo, CP 78175\nUbicación aproximada 17-ago: centroide de 259 establecimientos DENUE en San Luis Potosí, San Luis Potosí — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "09ea551b-58c0-4b5d-a26f-0a53bd4b0301",
+    "empresa": "Oporto",
+    "ciudad": "Monterrey, Nuevo León",
+    "correo": "agustin.morales@oportotransportes.com.mx",
+    "telefono": "8113242144",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicios de Fletes · 11 a 50 personas · Avenida Antonio I Villarreal 1605 Int Na, Colonia Coyoacan, CP 64510\nUbicación aproximada 17-ago: centroide de 442 establecimientos DENUE en Monterrey, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "8b69ed88-b9ae-4b72-875a-1fb776a0f98d",
+    "empresa": "Orbis Logistics Solutions, S.A. de C.V.",
+    "ciudad": "Zapopan, Jalisco",
+    "correo": "jose.germanos@orbislogistics.com.mx",
+    "telefono": "3339568681",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicios de Autotransporte Terrestre de Carga · 11 a 50 personas · Avenida Ludwing Van Beethoven 5113 Int Sn, Colonia Residencial la Estancia, CP 45030\nUbicación aproximada 17-ago: centroide de 205 establecimientos DENUE en Zapopan, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "068c95cb-b8b4-4da2-9f29-61340d485ca7",
+    "empresa": "Orlando Rangel Fernandez",
+    "ciudad": "Ensenada, Baja California",
+    "correo": "orlando.rangel@transportes-rangel.com",
+    "telefono": "6461510747",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Servicios de Transporte de Contenedores · 11 a 50 personas · Calle Cuahutemoc 2125 Int Na, Colonia Hidalgo, CP 22880\nUbicación aproximada 17-ago: centroide de 201 establecimientos DENUE en Ensenada, Baja California — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

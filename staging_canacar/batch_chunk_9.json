@@ -1,0 +1,52 @@
+[
+  {
+    "id": "7906f33b-c0f4-42cd-864e-091b37025a94",
+    "empresa": "Multimodal Logistics de Altamira, S.A. de C.V.",
+    "ciudad": "Altamira, Tamaulipas",
+    "correo": "rogelio.maldonado@multimodallogistics.com.mx",
+    "telefono": "8332600148",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte Foráneo de Carga General · 51 a 250 personas · Avenida Rio Tamesi Km 0 + 700 Int Na, Colonia Parque Industrial de Altamira, CP 89603\nUbicación aproximada 17-ago: centroide de 176 establecimientos DENUE en Altamira, Tamaulipas — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "2d96a725-72e4-4637-8168-1894cad57cb2",
+    "empresa": "Multinacional Gacela, S.A. de C.V.",
+    "ciudad": "San Pedro Garza García, Nuevo León",
+    "correo": "mmartinez@gsanbarr.mx",
+    "telefono": null,
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Carga · 51 a 250 personas · Calle Ricardo Margain Zozaya 335 Int Na, Colonia Valle del Campestre, CP 66265\nUbicación aproximada 17-ago: centroide de 113 establecimientos DENUE en San Pedro Garza García, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "56c3851a-d38d-424b-b19b-9c58a12a6ee1",
+    "empresa": "Omnicarga, S.A. de C.V.",
+    "ciudad": "Aguascalientes, Aguascalientes",
+    "correo": "asgutierrez@odm.com.mx",
+    "telefono": "5557475402",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Calle Republica de Peru 301 Int Na, Colonia Las Americas, CP 20230\nUbicación aproximada 17-ago: centroide de 261 establecimientos DENUE en Aguascalientes, Aguascalientes — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "bc3dc347-0054-4ace-a1fe-bc308ff37b56",
+    "empresa": "On Time Servicios Terrestres Urgentes, S.A. de C.V.",
+    "ciudad": "General Escobedo, Nuevo León",
+    "correo": "finanzas@ontime.com.mx",
+    "telefono": "8183971360",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 51 a 250 personas · Calle Josefa Ortiz de Dominguez 127 Int Na, Colonia Las Encinas, CP 66050\nUbicación aproximada 17-ago: centroide de 199 establecimientos DENUE en General Escobedo, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "e782c3fb-cdb9-4cbb-a533-af7e0edb2b9d",
+    "empresa": "Perrone Trucking Sociedad",
+    "ciudad": "Sabinas Hidalgo, Nuevo León",
+    "correo": "dante@perrone.mx",
+    "telefono": "8117491296",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Flete Terrestre Nacional E Internacional · 51 a 250 personas · Carretera Nacional Laredo 470 Int Na, Ciudad Sabinas Hidalgo, CP 65260\nUbicación aproximada 17-ago: centroide de 28 establecimientos DENUE en Sabinas Hidalgo, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  }
+]

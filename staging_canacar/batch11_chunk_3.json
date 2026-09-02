@@ -1,0 +1,52 @@
+[
+  {
+    "id": "ad3f99fa-73ab-4ca1-8a8a-98e041683c31",
+    "empresa": "José Alejandro Elizarraráz",
+    "ciudad": "Irapuato, Guanajuato",
+    "correo": "transalemi@yahoo.com.mx",
+    "telefono": "4621398975",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle 16 de Septiembre 400 Int Na, Colonia Zona Centro, CP 36500\nUbicación aproximada 17-ago: centroide de 96 establecimientos DENUE en Irapuato, Guanajuato — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCIÓN 2026-08-20: decisor José Alejandro Elizarraráz, titular/propietario (persona física con actividad empresarial, opera bajo el nombre comercial \"Transalemi\" según su correo transalemi@yahoo.com.mx) · fuente: CANACAR directorio de socios 17-ago-2026 (cargo por inferencia razonable, no una fuente que use la palabra \"dueño\" explícitamente).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "dce7cd84-a145-4bf3-ae5b-931fe999b14e",
+    "empresa": "Jose Arnoldo Ramos Treviño",
+    "ciudad": "Castaños, Coahuila",
+    "correo": "transportes_trt@hotmail.com",
+    "telefono": "8661549782",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Auto Transporte de Carga · 11 a 50 personas · Calle Secundaria 1 1240 Int Na, Colonia Ejidal, CP 25870",
+    "fuente": "canacar"
+  },
+  {
+    "id": "be510e19-7fcc-4036-819b-d08ddfb6dce3",
+    "empresa": "José Fernández Guerrero",
+    "ciudad": "Juárez, Chihuahua",
+    "correo": "jfernandez@transfer1.com.mx",
+    "telefono": "6566247405",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Josefa Ortiz de Dominguez 1281 Int Na, Ciudad Ciudad Juarez, CP 32580\nUbicación aproximada 17-ago: centroide de 444 establecimientos DENUE en Juárez, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "48d5fe29-ffe4-49a3-b70c-99bcfcc9daa6",
+    "empresa": "José Guillermo Sandoval Díaz",
+    "ciudad": "Ixtaczoquitlán, Veracruz",
+    "correo": "transportessandoval@prodigy.net.mx",
+    "telefono": "2727213315",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Calle Oriente 4 1317 Int Na, Barrio de la Luz, CP 94450\nPROSPECCIÓN 2026-08-19: decisor José Guillermo Sandoval Díaz, titular (persona física con actividad de autotransporte) · LinkedIn: no encontrado · viajes/mes: no público · historia: no pública · fuente: directorio público de socios CANACAR · fit 1/5",
+    "fuente": "canacar"
+  },
+  {
+    "id": "761e05ae-d14f-4acc-8bd4-f7e7cbe8f9d4",
+    "empresa": "José Humberto Almaguer Alanis",
+    "ciudad": "Santiago, Nuevo León",
+    "correo": "jhalmaguer@superliquidos.mx",
+    "telefono": "8122850047",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte · 11 a 50 personas · Calle Callejon el Mexicano 102 Int Sn, Colonia San Pedro, CP 67328\nUbicación aproximada 17-ago: centroide de 42 establecimientos DENUE en Santiago, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\n\nPROSPECCIÓN 19-ago-2026: decisor José Humberto Almaguer Alanis, titular (la razón social del directorio de socios CANACAR es la persona física, así que el registrante ES el titular) · LinkedIn: no hallado · fuente: directorio de socios CANACAR 17-ago-2026 (transporte, 11 a 50 personas, Callejón El Mexicano 102, Col. San Pedro, Santiago, Nuevo León) · el correo del censo (dominio superliquidos.mx) sugiere que su nombre comercial real es \"Súper Líquidos\", probablemente pipas; no se verificó · WebSearch sin cupo en la sesión",
+    "fuente": "canacar"
+  }
+]

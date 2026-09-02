@@ -1,0 +1,52 @@
+[
+  {
+    "id": "98949d81-0e8e-4a6c-ac1e-abba13daff00",
+    "empresa": "Transportadora Estrella S.A. de C.V.",
+    "ciudad": "Córdoba, Veracruz",
+    "correo": "jmontiel@transportadoraestrella.com",
+    "telefono": "2717122444",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Material Peligroso · 11 a 50 personas · Carretera Carretera Cordoba-Veracruz Na Int Na, Ciudad Zona Industrial, CP 94690 · PROSPECCIÓN 2026-08-19: decisor Joaquín Montiel Vázquez, director/fundador · fuente: sitio oficial transportadoraestrella.com (verificado por WebFetch) — empresa antecesora fundada 14-dic-1974, Transportadora Estrella constituida 8-jun-1987, más de 30 años en transporte de carga, talleres propios. Correo ya en base (jmontiel@transportadoraestrella.com) coincide con el nombre. Mensaje hiperpersonalizado generado citando al director por nombre.",
+    "fuente": "canacar"
+  },
+  {
+    "id": "f18442d9-b1ce-41c6-9527-175dc037b1ab",
+    "empresa": "Transportadora Gas Economico de Chihuahua, S.A. de C.V.",
+    "ciudad": "Chihuahua, Chihuahua",
+    "correo": "pablocoah@hotmail.com",
+    "telefono": "6144424200",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga General · 11 a 50 personas · Avenida Vallarta 4705 Int Na, Colonia Las Granjas, CP 31160\nUbicación aproximada 17-ago: centroide de 282 establecimientos DENUE en Chihuahua, Chihuahua — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nPROSPECCION 2026-08-19: sin decisor publico · LinkedIn: no localizado · fuente: CANACAR directorio de socios 17-ago-2026 (sin sitio web; el correo del registro es hotmail personal y no confirma titular). Razon social S.A. de C.V. — el registro NO expone persona fisica titular. Flota NO publicada — unidades sin dato. ENCAJE: alto — carga general / distribucion de gas, socio CANACAR, tamano en rango objetivo",
+    "fuente": "canacar"
+  },
+  {
+    "id": "41527107-1b15-49ee-b81e-0bf94863365c",
+    "empresa": "Transportadora Gola, S.A. de C.V.",
+    "ciudad": "Lagos de Moreno, Jalisco",
+    "correo": "enrique@gola.com.mx",
+    "telefono": "4747421781",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Transporte de Mercancias · 11 a 50 personas · Carretera Libramiento Norte 75 Int 1, Colonia Tepeyac, CP 47410\nUbicación aproximada 17-ago: centroide de 21 establecimientos DENUE en Lagos de Moreno, Jalisco — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "94f8e0c1-ddb0-449f-a90e-b6a5c88c1034",
+    "empresa": "Transportadora Imperial de Combustibles, S.A. de C.V.",
+    "ciudad": "Gómez Palacio, Durango",
+    "correo": "rtrejo@trafusa.com.mx",
+    "telefono": "8717191004",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Otro Autotransporte Foraneo de Carga Especializado · 11 a 50 personas · Calle Canatlan 455 Nte Int Na, Parque Industrial Carlos Herrera Araluce, CP 35079\nUbicación aproximada 17-ago: centroide de 111 establecimientos DENUE en Gómez Palacio, Durango — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).",
+    "fuente": "canacar"
+  },
+  {
+    "id": "0535ea48-f3fc-4e7f-adec-d1cd02a6b729",
+    "empresa": "Transportadora Integral de Carga, S.A. de C.V.",
+    "ciudad": "Cadereyta Jiménez, Nuevo León",
+    "correo": "fibarra@ticarsa.com.mx",
+    "telefono": "8282824010",
+    "estado": "nuevo",
+    "notas": "CANACAR (directorio de socios) 17-ago-2026: Autotransporte de Carga · 11 a 50 personas · Carretera Cadereyta-Reynosa Km 36.5 Sn Int Na, Colonia Centro, CP 1072\nUbicación aproximada 17-ago: centroide de 40 establecimientos DENUE en Cadereyta Jiménez, Nuevo León — no es la dirección exacta del domicilio (precisión de municipio, como ciudades.ts).\nINVESTIGACIÓN PROFUNDA 20-ago-2026: Jesús Arturo Cárdenas Esparza, key principal (D&B). José Juventino Tamez Rodríguez, Gerente de Operaciones (correo jtamez@ticarsa.com.mx confirmado).",
+    "fuente": "canacar"
+  }
+]
