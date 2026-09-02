@@ -3025,7 +3025,16 @@ async function procesarTurno(msg: InboundMessage, reloj: Presupuesto, soltarClai
             // dos veces, con su IVA y su IEPS encima. Un unique(cfdi_uuid) no lo
             // arregla: el del ticket es NULL y NULL no colisiona.
             const porTicket = emparejarXmlConTicket({ total: xml.total, fecha: xml.fecha }, gastos);
-            if (porTicket) { match = porTicket; eraTicket = true; }
+            if (porTicket) {
+              match = porTicket; eraTicket = true;
+              // AUDITORÍA 24 · WA-5: cuando el empate fue APROXIMADO (el OCR
+              // leyó $2,890.00 sobre un CFDI de $2,890.50), el XML corrige el
+              // monto —`updateGastoCfdiXml` escribe su `total`, que viene de
+              // un comprobante timbrado—. Queda dicho en el log: es la única
+              // señal de que una cifra del chofer se movió sin que él lo pidiera.
+              const brecha = xml.total != null ? Math.abs(porTicket.monto - xml.total) : 0;
+              if (brecha > 0.01) logger.info('xml.monto_corregido_por_cfdi', { viaje: viajeId, gasto: porTicket.id, leido: porTicket.monto, cfdi: xml.total });
+            }
           }
           let gastoId: string;
           if (match) {
