@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { LogOut } from 'lucide-react';
 import Fondo from '../fondo';
 import { MARCO_FILA, MARCO_SIDEBAR, MARCO_COLUMNA, MARCO_SCROLL, CLASE_COLUMNA_CENTRO } from '../marco';
@@ -6,6 +5,7 @@ import SidebarNav, { SidebarAbajo } from './sidebar-nav';
 import { BotonSidebar } from '../boton-sidebar';
 import AvisoRol from './aviso-rol';
 import { Logo } from '../logo';
+import { EnlaceCuenta } from './enlace-cuenta';
 
 /**
  * El marco visual de /dashboard — fondo shader, sidebar glass con el logo,
@@ -92,9 +92,15 @@ export default function DashboardChrome({
                 {(nombre ?? 'F')[0].toUpperCase()}
               </div>
               <div className="hidden lg:block min-w-0 flex-1 sb-texto">
-                <Link href="/cuenta" className="block text-[13px] font-medium hover:opacity-70 transition-opacity truncate leading-tight">
+                {/* H29 (auditoría 24): iba a `/cuenta` a secas — un superadmin
+                    previsualizando una flota (`?tenant=X&vista=demo`) que
+                    tocara su nombre perdía esos parámetros. Mismo contrato de
+                    sufijo que `sidebar-nav.tsx` (Client Component, lee
+                    `useSearchParams()` — `layout.tsx` no recibe `searchParams`,
+                    limitación de Next.js documentada ahí mismo). */}
+                <EnlaceCuenta rol={rol} className="block text-[13px] font-medium hover:opacity-70 transition-opacity truncate leading-tight">
                   {nombre ?? 'Mi cuenta'}
-                </Link>
+                </EnlaceCuenta>
                 <div className="text-[10px] truncate" style={{ color: 'var(--faint)' }}>{ROL_BADGE[rol] ?? rol.toUpperCase()}</div>
               </div>
               {cerrarSesion && (
