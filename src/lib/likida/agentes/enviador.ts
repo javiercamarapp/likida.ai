@@ -237,11 +237,19 @@ export async function correrEnviador(
   const filtroCandidatas = autoaprobar
     ? `and(estado.eq.pendiente,creado_en.lte.${corte}),and(estado.eq.aprobado,enviado_en.is.null,resuelto_por_email.eq.${RESOLUTOR_AUTOMATICO})`
     : `and(estado.eq.aprobado,enviado_en.is.null,resuelto_por.not.is.null)`;
+  // AGB-3 (auditoría 24): antes esta consulta traía las N más viejas SIN
+  // filtrar por correo — medido en producción, las 10 más viejas eran
+  // sistemáticamente piezas de prospectos SIN correo capturado (Nadro, Pepsi,
+  // ManpowerGroup...), así que las piezas CON correo (que sí se pueden
+  // enviar) nunca alcanzaban turno tras el `limit`. `!inner` + `.not(...)`
+  // excluye esas piezas en la CONSULTA, no en el bucle: con ellas fuera, la
+  // ventana avanza sola hacia las que sí son enviables.
   const { data, error } = await acotada(supabaseAdmin()
     .from('cola_aprobacion')
-    .select('id, tipo, estado, prospecto_id, prospecto:prospecto_id(empresa, correo)')
+    .select('id, tipo, estado, prospecto_id, prospecto:prospecto_id!inner(empresa, correo)')
     .or(filtroCandidatas)
     .in('tipo', [...TIPOS_CAMPANA])
+    .not('prospecto.correo', 'is', null)
     .order('creado_en', { ascending: true })
     .limit(Math.min(limite, topeCorreoFrioDia())), 'enviador.candidatas');
   if (error) throw new Error(`correrEnviador: ${error.message}`);

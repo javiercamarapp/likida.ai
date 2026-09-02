@@ -399,11 +399,19 @@ async function loteRedactor(
   // Y el número ya no es el freno: el freno es el reloj del `for`. El límite
   // ahora solo dimensiona la pila de candidatos; el que decide cuándo parar es
   // el tiempo, que es lo que de verdad se acaba.
+  // AGB-3 (auditoría 24): antes esta consulta no filtraba por correo — medido
+  // en producción, muchos de los "N más viejos" en `nuevo` son prospectos SIN
+  // correo capturado (redactarCorreoFrio los deja pasar con AVISO, pero la
+  // pieza que producen no se puede enviar ni resolver, AGB-4/AGB-5), así que
+  // esa parte de la ventana se re-fabricaba sin avanzar. `.not(...)` los
+  // excluye en la CONSULTA — la ventana avanza sola hacia los enviables, y
+  // los que quedan fuera no vuelven a aparecer mientras no tengan correo.
   const { data, error } = await acotada(supabaseAdmin()
     .from('prospecto')
     .select('id, vendedor:vendedor_id(nombre)')
     .is('duplicado_de', null)
     .eq('estado', 'nuevo')
+    .not('correo', 'is', null)
     .order('created_at', { ascending: true })
     .limit(tope * 2), 'runner.candidatos');
   if (error) throw new Error(`loteRedactor.candidatos: ${error.message}`);

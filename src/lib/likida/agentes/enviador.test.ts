@@ -12,14 +12,20 @@ import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest';
 // ═══════════════════════════════════════════════════════════════════════════
 
 const respuestas = new Map<string, Array<{ data: unknown; error: { message: string; code?: string } | null }>>();
+// AGB-3: registro de llamadas por tabla — para poder afirmar QUÉ filtro se
+// mandó, no solo qué devolvió el mock (el `.not('prospecto.correo', ...)`
+// tiene que quedar en la consulta real, no solo filtrarse en memoria).
+const llamadas: Array<{ tabla: string; metodo: string; args: unknown[] }> = [];
 function builder(tabla: string) {
   const responder = () => {
     const cola = respuestas.get(tabla);
     return cola && cola.length > 0 ? cola.shift()! : { data: [], error: null };
   };
   const b: Record<string, unknown> = {};
+  const encadenar = (metodo: string) => (...args: unknown[]) => { llamadas.push({ tabla, metodo, args }); return b; };
   Object.assign(b, {
-    select: () => b, eq: () => b, is: () => b, in: () => b, lte: () => b, or: () => b,
+    select: encadenar('select'), eq: encadenar('eq'), is: encadenar('is'), in: encadenar('in'),
+    lte: encadenar('lte'), or: encadenar('or'), not: encadenar('not'),
     limit: () => b, order: () => b, update: () => b, insert: () => b,
     then: (res: (x: unknown) => unknown, rej: (e: unknown) => unknown) =>
       Promise.resolve().then(responder).then(res, rej),
@@ -76,6 +82,7 @@ afterAll(() => {
 
 beforeEach(() => {
   respuestas.clear();
+  llamadas.length = 0;
   apagado = false;
   canal = true;
   enviarPiezaPorCorreo.mockClear();
@@ -318,5 +325,22 @@ describe('AGB-1 — con la palanca de autoaprobación en default, la pieza NO se
     const r = await correrEnviador();
     expect(r.piezasEnviadas).toBe(1);
     expect(enviarPiezaPorCorreo).toHaveBeenCalledWith(PIEZA.id, null, []);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AGB-3 (auditoría 24) — las 10 candidatas más viejas eran sistemáticamente
+// piezas de prospectos SIN correo (medido en producción): con un `limit` fijo
+// nunca le tocaba turno a una pieza CON correo. La consulta ahora excluye
+// `prospecto.correo is null` en la BASE, no en el bucle.
+// ═══════════════════════════════════════════════════════════════════════════
+describe('AGB-3 — la consulta de candidatas excluye prospectos sin correo en la base', () => {
+  it('la consulta a cola_aprobacion trae el join !inner y el filtro not-is-null sobre prospecto.correo', async () => {
+    respuestas.set('cola_aprobacion', [{ data: [], error: null }]);
+    await correrEnviador();
+    const select = llamadas.find((l) => l.tabla === 'cola_aprobacion' && l.metodo === 'select');
+    expect(select?.args[0]).toContain('prospecto:prospecto_id!inner(');
+    const not = llamadas.find((l) => l.tabla === 'cola_aprobacion' && l.metodo === 'not');
+    expect(not?.args).toEqual(['prospecto.correo', 'is', null]);
   });
 });
