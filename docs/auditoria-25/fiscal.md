@@ -3,8 +3,10 @@
 **Nota: 4/10** (antes 5). Razón del movimiento: **mirada más profunda — el código
 no cambió y la nota anterior estaba inflada**. Los 7 commits desde la 24
 (`592d26f`, `66339d5`, `4198985`, `5180c72`, `3cc8ead`, `aa5304d`, `18fa771`) no
-tocan **una sola línea** de este rubro: `git log` sobre `src/lib/likida/fiscal.ts`,
-`cuadre/`, `liquidacion/`, `intake/` y `normas/*.yaml` no trae nada. Los dos
+tocan **una sola línea** de este rubro: `git log b8a1a3a..HEAD` sobre
+`src/lib/likida/fiscal.ts`, `cuadre/`, `liquidacion/`, `intake/` y `normas/`
+devuelve exactamente dos commits, `592d26f` y `18fa771`, y los dos son el latido de
+`normas/.latido-vigilancia` — datos, ninguna ficha y ningún código. Los dos
 CRÍTICOS que la síntesis de la 24 declaró «lo primero de la ronda 25» siguen
 exactamente donde estaban, con los mismos números de línea, y además abrí dos
 caminos que la 24 no había abierto (`acreditables_liquidacion_tenant` y el
@@ -258,8 +260,8 @@ En los dos casos el CFDI está vigente ante el SAT, el receptor es correcto y el
 medio de pago está en `MEDIOS_LISR_27_III`: **cero diferencias**. El PDF imprime
 «Deducible para ISR **$11,600.00**» en verde y «IVA acreditable (LIVA art. 5)
 **$1,600.00**», y como cuadró sin diferencias el trigger de la 0299
-(`0299:126-127`) la deja `revision = 'aprobada'` **sin que ninguna persona la
-mire**. La verdad fiscal es la contraria: ese papel resta $10,000 de deducción y
+(`0299_revision_liquidacion.sql:127-128`) la deja `revision = 'aprobada'` **sin que
+ninguna persona la mire**. La verdad fiscal es la contraria: ese papel resta $10,000 de deducción y
 obliga a restituir $1,600 de IVA. El error es de **signo**, así que el
 desplazamiento contra la realidad es de $23,200 de base y $3,200 de IVA por
 comprobante.
@@ -344,10 +346,11 @@ fichas, no la puede vigilar.
 
 ### [BAJO, nuevo] El motor niega los litros del estímulo de diésel por un «4º párrafo de la LIF 20-A-IV» que la ficha verificada no transcribe
 
-`src/lib/likida/cuadre/engine.ts:1665-1670` (el comentario: *«El medio de pago es
+`src/lib/likida/cuadre/engine.ts:1650-1653` (el comentario: *«El medio de pago es
 requisito del 4º párrafo de la LIF 20-A-IV (monedero, tarjeta, cheque nominativo o
-transferencia)»*) · `engine.ts:1671` (`const pagoElectronico = … MEDIOS_LISR_27_III
-… ; if (pagoElectronico && litros > 0) litrosDieselAcreditables += litros`) ·
+transferencia)»*) · `engine.ts:1659` (`const pagoElectronico = … MEDIOS_LISR_27_III
+…`) y `engine.ts:1660` (`if (pagoElectronico && … litros > 0)` es la puerta de
+`litrosDieselAcreditables`) ·
 `src/lib/likida/fiscal.ts:867-870` (la misma condición en el panel).
 
 Ficha `normas/lif-2026-20-A.yaml` está en `verificado_fuente_primaria`, y por eso
