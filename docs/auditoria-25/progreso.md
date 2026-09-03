@@ -29,3 +29,4 @@
 | 25 | Tablero recapturado y **vuelto a mirar** tras la reauditoría: 12 rubros, 63/12 = **5.3**. La captura vieja ya no describía las notas. | — |
 | 26 | **Compuerta final:** vitest **820 archivos / 10,962 pruebas, 1 saltada, 0 fallos** · `tsc --noEmit` exit 0 · `eslint` 0 errores (173 avisos) · `lint:ratchet` 173/173, 0 nuevos. | — |
 | 27 | PR **#319** abierto en borrador y **verificado con `list_pull_requests`**, no de memoria. Notificación enviada al dueño con el punto que necesita su mano. | #319 |
+| 28 | **CI del PR #319 VERDE sobre `98ef547`**: los 8 checks en `success`, `mergeable_state: clean`. El job «Migraciones + aislamiento (Postgres efímero)» pasó en sus dos corridas — es el que aplica la 0304 contra un Postgres real, o sea que cierra el hueco de «no verificado» que dejó correr sin base de datos. | #319 |

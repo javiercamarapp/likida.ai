@@ -64,6 +64,14 @@ COMPLETA: los 12 rubros auditados, 1 CRÍTICO y 2 ALTOS arreglados con prueba, 6
 - **Tablero:** `tablero.html` + `tablero.png`, capturado con Chromium 141
   headless y **mirado**: 12 rubros contados, notas cuadradas contra la síntesis
   (63/12 = 5.3), recapturado y vuelto a mirar tras la reauditoría, colores por nota y no por delta.
+- **CI del PR #319: VERDE sobre el head `98ef547`** — los 8 checks en `success`
+  y `mergeable_state: clean`. Lo que eso cierra de la lista de «no verificado»:
+  el job «Migraciones + aislamiento (Postgres efímero)» pasó en sus dos
+  corridas, y ES el que aplica las migraciones contra un Postgres real, así que
+  la 0304 y el bloque 250 —que aquí solo estaban comprobados por parseo— sí se
+  ejecutaron. El bot de Vercel reporta «1 Skipped Deployment — Ignored»: la
+  compuerta de despliegue funcionando, porque ningún commit de esta rama lleva
+  `[deploy]` en el asunto.
 - **Nota de método:** el auditor de pruebas mutó el árbol durante la ronda (está
   autorizado). Ninguna mutación entró a un commit, la verificación se hizo
   contra `git show HEAD:`, y el árbol quedó limpio. Si esto vuelve a correr con

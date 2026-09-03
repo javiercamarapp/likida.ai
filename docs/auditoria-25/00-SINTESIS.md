@@ -214,6 +214,25 @@ Su veredicto vale más que el punto que devolvió:
   (`.limit(1)` cuenta filas del servidor) justifica todo el diseño. El repo
   tiene 20+ pruebas que leen el fuente con `readFileSync` para exactamente esto.
 
+
+## La CI del PR, y lo que cerró de la lista de «no verificado»
+
+Sobre el head **`98ef547`** (el árbol final de la ronda): **los 8 checks en
+`success`, `mergeable_state: clean`, sin conflicto.**
+
+Importa uno en particular. La compuerta de esta ronda corrió **sin base de
+datos**, así que la migración 0304 y el bloque 250 de `verificaciones.sql` solo
+estaban comprobados por parseo de SQL — quedaron escritos como *no verificado*.
+El job **«Migraciones + aislamiento (Postgres efímero)»** pasó en verde en sus
+dos corridas, y ese job **sí** aplica las migraciones contra un Postgres real:
+el `drop`/`add constraint` de la 0304 se ejecutó de verdad, y el bloque 250 con
+él. Es la mitad del arreglo DATOS-A1 que aquí no se podía tocar.
+
+También pasaron los dos `verificar` (suite completa + build, ~13 min cada uno) y
+los dos de Playwright. El bot de Vercel comentó **«1 Skipped Deployment —
+Ignored»**: es la compuerta de despliegue haciendo lo correcto, porque ningún
+commit de esta rama lleva `[deploy]` en el asunto.
+
 ## Compuerta al cerrar
 
 Sobre el árbol final:
