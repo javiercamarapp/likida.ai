@@ -1,6 +1,6 @@
 # Auditoría 25 — Síntesis y recalificación
 
-**Global: 5.2** (anterior: **6.2**) · **▼ 1.0**
+**Global: 5.3** (anterior: **6.2**) · **▼ 0.9**
 
 Ronda **COMPLETA**, desatendida, en la nube. Rama `claude/auditoria-25` sobre
 `master` = `4f94490`. Árbol limpio al arrancar → **autofix habilitado**.
@@ -20,8 +20,8 @@ Rama nueva con el prefijo obligatorio `claude/`. El clon de la nube no traía
 
 ## La lectura de la ronda, y es incómoda
 
-**Diez rubros bajan, dos se quedan, ninguno sube.** La global cae un punto
-entero, de 6.2 a 5.2 — el mayor movimiento de la serie.
+**Nueve rubros bajan, tres se quedan, ninguno sube.** La global cae de 6.2 a
+**5.3** — el mayor movimiento de la serie.
 
 Y **el código no empeoró**. Siete de los doce rubros no recibieron un solo
 commit desde la 24; sus auditores lo verificaron con `git log` sobre las rutas
@@ -30,8 +30,8 @@ firman «mirada más profunda» con esas palabras** — la 24 midió un cambio d
 commits y 484 archivos de un tirón, y calificó de más.
 
 Esto es exactamente lo que la rutina existe para producir. La 24 subió 0.8
-puntos cerrando trece cosas reales; la 25 devuelve 1.0 al mirar más despacio. La
-serie —6.1 · 5.4 · 6.2 · **5.2**— no es ruido: es una nota que se mueve cuando
+puntos cerrando trece cosas reales; la 25 devuelve 0.9 al mirar más despacio. La
+serie —6.1 · 5.4 · 6.2 · **5.3**— no es ruido: es una nota que se mueve cuando
 la mirada cambia de profundidad, que es lo que se le pidió.
 
 **El caso que mejor lo explica es agéntico.** La 24 declaró AGEN-1 cerrado y le
@@ -42,7 +42,11 @@ abierto, porque la nota ya cobró la subida.
 
 ## Las notas
 
-Global = media aritmética de los 12 rubros, con un decimal (62 / 12 = 5.2).
+Global = media aritmética de los 12 rubros, con un decimal (63 / 12 = 5.3).
+
+Agéntico lleva la nota de su **reauditoría**, no la de la primera pasada: la
+regla dice que si un arreglo toca código de un rubro ya calificado se relanza
+**ese** auditor, y AGEN-C1 se arregló en esta ronda. Fue el único relanzado.
 
 | Rubro | Antes | Hoy | Δ | Porqué del movimiento |
 |---|---|---|---|---|
@@ -57,7 +61,7 @@ Global = media aritmética de los 12 rubros, con un decimal (62 / 12 = 5.2).
 | Cumplimiento legal | 7 | **5** | ▼2 | **Mirada más profunda.** El código no cambió una línea (`git log` sobre las siete rutas del rubro → vacío), así que no hay deterioro: los tres ALTO siguen byte por byte. Lo que cambió es la lectura — la 24 se puso 7 con un flujo de dato personal hacia un modelo externo que ningún aviso enumera **ya escrito en su propia primera página**, y su rúbrica dice 3 o menos si hay transferencia sin cobertura. Además abrió la máquina de prospección, donde Likida es **responsable**, no encargada. |
 | Arquitectura | 6 | **4** | ▼2 | **Mirada más profunda, con deuda que cobró factura.** Cita su propia ancla: «4 o menos si la misma lógica de dinero vive en más de un archivo». La proporción de LIVA 5 fr. I vive en **tres**, y el tercero solo conoce la mitad de las reglas. El patrón que la 24 llamó el más importante de su ronda —*dos lugares que calculan lo mismo*— **creció de 4 sitios a 9**, seis ya divergidos. |
 | Operabilidad y DX | 5 | **5** | = | **Deuda que cobró factura.** Los dos críticos de la 24 se cerraron de verdad y se verificaron uno por uno — eso es lo único que impide que baje. Pero el ALTO que la 24 dejó abierto **cobró la factura exacta que se le anunció**, y de la peor forma posible: el detector automático de la deriva quedó anclado en un commit que Vercel nunca pudo construir. |
-| Sistema agéntico | 5 | **4** | ▼1 | **Mirada más profunda.** El arreglo estrella de la 24 estaba cerrado a la mitad —tapó la entrada de WhatsApp y dejó las tres salidas abiertas—, y tres de sus cinco hallazgos siguen abiertos verbatim. **Su crítico se arregló en esta ronda**; la nota se recalificó con el arreglo ya en el árbol. |
+| Sistema agéntico | 5 | **5** | = | **Se atacó y subió, tras haber bajado a 4.** La primera pasada le puso 4: el arreglo estrella de la 24 estaba cerrado a la mitad. Se arregló en esta ronda y **se relanzó el auditor sobre el arreglo**: las tres salidas cierran, en base y en TS, y no quedó una cuarta puerta de WhatsApp (de las 34 consultas a `app_user`, solo cuatro piden `telefono` y las cuatro filtran). Vuelve a 5 y no más porque el arreglo se hizo sobre las **líneas** que el hallazgo enumeraba y no sobre la **pregunta** que hacía. |
 
 ## Lo arreglado, con prueba que lo reproduce
 
@@ -165,6 +169,51 @@ El costo real fue una corrida de suite desperdiciada y un susto. Si esta rutina
 vuelve a correr los doce en paralelo, el auditor de pruebas debería trabajar
 sobre una copia del árbol, no sobre el árbol.
 
+
+## La reauditoría, que es la parte incómoda de esta ronda
+
+Tres de los arreglos tocaron código de rubros ya calificados. La regla permite
+relanzar **uno**, y se relanzó el de agéntico, que es donde se cerró el crítico.
+Su veredicto vale más que el punto que devolvió:
+
+- **El arreglo aguanta.** Las tres salidas cierran en las dos capas, y no quedó
+  una cuarta puerta de WhatsApp: de las 34 consultas a `app_user` en `src/`,
+  solo cuatro piden `telefono`, y las cuatro filtran. Revertir `contactos.ts`
+  tira 4 de 5 pruebas; revertir `asistencia_escalamiento.ts` tira 1 de 17.
+  262/262 verdes en los ocho archivos de consumidores.
+
+- **Pero se hizo sobre las líneas del hallazgo, no sobre su pregunta** — que es
+  literalmente el reproche que esta ronda le hizo a la 24. La pregunta era
+  «¿quién resuelve un destinatario desde `app_user`?». Contestada sobre
+  `telefono` da tres funciones; contestada sobre **`email`** da dos más, ninguna
+  filtrada: `facturacion/flota_fiscal.ts:106-121` (`correoDeFacturacion`) y
+  `agentes/notificaciones.ts:705-711` (`usuariosAvisables`). La primera es la
+  peor: el cron de facturación le sigue mandando **los CFDI de la flota al
+  ex-contador**. Queda **propuesto, no arreglado**: el tope de 3 vueltas estaba
+  agotado, y estirarlo a las 12:30 sin nadie mirando es exactamente lo que la
+  regla del tope prohíbe. Es lo primero de la ronda 26.
+
+- **Y encontró dos cosas contra el propio arreglo, que se corrigieron
+  (`9ded221`), sin tocar comportamiento:**
+  1. **Mi comentario y mi mensaje de commit afirmaban una garantía falsa.** Dije
+     que una base sin la 0294 «sigue recibiendo sus avisos». La 0294 crea
+     `activo boolean not null default true` (`0294:47`): aplicada, NULL es
+     imposible; **sin aplicar, la columna no existe y las funciones LANZAN**. El
+     caso sí queda cubierto, pero por la compuerta de despliegue y por el
+     `catch` que alerta, no por esa rama. El supuesto sin comprobar lo heredan
+     las cuatro consultas del camino caliente, `resolverCuentaOficina` incluida,
+     desde la 24. Un rótulo tiene que ser verdad también dentro de un comentario.
+  2. **Una fuga en mi propia prueba:** `duenoActivo.valor` se limpiaba después
+     del assert, así que un fallo habría contaminado las 16 pruebas siguientes.
+     Pasó al `beforeEach`.
+
+- **Lo que el arreglo NO puede defender, y queda anotado (MEDIO):** borrar las
+  cuatro llamadas `.or('activo.is.null,activo.eq.true')` deja **31/31 en verde**.
+  Los dobles encadenan `or` como identidad y lo declaran en un comentario
+  honesto, pero declarar no es cubrir — y es justo la capa cuyo razonamiento
+  (`.limit(1)` cuenta filas del servidor) justifica todo el diseño. El repo
+  tiene 20+ pruebas que leen el fuente con `readFileSync` para exactamente esto.
+
 ## Compuerta al cerrar
 
 Sobre el árbol final:
@@ -179,4 +228,6 @@ Sobre el árbol final:
 
 **Tablero:** `tablero.html` + `tablero.png`, capturado con Chromium 141 headless
 (`--force-prefers-reduced-motion`) y **mirado**: 12 rubros contados, las notas
-cuadradas contra esta síntesis (62/12 = 5.2), colores por nota y no por delta.
+cuadradas contra esta síntesis (63/12 = 5.3), colores por nota y no por delta.
+Se recapturó y se volvió a mirar después de la reauditoría, porque la captura
+vieja ya no describía las notas.

@@ -1,27 +1,366 @@
 # Sistema agéntico y orquestación — auditoría 25
 
-**Nota: 4/10** (antes 5). Razón del movimiento: **mirada más profunda — el
-código no cambió y la nota anterior estaba inflada.** La 24 subió a 5 apoyada en
-que su CRÍTICO (`app_user.activo` en el canal de WhatsApp) quedaba cerrado. Está
-cerrado a la MITAD: el arreglo `70dd5c6` tapó la puerta de ENTRADA
-(`resolverCuentaOficina`) y dejó abiertas las tres de SALIDA que el propio texto
-del hallazgo de la 24 nombraba con línea y todo. Y de los cinco hallazgos de la
-24, **tres siguen abiertos verbatim** (los dos ALTO y el MEDIO): ninguno se
-tocó, y el rubro no ha recibido un solo commit desde `b8a1a3a`.
+**Nota: 5/10** (antes 4 en la primera pasada de esta misma ronda; 5 en la 24).
+Razón del movimiento: **se atacó y subió** — el CRÍTICO se cerró de verdad en las
+tres salidas que se le señalaron, con pruebas que caen al revertir. Sube UN punto
+y no más porque el arreglo se hizo sobre la LISTA del hallazgo y no sobre su
+PREGUNTA, y por esa misma costura aparecieron **dos salidas más de la misma
+clase** que nadie había mirado —`usuariosAvisables` y `correoDeFacturacion`,
+ahora por correo—, una de las cuales le sigue mandando al ex-contador **los CFDI
+de la flota**, que es literalmente el daño que la preámbulo de la 0294 dice haber
+venido a cerrar. Y los ocho hallazgos restantes de la primera pasada siguen sin
+tocarse, verbatim.
 
-Riesgo mayor hoy: la flota da de baja a su dueño/contador, el panel y la RLS lo
-echan, y Likida **le sigue mandando por WhatsApp el PDF del contralor, las
-cifras de cada cierre y la ubicación del chofer en un 🚨** — porque los tres
-resolutores de "a qué número se le escribe" nunca miraron `activo`.
+Riesgo mayor hoy: ya no es WhatsApp. Es que la flota da de baja a su contador, el
+panel y la RLS lo echan, el WhatsApp por fin lo echa también… y el portal de
+facturación **le sigue poniendo su correo como receptor del CFDI**
+(`facturacion/flota_fiscal.ts:106-121`).
 
 ---
 
-## Hallazgos
+## Reauditoría tras el arreglo 24ce4c2
 
-### [CRÍTICO] La baja de un usuario cierra el panel y el WhatsApp de ENTRADA, pero no el de SALIDA: se le sigue escribiendo al ex-empleado (REINCIDENTE, medio-arreglado en la 24)
+Relanzamiento acotado. Se auditó el commit `24ce4c2`
+(*fix(agentes): AGEN-C1 — la baja tambien cierra las TRES salidas de WhatsApp*,
+4 archivos, +111/−9) con ojo adversarial, y se recalificó el rubro entero a la
+luz de lo que sigue abierto.
+
+### 1. ¿Cierra las TRES salidas que el hallazgo nombraba?
+
+**Sí, las tres.** Verificado con `git show 24ce4c2` y contra el fuente:
+
+| Salida | Filtro en BASE | Filtro en TS |
+|---|---|---|
+| `telefonoParaDineroDe` | `contactos.ts:153` `.or('activo.is.null,activo.eq.true')` | `:157` `f.activo !== false` |
+| `telefonosJefe` | `contactos.ts:189` | `:202` |
+| `telefonoDeRol` | `asistencia_escalamiento.ts:118` | `:122` `.find(f => f.activo !== false)` |
+
+Las tres suman `activo` al `select` (`:150`, `:186`, `:116`), que es lo que hace
+falta para que la capa de TS tenga qué mirar. La doble capa está bien razonada
+en `telefonoDeRol`: el `.limit(1)` de `:119` cuenta filas del SERVIDOR, así que
+sin el filtro de la base una fila de baja se lleva el cupo y el filtro de TS
+convertiría el 🚨 en un `null` — silencio en vez de destinatario equivocado.
+
+**No quedó una cuarta puerta de WhatsApp.** `grep -rn "from('app_user')" src/`
+devuelve 34 consultas; solo cuatro piden `telefono`, y son exactamente
+`contactos.ts:72,149,185` y `asistencia_escalamiento.ts:116` — las cuatro ya
+filtran. Por el canal de WhatsApp, la baja quedó cerrada de entrada y de salida.
+
+### 2. La CUARTA y la QUINTA salida: nadie las vio, y no son de WhatsApp
+
+Aquí es donde el arreglo se queda corto, y es un hallazgo nuevo. La pregunta que
+el hallazgo de la 24 hacía era «¿quién resuelve un destinatario desde
+`app_user`?». Contestada sobre `telefono` da tres funciones; contestada sobre
+`email` da **dos más, ninguna filtrada**. Ver el hallazgo `[ALTO]` nuevo abajo.
+
+- `src/lib/likida/agentes/notificaciones.ts:705-711` (`usuariosAvisables`)
+- `src/lib/likida/facturacion/flota_fiscal.ts:106-121` (`correoDeFacturacion`)
+
+Comprobado que ninguno de los dos archivos menciona `activo`:
+`grep -rn "activo" src/lib/likida/agentes/notificaciones.ts
+src/lib/likida/facturacion/flota_fiscal.ts src/lib/likida/portal_pago_aviso.ts`
+→ **cero resultados**.
+
+### 3. ¿Las pruebas prueban algo? — Sí la mitad de TS; **no** la mitad de la base
+
+Base verde: `npx vitest run src/lib/likida/contactos.test.ts
+src/lib/likida/asistencia_escalamiento.test.ts` → **31/31** en 840 ms.
+
+**Experimento A — revertir `contactos.ts` al padre:**
+`git checkout 24ce4c2^ -- src/lib/likida/contactos.ts` → **4 fallan / 10 pasan**.
+Coincide con lo que declara el commit. La quinta (`sigue funcionando con la
+columna ausente`) pasa con y sin el arreglo: es una prueba de no-regresión, no de
+la corrección — legítimo, pero conviene saber que 4, no 5, defienden el arreglo.
+
+**Experimento B — revertir `asistencia_escalamiento.ts` al padre:**
+→ **1 falla / 16 pasan**, exactamente como dice el commit
+(`nivel 2 NO va al dueño dado de baja`, `:196-200`).
+
+**Experimento C (el que importa) — borrar SOLO el filtro de la base, dejando el
+de TS:**
+`sed -i "/\.or('activo.is.null,activo.eq.true')/d" src/lib/likida/contactos.ts
+src/lib/likida/asistencia_escalamiento.ts` — quita las CUATRO
+(las tres de este arreglo **y la de `resolverCuentaOficina` que puso la 24) →
+**31/31 pasan**. Verde.
+
+O sea: **la mitad del arreglo cuyo razonamiento está escrito con más cuidado es
+la mitad que ninguna prueba puede defender**, ni en este arreglo ni en el de la
+24. Los dobles lo declaran en un comentario honesto
+(`contactos.test.ts:14-16`, `asistencia_escalamiento.test.ts:41-45`: «el doble
+devuelve la misma fila con o sin el encadenado»), pero declararlo no lo cubre, y
+el repo tiene 20+ pruebas que leen el fuente con `readFileSync` para exactamente
+esto (`embeds_con_alias.test.ts`, `limite_con_orden.test.ts`,
+`acotada_guardiana.test.ts`…). Ver el hallazgo `[MEDIO]` nuevo abajo.
+
+Árbol restaurado con `git checkout HEAD -- <archivo>` después de cada
+experimento; `git status --short` vacío.
+
+### 4. ¿El arreglo rompió algo? — No, y se comprobó en los dos casos difíciles
+
+**Caso «la flota cuyo único contacto quedó de baja»: falla fuerte, no en
+silencio.** Verificado en los dos consumidores que importan:
+
+- Cierre de liquidación: `avisar_cierre.ts:120-125` — sin teléfono se escribe
+  `logger.error('cierre.sin_telefono_de_jefe')`, con el comentario explicando
+  por qué es ERROR y no WARN. Antes del arreglo llegaba al ex-empleado; ahora no
+  llega a nadie **y se grita**. Es el desenlace correcto.
+- Emergencia: `asistencia_escalamiento.ts:303-310` — `alertarOperador(
+  'asistencia.escalamiento', … 'aviso_escalada_fallido')` se dispara con
+  `!avisado` por CUALQUIER motivo, incluido «no había a quién». Y el nivel 2+ ya
+  cae al jefe cuando el dueño no sirve (`:289`), que es justo lo que la prueba
+  nueva ejerce. El 🚨 no se pierde: cambia de destinatario o despierta a Likida.
+
+**Caso «base sin la 0294» (`activo` NULL): la tranquilidad que da el commit no
+es la que se puede dar.** La 0294 declara
+`alter table public.app_user add column if not exists activo boolean not null
+default true` (`0294_app_user_activo_y_sesiones.sql:47`). Con eso:
+
+- **Aplicada la 0294**, `activo` NUNCA es NULL — la rama `activo.is.null` del
+  `.or()` y el `!== false` de TS son cinturón sobre tirantes, correctos pero
+  muertos.
+- **Sin la 0294**, la columna no existe, así que `select('rol, telefono,
+  activo')` no devuelve filas sin la llave: PostgREST responde 42703 y las tres
+  funciones **lanzan**. No «siguen recibiendo sus avisos», como dice el cuerpo
+  del commit: se quedan sin ninguno.
+
+La prueba `telefonoParaDineroDe sigue funcionando con la columna ausente (base
+sin la 0294)` (`contactos.test.ts:143-146`) modela una fila cuyo objeto no trae
+la llave — un estado que ninguna base real produce. Radio de daño acotado, y por
+eso es BAJO y no más: la compuerta de despliegue
+(`scripts/ci/compuerta-deploy.mjs`) se niega a construir si la base va atrás de
+`supabase/migrations`, y el camino de emergencia atrapa el throw y alerta igual
+(`asistencia_escalamiento.ts:292-294` → `:303`). Pero la misma property la
+heredó `resolverCuentaOficina` desde la 24, así que son cuatro consultas del
+camino caliente del webhook con el mismo supuesto sin comprobar.
+
+**Regresión en consumidores: ninguna.** `npx vitest run avisar_cierre.test.ts
+talacha_wa.test.ts asistencia_wa.test.ts carta_porte_wa.test.ts
+escalar_viaje.test.ts relojes_legales.test.ts cierre_aviso.test.ts
+admin_comandos_wa.test.ts` → **262/262 verdes**.
+
+### 5. Lo que sigue abierto de la primera pasada
+
+Comprobado archivo por archivo con `git log -1 -- <archivo>`: **ninguno de los
+ocho hallazgos restantes se tocó.**
+
+| Hallazgo | Archivo | Último commit |
+|---|---|---|
+| ALTO · resumen de ráfaga cuenta copias | `processor.ts:2930-2945` | `b8a1a3a` (2-sep) |
+| ALTO · «tu jefe ya tiene la solicitud» | `talacha_wa.ts:243,275` | `b9678a7` (29-ago) |
+| MEDIO · prompt «páginas en reconstrucción» | `agents/prompts.ts:24` | `b9678a7` (29-ago) |
+| MEDIO · sello sobre PDF fallido | `processor.ts:4326-4338` | `b8a1a3a` |
+| MEDIO · `prompt_ref` NULL y deuda impagable | `agentes/backoffice.ts` | `5180c72` (2-sep) |
+| MEDIO · `?tenant=` inválido + superadmin | `chat/tenant.ts:24-42` | `66339d5` (2-sep) |
+| MEDIO · sondeo que inserta un `tenant` | `startup.ts:230-250` | `b9678a7` |
+| BAJO · `graduarAgente` sin llamador | `agentes/definiciones.ts` | `5180c72` |
+
+Los dos ALTO se releyeron contra el fuente hoy y están **idénticos**:
+`processor.ts:2930-2931` sigue con `getGastos` + `reduce` crudos y `:2942` sigue
+diciendo `llevo *${puestos.length} comprobantes*`; `talacha_wa.ts:243` sigue
+afirmando «tu jefe tiene la solicitud» con `cambios` vacío.
+
+### 6. Nota final: **5/10** — se atacó y subió
+
+Sube un punto, no dos. Lo que justifica el punto: el CRÍTICO está cerrado de
+verdad —dos capas, comentarios que explican el porqué de cada una, y pruebas que
+se caen cuando se revierte el código, comprobado a mano—, y el arreglo falla
+FUERTE en el caso feo (nadie a quién avisar → `logger.error` y
+`alertarOperador`), que es lo que este rubro premia.
+
+Lo que le impide subir más: el arreglo se hizo, otra vez, sobre las líneas que el
+hallazgo enumeraba en vez de sobre la pregunta que el hallazgo hacía. Es el mismo
+patrón que la primera pasada le reprochó a `70dd5c6` —«se arregló el punto que el
+escenario narraba primero y no la lista de funciones»— y por eso quedaron
+`usuariosAvisables` y `correoDeFacturacion`, que responden la misma pregunta por
+correo. Con el CRÍTICO cerrado el rubro carga hoy **3 ALTO** (los dos reincidentes
+verbatim de la 24, más el nuevo), **6 MEDIO** y **3 BAJO**. Eso no es un 7.
+
+---
+
+## Hallazgos nuevos de la reauditoría
+
+### [ALTO] La baja cerró las tres salidas de WhatsApp y dejó abiertas las dos de CORREO: al ex-contador le siguen llegando los CFDI de la flota
+`src/lib/likida/facturacion/flota_fiscal.ts:106-121` (`correoDeFacturacion`) ·
+`src/lib/likida/agentes/notificaciones.ts:699-717` (`usuariosAvisables`)
+
+Misma causa raíz exacta que el CRÍTICO que `24ce4c2` acaba de cerrar
+—`desactivarUsuario` (`usuarios_escritura.ts:191`) escribe `activo=false` y NO
+borra la fila ni sus datos de contacto— y las dos consultas resuelven «a quién se
+le escribe» desde `app_user` sin mirar `activo`. Solo que el dato de contacto
+aquí es `email`, y por eso el barrido del arreglo (que buscó `telefono`) no las
+tocó.
+
+**`correoDeFacturacion` es la peor de las dos.** Su encabezado dice qué es:
+«A qué dirección manda el portal el CFDI de esta flota», con la prioridad
+`contador → flota_admin` (`:45`, `ROLES_QUE_RECIBEN`) y el razonamiento «el
+contador primero porque es quien archiva el CFDI y quien lo va a cruzar contra su
+papel» (`:29-31`). La consulta (`:107-113`) filtra `tenant_id` y `rol`, ordena
+por `created_at` y toma 50 — **`activo` no aparece**. El correo elegido viaja a
+`FlotaFiscal.correo` (`:87`), entra a `getFiscalDeFlota`, y de ahí al registro de
+portales que consume el cron de facturación (`api/cron/facturar/lote.ts:431`).
+
+Escenario, con valores: Innovativos cambia de despacho contable y da de baja a
+Marisol, su `contador`, el 12-sep. `usuarios_escritura.ts:186` solo protege al
+ÚNICO `flota_admin` activo — para `contador` no hay guarda, así que la baja pasa
+limpia. El panel la echa, la RLS la echa, el ban de Auth le mata la cookie, y
+desde `24ce4c2` el WhatsApp también la echa. El 13-sep corre el cron de
+facturación: `getFiscalDeFlota('innovativos')` devuelve
+`correo: 'marisol@despacho-anterior.mx'`, el portal timbra y **manda el CFDI de
+Innovativos a la bandeja del despacho que ya no es su despacho** — con el RFC, la
+razón social y el importe. Y el correo del receptor viaja DENTRO del comprobante:
+no es solo una copia de más, es un dato del CFDI emitido.
+
+Es, palabra por palabra, el daño que la propia 0294 dice haber venido a cerrar:
+«el contador externo que dejó de trabajar con la flota … seguía descargando CFDI
+y liquidaciones semanas después de que la flota cambió de despacho»
+(`0294_app_user_activo_y_sesiones.sql:8-12`). La 0294 le cerró la descarga. Nadie
+le cerró el envío.
+
+**`usuariosAvisables` es la segunda, y tiene tres consumidores vivos.** La
+consulta (`:705-711`) trae `id, nombre, email, rol` por `tenant_id`, ordena y
+limita a 200 — sin `activo`. De ahí sale:
+
+1. `notificaciones.ts:926` → `repartoDe(...)` → `enviarCorreo(reparto.reciben.map
+   (d => d.email), correo)` (`:953`): las alarmas de los agentes de la flota.
+   `repartoDe` (`:586-624`) filtra por rol, por config y por correo duplicado, y
+   declara CADA exclusión con su porqué — pero «esta cuenta está dada de baja» no
+   es una de las causas, porque la fila llega ya sin esa información.
+2. `portal_pago_aviso.ts:108-120` → `avisarPropuestaAlContralor`: el aviso de una
+   propuesta de PAGO, disparado desde `api/pago/registrar/route.ts:162`. Dinero.
+3. `app/dashboard/agentes/seccion-notificaciones.tsx:49,81`: la pantalla que le
+   enseña a la flota **a quién le llega**. Con esto, `/dashboard/usuarios` pinta
+   a Marisol como «dada de baja» y `/dashboard/agentes` la pinta, dos clics más
+   allá, en la lista de quién recibe. Dos rótulos del mismo panel que se
+   contradicen sobre la misma persona — la regla que el producto declara como
+   propia.
+
+Consecuencia: la flota cree que la baja cierra todo porque el panel se lo dijo
+textualmente («ya no entra al panel y su sesión quedó revocada»), y sigue
+abierta la puerta por la que salen los comprobantes fiscales.
+
+Causa raíz probable: el arreglo barrió por `telefono` porque el hallazgo nombraba
+tres funciones de teléfono. La pregunta que había que barrer era «quién resuelve
+un DESTINATARIO desde `app_user`», y esa incluye el correo.
+
+---
+
+### [MEDIO] La mitad del arreglo que carga el razonamiento —el filtro en la BASE— es la mitad que ninguna prueba puede defender
+`src/lib/likida/contactos.test.ts:11-22` ·
+`src/lib/likida/asistencia_escalamiento.test.ts:41-53`
+
+Medido, no razonado: borrar las CUATRO llamadas
+`.or('activo.is.null,activo.eq.true')` de `contactos.ts` y
+`asistencia_escalamiento.ts` —las tres de `24ce4c2` **y la de
+`resolverCuentaOficina` que puso la 24**— deja las 31 pruebas de los dos archivos
+en verde. Los dobles encadenan `or` como identidad (`contactos.test.ts:17`,
+`asistencia_escalamiento.test.ts:47`) y devuelven la tabla entera.
+
+No es un descuido escondido: los dos archivos lo dicen en un comentario. Pero lo
+que se declara sigue sin cubrirse, y la capa descubierta es precisamente la que
+los comentarios del fuente justifican con más detalle: «el `.limit(1)` cuenta
+filas del SERVIDOR, así que el filtro tiene que ir en la base o una fila de baja
+se lleva el cupo y esconde a la viva» (`asistencia_escalamiento.ts:110-112`).
+
+Escenario, con valores: alguien simplifica en tres meses —«el filtro de TS ya
+hace esto, el `.or()` sobra»— y borra los cuatro. `npx vitest run` sigue verde,
+`tsc` y `eslint` también, y la compuerta deja pasar. En producción, la flota con
+dos `flota_admin` (uno de baja) hace que `telefonoDeRol` reciba del servidor
+UNA fila —la de baja, porque `.limit(1)` sin `.order()` no promete cuál— el
+filtro de TS la descarta, devuelve `null`, y el 🚨 de nivel 2 cae al jefe o
+—si tampoco hay— se convierte en un `alertarOperador`. La regresión no la ve
+nadie hasta que hay una emergencia.
+
+El repo ya tiene el idioma para esto: 20+ pruebas leen el fuente con
+`readFileSync` y afirman sobre la FORMA de la consulta
+(`embeds_con_alias.test.ts` compara cadenas de `.select(...)` literales;
+`limite_con_orden.test.ts` exige `.order()` junto a cada `.limit()`). Una prueba
+que exija `activo` en el `select` y `or('activo.is.null,activo.eq.true')` en cada
+una de las cuatro consultas de `app_user` que resuelven destinatario cuesta
+veinte líneas y cierra las dos capas.
+
+---
+
+### [BAJO] La prueba «base sin la 0294» no puede fallar, porque modela un estado que ninguna base produce
+`src/lib/likida/contactos.test.ts:143-146` ·
+`supabase/migrations/0294_app_user_activo_y_sesiones.sql:47`
+
+La 0294 crea la columna `not null default true`. Aplicada, `activo` nunca es
+NULL: la rama `activo.is.null` del `.or()` y el `!== false` de TS no se ejercen
+jamás. Sin aplicar, la columna no existe y `select('rol, telefono, activo')`
+devuelve 42703 desde PostgREST, así que las tres funciones **lanzan** en vez de
+degradar — lo contrario de lo que afirma el cuerpo de `24ce4c2` («una fila sin la
+columna sigue recibiendo sus avisos»). La prueba, en cambio, alimenta al doble
+con un objeto al que le falta la llave, que es un tercer estado que no ocurre.
+
+Es defensa en profundidad barata y no hace daño; se anota porque la frase del
+commit y el nombre de la prueba afirman una garantía que no está. El radio real
+está acotado por dos cosas verificadas: la compuerta
+(`scripts/ci/compuerta-deploy.mjs`) no construye si la base va atrás de
+`supabase/migrations`, y el camino de emergencia atrapa el throw y alerta igual
+(`asistencia_escalamiento.ts:292-294` → `:303-310`).
+
+---
+
+### [BAJO] El interruptor `duenoActivo` de la prueba nueva no se resetea en `beforeEach`: si su assert falla, contamina las 16 pruebas siguientes
+`src/lib/likida/asistencia_escalamiento.test.ts:38,116-122,196-200`
+
+`duenoActivo.valor = false` se pone en `:196` y se devuelve a `null` en `:200`,
+**después** del `expect` de `:199`. El `beforeEach` de `:116-122` resetea el otro
+interruptor del mismo doble (`telefonoDueno.mockResolvedValue('5210000000002')`,
+`:122`) pero no éste. Si el assert de `:199` falla, el valor `false` se queda
+puesto y toda prueba posterior del archivo que dependa del teléfono del dueño
+enruta al jefe: una falla se convierte en una cascada, y la verdadera queda
+sepultada. El propio archivo demuestra que el patrón correcto se conocía
+(`telefonoDueno.mockResolvedValue(null)` en `:185` SÍ lo limpia el `beforeEach`).
+
+---
+
+### [BAJO] `telefonosJefe` no tiene techo de filas: PostgREST recorta a 1,000 en silencio y una flota desaparece del mapa
+`src/lib/likida/contactos.ts:184-190`
+
+La consulta no lleva `.limit()`, no pasa por `traerTodo()` y `acotada` es solo un
+temporizador (`presupuesto.ts:219-240`), no un paginador. `escalar_viaje.ts:254`
+la llama con **todos** los tenants que tienen viajes vencidos en una corrida. Con
+más de 1,000 filas de `app_user` en el lote, PostgREST recorta sin avisar y las
+flotas que quedaron fuera del corte salen del mapa como si no tuvieran contacto —
+el modo de falla que el propio CLAUDE.md nombra («PostgREST recorta a 1,000 filas
+en silencio»). Hoy es teórico (0 clientes), y por eso es BAJO; se anota porque el
+arreglo acaba de añadirle una columna al `select` sin revisar el techo, y porque
+el remedio ya existe en el repo y son dos líneas.
+
+---
+
+## Hallazgos de la primera pasada (íntegros)
+
+> **Cabecera original de la primera pasada, conservada tal cual se escribió**
+> (la nota que encabeza este documento ya es la de la reauditoría):
+>
+> > **Nota: 4/10** (antes 5). Razón del movimiento: **mirada más profunda — el
+> > código no cambió y la nota anterior estaba inflada.** La 24 subió a 5
+> > apoyada en que su CRÍTICO (`app_user.activo` en el canal de WhatsApp)
+> > quedaba cerrado. Está cerrado a la MITAD: el arreglo `70dd5c6` tapó la
+> > puerta de ENTRADA (`resolverCuentaOficina`) y dejó abiertas las tres de
+> > SALIDA que el propio texto del hallazgo de la 24 nombraba con línea y todo.
+> > Y de los cinco hallazgos de la 24, **tres siguen abiertos verbatim** (los
+> > dos ALTO y el MEDIO): ninguno se tocó, y el rubro no ha recibido un solo
+> > commit desde `b8a1a3a`.
+> >
+> > Riesgo mayor hoy: la flota da de baja a su dueño/contador, el panel y la RLS
+> > lo echan, y Likida **le sigue mandando por WhatsApp el PDF del contralor,
+> > las cifras de cada cierre y la ubicación del chofer en un 🚨** — porque los
+> > tres resolutores de "a qué número se le escribe" nunca miraron `activo`.
+
+### [CERRADO por `24ce4c2` · era CRÍTICO] La baja de un usuario cierra el panel y el WhatsApp de ENTRADA, pero no el de SALIDA: se le sigue escribiendo al ex-empleado (REINCIDENTE, medio-arreglado en la 24)
 `src/lib/likida/contactos.ts:141-154` (`telefonoParaDineroDe`) ·
 `src/lib/likida/contactos.ts:168-195` (`telefonosJefe`) ·
 `src/lib/likida/asistencia_escalamiento.ts:107-115` (`telefonoDeRol`)
+
+> **Estado tras la reauditoría: CERRADO.** Las tres salidas filtran `activo` en
+> la base y en TS (`contactos.ts:153,157`, `:189,202`,
+> `asistencia_escalamiento.ts:118,122`), y las pruebas caen al revertir (4/5 y
+> 1/17). El texto de abajo se conserva como quedó escrito. Lo que queda vivo de
+> esta clase está arriba: las salidas por CORREO (`[ALTO]` nuevo) y el filtro de
+> la base sin prueba (`[MEDIO]` nuevo).
 
 El hallazgo de la 24 nombraba **tres** funciones. El arreglo tocó **una**:
 `resolverCuentaOficina` (`contactos.ts:71-83`) ya lleva

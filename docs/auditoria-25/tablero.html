@@ -149,7 +149,7 @@ const D = {
   rubros: [
     { n:'Frontend',        h:5, a:6, r:'El chip del Cotizador sigue en 1.24:1 con el SO en oscuro. Tercera ronda sin cerrar ninguno de sus 13 abiertos.' },
     { n:'Backend y API',   h:6, a:7, r:'El ajuste del contralor mueve el total y no el desglose: la póliza carga un IVA no acreditable inventado, o el export del mes entero se cae con 409.' },
-    { n:'Sistema agéntico',h:4, a:5, r:'El arreglo de la 24 cerró la ENTRADA de WhatsApp y dejó las tres SALIDAS abiertas. Cerradas esta ronda.' },
+    { n:'Sistema agéntico',h:5, a:5, r:'El arreglo de la 24 cerró la ENTRADA de WhatsApp y dejó las tres SALIDAS abiertas. Cerradas y reauditadas esta ronda — pero quedan dos más, por correo.' },
     { n:'Tool calling',    h:6, a:7, r:'TC-1 quedó cerrado a medias: el predicado de copias es el mismo, el ORDEN no — y de él depende cuál copia se cuenta.' },
     { n:'Seguridad',       h:6, a:7, r:'La baja cerraba panel, RLS y Auth, y dejaba vivo el token MCP que lee el dinero por service_role. Cerrado esta ronda.' },
     { n:'Cumplimiento fiscal', h:4, a:5, r:'Cuatro puertas distintas imprimen una cifra fiscal que no coincide con el motor. El ancla del rubro dice 3 o menos si imprime una; imprime cuatro.' },
@@ -163,6 +163,7 @@ const D = {
   rompio: [
     '<b>Diez rubros bajan, dos se quedan, ninguno sube.</b> No porque el código empeorara —siete de los doce no recibieron un solo commit desde la 24— sino porque la 24 midió 188 commits de golpe y <b>calificó de más</b>. Nueve de los doce firman «mirada más profunda» con esas palabras.',
     'El arreglo estrella de la 24 estaba <b>cerrado a la mitad</b>: tapó la entrada de WhatsApp y dejó las tres salidas abiertas. Al ex-empleado le seguían llegando el PDF del contralor y el 🚨 con el GPS del chofer. <b>Arreglado</b>.',
+    'La <b>reauditoría del propio arreglo</b> encontró que se hizo sobre las <b>líneas</b> que el hallazgo enumeraba y no sobre la <b>pregunta</b> que hacía: quedan dos salidas más, por correo. Es el mismo reproche que esta ronda le hizo a la 24.',
     '<b>El humano SÍ puso la bandera de despliegue y el sistema se la comió.</b> El <code>[deploy]</code> viajaba en el cuerpo de un merge commit; la compuerta lee solo el asunto, a propósito. Producción corre <code>3cc8ead</code> con un bug del chat vivo y dos migraciones sin aplicar.',
   ],
   reincidentes: [
@@ -175,6 +176,7 @@ const D = {
   ],
   hallazgos: [
     { s:'CRÍTICO', q:'La baja cierra el panel y el WhatsApp de ENTRADA, pero no las tres SALIDAS: al ex-empleado le siguen llegando las cifras del cierre, el PDF del contralor y el 🚨 con el GPS del chofer', d:'contactos.ts:141,168 · asistencia_escalamiento.ts:107', e:'arreglado', nota:'24ce4c2 — 6 pruebas, rojo→verde comprobado revirtiendo cada archivo por separado', rein:true },
+    { s:'ALTO', q:'Y hay una CUARTA y una QUINTA salida, por CORREO: el cron de facturación le sigue mandando los CFDI de la flota al ex-contador', d:'flota_fiscal.ts:106 · notificaciones.ts:705', e:'propuesto', nota:'NUEVO, de la REAUDITORÍA del propio arreglo. El barrido buscó `telefono`; estas resuelven por `email`. Tope de 3 vueltas AGOTADO — no se tocó' },
     { s:'ALTO', q:'La baja deja vivo el token MCP, que lee el dinero de la flota por service_role y se renueva 60 días en cada uso', d:'mcp/oauth.ts:517,533', e:'arreglado', nota:'ffc95b2 — misma raíz que el crítico de arriba; 3 pruebas' },
     { s:'ALTO', q:'El CHECK rechaza la fase «transcripcion»: el costo de cada nota de voz se descarta en silencio y la cifra con la que se fija el precio sale corta', d:'0025_dominios_check.sql:146 · costos.ts:41', e:'arreglado', nota:'5660918 — migración 0304 + una prueba que cruza el tipo de TS contra el CHECK, sin base de datos' },
     { s:'CRÍTICO', q:'«Ajustar» mueve el total y no el desglose: la póliza contable carga un «IVA/IEPS no acreditable» inventado, o el export del periodo entero se cae con 409', d:'0299.sql:384 · poliza.ts:205,230', e:'pendiente', nota:'NUEVO. Verificado: grep de desglose sobre la 0299 → 0 ocurrencias. Regenerar o invalidar el papel es decisión de producto' },

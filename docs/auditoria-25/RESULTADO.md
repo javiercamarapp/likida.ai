@@ -7,13 +7,16 @@ COMPLETA: los 12 rubros auditados, 1 CRÍTICO y 2 ALTOS arreglados con prueba, 6
 - **Rama:** `claude/auditoria-25` sobre `master` = `4f94490`. Árbol limpio al
   arrancar → autofix habilitado. El clon no traía `node_modules`: `npm ci`
   (INFRA, resuelta).
-- **Global: 5.2** (anterior **6.2**) · **▼ 1.0**. Media de los 12 (62/12).
-  **Diez rubros bajan, dos se quedan, ninguno sube.**
+- **Global: 5.3** (anterior **6.2**) · **▼ 0.9**. Media de los 12 (63/12).
+  **Nueve rubros bajan, tres se quedan, ninguno sube.** Agéntico lleva la nota de
+  su reauditoría (4 en la primera pasada, 5 tras verificarse el arreglo): es el
+  único rubro relanzado, como manda la regla cuando un arreglo toca código ya
+  calificado.
 - **Y el código no empeoró.** Siete de los doce rubros no recibieron un solo
   commit desde la 24 y sus auditores lo verificaron con `git log` sobre las
   rutas de su rubro. **Nueve de los doce firman «mirada más profunda»**: la 24
-  midió 188 commits de un tirón y calificó de más. Que la global baje un punto
-  entero es el resultado, no el problema.
+  midió 188 commits de un tirón y calificó de más. Que la global baje casi un punto
+  es el resultado, no el problema.
 - **El caso que lo explica:** la 24 declaró AGEN-1 cerrado y subió un punto por
   ello. El hallazgo nombraba **tres** funciones y el arreglo tocó **una**. Un
   cierre a medias sale más caro que un hallazgo abierto, porque la nota ya cobró
@@ -44,6 +47,13 @@ COMPLETA: los 12 rubros auditados, 1 CRÍTICO y 2 ALTOS arreglados con prueba, 6
   no construyó. **El Redeploy del panel ya NO basta**: redesplegaría `3cc8ead`.
   Hay que aplicar 0302/0303 y publicar el tip. Entre lo no publicado va el fix
   del chat con tenant fantasma, que arregla un fallo vivo hoy en producción.
+- **La reauditoría del propio arreglo encontró DOS SALIDAS MÁS, por correo**
+  (`flota_fiscal.ts:106-121` y `notificaciones.ts:705-711`, ninguna filtra
+  `activo`): el cron de facturación le sigue mandando los CFDI de la flota al
+  ex-contador. **Propuesto, no arreglado** — el tope de 3 vueltas estaba
+  agotado. Es lo primero de la ronda 26. Y corrigió dos cosas de mi propio
+  arreglo (`9ded221`, sin tocar comportamiento): una garantía que el comentario
+  afirmaba de más sobre la base sin la 0294, y una fuga del doble de pruebas.
 - **Descartados / refutados / corregidos: 5**, con la razón escrita — incluido
   un falso rojo de la suite que era INFRA (mutaciones vivas del auditor de
   pruebas) y **no se revirtió nada** por ello.
@@ -53,7 +63,7 @@ COMPLETA: los 12 rubros auditados, 1 CRÍTICO y 2 ALTOS arreglados con prueba, 6
   nuevos. `npm run build` no corre aquí a propósito.
 - **Tablero:** `tablero.html` + `tablero.png`, capturado con Chromium 141
   headless y **mirado**: 12 rubros contados, notas cuadradas contra la síntesis
-  (62/12 = 5.2), colores por nota y no por delta.
+  (63/12 = 5.3), recapturado y vuelto a mirar tras la reauditoría, colores por nota y no por delta.
 - **Nota de método:** el auditor de pruebas mutó el árbol durante la ronda (está
   autorizado). Ninguna mutación entró a un commit, la verificación se hizo
   contra `git show HEAD:`, y el árbol quedó limpio. Si esto vuelve a correr con
