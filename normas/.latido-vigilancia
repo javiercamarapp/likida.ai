@@ -1,37 +1,33 @@
-fecha_corrida: 2026-09-03 (jueves, corrida programada)
-ultimo_dia_barrido: 2026-09-02 (sin cambio — esta corrida no pudo barrer nada
-  nuevo)
-rango_barrido: vacío — el día siguiente al último barrido (03-sep) es hoy
-  mismo; el barrido diario opera sobre "ayer" (02-sep), que la corrida
-  anterior (2026-09-02 21:30) ya cubrió. No había rango pendiente que
-  cerrar aun si el egress hubiera funcionado.
-notas_revisadas: 0
-estado: "INFRA — egress bloqueado a nivel de proxy de organización en esta
-  sesión de nube. No es un fallo específico de sidofqa: CONNECT rechazado
-  con 403 también contra www.sat.gob.mx, diputados.gob.mx y hasta
-  www.google.com (ver recentRelayFailures en /__agentproxy/status). No se
-  pudo hacer ni una sola petición de verificación esta corrida."
-fichas_disparadas: 0
-etag_sat: no_recheck — hoy es jueves, no lunes; ventana siguiente:
-  07-sep-2026 (y ese día también dependerá de que el egress esté abierto)
+fecha_corrida: 2026-09-03 (jueves, corrida programada, cerrada desde sesión
+  local con egress abierto — la corrida en la nube de este mismo día quedó en
+  INFRA por bloqueo de egress a nivel de organización, ver historial de este
+  archivo en git)
+ultimo_dia_barrido: 2026-09-03
+rango_barrido: 02-09-2026 y 03-09-2026 (el 02-sep se rebarrió para no dejar
+  hueco: la corrida previa que decía haberlo cubierto fue la de 2026-09-02
+  21:30, anterior a los tres intentos fallidos por egress del 31-ago, 02-sep
+  temprano y 03-sep)
+notas_revisadas: 204 (80 matutina 02-sep + 124 matutina 03-sep; 0 vespertina
+  y 0 extraordinaria en ambas fechas, confirmado real —no infra— por cruce
+  contra diarios/porFecha: Vespertina=null y Extraordinaria=null en las dos
+  fechas, consistente con el índice de notas vacío en esas ediciones)
+fichas_disparadas: 0. Dos títulos del 03-sep matutina contienen "Nota
+  Aclaratoria" (codNota 5797820 y 5797821, aclaratorias a convenios STPS de
+  centros de conciliación laboral en Baja California y Campeche) — coinciden
+  con el disparador léxico pero NO tocan el dominio de Likida (no son
+  fiscales/CFDI/autotransporte); se descartaron tras leer el título completo,
+  no se ignoraron a ciegas.
+etag_sat: no_recheck — hoy es jueves, no lunes; próxima ventana: 07-sep-2026
 deriva_ley_check: no_aplica — no es día 1 de trimestre
-sin_verificar_esta_corrida: >
-  Todo. Ninguna petición de red se completó (SIDOF, SAT, diputados,
-  incluso un host de control como google.com). No hay forma de distinguir
-  "sin novedades" de "no pude ver" en esta corrida — se reporta como INFRA,
-  no como SIN CAMBIOS.
+estado: SIN CAMBIOS — 204 títulos revisados, sin cambios del dominio,
+  latido actualizado
+sin_verificar_esta_corrida: nada pendiente de esta rutina; sigue abierto el
+  tema de infraestructura de abajo
 accion_requerida: >
-  Esta es la TERCERA vez que una corrida programada en la nube de esta
-  rutina cae por egress bloqueado (31-ago, 02-sep temprano, y ahora
-  03-sep) — las dos previas se cerraron manualmente desde una sesión local
-  con egress abierto. El bloqueo no es específico de sidofqa.segob.gob.mx:
-  esta corrida confirmó que NINGÚN host externo es alcanzable desde esta
-  sesión de nube programada (ni siquiera google.com), así que no es cosa
-  de agregar un dominio a una allowlist fina — es que las sesiones
-  programadas de esta rutina corren bajo una política de red sin egress
-  saliente en absoluto. Sigue pendiente decidir: (a) mover la cadencia
-  diaria de esta rutina a un entorno/sesión con egress general habilitado,
-  o (b) que un admin habilite egress saliente (al menos a los hosts de
-  fuentes.md) para las sesiones de nube donde corre este cron. Sin
-  resolver esto, cada corrida programada seguirá siendo un no-op de
-  infraestructura que alguien tiene que notar y cerrar a mano.
+  El bloqueo de egress en las sesiones de nube programadas (31-ago, 02-sep
+  temprano, 03-sep) sigue sin resolverse — esta corrida se cerró manualmente
+  desde una sesión LOCAL con salida a internet normal, no desde el cron. Cada
+  vez que la sesión programada de esta rutina caiga en el entorno de nube sin
+  egress, va a repetir el mismo INFRA. Sigue pendiente: (a) mover la cadencia
+  diaria a un entorno con egress general habilitado, o (b) que un admin abra
+  salida saliente al menos a los hosts de fuentes.md para esas sesiones.
