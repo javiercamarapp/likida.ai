@@ -1,37 +1,48 @@
-fecha_corrida: 2026-09-03 (jueves, corrida programada)
-ultimo_dia_barrido: 2026-09-02 (sin cambio — esta corrida no pudo barrer nada
-  nuevo)
-rango_barrido: vacío — el día siguiente al último barrido (03-sep) es hoy
-  mismo; el barrido diario opera sobre "ayer" (02-sep), que la corrida
-  anterior (2026-09-02 21:30) ya cubrió. No había rango pendiente que
-  cerrar aun si el egress hubiera funcionado.
-notas_revisadas: 0
-estado: "INFRA — egress bloqueado a nivel de proxy de organización en esta
-  sesión de nube. No es un fallo específico de sidofqa: CONNECT rechazado
-  con 403 también contra www.sat.gob.mx, diputados.gob.mx y hasta
-  www.google.com (ver recentRelayFailures en /__agentproxy/status). No se
-  pudo hacer ni una sola petición de verificación esta corrida."
-fichas_disparadas: 0
-etag_sat: no_recheck — hoy es jueves, no lunes; ventana siguiente:
-  07-sep-2026 (y ese día también dependerá de que el egress esté abierto)
-deriva_ley_check: no_aplica — no es día 1 de trimestre
-sin_verificar_esta_corrida: >
-  Todo. Ninguna petición de red se completó (SIDOF, SAT, diputados,
-  incluso un host de control como google.com). No hay forma de distinguir
-  "sin novedades" de "no pude ver" en esta corrida — se reporta como INFRA,
-  no como SIN CAMBIOS.
-accion_requerida: >
-  Esta es la TERCERA vez que una corrida programada en la nube de esta
-  rutina cae por egress bloqueado (31-ago, 02-sep temprano, y ahora
-  03-sep) — las dos previas se cerraron manualmente desde una sesión local
-  con egress abierto. El bloqueo no es específico de sidofqa.segob.gob.mx:
-  esta corrida confirmó que NINGÚN host externo es alcanzable desde esta
-  sesión de nube programada (ni siquiera google.com), así que no es cosa
-  de agregar un dominio a una allowlist fina — es que las sesiones
-  programadas de esta rutina corren bajo una política de red sin egress
-  saliente en absoluto. Sigue pendiente decidir: (a) mover la cadencia
-  diaria de esta rutina a un entorno/sesión con egress general habilitado,
-  o (b) que un admin habilite egress saliente (al menos a los hosts de
-  fuentes.md) para las sesiones de nube donde corre este cron. Sin
-  resolver esto, cada corrida programada seguirá siendo un no-op de
-  infraestructura que alguien tiene que notar y cerrar a mano.
+fecha_corrida: 2026-09-04 (viernes, corrida programada 21:30)
+ultimo_dia_barrido: 2026-09-04
+rango_barrido: 2026-09-03 y 2026-09-04 (cierra el hueco dejado por las tres
+  corridas previas con egress bloqueado en la nube — 31-ago, 02-sep y 03-sep —
+  que quedaron en INFRA sin barrer nada; esta corrida sí tuvo egress, ver abajo)
+notas_revisadas: 223 (03-sep: 124 matutina + 0 vespertina + 0 extraordinaria;
+  04-sep: 99 matutina + 8 vespertina + 0 extraordinaria)
+anti_silencio: OK — diarios/porFecha confirma que 03-sep solo tuvo edición
+  Matutina (Vespertina: null) y notas trae 0 en Vespertina, consistente; 04-sep
+  confirma Matutina+Vespertina y notas trae 99+8, ambas no vacías. Sin
+  discrepancia entre diarios y notas en ninguno de los dos días.
+fichas_disparadas: 0 (ninguna de las 18 fichas de normas/*.yaml quedó
+  contradicha)
+hallazgo_del_dominio: >
+  Acuerdo 134/2026 (SHCP), DOF 04-sep-2026 vespertina, codNota 5798037:
+  cuotas semanales de IEPS a combustibles automotrices, vigencia
+  05-sep al 11-sep-2026. Diésel: estímulo 90.78%, reducción SHCP
+  $6.6847/litro, cuota disminuida $0.6787/litro. Aritmética verificada:
+  6.6847 + 0.6787 = 7.3634 (cuota completa LIF 2026), exacta. Es la
+  publicación semanal de rutina que alimenta normas/datos/cuota-ieps-diesel.yaml
+  (ficha lif-2026-20-A) — no contradice ninguna ficha, solo la extiende.
+otros_titulos_revisados_sin_accion:
+  - "4x Nota Aclaratoria a convenios STPS (centros de conciliación /
+    tribunales laborales, BC/Campeche/Edomex/Michoacán) — coincidencia de
+    palabra suelta ('Nota Aclaratoria'), fuera del dominio de Likida."
+  - "2x Acuerdo de estímulos a gasolinas en franja/región fronteriza (EUA y
+    Guatemala) — no está en el radio de las fichas (diésel autotransporte,
+    no gasolina fronteriza)."
+  - "PROY-NOM-008-SICT2-2026 (amortiguadores de impacto en carreteras) y
+    PROY-NOM-005-SICT2-2026 (info. de emergencia transporte de sustancias) —
+    avisos de CONSULTA PÚBLICA, sin vigencia, y no corresponden al número de
+    la NOM ya fichada (nom-087-sct-2-2017). Sin acción; vigilar si llegan a
+    publicarse como NOM definitiva."
+etag_sat: no_recheck — hoy es viernes, no lunes; próxima ventana: lunes
+  07-sep-2026
+deriva_ley_check: no_aplica — no es día 1 de trimestre (próxima: 01-oct-2026)
+estado: "OK — egress abierto en esta sesión local (a diferencia de las 3
+  corridas en la nube previas), barrido completo de 03 y 04-sep, hueco
+  cerrado, hallazgo de rutina capturado en normas/datos/cuota-ieps-diesel.yaml."
+accion_pendiente_de_infra: >
+  Persiste sin resolver: las corridas PROGRAMADAS en la nube de esta rutina
+  (31-ago, 02-sep, 03-sep) cayeron por egress bloqueado a nivel de proxy de
+  organización — ni siquiera google.com era alcanzable. Esta corrida fue en
+  sesión local con egress normal y sí funcionó. Sigue pendiente que un admin
+  decida (a) mover la cadencia diaria a un entorno con egress general, o (b)
+  habilitar egress saliente a los hosts de fuentes.md para las sesiones de
+  nube programadas. Sin eso, cada corrida en la nube seguirá siendo un no-op
+  que alguien debe notar y cerrar a mano — como se hizo hoy.
