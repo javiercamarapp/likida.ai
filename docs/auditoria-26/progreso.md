@@ -119,3 +119,45 @@ calificaron: relanzarlos sería pagar contexto por volver a leer el mismo árbol
 **Línea base VERDE, y exactamente igual a la compuerta con que cerró la 26.**
 Nadie tocó la rama entre las dos corridas. Cualquier rojo posterior es de esta
 continuación.
+
+## Fase 1 — los tres auditores relanzados
+
+Lanzados en un solo mensaje, contexto fresco, uno por rubro, ninguno toca
+código. A cada uno se le encargó **abrir el arreglo de la ronda 26 que tocó su
+rubro** y comprobarlo, no volver a barrer superficie ya recorrida.
+
+| Rubro | Nota | Hallazgos | Veredicto sobre el arreglo de la 26 |
+|---|---|---|---|
+| Frontend | 5 → **4** | 3 ALTO · 3 MEDIO | `273ecd9` cerrado de verdad (17.5:1 medido); `75ec862` en la mitad equivocada |
+| Backend | 7 → **6** | 1 CRÍT · 3 ALTO · 4 MEDIO · 2 BAJO | mismo defecto encontrado por su cuenta, en paralelo |
+| Fiscal | 5 → **4** | 1 CRÍT · 4 ALTO · 3 MEDIO · 1 BAJO | `8abb596` destapó un tercero en la misma línea |
+
+**Frontend y backend llegaron al mismo renglón sin contacto entre ellos.** Es la
+señal más fuerte de la ronda: dos encargos distintos, dos contextos frescos, la
+misma piedra.
+
+## Fase 2 — verificación adversarial y arreglo
+
+Cada hallazgo se abrió y se comprobó contra el código antes de tocar nada.
+
+| # | Acción | Sha | Estado |
+|---|---|---|---|
+| 1 | **FE-1b (ALTO)** verificado abriendo `analytics.ts`: `:1376` da la victoria a `reconstruida.filas`, y su `.map()` enumera 11 claves sin `pagadoEn`; `repo.ts:995` sí lo trae. Prueba de **paridad** entre los dos caminos, roja 2/2 y nombrando `pagadoEn` → arreglo → verde → suite 862/11,289 | `fc98bbf6` | **RETENIDO** |
+| 2 | **FIS-C2c (CRÍTICO)** verificado contra el `where` de la 0305: `fecha` NULL falla las dos comparaciones y queda fuera del denominador; `engine.ts` la metía al numerador. Prueba roja con `noDeducible 111,000` exacto → arreglo → verde. Puso 3 pruebas en rojo; **no se revirtió** tras comprobar que fallaban por fixture incompleto y no por aserción (ver la síntesis) → suite 863/11,292 | `2a58e075` | **RETENIDO** |
+| 3 | **FIS-A3 (ALTO)** verificado: `tools.ts:200` llamaba con 2 argumentos donde `desde_db.ts:128` y `fiscal.ts:487` pasan 3. Prueba roja → `getConfig` sube 5 líneas y se pasan las claves → verde → suite 864/11,293 | `8c72f7bd` | **RETENIDO** |
+
+**Presupuesto: 3 vueltas contra un tope de 3.** Se para aquí. Lo que queda está
+en la síntesis como pendiente con su razón, y ninguno es quirúrgico.
+
+## Fase 3 — tablero
+
+`tablero-continuacion.html` + `.png`, Chromium headless con
+`--force-prefers-reduced-motion`, **capturado y mirado**: 12 rubros en la tabla,
+notas 8·6·7·6·6·6·6·6·4·5·4·5 = **69**, y 69/12 = 5.75 → **5.8**, que es la
+cifra que encabeza la síntesis. Cuadra.
+
+## Compuerta al cerrar
+
+`npx vitest run` **864 archivos / 11,293 pruebas / 1 saltada / 0 fallos** ·
+`npx tsc --noEmit -p .` **exit 0** · `npm run lint` **0 errores, 194 avisos** ·
+`npm run lint:ratchet` **194/194, 0 nuevos**.
