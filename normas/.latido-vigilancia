@@ -1,37 +1,40 @@
-fecha_corrida: 2026-09-03 (jueves, corrida programada)
-ultimo_dia_barrido: 2026-09-02 (sin cambio — esta corrida no pudo barrer nada
-  nuevo)
-rango_barrido: vacío — el día siguiente al último barrido (03-sep) es hoy
-  mismo; el barrido diario opera sobre "ayer" (02-sep), que la corrida
-  anterior (2026-09-02 21:30) ya cubrió. No había rango pendiente que
-  cerrar aun si el egress hubiera funcionado.
+fecha_corrida: 2026-09-05 (sábado, corrida programada, 14:09 UTC)
+ultimo_dia_barrido: 2026-09-02 (sin cambio — esta corrida tampoco pudo barrer)
+rango_barrido: pendiente — 03-sep-2026 a 04-sep-2026 (el barrido diario opera
+  sobre "ayer"; con la última corrida exitosa cubriendo hasta el 02-sep,
+  quedan 03 y 04-sep sin revisar, y siguen sin revisar después de esta corrida)
 notas_revisadas: 0
 estado: "INFRA — egress bloqueado a nivel de proxy de organización en esta
-  sesión de nube. No es un fallo específico de sidofqa: CONNECT rechazado
-  con 403 también contra www.sat.gob.mx, diputados.gob.mx y hasta
-  www.google.com (ver recentRelayFailures en /__agentproxy/status). No se
-  pudo hacer ni una sola petición de verificación esta corrida."
+  sesión de nube. Confirmado dos veces de forma independiente: (1) curl
+  directo a sidofqa.segob.gob.mx, www.google.com y diputados.gob.mx →
+  'CONNECT tunnel failed, response 403' para los tres; (2) WebFetch (que
+  usa una ruta de red distinta a curl) contra sidofqa.segob.gob.mx →
+  error_type EGRESS_BLOCKED explícito. No es un fallo específico de
+  sidofqa ni transitorio: ningún host externo es alcanzable, ni siquiera
+  google.com como control. No se completó ni una sola petición de
+  verificación esta corrida."
 fichas_disparadas: 0
-etag_sat: no_recheck — hoy es jueves, no lunes; ventana siguiente:
-  07-sep-2026 (y ese día también dependerá de que el egress esté abierto)
+etag_sat: no_recheck — hoy es sábado, no lunes; aun si lo fuera, el egress
+  bloqueado lo hubiera impedido igual
 deriva_ley_check: no_aplica — no es día 1 de trimestre
 sin_verificar_esta_corrida: >
-  Todo. Ninguna petición de red se completó (SIDOF, SAT, diputados,
-  incluso un host de control como google.com). No hay forma de distinguir
-  "sin novedades" de "no pude ver" en esta corrida — se reporta como INFRA,
-  no como SIN CAMBIOS.
+  Todo. Ninguna petición de red se completó (SIDOF notas, SIDOF diarios,
+  SAT, diputados, google.com de control). No hay forma de distinguir "sin
+  novedades" de "no pude ver" en esta corrida — se reporta como INFRA, no
+  como SIN CAMBIOS.
 accion_requerida: >
-  Esta es la TERCERA vez que una corrida programada en la nube de esta
-  rutina cae por egress bloqueado (31-ago, 02-sep temprano, y ahora
-  03-sep) — las dos previas se cerraron manualmente desde una sesión local
-  con egress abierto. El bloqueo no es específico de sidofqa.segob.gob.mx:
-  esta corrida confirmó que NINGÚN host externo es alcanzable desde esta
-  sesión de nube programada (ni siquiera google.com), así que no es cosa
-  de agregar un dominio a una allowlist fina — es que las sesiones
-  programadas de esta rutina corren bajo una política de red sin egress
-  saliente en absoluto. Sigue pendiente decidir: (a) mover la cadencia
-  diaria de esta rutina a un entorno/sesión con egress general habilitado,
-  o (b) que un admin habilite egress saliente (al menos a los hosts de
-  fuentes.md) para las sesiones de nube donde corre este cron. Sin
-  resolver esto, cada corrida programada seguirá siendo un no-op de
-  infraestructura que alguien tiene que notar y cerrar a mano.
+  CUARTA corrida consecutiva de esta rutina que cae por egress bloqueado
+  en sesión de nube programada (31-ago, 02-sep, 03-sep, y ahora 05-sep).
+  El patrón es sistemático, no un blip: cada corrida en este entorno de
+  nube programado ha tenido egress saliente completamente cerrado (ni
+  siquiera alcanza google.com), así que no es cosa de una allowlist fina
+  de dominios — es que la política de red del entorno donde corre este
+  cron no permite salida alguna. Las corridas previas se cerraron
+  manualmente desde una sesión local con egress abierto; eso sigue siendo
+  la única vía que ha funcionado. Sigue pendiente decidir: (a) mover la
+  cadencia de esta rutina a un entorno/sesión con egress general
+  habilitado, o (b) que un admin habilite egress saliente (al menos a los
+  hosts de fuentes.md: sidofqa.segob.gob.mx, sat.gob.mx, diputados.gob.mx)
+  para las sesiones de nube donde corre este cron. Con 4 corridas seguidas
+  en cero, el atraso acumulado de días sin barrer ya es de más de una
+  semana y sigue creciendo cada vez que el cron dispara en este entorno.
