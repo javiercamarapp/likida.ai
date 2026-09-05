@@ -111,5 +111,11 @@ calificaron: relanzarlos sería pagar contexto por volver a leer el mismo árbol
 
 - `npx tsc --noEmit -p .` → **exit 0**.
 - `npm run lint` → **0 errores, 194 avisos** (idéntico a la línea base de la 26).
-- `npx vitest run` → ver abajo.
+- `npx vitest run` → **861 archivos, 11,287 pruebas, 1 saltada, 0 fallos**
+  (120.81 s).
+- `npm run lint:ratchet` → **194/194 heredados, 0 nuevos, 0 errores**.
 - `npm run build` → **no se corre aquí a propósito**.
+
+**Línea base VERDE, y exactamente igual a la compuerta con que cerró la 26.**
+Nadie tocó la rama entre las dos corridas. Cualquier rojo posterior es de esta
+continuación.
