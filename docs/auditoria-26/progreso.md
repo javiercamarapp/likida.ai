@@ -69,3 +69,47 @@ que un arreglo tocó). En la 25 esa reauditoría encontró dos puertas más.
 referencia `src/app/dashboard/agentes/liquidacion/cola.tsx:50-52`. Es la misma
 clase que FE-4, en otro archivo: entra como hallazgo nuevo, no como arreglo de
 paso.
+
+---
+
+# Continuación — corrida del 5-sep-2026
+
+Segunda corrida desatendida sobre **la misma rama y el mismo PR**. No se abre
+ronda 27: la regla de continuación manda seguir sobre el PR vivo.
+
+## Fase 0 — decisión de tamaño
+
+- `list_pull_requests(javiercamarapp/cuadra, state=open)` → **5 PRs**, y uno de
+  ellos es **#326 `claude/auditoria-26`**, de auditoría y abierto. → **RONDA DE
+  CONTINUACIÓN.** No se abre rama nueva ni PR nuevo.
+- `git fetch origin master` → `origin/master` = `ce6f4621`, y
+  `git merge-base --is-ancestor ce6f4621 HEAD` → **SI**. La rama contiene a
+  master: **sin conflicto de merge**, nada que traer.
+- `pull_request_read(get_check_runs, #326)` → **9 checks, 9 `success`**
+  (verificar, Migraciones+aislamiento, Playwright, GitGuardian, avisar, Vercel).
+  CI verde: no hay nada que arreglar por el lado de la compuerta remota.
+- `git status --porcelain` vacío al arrancar → **autofix HABILITADO**.
+- El clon no traía `node_modules`: `npm ci` → exit 0. **INFRA, resuelta.**
+
+## Qué se relanza, y por qué solo eso
+
+La regla: se relanzan los rubros cuyo archivo falte o **cuyo código haya
+cambiado desde que se escribió**. Los 12 archivos existen. Cruzando los cuatro
+commits de arreglo contra la hora de cada reporte:
+
+| Rubro | Commit posterior a su archivo | ¿Relanza? |
+|---|---|---|
+| Frontend | `273ecd9` (FE-4, `mcp/autorizar/page.tsx`), `75ec862` (FE-1) | **Sí** |
+| Backend | `75ec862` (`analytics.ts`, su archivo) | **Sí** |
+| Fiscal | `8abb596`, posterior a `fiscal-reauditoria.md` | **Sí** |
+| Los otros nueve | ninguno | No — su nota se conserva |
+
+Tres auditores, no doce. Nueve rubros no recibieron un solo commit desde que se
+calificaron: relanzarlos sería pagar contexto por volver a leer el mismo árbol.
+
+## Compuerta — línea base de la continuación
+
+- `npx tsc --noEmit -p .` → **exit 0**.
+- `npm run lint` → **0 errores, 194 avisos** (idéntico a la línea base de la 26).
+- `npx vitest run` → ver abajo.
+- `npm run build` → **no se corre aquí a propósito**.
